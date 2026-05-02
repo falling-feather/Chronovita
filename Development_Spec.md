@@ -530,3 +530,16 @@ Mock LLM 策略：思辨派 `_thinker_compose` 模板生成开放反问，史实
 设计选择：可达性算法采用状态位完整去重而非节点级去重，避免「同一节点不同状态可达不同后继」被误判为不可达；预检结果不持久化，每次现算（任务数量小、剧本变更频繁），保证与最新剧本一致。
 
 验证：对大禹治水任务 `task_5eaf0a02ea` 调用 `/verify` 返回 `reachable_count=8 / total_node_count=8 / warnings=[] / ok=true`；前端任务模式打开沙盘可见推荐边以青虚线标注。
+
+### v2.0.0（2026-05-05）第四条剧本 · 洋务运动
+
+落地内容：
+
+- `services/sandbox/scenarios.py`：新增 `_yangwu`（scenario_id `qing-yangwu-yundong`），10 节点 / 12 边 / 5 状态变量（industry / navy / frontier / conservatives / merchant），起点 `n_zongli`（设总理衙门），三类终局——`n_jiawu`（甲午之殇）/ `n_wuxu_eve`（维新前夜）/ `n_collapse`（顽固反扑）
+- 关键分支：海防塞防之争 `n_haifang_saifang` 是必经路口；`n_xizheng` / `n_beiyang` 互斥后汇入 `n_guandu_shangban`；甲午败局可由「海军未振」或「未引商办」两条路径触发
+- `services/agent/corpus.py`：新增 4 条洋务史料 Citation（曾国藩奏稿/李鸿章筹议海防折/左宗棠塞防疏/盛宣怀招商局章程）与对应关键词索引
+- 版本号 → 2.0.0：标志四条剧本贯通先秦至晚清（夏 · 大禹 / 战国 · 商鞅 / 北宋 · 王安石 / 晚清 · 洋务），「看 · 练 · 问 · 创」全链路在四个历史阶段完整可运行
+
+设计选择：洋务剧本节点数（10）与变量数（5）控制在与王安石变法（11/5）相近规模，避免认知超载；海防塞防之争作为强制汇聚节点，让两条主线必然交汇并在后续的官督商办抉择中暴露「制度未变」的核心矛盾——剧本叙事内嵌于状态机结构。
+
+验证：`POST /classroom/tasks` 创建洋务任务（推荐路径 5 条边） → `/verify` 返回 `reachable_count=10 / total_node_count=10 / warnings=[] / ok=true`，所有节点全可达，推荐路径合法。

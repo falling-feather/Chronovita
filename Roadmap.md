@@ -58,6 +58,7 @@
 - [v1.8.0][2026-05-03] 课堂化「老师预设」：services/classroom 引入课堂任务模型（预调初始状态、必经节点、合格终局、推荐路径）+ SQLite classroom_tasks 持久化；POST /classroom/tasks 创建并校验节点 id、GET /classroom/tasks/{id}/check 自动比对推演快照给出验收报告（终局合格/必经命中/推荐路径匹配率）；sandbox new_playthrough 支持 task_id 注入预设状态；前端新增「课 · 老师预设」页面（剧本动态表单、复选必经/合格终局、生成任务 ID 与可分享链接），SandboxPage 接收 ?task=xxx 自动加载课堂任务卡与一键验收弹窗，详见 ADR-0008
 - [v1.9.0][2026-05-03] 学生作业 · 推演记录回放：PlaythroughSnapshot 增 task_id/student_name 字段；sandbox new_playthrough/router 支持 student_name 透传；新增 GET /classroom/tasks/{id}/submissions 端点聚合所有学生 playthrough，输出节点访问/边遍历/终局分布热力与逐学生验收摘要；前端 SandboxPage 任务模式强制学生姓名，ClassroomPage 任务卡新增「作业回放」抽屉（合格率统计、节点/边热力 Top10、可展开学生路径表），详见 ADR-0009
 - [v1.9.1][2026-05-04] 课堂化精修：sandbox.engine 新增 reachable_nodes BFS（按 (节点, 状态位) 去重）；新增 GET /classroom/tasks/{id}/verify 端点输出可达节点数、不可达必经/终局/推荐边；前端 ClassroomPage 任务卡加「预检」「复制为模板」按钮（复制时回填 form 字段）；SandboxPage DAG 在任务模式下用青色虚线 + ★ 标注推荐路径边
+- [v2.0.0][2026-05-05] 第四条剧本 · 洋务运动：services/sandbox/scenarios 新增 qing-yangwu-yundong（10 节点 / 12 边 / 5 状态变量），覆盖总理衙门→江南制造/福州船政→海防塞防之争→西征/北洋→官督商办→甲午之殇 / 维新前夜两类终局；agent/corpus 增 4 条洋务史料关键词索引；通过 /verify 校验 10/10 可达，标志 v2 大版本——四条剧本贯通先秦至晚清，「看练问创」全链路在四个史阶完整运行
 - _（后续追加）_
 
 ## 风险与对冲

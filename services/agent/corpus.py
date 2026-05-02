@@ -70,6 +70,30 @@ _CORPUS: list[Citation] = [
         excerpt="光（司马光）言：青苗之法，名为利民，实则害民，州县抑配，民被其扰。",
         relevance=0.0,
     ),
+    Citation(
+        source_id="zengwen-zhengong-zougao",
+        title="《曾文正公奏稿 · 复陈购买外洋船炮折》",
+        excerpt="购成之后，访募覃思之士，智巧之匠，始而演习，继而试造，不过一二年，火轮船必为中外官民通行之物。",
+        relevance=0.0,
+    ),
+    Citation(
+        source_id="lihongzhang-chouyi-haifang",
+        title="《李文忠公全集 · 筹议海防折》",
+        excerpt="今日之事，以海防为第一要务……日本与我隔一衣带水，伺隙而动，未尝一日忘也。",
+        relevance=0.0,
+    ),
+    Citation(
+        source_id="zuozongtang-fuchen-saifang",
+        title="《左文襄公全集 · 复陈塞防海防关系疏》",
+        excerpt="重新疆者所以保蒙古，保蒙古者所以卫京师……若此时即拟停兵节饷，自撤藩篱，则我退寸而寇进尺。",
+        relevance=0.0,
+    ),
+    Citation(
+        source_id="shengxuanhuai-yusi",
+        title="《盛宣怀愚斋存稿 · 招商局章程》",
+        excerpt="官督商办，由官总其大纲，察其利病，而听商董自立条议，悦服众商。",
+        relevance=0.0,
+    ),
 ]
 
 
@@ -85,6 +109,10 @@ _KEYWORDS: dict[str, list[str]] = {
     "linchuan-jizhi-benchao": ["王安石", "理财", "法", "吏", "本朝"],
     "sushi-on-xinfa": ["苏轼", "新法", "道德", "风俗", "强弱"],
     "zizhitongjian-xining": ["青苗", "司马光", "熙宁", "抑配", "民"],
+    "zengwen-zhengong-zougao": ["曾国藩", "洋务", "船炮", "购舰", "火轮"],
+    "lihongzhang-chouyi-haifang": ["李鸿章", "海防", "日本", "北洋", "甲午"],
+    "zuozongtang-fuchen-saifang": ["左宗棠", "塞防", "新疆", "蒙古", "藩篱"],
+    "shengxuanhuai-yusi": ["盛宣怀", "招商", "官督", "商办", "电报"],
 }
 
 
