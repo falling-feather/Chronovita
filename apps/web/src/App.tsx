@@ -1,4 +1,4 @@
-import { Layout, Menu } from 'antd';
+import { App as AntdApp, Layout, Menu } from 'antd';
 import { Link, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import RecallPage from './pages/RecallPage';
@@ -19,32 +19,34 @@ const navItems = [
 export default function App() {
   const location = useLocation();
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ display: 'flex', alignItems: 'center' }}>
-        <div className="chrono-title" style={{ color: '#F3EBDD', fontSize: 20, marginRight: 48 }}>
-          史脉 · 未来课堂
-        </div>
-        <Menu
-          theme="dark"
-          mode="horizontal"
-          selectedKeys={[location.pathname]}
-          items={navItems}
-          style={{ flex: 1, minWidth: 0, background: 'transparent' }}
-        />
-      </Header>
-      <Content style={{ padding: '32px 48px' }}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/recall" element={<RecallPage />} />
-          <Route path="/sandbox" element={<SandboxPage />} />
-          <Route path="/agent" element={<AgentPage />} />
-          <Route path="/canvas" element={<CanvasPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Content>
-      <Footer style={{ textAlign: 'center', background: 'transparent' }}>
-        史脉 Chronovita · 看 练 问 创 · 让历史可推演
-      </Footer>
-    </Layout>
+    <AntdApp>
+      <Layout style={{ minHeight: '100vh' }}>
+        <Header style={{ display: 'flex', alignItems: 'center' }}>
+          <div className="chrono-title" style={{ color: '#F3EBDD', fontSize: 20, marginRight: 48 }}>
+            史脉 · 未来课堂
+          </div>
+          <Menu
+            theme="dark"
+            mode="horizontal"
+            selectedKeys={[location.pathname]}
+            items={navItems}
+            style={{ flex: 1, minWidth: 0, background: 'transparent' }}
+          />
+        </Header>
+        <Content style={{ padding: '32px 48px' }}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/recall" element={<RecallPage />} />
+            <Route path="/sandbox" element={<SandboxPage />} />
+            <Route path="/agent" element={<AgentPage />} />
+            <Route path="/canvas" element={<CanvasPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Content>
+        <Footer style={{ textAlign: 'center', background: 'transparent' }}>
+          史脉 Chronovita · 看 练 问 创 · 让历史可推演
+        </Footer>
+      </Layout>
+    </AntdApp>
   );
 }

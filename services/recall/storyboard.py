@@ -26,7 +26,8 @@ def _heuristic_flags(text: str) -> tuple[bool, bool]:
 
 
 def generate_storyboard(req: StoryboardRequest) -> Storyboard:
-    has_character, has_architecture = _heuristic_flags(req.history_context + req.title)
+    scan_text = req.history_context + req.title + "、".join(req.keywords)
+    has_character, has_architecture = _heuristic_flags(scan_text)
     shots: list[Shot] = []
     for i in range(req.target_shot_count):
         beat, camera, shot_size = _pick_scene(i)

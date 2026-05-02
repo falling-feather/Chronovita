@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Alert,
+  App,
   Button,
   Card,
   Col,
@@ -16,7 +17,6 @@ import {
   Spin,
   Tag,
   Typography,
-  message,
 } from 'antd';
 
 const { Title, Paragraph, Text } = Typography;
@@ -93,6 +93,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function RecallPage() {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [storyboard, setStoryboard] = useState<Storyboard | null>(null);
@@ -180,7 +181,7 @@ export default function RecallPage() {
 
       <Row gutter={24}>
         <Col xs={24} lg={10}>
-          <Card title="新建分镜" bordered>
+          <Card title="新建分镜">
             <Form
               form={form}
               layout="vertical"
@@ -241,7 +242,7 @@ export default function RecallPage() {
                 </Space>
               )
             }
-            bordered
+
           >
             {!storyboard && <Paragraph type="secondary">请先在左侧生成分镜。</Paragraph>}
             {loading && <Spin />}
@@ -277,7 +278,7 @@ export default function RecallPage() {
 
           <Divider />
 
-          <Card title="渲染任务" bordered>
+          <Card title="渲染任务">
             {jobs.length === 0 && <Paragraph type="secondary">暂无任务。</Paragraph>}
             <List
               dataSource={jobs}
