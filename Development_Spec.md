@@ -384,3 +384,25 @@ LLM 生成（system prompt 绑定 persona）
 Prompt 链六段固定角色：`system / history_context / scene / character / camera / style`，可分段编辑、可审计。
 
 ControlNet 信号按场景特征动态组装：人物 → pose；建筑 → lineart + depth；参考图 → reference；兜底 → scribble。
+
+### v1.1.1（2026-05-03）看模块运行时收敛
+
+落地内容：
+
+- 修复 AntD 5 静态 `message` API 在动态主题上下文下的告警：根布局用 `<App>` 包裹，组件内通过 `App.useApp()` 获取 `message` 实例
+- 移除 `Card` 组件已废弃的 `bordered` 属性
+- 启发式扫描扩展 `scan_text` 拼入 `keywords`，"堤坝/河道"等地理关键词可正确触发 lineart + depth 信号
+- 端到端浏览器实测打通：分镜生成 → 4 镜显示 + ControlNet tag → 提交渲染 → 阶段机轮询推进
+
+### v1.2.0（2026-05-03）练模块 DAG 与状压 DP 推演雏形
+
+落地内容：
+
+- `services/sandbox/`：`models.py`（StateVar / DagNode / DagEdge / Condition / Effect / Scenario / PlaythroughSnapshot）+ `engine.py`（位编码、记忆化分支、推演前进）+ `scenarios.py`（首发剧本「大禹治水」）
+- `apps/api/routers/sandbox.py`：剧本列表 / 剧本详情 / 推演开始 / 推演详情 / 候选分支 / 推演前进 六端点
+- `apps/web/src/pages/SandboxPage.tsx`：剧本选择 + 状态变量面板 + 当前节点叙事 + 候选分支决策 + 时间线
+- `docs/adr/ADR-0003-练模块状压DP设计.md`：决策记录
+
+状态编码策略：每个 `StateVar` 声明 `bits`，按声明顺序左移拼接为整数，作为 `lru_cache` key，确保「相同状态、相同节点」分支结果可复用。
+
+剧本「大禹治水」共 4 状态变量（合计 9 bit）、8 节点、9 条边、2 终局（溃堤之变 / 开夏之基）。后续版本接入 LLM 动态叙事 + RAG 校验 + 剧本编辑器。
