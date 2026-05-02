@@ -17,6 +17,15 @@ import {
   Tag,
   Typography,
 } from 'antd';
+import ReactFlow, {
+  Background,
+  Controls,
+  Edge,
+  Node,
+  Position,
+  ReactFlowProvider,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -36,6 +45,13 @@ interface DagNode {
   is_terminal: boolean;
 }
 
+interface DagEdge {
+  edge_id: string;
+  from_node: string;
+  to_node: string;
+  label: string;
+}
+
 interface Scenario {
   scenario_id: string;
   title: string;
@@ -43,6 +59,7 @@ interface Scenario {
   summary: string;
   state_vars: StateVar[];
   nodes: DagNode[];
+  edges: DagEdge[];
   start_node: string;
 }
 
@@ -186,6 +203,102 @@ export default function SandboxPage() {
     return snapshot.history.map((nid) => map.get(nid) ?? nid);
   }, [scenario, snapshot]);
 
+  const visitedSet = useMemo(
+    () => new Set(snapshot?.history ?? []),
+    [snapshot],
+  );
+
+  const branchEdgeIds = useMemo(
+    () => new Set(branches.map((b) => b.edge_id)),
+    [branches],
+  );
+
+  const branchTargetIds = useMemo(
+    () => new Set(branches.map((b) => b.target_node_id)),
+    [branches],
+  );
+
+  const flowNodes: Node[] = useMemo(() => {
+    if (!scenario) return [];
+    const nodeIds = scenario.nodes.map((n) => n.node_id);
+    const indexOf: Record<string, number> = {};
+    nodeIds.forEach((id, i) => { indexOf[id] = i; });
+    const layer: Record<string, number> = {};
+    layer[scenario.start_node] = 0;
+    let progress = true;
+    while (progress) {
+      progress = false;
+      for (const e of scenario.edges) {
+        if (layer[e.from_node] === undefined) continue;
+        const next = layer[e.from_node] + 1;
+        if (layer[e.to_node] === undefined || layer[e.to_node] < next) {
+          layer[e.to_node] = next;
+          progress = true;
+        }
+      }
+    }
+    const byLayer: Record<number, string[]> = {};
+    for (const id of nodeIds) {
+      const l = layer[id] ?? 0;
+      (byLayer[l] = byLayer[l] || []).push(id);
+    }
+    return scenario.nodes.map((n) => {
+      const l = layer[n.node_id] ?? 0;
+      const col = byLayer[l].indexOf(n.node_id);
+      const rowCount = byLayer[l].length;
+      const isCurrent = snapshot?.current_node_id === n.node_id;
+      const isVisited = visitedSet.has(n.node_id);
+      const isReachable = branchTargetIds.has(n.node_id);
+      const bg = isCurrent
+        ? '#9F2E25'
+        : isVisited
+          ? '#3F5F4D'
+          : isReachable
+            ? '#7A5C2E'
+            : n.is_terminal
+              ? '#1F1B17'
+              : '#F3EBDD';
+      const color = bg === '#F3EBDD' ? '#1F1B17' : '#F3EBDD';
+      return {
+        id: n.node_id,
+        position: { x: l * 220, y: col * 90 - (rowCount - 1) * 45 },
+        data: { label: n.title + (n.is_terminal ? ' ⛩' : '') },
+        sourcePosition: Position.Right,
+        targetPosition: Position.Left,
+        style: {
+          background: bg,
+          color,
+          border: isCurrent ? '2px solid #1F1B17' : '1px solid #D9C9A8',
+          borderRadius: 6,
+          padding: 8,
+          fontSize: 12,
+          width: 140,
+          textAlign: 'center' as const,
+        },
+      };
+    });
+  }, [scenario, snapshot, visitedSet, branchTargetIds]);
+
+  const flowEdges: Edge[] = useMemo(() => {
+    if (!scenario) return [];
+    return scenario.edges.map((e) => {
+      const isOption = branchEdgeIds.has(e.edge_id);
+      return {
+        id: e.edge_id,
+        source: e.from_node,
+        target: e.to_node,
+        label: e.label,
+        animated: isOption,
+        style: {
+          stroke: isOption ? '#9F2E25' : '#D9C9A8',
+          strokeWidth: isOption ? 2 : 1,
+        },
+        labelStyle: { fill: '#1F1B17', fontSize: 10 },
+        labelBgStyle: { fill: '#F3EBDD', opacity: 0.85 },
+      };
+    });
+  }, [scenario, branchEdgeIds]);
+
   return (
     <div>
       <Title level={3} className="chrono-title">练 · 沙盘推演</Title>
@@ -218,8 +331,33 @@ export default function SandboxPage() {
       )}
 
       <Spin spinning={loading}>
+        <Card title="DAG 史脉图（红=当前，赭=可选分支，墨=已访问，黑=终局）" style={{ marginBottom: 16 }}>
+          <div style={{ height: 340, background: '#FBF6EC', border: '1px solid #D9C9A8', borderRadius: 4 }}>
+            {scenario ? (
+              <ReactFlowProvider>
+                <ReactFlow
+                  nodes={flowNodes}
+                  edges={flowEdges}
+                  fitView
+                  nodesDraggable={false}
+                  nodesConnectable={false}
+                  elementsSelectable={false}
+                  panOnDrag
+                  zoomOnScroll
+                  proOptions={{ hideAttribution: true }}
+                >
+                  <Background color="#D9C9A8" gap={16} />
+                  <Controls showInteractive={false} />
+                </ReactFlow>
+              </ReactFlowProvider>
+            ) : (
+              <Empty description="选择剧本后渲染" style={{ padding: 80 }} />
+            )}
+          </div>
+        </Card>
+
         <Row gutter={16}>
-          <Col span={8}>
+          <Col span={6}>
             <Card title="状态变量">
               {snapshot && scenario ? (
                 <Space direction="vertical" style={{ width: '100%' }} size="middle">
@@ -240,7 +378,7 @@ export default function SandboxPage() {
             </Card>
           </Col>
 
-          <Col span={10}>
+          <Col span={12}>
             <Card title={snapshot ? snapshot.current_node_title : '当前节点'}>
               {snapshot ? (
                 <>
