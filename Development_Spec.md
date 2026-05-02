@@ -406,3 +406,23 @@ ControlNet 信号按场景特征动态组装：人物 → pose；建筑 → line
 状态编码策略：每个 `StateVar` 声明 `bits`，按声明顺序左移拼接为整数，作为 `lru_cache` key，确保「相同状态、相同节点」分支结果可复用。
 
 剧本「大禹治水」共 4 状态变量（合计 9 bit）、8 节点、9 条边、2 终局（溃堤之变 / 开夏之基）。后续版本接入 LLM 动态叙事 + RAG 校验 + 剧本编辑器。
+
+### v1.2.1（2026-05-03）练模块 DAG 拓扑可视化
+
+- `apps/web/src/pages/SandboxPage.tsx` 接入 `reactflow ^11.11.4`，BFS 层级布局：`x = layer * 220, y = col * 90 - (rowCount-1) * 45`
+- 节点配色：当前 #9F2E25 / 已访 #3F5F4D / 候选可达 #7A5C2E / 终局 #1F1B17 / 默认 #F3EBDD；终局节点 label 加 ⛩
+- 边样式：候选边 `animated + #9F2E25 + 2px`，其余 `#D9C9A8 + 1px`；标签底色 #F3EBDD opacity 0.85
+- `nodesDraggable=false / nodesConnectable=false`，仅作只读拓扑展示
+
+### v1.3.0（2026-05-03）问模块双模智者 + 流式对话 + RAG 引证
+
+落地内容：
+
+- `services/agent/`：`models.py`（AgentPersona / Citation / DialogueMessage / DialogueSession / AskRequest / StreamChunk）+ `personas.py`（思辨派 + 史实派两 Persona）+ `corpus.py`（7 条典籍 + 关键词命中）+ `dialogue.py`（异步队列双流 + 字符块 yield）
+- `apps/api/routers/agent.py`：`/personas` / `/corpus` / `/sessions` CRUD / `/sessions/{id}/ask` SSE 流式六端点
+- `apps/web/src/pages/AgentPage.tsx`：主题输入 + 双栏并置（左思辨 #7A5C2E / 右史实 #3F5F4D）+ 提问输入 + 引证 Drawer + 历史消息列表
+- `docs/adr/ADR-0004-问模块双模智者设计.md`：决策记录
+
+流式协议：`text/event-stream` + `data: {json}\n\n` + `event: end` 收尾；前端 `fetch` + `ReadableStream` 解析，逐字渲染并按 `persona` 分流到左右栏。
+
+Mock LLM 策略：思辨派 `_thinker_compose` 模板生成开放反问，史实派 `_historian_compose` 拼接 `search_corpus` 命中典籍片段。后续 v1.4.x 替换为真实 LLM 时，仅替换 `compose` + `search` 两层，SSE 协议与前端不变。

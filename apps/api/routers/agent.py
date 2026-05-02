@@ -1,49 +1,69 @@
-from fastapi import APIRouter, WebSocket
-from pydantic import BaseModel
+from __future__ import annotations
+
+import json
+
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+
+from services.agent import (
+    AgentPersona,
+    AskRequest,
+    Citation,
+    DialogueSession,
+    get_session,
+    list_corpus,
+    list_personas,
+    list_sessions,
+    new_session,
+    stream_answer,
+)
 
 router = APIRouter()
 
 
 class CreateSessionRequest(BaseModel):
-    persona_id: str
-    mode: str = "companion"
+    topic: str = Field(min_length=1, max_length=120)
 
 
-class MessageRequest(BaseModel):
-    content: str
+@router.get("/personas", response_model=list[AgentPersona], summary="智者列表")
+async def fetch_personas() -> list[AgentPersona]:
+    return list_personas()
 
 
-class SwitchRequest(BaseModel):
-    persona_id: str
-    mode: str
+@router.get("/corpus", response_model=list[Citation], summary="语料库")
+async def fetch_corpus() -> list[Citation]:
+    return list_corpus()
 
 
-@router.get("/personas")
-async def list_personas():
-    return {"items": []}
+@router.post("/sessions", response_model=DialogueSession, summary="新建对话")
+async def create_session(payload: CreateSessionRequest) -> DialogueSession:
+    return new_session(payload.topic)
 
 
-@router.post("/sessions")
-async def create_session(payload: CreateSessionRequest):
-    return {"session_id": "stub", "persona_id": payload.persona_id, "mode": payload.mode}
+@router.get("/sessions", response_model=list[DialogueSession], summary="对话列表")
+async def fetch_sessions() -> list[DialogueSession]:
+    return list_sessions()
 
 
-@router.post("/sessions/{sid}/message")
-async def post_message(sid: str, payload: MessageRequest):
-    return {"session_id": sid, "reply": "", "citations": []}
+@router.get("/sessions/{sid}", response_model=DialogueSession, summary="对话详情")
+async def fetch_session(sid: str) -> DialogueSession:
+    sess = get_session(sid)
+    if sess is None:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return sess
 
 
-@router.post("/sessions/{sid}/switch")
-async def switch_persona(sid: str, payload: SwitchRequest):
-    return {"session_id": sid, "persona_id": payload.persona_id, "mode": payload.mode}
+@router.post("/sessions/{sid}/ask", summary="流式提问（SSE）")
+async def ask(sid: str, payload: AskRequest) -> StreamingResponse:
+    sess = get_session(sid)
+    if sess is None:
+        raise HTTPException(status_code=404, detail="会话不存在")
 
+    async def event_source():
+        async for chunk in stream_answer(sid, payload.question):
+            data = json.dumps(chunk.model_dump(mode="json"), ensure_ascii=False)
+            yield f"data: {data}\n\n"
+        yield "event: end\ndata: {}\n\n"
 
-@router.websocket("/ws/{sid}")
-async def voice_channel(websocket: WebSocket, sid: str):
-    await websocket.accept()
-    try:
-        while True:
-            data = await websocket.receive_bytes()
-            await websocket.send_bytes(data)
-    except Exception:
-        await websocket.close()
+    return StreamingResponse(event_source(), media_type="text/event-stream")
