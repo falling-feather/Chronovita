@@ -482,3 +482,23 @@ Mock LLM 策略：思辨派 `_thinker_compose` 模板生成开放反问，史实
 设计选择：剧本仍以代码常量形式声明（`_REGISTRY` 字典），重启即在；不引入剧本编辑后台，保持「研究者直接 PR 剧本」的轻流程。状态位宽预算（≤60 位）严格遵守，本期最大占用 12 位，余量充足。
 
 验证：`GET /api/v1/sandbox/scenarios` 返回 3 条；商鞅 / 王安石 playthrough 起始节点正确，分支可枚举；新 playthrough 自动持久化入 sqlite。
+
+### v1.8.0（2026-05-03）课堂化「老师预设」
+
+落地内容：
+
+- `services/classroom/`
+  - `models.py`：`ClassroomTask`（task_id/title/scenario_id/teacher_notes/preset_state/must_visit_nodes/accepted_terminals/recommended_path/created_at）+ `CreateClassroomTaskRequest` + `TaskCheckResult`
+  - `store.py`：内存 `_TASKS` + `list/get/create/delete/hydrate_from_db`，写时调用 `persistence.save_task` 落盘
+- `services/persistence/db.py`：新增 `classroom_tasks` 表（task_id PK + data TEXT + updated_at DateTime）+ `save_task / delete_task / load_all_tasks`
+- `services/sandbox/engine.py`：`new_playthrough(scenario_id, preset_state=None)` 支持课堂任务预调初始状态（按位宽 clamp）
+- `apps/api/routers/classroom.py`：`GET /tasks`、`POST /tasks`（校验 must_visit / accepted_terminals 节点 id 是否存在）、`GET /tasks/{id}`、`DELETE /tasks/{id}`、`GET /tasks/{id}/check?playthrough_id=...`（自动比对 history 给出 must_visit_hit / miss、terminal_accepted、recommended_match_ratio、summary 文案）
+- `apps/api/routers/sandbox.py`：`POST /playthroughs?scenario_id=&task_id=` 支持自动应用任务的 preset_state
+- `apps/api/main.py`：挂载 classroom router，lifespan 增加 `classroom_store.hydrate_from_db()`
+- 前端 `apps/web/src/pages/ClassroomPage.tsx`：老师面板，剧本动态表单（InputNumber 调初始状态、Checkbox.Group 选必经节点/合格终局、Select 多选推荐路径），创建后弹窗显示 task_id 与可分享链接
+- `apps/web/src/pages/SandboxPage.tsx`：`useSearchParams` 读取 `?task=task_id` 自动加载任务卡（必经节点进度提示）；新推演 POST 携带 task_id；终局加「验收任务」按钮，弹 Modal 展示验收报告（含 Progress 推荐路径匹配率）
+- `apps/web/src/App.tsx` + `HomePage.tsx`：新增 `/classroom` 路由与首页入口
+
+设计选择：preset_state 仅在 `new_playthrough` 时生效（不修改 advance 路径），保持 DAG 状态转移规则纯粹；推荐路径以 edge_id 列表表达，验收时反查 history 相邻节点对应的边求集合交集；must_visit_nodes 与 accepted_terminals 在创建时强制校验 id 合法性；任务 ID 短哈希形式 `task_xxxxxxxxxx`，可由学生在 URL 中直接粘贴。
+
+验证：端到端跑通——创建大禹治水任务（必经 n_reform/n_field_survey、合格终局 n_dynasty、4 条推荐边）→ 起新推演 → 沿推荐路径走 4 步 → `/check` 返回 `is_terminal=true / accepted=true / ratio=1.0 / must_hit_count=2 / miss_count=0`，summary 文案为「已圆满达成本任务的全部老师预设」。

@@ -33,11 +33,20 @@ async def fetch_scenario(scenario_id: str) -> Scenario:
 
 
 @router.post("/playthroughs", response_model=PlaythroughSnapshot, summary="开始一次推演")
-async def create_playthrough(scenario_id: str) -> PlaythroughSnapshot:
+async def create_playthrough(scenario_id: str, task_id: str | None = None) -> PlaythroughSnapshot:
+    preset: dict[str, int] | None = None
+    if task_id:
+        from services.classroom import get_task
+        task = get_task(task_id)
+        if task is None:
+            raise HTTPException(status_code=404, detail="任务不存在")
+        if task.scenario_id != scenario_id:
+            raise HTTPException(status_code=400, detail="任务剧本与请求剧本不一致")
+        preset = task.preset_state
     sc = get_scenario(scenario_id)
     if sc is None:
         raise HTTPException(status_code=404, detail="剧本不存在")
-    return new_playthrough(scenario_id)
+    return new_playthrough(scenario_id, preset)
 
 
 @router.get("/playthroughs", response_model=list[PlaythroughSnapshot], summary="推演列表")

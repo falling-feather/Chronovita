@@ -5,6 +5,7 @@ import RecallPage from './pages/RecallPage';
 import SandboxPage from './pages/SandboxPage';
 import AgentPage from './pages/AgentPage';
 import CanvasPage from './pages/CanvasPage';
+import ClassroomPage from './pages/ClassroomPage';
 
 const { Header, Content, Footer } = Layout;
 
@@ -14,6 +15,7 @@ const navItems = [
   { key: '/sandbox', label: <Link to="/sandbox">练 · 沙盘推演</Link> },
   { key: '/agent', label: <Link to="/agent">问 · 双模智者</Link> },
   { key: '/canvas', label: <Link to="/canvas">创 · 知识谱系</Link> },
+  { key: '/classroom', label: <Link to="/classroom">课 · 老师预设</Link> },
 ];
 
 export default function App() {
@@ -40,6 +42,7 @@ export default function App() {
             <Route path="/sandbox" element={<SandboxPage />} />
             <Route path="/agent" element={<AgentPage />} />
             <Route path="/canvas" element={<CanvasPage />} />
+            <Route path="/classroom" element={<ClassroomPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Content>

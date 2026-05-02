@@ -10,11 +10,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from settings import settings
-from routers import recall, sandbox, agent, canvas, common
+from routers import recall, sandbox, agent, canvas, classroom, common
 from services import persistence
 from services.canvas import store as canvas_store
 from services.sandbox import engine as sandbox_engine
 from services.agent import dialogue as agent_dialogue
+from services.classroom import store as classroom_store
 
 
 @asynccontextmanager
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
     canvas_store.hydrate_from_db()
     sandbox_engine.hydrate_from_db()
     agent_dialogue.hydrate_from_db()
+    classroom_store.hydrate_from_db()
     yield
 
 
@@ -48,11 +50,12 @@ app.include_router(recall.router, prefix=f"{API_PREFIX}/recall", tags=["看 · �
 app.include_router(sandbox.router, prefix=f"{API_PREFIX}/sandbox", tags=["练 · 沙盘推演"])
 app.include_router(agent.router, prefix=f"{API_PREFIX}/agent", tags=["问 · 双模智者"])
 app.include_router(canvas.router, prefix=f"{API_PREFIX}/canvas", tags=["创 · 知识谱系"])
+app.include_router(classroom.router, prefix=f"{API_PREFIX}/classroom", tags=["课 · 老师预设"])
 
 
 @app.get("/", tags=["通用"])
 async def root():
-    return {"name": settings.app_name, "version": settings.app_version, "modules": ["recall", "sandbox", "agent", "canvas"]}
+    return {"name": settings.app_name, "version": settings.app_version, "modules": ["recall", "sandbox", "agent", "canvas", "classroom"]}
 
 
 @app.get("/healthz", tags=["通用"])

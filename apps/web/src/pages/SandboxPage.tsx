@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { takeRecallToSandbox, setSandboxToAgent } from '../bridge';
 import {
   Alert,
@@ -10,6 +10,8 @@ import {
   Divider,
   Empty,
   List,
+  Modal,
+  Progress,
   Row,
   Select,
   Space,
@@ -88,6 +90,30 @@ interface PlaythroughSnapshot {
   updated_at: string;
 }
 
+interface ClassroomTaskLite {
+  task_id: string;
+  title: string;
+  scenario_id: string;
+  teacher_notes: string;
+  preset_state: Record<string, number>;
+  must_visit_nodes: string[];
+  accepted_terminals: string[];
+  recommended_path: string[];
+}
+
+interface TaskCheckResult {
+  task_id: string;
+  playthrough_id: string;
+  is_terminal: boolean;
+  terminal_node_id: string | null;
+  visited_nodes: string[];
+  must_visit_hit: string[];
+  must_visit_miss: string[];
+  terminal_accepted: boolean;
+  recommended_match_ratio: number;
+  summary: string;
+}
+
 const STAT_COLORS: Record<string, string> = {
   strategy: '#7A5C2E',
   morale: '#3F5F4D',
@@ -108,8 +134,10 @@ function describeValue(v: StateVar, value: number): string {
 }
 
 export default function SandboxPage() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const taskParam = searchParams.get('task');
 
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -118,6 +146,7 @@ export default function SandboxPage() {
   const [branches, setBranches] = useState<BranchOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [incoming, setIncoming] = useState<{ title: string; keywords: string[] } | null>(null);
+  const [task, setTask] = useState<ClassroomTaskLite | null>(null);
 
   useEffect(() => {
     const p = takeRecallToSandbox();
@@ -153,7 +182,10 @@ export default function SandboxPage() {
     if (!selectedId) return;
     setLoading(true);
     try {
-      const r = await fetch(`/api/v1/sandbox/playthroughs?scenario_id=${selectedId}`, {
+      const url = task && task.scenario_id === selectedId
+        ? `/api/v1/sandbox/playthroughs?scenario_id=${selectedId}&task_id=${task.task_id}`
+        : `/api/v1/sandbox/playthroughs?scenario_id=${selectedId}`;
+      const r = await fetch(url, {
         method: 'POST',
       });
       if (!r.ok) {
@@ -167,7 +199,62 @@ export default function SandboxPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedId, fetchBranches, message]);
+  }, [selectedId, fetchBranches, message, task]);
+
+  const checkTask = useCallback(async () => {
+    if (!task || !snapshot) return;
+    const r = await fetch(
+      `/api/v1/classroom/tasks/${task.task_id}/check?playthrough_id=${snapshot.playthrough_id}`,
+    );
+    if (!r.ok) {
+      message.error('验收失败');
+      return;
+    }
+    const res: TaskCheckResult = await r.json();
+    modal.info({
+      title: `任务验收：${task.title}`,
+      width: 560,
+      content: (
+        <div>
+          <Paragraph>{res.summary}</Paragraph>
+          <Paragraph style={{ marginBottom: 8 }}>
+            <Text strong>终局合格：</Text>
+            <Tag color={res.terminal_accepted ? '#3F5F4D' : '#9F2E25'}>
+              {res.terminal_accepted ? '是' : '否'}
+            </Tag>
+          </Paragraph>
+          <Paragraph style={{ marginBottom: 8 }}>
+            <Text strong>推荐路径匹配率：</Text>
+            <Progress
+              percent={Math.round(res.recommended_match_ratio * 100)}
+              size="small"
+              strokeColor="#7A5C2E"
+            />
+          </Paragraph>
+          <Paragraph style={{ marginBottom: 8 }}>
+            <Text strong>必经命中：</Text>
+            {res.must_visit_hit.length === 0
+              ? '—'
+              : res.must_visit_hit.map((n) => (
+                  <Tag key={n} color="#3F5F4D">
+                    {n}
+                  </Tag>
+                ))}
+          </Paragraph>
+          <Paragraph>
+            <Text strong>必经缺漏：</Text>
+            {res.must_visit_miss.length === 0
+              ? '—'
+              : res.must_visit_miss.map((n) => (
+                  <Tag key={n} color="#9F2E25">
+                    {n}
+                  </Tag>
+                ))}
+          </Paragraph>
+        </div>
+      ),
+    });
+  }, [task, snapshot, message, modal]);
 
   const advance = useCallback(
     async (edgeId: string) => {
@@ -342,6 +429,38 @@ export default function SandboxPage() {
         />
       )}
 
+      {task && (
+        <Alert
+          type="warning"
+          style={{ marginBottom: 16 }}
+          message={<Space><Text strong>课堂任务：{task.title}</Text><Tag color="#7A5C2E">{task.task_id}</Tag></Space>}
+          description={
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              {task.teacher_notes && <Text>{task.teacher_notes}</Text>}
+              <Text type="secondary">
+                必经节点：{task.must_visit_nodes.length === 0 ? '—' : task.must_visit_nodes.join(' / ')} ·
+                合格终局：{task.accepted_terminals.length === 0 ? '不限' : task.accepted_terminals.join(' / ')}
+              </Text>
+              {snapshot && (
+                <Text type="secondary">
+                  进度：{task.must_visit_nodes.filter((n) => snapshot.history.includes(n)).length} /{' '}
+                  {task.must_visit_nodes.length} 必经已抵达
+                </Text>
+              )}
+              <Button
+                size="small"
+                onClick={() => {
+                  setTask(null);
+                  setSearchParams({});
+                }}
+              >
+                退出任务模式
+              </Button>
+            </Space>
+          }
+        />
+      )}
+
       {incoming && (
         <Alert
           type="success"
@@ -410,6 +529,9 @@ export default function SandboxPage() {
                   {snapshot.is_terminal ? (
                     <Space direction="vertical" style={{ width: '100%' }}>
                       <Tag color="#7A5C2E">推演已抵达终局</Tag>
+                      {task && (
+                        <Button onClick={checkTask}>验收任务</Button>
+                      )}
                       <Button
                         type="primary"
                         onClick={() => {

@@ -50,6 +50,14 @@ agent_sessions_table = Table(
     Column("updated_at", DateTime, nullable=False),
 )
 
+classroom_tasks_table = Table(
+    "classroom_tasks",
+    _METADATA,
+    Column("task_id", String, primary_key=True),
+    Column("data", Text, nullable=False),
+    Column("updated_at", DateTime, nullable=False),
+)
+
 
 def init_engine(sqlite_path: str) -> Engine:
     global _ENGINE
@@ -135,3 +143,15 @@ def save_session(sess: Any) -> None:
 
 def load_all_sessions() -> Iterable[dict]:
     return _load_all(agent_sessions_table)
+
+
+def save_task(task: Any) -> None:
+    _upsert(classroom_tasks_table, "task_id", task.task_id, task)
+
+
+def delete_task(task_id: str) -> None:
+    _delete(classroom_tasks_table, "task_id", task_id)
+
+
+def load_all_tasks() -> Iterable[dict]:
+    return _load_all(classroom_tasks_table)

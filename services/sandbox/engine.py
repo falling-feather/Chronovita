@@ -121,13 +121,18 @@ def list_branches(scenario: Scenario, node_id: str, state: dict[str, int]) -> li
 _PLAYTHROUGHS: dict[str, PlaythroughSnapshot] = {}
 
 
-def new_playthrough(scenario_id: str) -> PlaythroughSnapshot:
+def new_playthrough(scenario_id: str, preset_state: dict[str, int] | None = None) -> PlaythroughSnapshot:
     scenario = get_scenario(scenario_id)
     if scenario is None:
         raise KeyError(scenario_id)
     nodes = _node_map(scenario)
     start = nodes[scenario.start_node]
     state = {v.key: v.initial for v in scenario.state_vars}
+    if preset_state:
+        for v in scenario.state_vars:
+            if v.key in preset_state:
+                hi = (1 << v.bits) - 1
+                state[v.key] = max(0, min(hi, int(preset_state[v.key])))
     snap = PlaythroughSnapshot(
         playthrough_id=f"play_{uuid.uuid4().hex[:10]}",
         scenario_id=scenario_id,

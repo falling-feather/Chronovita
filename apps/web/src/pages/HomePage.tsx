@@ -8,6 +8,7 @@ const modules = [
   { path: '/sandbox', name: '练 · 沙盘推演', desc: '干预历史变量，于平行时空验证因果必然与偶然。' },
   { path: '/agent', name: '问 · 双模智者', desc: '历史人物同伴与考古专家无缝切换，跨时空对话。' },
   { path: '/canvas', name: '创 · 知识谱系', desc: '低代码画布编织个人知识脉络，从被动观看到主动创造。' },
+  { path: '/classroom', name: '课 · 老师预设', desc: '老师预调初始变量、必经节点与合格终局，生成任务 ID 分享学生。' },
 ];
 
 export default function HomePage() {

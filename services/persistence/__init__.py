@@ -7,6 +7,9 @@ from .db import (
     load_all_playthroughs,
     save_session,
     load_all_sessions,
+    save_task,
+    delete_task,
+    load_all_tasks,
 )
 
 __all__ = [
@@ -18,4 +21,7 @@ __all__ = [
     "load_all_playthroughs",
     "save_session",
     "load_all_sessions",
+    "save_task",
+    "delete_task",
+    "load_all_tasks",
 ]
