@@ -517,3 +517,16 @@ Mock LLM 策略：思辨派 `_thinker_compose` 模板生成开放反问，史实
 设计选择：聚合接口在服务端一次性算完热力计数，前端只做排序与展示；提交分数不存历史快照，每次重新计算（数据集小、计算简单），不引入额外存储；学生姓名走前端 sessionStorage，避免每次推演都让学生重填。
 
 验证：用同一个大禹治水任务以「小明/小红/小李」三个 student_name 各跑一遍推荐路径，`GET /classroom/tasks/{id}/submissions` 返回 `total_count=3 / accepted_count=3`，`node_visit_counts` 五节点各 ×3，`edge_traverse_counts` 四边各 ×3，`terminal_distribution` `{n_dynasty: 3}`。
+
+### v1.9.1（2026-05-04）课堂化精修
+
+落地内容：
+
+- `services/sandbox/engine.py`：新增 `reachable_nodes(scenario_id, preset_state)`——以 `(node_id, state_bits)` 为去重键的 BFS，复用既有 `_branches_cached` lru，无新增缓存
+- `apps/api/routers/classroom.py`：新增 `GET /tasks/{id}/verify` → `TaskVerifyResult`（reachable_count / total_node_count / unreachable_must_visit / unreachable_accepted_terminals / unreachable_recommended_edges / warnings / ok）
+- 前端 `ClassroomPage`：任务卡按钮组追加「预检」（弹 Modal 显示警告）「复制为模板」（回填 form 字段并打开 Drawer）
+- 前端 `SandboxPage`：任务模式下用 `task.recommended_path` 在 ReactFlow DAG 中以青色（#3F5F4D）虚线 + ★ 标注推荐边，与当前候选边（红色实线）正交不冲突
+
+设计选择：可达性算法采用状态位完整去重而非节点级去重，避免「同一节点不同状态可达不同后继」被误判为不可达；预检结果不持久化，每次现算（任务数量小、剧本变更频繁），保证与最新剧本一致。
+
+验证：对大禹治水任务 `task_5eaf0a02ea` 调用 `/verify` 返回 `reachable_count=8 / total_node_count=8 / warnings=[] / ok=true`；前端任务模式打开沙盘可见推荐边以青虚线标注。

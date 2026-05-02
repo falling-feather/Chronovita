@@ -57,6 +57,7 @@
 - [v1.7.0][2026-05-03] 多剧本拓展：sandbox 新增「商鞅变法」（9 节点 9 边）「王安石变法 · 熙宁新法」（10 节点 11 边）两条 DAG 剧本，与「大禹治水」形成「上古—战国—北宋」三段制变法/改革对照；agent corpus 增 4 条变法相关典籍（《宋史·王安石传》《临川集·本朝百年无事札子》《苏轼集·上神宗皇帝书》《续资治通鉴长编·熙宁三年》）；recall storyboard 启发式人物/建筑词扩充；前端「快速模板」下拉一键填三大剧本分镜素材
 - [v1.8.0][2026-05-03] 课堂化「老师预设」：services/classroom 引入课堂任务模型（预调初始状态、必经节点、合格终局、推荐路径）+ SQLite classroom_tasks 持久化；POST /classroom/tasks 创建并校验节点 id、GET /classroom/tasks/{id}/check 自动比对推演快照给出验收报告（终局合格/必经命中/推荐路径匹配率）；sandbox new_playthrough 支持 task_id 注入预设状态；前端新增「课 · 老师预设」页面（剧本动态表单、复选必经/合格终局、生成任务 ID 与可分享链接），SandboxPage 接收 ?task=xxx 自动加载课堂任务卡与一键验收弹窗，详见 ADR-0008
 - [v1.9.0][2026-05-03] 学生作业 · 推演记录回放：PlaythroughSnapshot 增 task_id/student_name 字段；sandbox new_playthrough/router 支持 student_name 透传；新增 GET /classroom/tasks/{id}/submissions 端点聚合所有学生 playthrough，输出节点访问/边遍历/终局分布热力与逐学生验收摘要；前端 SandboxPage 任务模式强制学生姓名，ClassroomPage 任务卡新增「作业回放」抽屉（合格率统计、节点/边热力 Top10、可展开学生路径表），详见 ADR-0009
+- [v1.9.1][2026-05-04] 课堂化精修：sandbox.engine 新增 reachable_nodes BFS（按 (节点, 状态位) 去重）；新增 GET /classroom/tasks/{id}/verify 端点输出可达节点数、不可达必经/终局/推荐边；前端 ClassroomPage 任务卡加「预检」「复制为模板」按钮（复制时回填 form 字段）；SandboxPage DAG 在任务模式下用青色虚线 + ★ 标注推荐路径边
 - _（后续追加）_
 
 ## 风险与对冲

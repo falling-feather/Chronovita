@@ -131,6 +131,60 @@ export default function ClassroomPage() {
     [message],
   );
 
+  const verifyTask = useCallback(
+    async (t: ClassroomTask) => {
+      const r = await fetch(`/api/v1/classroom/tasks/${t.task_id}/verify`);
+      if (!r.ok) {
+        message.error('预检失败');
+        return;
+      }
+      const d = await r.json();
+      modal.info({
+        title: `任务预检：${t.title}`,
+        width: 520,
+        content: (
+          <div>
+            <p>
+              可达节点：{d.reachable_count}/{d.total_node_count}
+            </p>
+            {d.ok ? (
+              <Tag color="#3F5F4D">全部预设可达，验收逻辑正常</Tag>
+            ) : (
+              <ul style={{ paddingLeft: 18, margin: 0 }}>
+                {d.warnings.map((w: string) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ),
+      });
+    },
+    [message, modal],
+  );
+
+  const cloneAsTemplate = useCallback(
+    (t: ClassroomTask) => {
+      const sc = scenarios.find((s) => s.scenario_id === t.scenario_id);
+      if (!sc) {
+        message.error('原剧本不存在，无法复制');
+        return;
+      }
+      setScenario(sc);
+      setOpen(true);
+      form.setFieldsValue({
+        title: `${t.title} · 副本`,
+        scenario_id: t.scenario_id,
+        teacher_notes: t.teacher_notes,
+        preset_state: { ...t.preset_state },
+        must_visit_nodes: [...t.must_visit_nodes],
+        accepted_terminals: [...t.accepted_terminals],
+        recommended_path: [...t.recommended_path],
+      });
+    },
+    [scenarios, form, message],
+  );
+
   const refresh = useCallback(async () => {
     const r = await fetch('/api/v1/classroom/tasks');
     if (r.ok) setTasks(await r.json());
@@ -256,6 +310,12 @@ export default function ClassroomPage() {
                 }
                 extra={
                   <Space>
+                    <Button size="small" onClick={() => verifyTask(t)}>
+                      预检
+                    </Button>
+                    <Button size="small" onClick={() => cloneAsTemplate(t)}>
+                      复制为模板
+                    </Button>
                     <Button size="small" onClick={() => openReplay(t)}>
                       作业回放
                     </Button>

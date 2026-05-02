@@ -205,3 +205,30 @@ def hydrate_from_db() -> int:
         _PLAYTHROUGHS[snap.playthrough_id] = snap
         count += 1
     return count
+
+
+def reachable_nodes(scenario_id: str, preset_state: dict[str, int] | None = None) -> set[str]:
+    scenario = get_scenario(scenario_id)
+    if scenario is None:
+        return set()
+    init_state = {v.key: v.initial for v in scenario.state_vars}
+    if preset_state:
+        for v in scenario.state_vars:
+            if v.key in preset_state:
+                hi = (1 << v.bits) - 1
+                init_state[v.key] = max(0, min(hi, int(preset_state[v.key])))
+    visited: set[tuple[str, int]] = set()
+    reachable_node_ids: set[str] = set()
+    start_bits = encode_state(scenario, init_state)
+    queue: list[tuple[str, int]] = [(scenario.start_node, start_bits)]
+    while queue:
+        node_id, bits = queue.pop()
+        if (node_id, bits) in visited:
+            continue
+        visited.add((node_id, bits))
+        reachable_node_ids.add(node_id)
+        for branch in _branches_cached(scenario_id, node_id, bits):
+            target_bits = encode_state(scenario, branch.state_after)
+            if (branch.target_node_id, target_bits) not in visited:
+                queue.append((branch.target_node_id, target_bits))
+    return reachable_node_ids

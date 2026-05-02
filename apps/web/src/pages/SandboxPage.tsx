@@ -388,23 +388,28 @@ export default function SandboxPage() {
 
   const flowEdges: Edge[] = useMemo(() => {
     if (!scenario) return [];
+    const recSet = new Set(task?.recommended_path ?? []);
     return scenario.edges.map((e) => {
       const isOption = branchEdgeIds.has(e.edge_id);
+      const isRec = recSet.has(e.edge_id);
+      const stroke = isOption ? '#9F2E25' : isRec ? '#3F5F4D' : '#D9C9A8';
+      const width = isOption ? 2 : isRec ? 2 : 1;
       return {
         id: e.edge_id,
         source: e.from_node,
         target: e.to_node,
-        label: e.label,
+        label: isRec ? `${e.label} ★` : e.label,
         animated: isOption,
         style: {
-          stroke: isOption ? '#9F2E25' : '#D9C9A8',
-          strokeWidth: isOption ? 2 : 1,
+          stroke,
+          strokeWidth: width,
+          strokeDasharray: isRec && !isOption ? '6 3' : undefined,
         },
         labelStyle: { fill: '#1F1B17', fontSize: 10 },
         labelBgStyle: { fill: '#F3EBDD', opacity: 0.85 },
       };
     });
-  }, [scenario, branchEdgeIds]);
+  }, [scenario, branchEdgeIds, task]);
 
   return (
     <div>

@@ -14,7 +14,7 @@ from services.classroom import (
     get_task,
     list_tasks,
 )
-from services.sandbox import get_playthrough, get_scenario, list_playthroughs_by_task
+from services.sandbox import get_playthrough, get_scenario, list_playthroughs_by_task, reachable_nodes
 
 router = APIRouter()
 
@@ -92,6 +92,55 @@ async def fetch(task_id: str) -> ClassroomTask:
     if task is None:
         raise HTTPException(status_code=404, detail="任务不存在")
     return task
+
+
+class TaskVerifyResult(BaseModel):
+    task_id: str
+    scenario_id: str
+    reachable_count: int
+    total_node_count: int
+    unreachable_must_visit: list[str]
+    unreachable_accepted_terminals: list[str]
+    unreachable_recommended_edges: list[str]
+    warnings: list[str]
+    ok: bool
+
+
+@router.get("/tasks/{task_id}/verify", response_model=TaskVerifyResult, summary="任务静态可达性校验")
+async def verify(task_id: str) -> TaskVerifyResult:
+    task = get_task(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    sc = get_scenario(task.scenario_id)
+    if sc is None:
+        raise HTTPException(status_code=404, detail="剧本不存在")
+    reach = reachable_nodes(task.scenario_id, task.preset_state)
+    bad_must = [n for n in task.must_visit_nodes if n not in reach]
+    bad_term = [n for n in task.accepted_terminals if n not in reach]
+    edge_map = {e.edge_id: e for e in sc.edges}
+    bad_edges: list[str] = []
+    for eid in task.recommended_path:
+        e = edge_map.get(eid)
+        if e is None or e.from_node not in reach:
+            bad_edges.append(eid)
+    warnings: list[str] = []
+    if bad_must:
+        warnings.append(f"必经节点不可达：{', '.join(bad_must)}")
+    if bad_term:
+        warnings.append(f"合格终局不可达：{', '.join(bad_term)}")
+    if bad_edges:
+        warnings.append(f"推荐边起点不可达：{', '.join(bad_edges)}")
+    return TaskVerifyResult(
+        task_id=task.task_id,
+        scenario_id=task.scenario_id,
+        reachable_count=len(reach),
+        total_node_count=len(sc.nodes),
+        unreachable_must_visit=bad_must,
+        unreachable_accepted_terminals=bad_term,
+        unreachable_recommended_edges=bad_edges,
+        warnings=warnings,
+        ok=not warnings,
+    )
 
 
 @router.delete("/tasks/{task_id}", summary="删除任务")
