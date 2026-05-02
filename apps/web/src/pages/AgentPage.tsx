@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { takeSandboxToAgent, setAgentToCanvas } from '../bridge';
 import {
   Alert,
   App,
@@ -58,6 +60,7 @@ const PERSONA_COLOR: Record<string, string> = {
 
 export default function AgentPage() {
   const { message } = App.useApp();
+  const navigate = useNavigate();
   const [topic, setTopic] = useState('大禹治水的功过');
   const [session, setSession] = useState<DialogueSession | null>(null);
   const [question, setQuestion] = useState('');
@@ -67,7 +70,18 @@ export default function AgentPage() {
   const [pendingCitations, setPendingCitations] = useState<Citation[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeCitations, setActiveCitations] = useState<Citation[]>([]);
+  const [incomingKeywords, setIncomingKeywords] = useState<string[]>([]);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const p = takeSandboxToAgent();
+    if (p) {
+      setTopic(p.scenario_title);
+      setQuestion(p.ending_summary + '\n请两位先生评议此终局得失。');
+      setIncomingKeywords(p.keywords);
+      message.info(`已接收练模块推演终局：${p.scenario_title}，请点击「开启会话」`);
+    }
+  }, [message]);
 
   const startSession = useCallback(async () => {
     if (!topic.trim()) {
@@ -202,9 +216,48 @@ export default function AgentPage() {
           开启 / 重置会话
         </Button>
         {session && <Tag color="#3F5F4D">会话 {session.session_id}</Tag>}
+        {(thinkerBuf || historianBuf) && !streaming && (
+          <Button
+            onClick={() => {
+              const allCites = [
+                ...pendingCitations,
+                ...(session?.messages.flatMap((m) => m.citations) ?? []),
+              ];
+              const seen = new Set<string>();
+              const cites = allCites
+                .filter((c) => {
+                  if (seen.has(c.source_id)) return false;
+                  seen.add(c.source_id);
+                  return true;
+                })
+                .map((c) => ({ title: c.title, excerpt: c.excerpt }));
+              setAgentToCanvas({
+                topic,
+                thinker_text: thinkerBuf,
+                historian_text: historianBuf,
+                citations: cites,
+              });
+              message.success('已携带双派论述与引证沉淀至「创 · 知识谱系」');
+              navigate('/canvas');
+            }}
+          >
+            沉淀为创模块谱系 →
+          </Button>
+        )}
       </Space>
 
       {!session && <Alert type="warning" message="请先点击「开启会话」" showIcon style={{ marginBottom: 12 }} />}
+
+      {incomingKeywords.length > 0 && (
+        <Alert
+          type="success"
+          style={{ marginBottom: 12 }}
+          message="来自练模块的推演关键词"
+          description={incomingKeywords.map((k) => <Tag key={k} color="#7A5C2E">{k}</Tag>)}
+          closable
+          onClose={() => setIncomingKeywords([])}
+        />
+      )}
 
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={12}>

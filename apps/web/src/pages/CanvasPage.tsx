@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { takeAgentToCanvas } from '../bridge';
 import {
   App,
   Button,
@@ -99,6 +100,64 @@ export default function CanvasPage() {
   useEffect(() => {
     fetchBoards();
   }, [fetchBoards]);
+
+  useEffect(() => {
+    const p = takeAgentToCanvas();
+    if (!p) return;
+    (async () => {
+      const r = await fetch('/api/v1/canvas/boards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: `论辩沉淀 · ${p.topic}`,
+          summary: '由问模块双派论述与典籍引证一键沉淀',
+          seed: false,
+        }),
+      });
+      if (!r.ok) {
+        message.error('沉淀谱系创建失败');
+        return;
+      }
+      const board: CanvasBoard = await r.json();
+      const bid = board.board_id;
+      const addNode = async (kind: string, label: string, detail: string) => {
+        const rr = await fetch(`/api/v1/canvas/boards/${bid}/nodes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind, label, detail, period: '', x: 0, y: 0 }),
+        });
+        return rr.ok ? ((await rr.json()) as CanvasNode) : null;
+      };
+      const topicNode = await addNode('concept', p.topic.slice(0, 40), p.topic);
+      const thinkerNode = await addNode('concept', '思辨派', p.thinker_text.slice(0, 400));
+      const historianNode = await addNode('figure', '史实派', p.historian_text.slice(0, 400));
+      const citeNodes = [];
+      for (const c of p.citations.slice(0, 6)) {
+        const n = await addNode('policy', c.title.slice(0, 40), c.excerpt);
+        if (n) citeNodes.push(n);
+      }
+      const link = async (src: string, tgt: string, label: string) => {
+        await fetch(`/api/v1/canvas/boards/${bid}/edges`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source_id: src, target_id: tgt, label }),
+        });
+      };
+      if (topicNode && thinkerNode) await link(topicNode.node_id, thinkerNode.node_id, '辩');
+      if (topicNode && historianNode) await link(topicNode.node_id, historianNode.node_id, '证');
+      for (const cn of citeNodes) {
+        if (historianNode) await link(historianNode.node_id, cn.node_id, '引');
+      }
+      await fetch(`/api/v1/canvas/boards/${bid}/layout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ algorithm: 'layered' }),
+      });
+      await refreshActive(bid);
+      await fetchBoards();
+      message.success(`已沉淀「${p.topic}」论辩谱系`);
+    })();
+  }, [fetchBoards, refreshActive, message]);
 
   const createBoard = useCallback(async () => {
     const v = await createForm.validateFields();

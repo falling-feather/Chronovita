@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { setRecallToSandbox } from '../bridge';
 import {
   Alert,
   App,
@@ -94,6 +96,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function RecallPage() {
   const { message } = App.useApp();
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [storyboard, setStoryboard] = useState<Storyboard | null>(null);
@@ -238,6 +241,25 @@ export default function RecallPage() {
                   <Tag color="gold">{storyboard.style}</Tag>
                   <Button type="primary" onClick={onSubmitRender}>
                     提交渲染
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const values = form.getFieldsValue();
+                      const keywords = String(values.keywords ?? '')
+                        .split(/[,，、\s]+/)
+                        .map((s: string) => s.trim())
+                        .filter(Boolean);
+                      setRecallToSandbox({
+                        chapter_id: values.chapter_id,
+                        title: values.title,
+                        keywords,
+                        history_context: values.history_context,
+                      });
+                      message.success('已携带分镜素材跳往「练 · 沙盘推演」');
+                      navigate('/sandbox');
+                    }}
+                  >
+                    送入练模块 →
                   </Button>
                 </Space>
               )

@@ -439,3 +439,17 @@ Mock LLM 策略：思辨派 `_thinker_compose` 模板生成开放反问，史实
 布局策略：layered 走 BFS 层级，节点按 (layer×240, col×120) 网格排布；radial 取度数最大节点为中心，余者按等角分布在半径 260 圆上。
 
 导出策略：JSON 即 `model_dump`，Markdown 按节点类型分组 + 关系段落，Mermaid 输出 `graph LR`。三种均通过 `Content-Disposition: attachment` 触发浏览器下载。
+
+### v1.5.0（2026-05-03）看练问创全链路联调
+
+落地内容：
+
+- `apps/web/src/bridge.ts`：sessionStorage 桥模块，三段载荷类型（RecallToSandbox / SandboxToAgent / AgentToCanvas）+ set/take 一对 API（take 后即清）
+- RecallPage：分镜生成后追加「送入练模块 →」按钮，携带 chapter_id / title / keywords / history_context
+- SandboxPage：useEffect 接收看模块素材并 alert 提示；终局节点新增「送入问模块 →」，携带 scenario_title / ending_summary / keywords
+- AgentPage：自动设置 topic 与预填问题；双派输出后追加「沉淀为创模块谱系 →」，携带 topic / 双派文本 / 引证去重列表
+- CanvasPage：useEffect 自动 POST 创建谱系，依次 upsert 议题/思辨派/史实派/引证节点并按「辩 / 证 / 引」连边，最后调用 layered 布局
+- HomePage：追加 v1.5.0 全链路引导 Steps 卡片
+- `docs/adr/ADR-0006-看练问创全链路联调.md`：决策记录
+
+关键约束：桥接全部走前端 sessionStorage，不新增后端 API；引证按 source_id 去重并截至前 6 条避免画布过密。

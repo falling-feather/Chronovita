@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { takeRecallToSandbox, setSandboxToAgent } from '../bridge';
 import {
   Alert,
   App,
@@ -107,6 +109,7 @@ function describeValue(v: StateVar, value: number): string {
 
 export default function SandboxPage() {
   const { message } = App.useApp();
+  const navigate = useNavigate();
 
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -114,6 +117,15 @@ export default function SandboxPage() {
   const [snapshot, setSnapshot] = useState<PlaythroughSnapshot | null>(null);
   const [branches, setBranches] = useState<BranchOption[]>([]);
   const [loading, setLoading] = useState(false);
+  const [incoming, setIncoming] = useState<{ title: string; keywords: string[] } | null>(null);
+
+  useEffect(() => {
+    const p = takeRecallToSandbox();
+    if (p) {
+      setIncoming({ title: p.title, keywords: p.keywords });
+      message.info(`已接收看模块素材：${p.title}`);
+    }
+  }, [message]);
 
   useEffect(() => {
     fetch('/api/v1/sandbox/scenarios')
@@ -330,6 +342,17 @@ export default function SandboxPage() {
         />
       )}
 
+      {incoming && (
+        <Alert
+          type="success"
+          style={{ marginBottom: 16 }}
+          message={`来自看模块的素材：${incoming.title}`}
+          description={`关键词：${incoming.keywords.join(' / ')}（已记录，将在送入问模块时一并携带）`}
+          closable
+          onClose={() => setIncoming(null)}
+        />
+      )}
+
       <Spin spinning={loading}>
         <Card title="DAG 史脉图（红=当前，赭=可选分支，墨=已访问，黑=终局）" style={{ marginBottom: 16 }}>
           <div style={{ height: 340, background: '#FBF6EC', border: '1px solid #D9C9A8', borderRadius: 4 }}>
@@ -385,7 +408,27 @@ export default function SandboxPage() {
                   <Paragraph>{snapshot.current_narrative}</Paragraph>
                   <Divider orientation="left" plain>候选分支</Divider>
                   {snapshot.is_terminal ? (
-                    <Tag color="#7A5C2E">推演已抵达终局</Tag>
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <Tag color="#7A5C2E">推演已抵达终局</Tag>
+                      <Button
+                        type="primary"
+                        onClick={() => {
+                          if (!scenario || !snapshot) return;
+                          const kws = incoming?.keywords?.length
+                            ? incoming.keywords
+                            : Array.from(new Set([scenario.title, snapshot.current_node_title]));
+                          setSandboxToAgent({
+                            scenario_title: scenario.title,
+                            ending_summary: `${snapshot.current_node_title}：${snapshot.current_narrative}`,
+                            keywords: kws,
+                          });
+                          message.success('已携带推演终局送往「问 · 双模智者」');
+                          navigate('/agent');
+                        }}
+                      >
+                        送入问模块 →
+                      </Button>
+                    </Space>
                   ) : branches.length === 0 ? (
                     <Empty description="当前状态下无可行分支" />
                   ) : (

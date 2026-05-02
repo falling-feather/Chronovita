@@ -1,4 +1,4 @@
-import { Card, Col, Row, Typography } from 'antd';
+import { Card, Col, Row, Steps, Typography } from 'antd';
 import { Link } from 'react-router-dom';
 
 const { Title, Paragraph } = Typography;
@@ -30,6 +30,25 @@ export default function HomePage() {
           </Col>
         ))}
       </Row>
+
+      <div className="chrono-divider" />
+      <Card title={<span className="chrono-title">v1.5.0 · 全链路引导</span>} style={{ background: '#FBF6EC' }}>
+        <Paragraph>
+          四模块已贯通会话桥，按下列次序游历可一键串联整段课堂：
+        </Paragraph>
+        <Steps
+          direction="horizontal"
+          size="small"
+          current={-1}
+          items={[
+            { title: '看', description: '生成分镜后点「送入练模块」' },
+            { title: '练', description: '推演至终局后点「送入问模块」' },
+            { title: '问', description: '获得双派论述后点「沉淀为创模块谱系」' },
+            { title: '创', description: '自动生成论辩谱系节点与引证' },
+          ]}
+        />
+      </Card>
     </div>
   );
 }
+
