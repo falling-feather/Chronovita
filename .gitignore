@@ -1,0 +1,70 @@
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+.pnpm-store/
+.turbo/
+.cache/
+.parcel-cache/
+.next/
+out/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.eggs/
+*.egg-info/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 环境变量与本地配置
+.env
+.env.*
+!.env.example
+
+# 日志
+*.log
+logs/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 编辑器与系统
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.recommended.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# 本地数据库与媒体大文件
+*.sqlite
+*.sqlite3
+*.db
+data/
+storage/
+uploads/
+*.mp4
+*.mov
+*.mkv
+*.psd
+*.ai
+
+# 任务队列与缓存数据卷
+.pgdata/
+.redisdata/
+.chroma/
+.minio/

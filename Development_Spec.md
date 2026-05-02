@@ -1,0 +1,368 @@
+# Chronovita 开发文档 · Development Specification
+
+> 本文是 Chronovita 项目最权威、最详尽的工程级开发说明。所有研发活动以本文为单一信源（Single Source of Truth），任何与本文冲突的实现均视为缺陷。
+
+---
+
+## 目录
+
+- 1. 文档分级结构
+- 2. 系统总体架构
+- 3. 业务模块详解
+- 4. 数据模型设计
+- 5. 前后端接口契约
+- 6. 核心待实现功能模块
+- 7. GenAI 工作流与算法设计
+- 8. 短期项目研发规划
+- 9. 编码与提交规范
+- 10. 测试与质量保证
+- 11. 安全与合规
+
+---
+
+## 1. 文档分级结构
+
+| 层级 | 文档 | 受众 | 更新频率 |
+| --- | --- | --- | --- |
+| 顶层 | [README.md](README.md) | 所有人 | 按版本 |
+| 顶层 | [Roadmap.md](Roadmap.md) | 项目管理 / 教师 / 投资方 | 每月 |
+| 顶层 | Development_Spec.md（本文） | 全体研发 | 每次中版本递增 |
+| 总规划 | [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md) | 全体研发 | 每次大决策 |
+| 决策记录 | docs/adr/ADR-XXXX.md | 架构师 | 每次架构决策 |
+| 接口契约 | apps/api/openapi.yaml（自动生成） | 前后端联调 | 每次接口变更 |
+| 数据迁移 | apps/api/alembic/versions/ | 后端 / DBA | 每次模型变更 |
+
+## 2. 系统总体架构
+
+### 2.1 部署拓扑
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────────────┐
+│   浏览器    │ <-> │  Nginx 反代 │ <-> │  apps/web (静态)    │
+│  React SPA  │     └─────────────┘     └─────────────────────┘
+└─────────────┘             │
+        │                   v
+        │           ┌──────────────────┐    ┌──────────────────┐
+        └---WS---->│   apps/api       │<-> │  Postgres 主库   │
+                   │   FastAPI        │    └──────────────────┘
+                   │                  │    ┌──────────────────┐
+                   │                  │<-> │  Redis 缓存/队列 │
+                   │                  │    └──────────────────┘
+                   │                  │    ┌──────────────────┐
+                   │                  │<-> │  Chroma 向量库   │
+                   └──────────────────┘    └──────────────────┘
+                            │
+            ┌───────────────┼─────────────────┐
+            v               v                 v
+   ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐
+   │ services/    │ │ services/    │ │ services/canvas  │
+   │ recall(GenAI)│ │ sandbox(DAG) │ │ services/agent   │
+   └──────────────┘ └──────────────┘ └──────────────────┘
+```
+
+### 2.2 技术栈选型
+
+| 层 | 选型 | 理由 |
+| --- | --- | --- |
+| 前端框架 | React 18 + Vite 5 + TypeScript 5 | 生态成熟、HMR 快、类型安全 |
+| 前端 UI | Ant Design 5 + 中式 token 定制 | 加速 MVP，保留视觉自由度 |
+| 前端状态 | Zustand | 轻量、无样板 |
+| 前端路由 | React Router 6 | 与 Vite 配合最佳 |
+| 前端字体 | 思源宋体 / 霞鹜文楷 | 中式古典调性 |
+| 后端框架 | FastAPI 0.115+ | 异步、自带 OpenAPI、Pydantic v2 |
+| ORM | SQLAlchemy 2.0 + Alembic | 业界标准，迁移可控 |
+| 数据校验 | Pydantic v2 | 与 FastAPI 原生集成 |
+| 关系库 | PostgreSQL 16 | JSONB 支持，与历史叙事数据契合 |
+| 缓存与队列 | Redis 7 + Celery | 异步视频生成任务 |
+| 向量库 | Chroma（短期） → Milvus（中期） | 轻量起步，后续切换 |
+| 容器 | Docker Compose（开发）+ K8s（远期） | 渐进式部署 |
+| Python 版本 | 3.12（强制） | 规避 3.14 与 pydantic-core/orjson Rust 编译问题 |
+
+### 2.3 服务划分
+
+| 服务 | 职责 | 主要依赖 |
+| --- | --- | --- |
+| `apps/api` | HTTP/WS 入口、鉴权、路由分发 | FastAPI |
+| `services/recall` | 看 · GenAI 视频生成工作流编排 | Celery, Stable Diffusion, AnimateDiff, TTS |
+| `services/sandbox` | 练 · DAG 因果推演引擎 | NetworkX, 自研状压 DP |
+| `services/agent` | 问 · 双模态智能体 + RAG | Chroma, LangChain（可选）, ASR/TTS |
+| `services/canvas` | 创 · 知识谱系画布数据服务 | SQLAlchemy |
+
+## 3. 业务模块详解
+
+### 3.1 看 · 沉浸式叙事生成
+
+工作流：
+
+```
+课程章节关键词
+  ↓ 历史文本解析（LLM + 规则）
+分镜脚本（JSON）
+  ↓ 关键帧 Prompt 构造（Prompt 链）
+ControlNet 约束（服饰/建筑/器物风格）
+  ↓ Stable Diffusion 出图
+关键帧序列
+  ↓ AnimateDiff 插帧
+动态片段
+  ↓ TTS 声线克隆 + BGM
+最终微视频（mp4）
+```
+
+输出：每章节 60–120 秒微视频，分辨率 1280x720，码率 ≤ 2 Mbps。
+
+### 3.2 练 · 沙盘推演
+
+数据结构：
+
+- DAG 节点：历史关键节点（事件/抉择点），含 `state_vars`（核心参量字典，如劳动力、地形、粮仓）。
+- DAG 边：因果转移，含触发条件 `condition` 与转移函数 `transition`。
+- 状态压缩：核心参量取值集合编码为 bitmask，`dp[bitmask] = 当前最优后续历史链`。
+- LLM 仅在转移函数边缘负责文本生成，逻辑骨架由代码保证可重放。
+- RAG 校验：每次状态转移生成的叙事先入向量库检索权威史料，相似度 < 阈值则回退至预置兜底剧本。
+
+首发剧本：「大禹治水」，参量包含劳动力 ∈ {寡, 中, 众}、地形 ∈ {高, 中, 低}、治水策略 ∈ {堵, 疏, 混}。
+
+### 3.3 问 · 双模态智能体
+
+- 同伴（Companion）模式：扮演同时代历史人物，使用方言化口语、降低认知门槛。
+- 专家（Expert）模式：扮演考古/史学专家，使用学术语言、补充文献出处。
+- 双 Persona 通过系统提示模板与温度参数差异化实现。
+- 防幻觉三层：
+  1. RAG 召回（top-k=8）+ rerank（cross-encoder）
+  2. 规则正则与黑名单过滤（朝代年份、人物关系等结构化校验）
+  3. 轻量级审核模型二次确认（关键事实绑定到知识库 ID）
+- 语音通道：浏览器端 WebRTC → 服务端 ASR（Whisper）→ LLM → TTS → WebSocket 推流。
+
+### 3.4 创 · 知识谱系
+
+- 复用团队既有「理科实验室互动网站」的节点渲染引擎，前端以 ReactFlow 包装。
+- 学习卡片来源：四模块交互行为日志聚合后由 LLM 抽取要点。
+- 自动布局：基于力导向 + 时间轴双视图。
+- 导出：PNG / JSON / Markdown。
+- 行为数据反哺：路径长度、决策正确率、问答深度入参用于教学评估模型。
+
+## 4. 数据模型设计
+
+> Pydantic v2 + SQLAlchemy 2.0；表名小写下划线；主键统一 UUIDv7。
+
+### 4.1 通用
+
+- `users(id, name, role[student|teacher|admin], school, created_at)`
+- `courses(id, title, dynasty, grade_level, syllabus_json)`
+- `chapters(id, course_id, ord, title, summary, keywords)`
+
+### 4.2 看
+
+- `recall_jobs(id, chapter_id, status, prompt_chain_json, controlnet_config_json, video_url, error)`
+- `recall_assets(id, job_id, kind[keyframe|clip|audio], url, meta_json)`
+
+### 4.3 练
+
+- `sandbox_dags(id, chapter_id, name, version, graph_json)`
+- `sandbox_sessions(id, user_id, dag_id, current_node_id, state_vars_json, score)`
+- `sandbox_decisions(id, session_id, node_id, choice_json, generated_narrative, rag_score, created_at)`
+
+### 4.4 问
+
+- `agent_personas(id, kind[companion|expert], name, era, system_prompt, voice_model)`
+- `agent_sessions(id, user_id, persona_id, started_at)`
+- `agent_messages(id, session_id, role[user|assistant], content, audio_url, citations_json, created_at)`
+
+### 4.5 创
+
+- `canvas_boards(id, user_id, title, layout_json, updated_at)`
+- `canvas_nodes(id, board_id, kind[card|note|media], data_json, x, y)`
+- `canvas_edges(id, board_id, source_id, target_id, label)`
+
+### 4.6 评价
+
+- `eval_metrics(id, user_id, course_id, dim[participation|mastery|satisfaction], value, captured_at)`
+
+## 5. 前后端接口契约
+
+> 全部接口 base path：`/api/v1`。响应统一信封：`{ "code": 0, "data": ..., "message": "" }`。错误使用标准 HTTP 状态码 + `code` 子码。
+
+### 5.1 通用
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| POST | `/auth/login` | 账号登录，返回 JWT |
+| GET | `/users/me` | 当前用户信息 |
+| GET | `/courses` | 课程列表 |
+| GET | `/courses/{id}/chapters` | 章节列表 |
+
+### 5.2 看 · recall
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| POST | `/recall/storyboard` | 文本 → 分镜脚本 |
+| POST | `/recall/render` | 分镜 → 提交渲染任务 |
+| GET | `/recall/jobs/{id}` | 渲染任务状态与产物 |
+| GET | `/recall/assets/{id}` | 单一资源元信息 |
+
+### 5.3 练 · sandbox
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| POST | `/sandbox/sessions` | 开启沙盘会话（指定 DAG） |
+| GET | `/sandbox/sessions/{sid}` | 会话当前状态 |
+| GET | `/sandbox/sessions/{sid}/dag` | 当前 DAG 可视化数据 |
+| POST | `/sandbox/sessions/{sid}/decision` | 学生输入决策变量 |
+| POST | `/sandbox/sessions/{sid}/rewind` | 回到上一节点 |
+| GET | `/sandbox/sessions/{sid}/timeline` | 推演时间轴回放 |
+
+### 5.4 问 · agent
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/agent/personas` | 可用 persona 列表（按朝代/角色筛选） |
+| POST | `/agent/sessions` | 开启对话（mode=companion\|expert） |
+| POST | `/agent/sessions/{sid}/message` | 文本消息 |
+| WS | `/ws/agent/{sid}` | 实时语音通道（双向） |
+| POST | `/agent/sessions/{sid}/switch` | 切换 persona |
+
+### 5.5 创 · canvas
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/canvas/boards` | 我的画布列表 |
+| POST | `/canvas/boards` | 新建画布 |
+| GET | `/canvas/boards/{cid}` | 画布详情 |
+| POST | `/canvas/boards/{cid}/nodes` | 新增节点 |
+| PATCH | `/canvas/boards/{cid}/nodes/{nid}` | 更新节点 |
+| POST | `/canvas/boards/{cid}/edges` | 新增连线 |
+| GET | `/canvas/boards/{cid}/export` | 导出（query: format=png\|json\|md） |
+
+### 5.6 评价
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/eval/users/{uid}/summary` | 学生综合评估 |
+| GET | `/eval/courses/{cid}/dashboard` | 教师仪表盘 |
+
+## 6. 核心待实现功能模块
+
+| 序号 | 模块 | 优先级 | 负责服务 | 预计版本 |
+| --- | --- | --- | --- | --- |
+| F-01 | 文本 → 分镜 Prompt 链 | P0 | recall | v1.1.0 |
+| F-02 | ControlNet 约束器（服饰/建筑/器物） | P0 | recall | v1.1.0 |
+| F-03 | AnimateDiff 插帧与拼接 | P0 | recall | v1.1.0 |
+| F-04 | 声线克隆 TTS | P1 | recall | v1.1.0 |
+| F-05 | DAG 数据模型与图编辑器 | P0 | sandbox | v1.2.0 |
+| F-06 | 状态压缩 DP 推演内核 | P0 | sandbox | v1.2.0 |
+| F-07 | LLM 转移函数生成器 | P0 | sandbox | v1.2.0 |
+| F-08 | RAG 史实校验与兜底 | P0 | sandbox | v1.2.0 |
+| F-09 | 双 Persona 系统提示库 | P0 | agent | v1.3.0 |
+| F-10 | 防幻觉三层管线 | P0 | agent | v1.3.0 |
+| F-11 | 实时语音 WebSocket 通道 | P1 | agent | v1.3.0 |
+| F-12 | 知识谱系节点渲染引擎迁移 | P0 | canvas | v1.4.0 |
+| F-13 | 画布自动布局算法 | P1 | canvas | v1.4.0 |
+| F-14 | 量化教学评估模型 v1 | P1 | api | v1.5.0 |
+
+## 7. GenAI 工作流与算法设计
+
+### 7.1 看 · Prompt 链
+
+```
+[章节关键词] → [历史背景检索] → [分镜大纲生成] → [镜头细化 Prompt]
+                                                    ↓
+                                         [ControlNet 风格约束]
+                                                    ↓
+                                              [SD 关键帧]
+                                                    ↓
+                                          [AnimateDiff 插帧]
+                                                    ↓
+                                          [TTS + BGM 合成]
+```
+
+### 7.2 练 · DAG 状压 DP
+
+```python
+# 伪代码（实际实现不写注释）
+state_bits = encode(state_vars)
+if (node_id, state_bits) in cache:
+    return cache[(node_id, state_bits)]
+candidates = []
+for edge in dag.out_edges(node_id):
+    if edge.condition(state_vars):
+        next_state = edge.transition(state_vars)
+        narrative = llm.generate(edge.template, next_state)
+        if rag.validate(narrative).score < THRESHOLD:
+            narrative = edge.fallback_narrative
+        candidates.append((edge, next_state, narrative))
+cache[(node_id, state_bits)] = candidates
+return candidates
+```
+
+### 7.3 问 · 防幻觉三层
+
+```
+用户问句
+  ↓
+RAG 召回（Chroma top-k=8） + Rerank（bge-reranker）
+  ↓
+LLM 生成（system prompt 绑定 persona）
+  ↓
+规则过滤：朝代年份正则、人物关系黑名单
+  ↓
+轻量审核模型：判定关键事实是否落在知识库 ID 集合内
+  ↓
+返回（带引用 ID）
+```
+
+### 7.4 创 · 自动布局
+
+- 力导向（D3-force）+ 时间轴对齐双视图。
+- 用户拖拽优先级最高，算法在剩余自由度内重排。
+
+## 8. 短期项目研发规划
+
+| 周次 | 任务 | 验收标准 |
+| --- | --- | --- |
+| W1（2026-05-04 ~ 05-10） | 仓库骨架、文档、设计稿占位 | v1.0.0 提交、CI 跑通 |
+| W2 ~ W4 | 看模块 Prompt 链、ControlNet 接入 | 单章节可生成 60s 微视频 |
+| W5 ~ W6 | 练模块 DAG 编辑器、首发「大禹治水」 | 学生可完成一次完整推演 |
+| W7 ~ W8 | 问模块双 Persona、RAG 三层 | 关键事实零幻觉抽样验证 |
+| W9 ~ W10 | 创模块画布迁移、自动布局 | 学生可生成并导出谱系图 |
+| W11 ~ W12 | 全链路联调、教师试用 | E2E 无阻塞、教师认可度 ≥ 80% |
+
+## 9. 编码与提交规范
+
+### 9.1 代码风格
+
+- **不写注释**：代码自解释优先；命名表达意图；复杂逻辑拆函数。
+- 前端遵循 ESLint + Prettier 默认；后端遵循 Ruff + Black 默认。
+- 全部 UI 文案使用纯中文，禁止中英文混排。
+
+### 9.2 Git 提交
+
+- 提交信息：`v大版本.中版本.小版本 - 中文版本说明`
+- 微小修复合入下一次正式提交，不单独成行
+- 中版本递增时合并相关分支历史；主干仅保留中/大版本节点
+- 历史整理前先建备份分支，使用 `git push --force-with-lease`
+- 中文提交信息一律 `git commit -F message.txt`（UTF-8 无 BOM），避免 PowerShell 管道编码丢失
+
+### 9.3 分支模型
+
+- `main`：主干，仅中/大版本提交
+- `feature/<模块>-<简述>`：功能分支，完成后合并并清理
+- `release/<vX.Y.Z>`：发布前冻结分支
+- `hotfix/<vX.Y.Z>`：紧急修复
+
+## 10. 测试与质量保证
+
+| 层 | 工具 | 覆盖目标 |
+| --- | --- | --- |
+| 前端单测 | Vitest + Testing Library | 关键组件、Hooks |
+| 前端 E2E | Playwright | 看-练-问-创核心流程 |
+| 后端单测 | pytest + pytest-asyncio | 服务层、算法层 |
+| 后端集成 | pytest + httpx | 全部 API 契约 |
+| 算法基准 | pytest-benchmark | 状压 DP 推演耗时 |
+| 史实校验 | 自研评测集 | 1000 条历史问答的 RAG 命中率 |
+
+## 11. 安全与合规
+
+- OWASP Top 10：参数化查询（SQLAlchemy）、CSRF token、XSS 转义、JWT 短时效 + Refresh
+- LLM 输入过滤：禁止越狱 Prompt 注入到 system prompt
+- 教育数据：学生未成年信息脱敏存储，遵循《个人信息保护法》
+- 文化合规：历史叙事内容禁止偏离主流史观；敏感朝代过渡（如近现代）由人工审稿

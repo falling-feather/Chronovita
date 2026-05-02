@@ -1,0 +1,21 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background-color: #f3ebdd;
+  color: #1f1b17;
+  font-family: '霞鹜文楷', 'Noto Serif SC', '宋体', serif;
+}
+
+.chrono-title {
+  font-family: 'Noto Serif SC', '宋体', serif;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+
+.chrono-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d9c9a8, transparent);
+  margin: 16px 0;
+}
