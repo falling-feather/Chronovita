@@ -426,3 +426,16 @@ ControlNet 信号按场景特征动态组装：人物 → pose；建筑 → line
 流式协议：`text/event-stream` + `data: {json}\n\n` + `event: end` 收尾；前端 `fetch` + `ReadableStream` 解析，逐字渲染并按 `persona` 分流到左右栏。
 
 Mock LLM 策略：思辨派 `_thinker_compose` 模板生成开放反问，史实派 `_historian_compose` 拼接 `search_corpus` 命中典籍片段。后续 v1.4.x 替换为真实 LLM 时，仅替换 `compose` + `search` 两层，SSE 协议与前端不变。
+
+### v1.4.0（2026-05-03）创模块知识谱系画布
+
+落地内容：
+
+- `services/canvas/`：`models.py`（CanvasNodeKind 五分类 / CanvasNode / CanvasEdge / CanvasBoard / 多个 Upsert 请求）+ `store.py`（内存字典 + 「大禹治水」种子谱系）+ `layout.py`（layered / radial 双算法）+ `exporter.py`（JSON / Markdown / Mermaid）
+- `apps/api/routers/canvas.py`：谱系 CRUD + 节点 upsert/delete + 边 upsert/delete + 自动布局 + 导出共十端点
+- `apps/web/src/pages/CanvasPage.tsx`：谱系列表 + reactflow 可编辑画布（拖动、连线、单击编辑、双击删边、Delete 删点）+ 顶栏「新增节点 / 分层 / 放射 / MD / JSON / Mermaid」
+- `docs/adr/ADR-0005-创模块知识谱系画布.md`：决策记录
+
+布局策略：layered 走 BFS 层级，节点按 (layer×240, col×120) 网格排布；radial 取度数最大节点为中心，余者按等角分布在半径 260 圆上。
+
+导出策略：JSON 即 `model_dump`，Markdown 按节点类型分组 + 关系段落，Mermaid 输出 `graph LR`。三种均通过 `Content-Disposition: attachment` 触发浏览器下载。
