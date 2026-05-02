@@ -4,6 +4,8 @@ import uuid
 from datetime import datetime
 from functools import lru_cache
 
+from services import persistence
+
 from .models import (
     AdvanceRequest,
     BranchOption,
@@ -138,6 +140,7 @@ def new_playthrough(scenario_id: str) -> PlaythroughSnapshot:
         is_terminal=start.is_terminal,
     )
     _PLAYTHROUGHS[snap.playthrough_id] = snap
+    persistence.save_playthrough(snap)
     return snap
 
 
@@ -164,6 +167,7 @@ def advance(playthrough_id: str, req: AdvanceRequest) -> PlaythroughSnapshot:
     snap.history.append(target.node_id)
     snap.is_terminal = target.is_terminal
     snap.updated_at = datetime.utcnow()
+    persistence.save_playthrough(snap)
     return snap
 
 
@@ -173,3 +177,15 @@ def get_playthrough(playthrough_id: str) -> PlaythroughSnapshot | None:
 
 def list_playthroughs() -> list[PlaythroughSnapshot]:
     return list(_PLAYTHROUGHS.values())
+
+
+def hydrate_from_db() -> int:
+    count = 0
+    for raw in persistence.load_all_playthroughs():
+        try:
+            snap = PlaythroughSnapshot.model_validate(raw)
+        except Exception:
+            continue
+        _PLAYTHROUGHS[snap.playthrough_id] = snap
+        count += 1
+    return count

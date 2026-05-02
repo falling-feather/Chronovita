@@ -11,10 +11,18 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from settings import settings
 from routers import recall, sandbox, agent, canvas, common
+from services import persistence
+from services.canvas import store as canvas_store
+from services.sandbox import engine as sandbox_engine
+from services.agent import dialogue as agent_dialogue
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    persistence.init_engine(settings.sqlite_path)
+    canvas_store.hydrate_from_db()
+    sandbox_engine.hydrate_from_db()
+    agent_dialogue.hydrate_from_db()
     yield
 
 

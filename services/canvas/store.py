@@ -3,6 +3,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from services import persistence
+
 from .models import (
     CanvasBoard,
     CanvasEdge,
@@ -18,6 +20,19 @@ _BOARDS: dict[str, CanvasBoard] = {}
 
 def _now(b: CanvasBoard) -> None:
     b.updated_at = datetime.utcnow()
+    persistence.save_board(b)
+
+
+def hydrate_from_db() -> int:
+    count = 0
+    for raw in persistence.load_all_boards():
+        try:
+            board = CanvasBoard.model_validate(raw)
+        except Exception:
+            continue
+        _BOARDS[board.board_id] = board
+        count += 1
+    return count
 
 
 def _seed_xia_dynasty() -> CanvasBoard:
@@ -68,11 +83,16 @@ def create_board(title: str, summary: str = "", seed: bool = False) -> CanvasBoa
     board_id = f"board_{uuid.uuid4().hex[:10]}"
     b = CanvasBoard(board_id=board_id, title=title, summary=summary)
     _BOARDS[board_id] = b
+    persistence.save_board(b)
     return b
 
 
 def delete_board(board_id: str) -> bool:
-    return _BOARDS.pop(board_id, None) is not None
+    removed = _BOARDS.pop(board_id, None)
+    if removed is None:
+        return False
+    persistence.delete_board(board_id)
+    return True
 
 
 def upsert_node(board_id: str, payload: UpsertNodeRequest) -> CanvasNode | None:

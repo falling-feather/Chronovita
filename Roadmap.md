@@ -53,6 +53,7 @@
 - [v1.3.0][2026-05-03] 问模块：双模智者（思辨派 + 史实派）+ SSE 流式对话 + RAG 引证抽屉雏形落地，mock LLM 双栏并置叙述，引证由关键词命中典籍片段，详见 ADR-0004
 - [v1.4.0][2026-05-03] 创模块：知识谱系画布落地（reactflow 可编辑节点+连线、分层/放射两种自动布局、JSON/Markdown/Mermaid 三件套导出），首发「大禹治水 · 夏代奠基」种子谱系 6 节点 6 边，详见 ADR-0005
 - [v1.5.0][2026-05-03] 看练问创全链路联调：sessionStorage 载体的 bridge 模块贯通四模块，看→练（分镜关键词+背景）→问（推演终局+预填问题）→创（双派论述+引证一键生成论辩谱系），首页补全四步引导卡片，详见 ADR-0006
+- [v1.6.0][2026-05-03] 后端持久化：services/persistence 引入 SQLAlchemy + SQLite，canvas_boards / sandbox_playthroughs / agent_sessions 三张 JSON 镜像表，store/engine/dialogue 在写时同步落盘，启动 lifespan 自动 hydrate，重启进程后谱系/推演/对话不丢失，详见 ADR-0007
 - _（后续追加）_
 
 ## 风险与对冲

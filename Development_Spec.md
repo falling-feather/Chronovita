@@ -453,3 +453,17 @@ Mock LLM 策略：思辨派 `_thinker_compose` 模板生成开放反问，史实
 - `docs/adr/ADR-0006-看练问创全链路联调.md`：决策记录
 
 关键约束：桥接全部走前端 sessionStorage，不新增后端 API；引证按 source_id 去重并截至前 6 条避免画布过密。
+
+### v1.6.0（2026-05-03）后端持久化
+
+落地内容：
+
+- `services/persistence/`：基于已声明的 SQLAlchemy 2.0 + SQLite 的轻量持久化层，三张「JSON 镜像」表 `canvas_boards / sandbox_playthroughs / agent_sessions`，对外暴露 `save_* / delete_* / load_all_*` 与 `init_engine`
+- `services/canvas/store.py`、`services/sandbox/engine.py`、`services/agent/dialogue.py`：写路径同步落盘，新增 `hydrate_from_db()` 启动装载
+- `apps/api/main.py` lifespan：`init_engine → canvas/sandbox/agent.hydrate_from_db()`
+- `apps/api/settings.py`：新增 `sqlite_path = "../../data/chronovita.db"`（相对 uvicorn cwd 回到仓库根）
+- `docs/adr/ADR-0007-后端持久化.md`：决策记录
+
+策略：内存仍为热路径，DB 作镜像；写时整段 `model_dump(mode="json")` 覆盖入表，读时用 `Model.model_validate` 反序列化；脏数据 silently skip 不阻塞启动。
+
+验证：创建测试板 → SQLite 出现行 → 触发 reload → 接口仍返回该板 → 删除后 DB 行消失。

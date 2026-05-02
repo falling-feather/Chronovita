@@ -13,6 +13,7 @@ from .models import (
     PersonaKind,
     StreamChunk,
 )
+from services import persistence
 
 
 _SESSIONS: dict[str, DialogueSession] = {}
@@ -21,6 +22,7 @@ _SESSIONS: dict[str, DialogueSession] = {}
 def new_session(topic: str) -> DialogueSession:
     sess = DialogueSession(session_id=f"sess_{uuid.uuid4().hex[:10]}", topic=topic)
     _SESSIONS[sess.session_id] = sess
+    persistence.save_session(sess)
     return sess
 
 
@@ -30,6 +32,18 @@ def get_session(session_id: str) -> DialogueSession | None:
 
 def list_sessions() -> list[DialogueSession]:
     return list(_SESSIONS.values())
+
+
+def hydrate_from_db() -> int:
+    count = 0
+    for raw in persistence.load_all_sessions():
+        try:
+            sess = DialogueSession.model_validate(raw)
+        except Exception:
+            continue
+        _SESSIONS[sess.session_id] = sess
+        count += 1
+    return count
 
 
 def _thinker_compose(question: str) -> str:
@@ -104,3 +118,4 @@ async def stream_answer(session_id: str, question: str) -> AsyncIterator[StreamC
         DialogueMessage(role="historian", content=historian_text, citations=citations)
     )
     sess.updated_at = datetime.utcnow()
+    persistence.save_session(sess)
