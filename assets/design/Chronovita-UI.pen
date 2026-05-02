@@ -1,0 +1,772 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": -315,
+      "y": -784,
+      "name": "Frame",
+      "clip": true,
+      "width": 800,
+      "height": 600,
+      "fill": "#FFFFFF",
+      "layout": "none"
+    },
+    {
+      "type": "frame",
+      "id": "WepuN",
+      "x": 882,
+      "y": -1034,
+      "name": "看 · 沉浸叙事",
+      "width": 1440,
+      "height": 900,
+      "fill": "#F3EBDD",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "PGCUU",
+          "name": "顶部",
+          "width": "fill_container",
+          "height": 72,
+          "fill": "#1F1B17",
+          "padding": [
+            32,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "uJsGz",
+              "name": "title",
+              "fill": "#F3EBDD",
+              "content": "史脉 · 看 · 沉浸叙事",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 24,
+              "fontWeight": "800"
+            },
+            {
+              "type": "text",
+              "id": "YSwM9",
+              "name": "nav",
+              "fill": "#D9C9A8",
+              "content": "看 / 练 / 问 / 创",
+              "fontFamily": "霞鹜文楷",
+              "fontSize": 16,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "UcS7x",
+          "name": "主体",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "UUMle",
+              "name": "播放区",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#1F1B17",
+              "cornerRadius": 8,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KTSgR",
+                  "name": "playerLabel",
+                  "fill": "#F3EBDD",
+                  "content": "历史微视频播放器",
+                  "fontFamily": "霞鹜文楷",
+                  "fontSize": 20,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eqQmT",
+              "name": "侧栏",
+              "width": 360,
+              "height": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#D9C9A8"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Q2eg9D",
+                  "name": "sideTitle",
+                  "fill": "#1F1B17",
+                  "content": "关键帧时间轴",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "K5ofm",
+                  "name": "chapter",
+                  "fill": "#7A5C2E",
+                  "content": "章节：大禹治水",
+                  "fontFamily": "霞鹜文楷",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "ppPDQ",
+                  "name": "关键帧1",
+                  "width": "fill_container",
+                  "height": 80,
+                  "fill": "#F3EBDD",
+                  "cornerRadius": 4,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#D9C9A8"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "In19u",
+                  "name": "关键帧2",
+                  "width": "fill_container",
+                  "height": 80,
+                  "fill": "#F3EBDD",
+                  "cornerRadius": 4,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#D9C9A8"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "EY5qj",
+                  "name": "关键帧3",
+                  "width": "fill_container",
+                  "height": 80,
+                  "fill": "#F3EBDD",
+                  "cornerRadius": 4,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#D9C9A8"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "MbDoe",
+      "x": -1108,
+      "y": 95,
+      "name": "练 · 沙盘推演",
+      "width": 1440,
+      "height": 900,
+      "fill": "#F3EBDD",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "hZt50",
+          "name": "顶部",
+          "width": "fill_container",
+          "height": 72,
+          "fill": "#1F1B17",
+          "padding": [
+            32,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "Em27S",
+              "name": "title",
+              "fill": "#F3EBDD",
+              "content": "史脉 · 练 · 沙盘推演",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 24,
+              "fontWeight": "800"
+            },
+            {
+              "type": "text",
+              "id": "AmbuI",
+              "name": "chapter",
+              "fill": "#D9C9A8",
+              "content": "剧本：大禹治水",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 16,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "BaOb1",
+          "name": "主体",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "HIjAh",
+              "name": "变量面板",
+              "width": 280,
+              "height": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#D9C9A8"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fOSQj",
+                  "name": "varTitle",
+                  "fill": "#1F1B17",
+                  "content": "核心参量",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "pSWxG",
+                  "name": "var1",
+                  "fill": "#7A5C2E",
+                  "content": "劳动力：寡 / 中 / 众",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "SpdO3",
+                  "name": "var2",
+                  "fill": "#7A5C2E",
+                  "content": "地形：高 / 中 / 低",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "fortL",
+                  "name": "var3",
+                  "fill": "#7A5C2E",
+                  "content": "治水策略：堵 / 疏 / 混",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CyCBB",
+              "name": "DAG 画布",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#D9C9A8"
+              },
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "abMcY",
+                  "name": "canvasLabel",
+                  "fill": "#1F1B17",
+                  "content": "有向无环图 · 因果推演画布",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 18,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lU1dx",
+              "name": "分支结果",
+              "width": 320,
+              "height": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#D9C9A8"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LqpZS",
+                  "name": "resultTitle",
+                  "fill": "#1F1B17",
+                  "content": "平行历史分支",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "g4ij1f",
+                  "name": "分支A",
+                  "width": "fill_container",
+                  "height": 80,
+                  "fill": "#F3EBDD",
+                  "cornerRadius": 4
+                },
+                {
+                  "type": "frame",
+                  "id": "Xb8MQ",
+                  "name": "分支B",
+                  "width": "fill_container",
+                  "height": 80,
+                  "fill": "#F3EBDD",
+                  "cornerRadius": 4
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "JJmBE",
+      "x": -1035,
+      "y": 1206,
+      "name": "问 · 双模智者",
+      "width": 1440,
+      "height": 900,
+      "fill": "#F3EBDD",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "amIeg",
+          "name": "顶部",
+          "width": "fill_container",
+          "height": 72,
+          "fill": "#1F1B17",
+          "padding": [
+            32,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "O9JNf",
+              "name": "title",
+              "fill": "#F3EBDD",
+              "content": "史脉 · 问 · 双模智者",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 24,
+              "fontWeight": "800"
+            },
+            {
+              "type": "frame",
+              "id": "XvkNo",
+              "name": "模式切换",
+              "width": 240,
+              "height": 40,
+              "fill": "#7A5C2E",
+              "cornerRadius": 20,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Y2tG7k",
+                  "name": "modeText",
+                  "fill": "#F3EBDD",
+                  "content": "同伴模式 · 专家模式",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tbrnm",
+          "name": "主体",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "AhjeV",
+              "name": "对话区",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#D9C9A8"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "nbMSD",
+                  "name": "NPC消息",
+                  "width": "fill_container",
+                  "height": 80,
+                  "fill": "#F3EBDD",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vL0y2",
+                      "name": "msg1text",
+                      "fill": "#1F1B17",
+                      "content": "大禹：吾承父志，誓平洪水。",
+                      "fontFamily": "Noto Serif SC",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "EhUQx",
+                  "name": "用户消息",
+                  "width": "fill_container",
+                  "height": 80,
+                  "fill": "#9F2E25",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "nGUCs",
+                      "name": "msg2text",
+                      "fill": "#F3EBDD",
+                      "content": "学生：当以何法治水？",
+                      "fontFamily": "Noto Serif SC",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "UNjjb",
+                  "name": "输入栏",
+                  "width": "fill_container",
+                  "height": 56,
+                  "fill": "#F3EBDD",
+                  "cornerRadius": 28,
+                  "padding": 16,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "O1aQV",
+                      "name": "inputHint",
+                      "fill": "#7A5C2E",
+                      "content": "按住说话，或键入问题…",
+                      "fontFamily": "Noto Serif SC",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "oNAkI",
+              "name": "人物卡",
+              "width": 320,
+              "height": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#D9C9A8"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "Uixrb",
+                  "name": "头像",
+                  "fill": "#7A5C2E",
+                  "width": 120,
+                  "height": 120
+                },
+                {
+                  "type": "text",
+                  "id": "BArIz",
+                  "name": "sideName",
+                  "fill": "#1F1B17",
+                  "content": "夏 · 大禹",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 20,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "qotsV",
+                  "name": "sideEra",
+                  "fill": "#7A5C2E",
+                  "content": "前 2070 年前后",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "oJogR",
+      "x": 661,
+      "y": 95,
+      "name": "创 · 知识谱系",
+      "width": 1440,
+      "height": 900,
+      "fill": "#F3EBDD",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "Q7oydv",
+          "name": "顶部",
+          "width": "fill_container",
+          "height": 72,
+          "fill": "#1F1B17",
+          "padding": [
+            32,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "OxF0n",
+              "name": "title",
+              "fill": "#F3EBDD",
+              "content": "史脉 · 创 · 知识谱系",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 24,
+              "fontWeight": "800"
+            },
+            {
+              "type": "frame",
+              "id": "a0G7BK",
+              "name": "导出",
+              "width": 120,
+              "height": 40,
+              "fill": "#9F2E25",
+              "cornerRadius": 20,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "No5v8",
+                  "name": "exportText",
+                  "fill": "#F3EBDD",
+                  "content": "导出谱系",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "aSAyS",
+          "name": "主体",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "R2jwr",
+              "name": "卡片库",
+              "width": 280,
+              "height": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#D9C9A8"
+              },
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "qnSBG",
+                  "name": "cardsTitle",
+                  "fill": "#1F1B17",
+                  "content": "学习卡片库",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "zhyBs",
+                  "name": "卡片1",
+                  "width": "fill_container",
+                  "height": 64,
+                  "fill": "#F3EBDD",
+                  "cornerRadius": 6,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "k3Ro8a",
+                      "name": "card1text",
+                      "fill": "#1F1B17",
+                      "content": "大禹治水 · 疏堵之辨",
+                      "fontFamily": "Noto Serif SC",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "b1Ej1j",
+                  "name": "卡片2",
+                  "width": "fill_container",
+                  "height": 64,
+                  "fill": "#F3EBDD",
+                  "cornerRadius": 6,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "OtjLO",
+                      "name": "card2text",
+                      "fill": "#1F1B17",
+                      "content": "夏商周 · 王朝更替",
+                      "fontFamily": "Noto Serif SC",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xmWJL",
+                  "name": "卡片3",
+                  "width": "fill_container",
+                  "height": 64,
+                  "fill": "#F3EBDD",
+                  "cornerRadius": 6,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "WDzDh",
+                      "name": "card3text",
+                      "fill": "#1F1B17",
+                      "content": "井田制度 · 经济基础",
+                      "fontFamily": "Noto Serif SC",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "R6SlP",
+              "name": "谱系画布",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#D9C9A8"
+              },
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oRKLe",
+                  "name": "canvasHint",
+                  "fill": "#7A5C2E",
+                  "content": "拖入卡片以编织个人知识谱系",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 18,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
