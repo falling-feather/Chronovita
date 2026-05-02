@@ -336,9 +336,10 @@ LLM 生成（system prompt 绑定 persona）
 
 ### 9.2 Git 提交
 
-- 提交信息：`v大版本.中版本.小版本 - 中文版本说明`
+- 提交信息：`V{大版本}.{中版本}.{小版本} 中文提交信息`（V 大写、无短横线，三段位完整，不省略）
+  - 示例：`V1.1.0 看模块 Prompt 链与 ControlNet 工作流落地`
 - 微小修复合入下一次正式提交，不单独成行
-- 中版本递增时合并相关分支历史；主干仅保留中/大版本节点
+- 中版本递增时同步执行分支合并管理（整理/合并相关分支后再入主干）
 - 历史整理前先建备份分支，使用 `git push --force-with-lease`
 - 中文提交信息一律 `git commit -F message.txt`（UTF-8 无 BOM），避免 PowerShell 管道编码丢失
 
@@ -366,3 +367,20 @@ LLM 生成（system prompt 绑定 persona）
 - LLM 输入过滤：禁止越狱 Prompt 注入到 system prompt
 - 教育数据：学生未成年信息脱敏存储，遵循《个人信息保护法》
 - 文化合规：历史叙事内容禁止偏离主流史观；敏感朝代过渡（如近现代）由人工审稿
+
+## 12. 版本里程碑
+
+### v1.1.0（2026-05-03）看模块工作流编排骨架
+
+落地内容：
+
+- `services/recall/`：Prompt 链、分镜编排、ControlNet 信号编排、阶段机任务推进四模块
+- `apps/api/routers/recall.py`：分镜生成 / 分镜查询 / 提交渲染 / 任务列表 / 任务详情 五端点
+- `apps/web/src/pages/RecallPage.tsx`：分镜表单、分镜预览、任务列表轮询（2s 间隔）
+- `docs/adr/ADR-0002-看模块工作流设计.md`：决策记录
+
+阶段机推进流程：`queued → prompt_chain → storyboard → controlnet → diffusion → animation → tts → compose → done`，v1.1.0 为内存占位（每次查询前进一阶），v1.2.0 替换为 Celery + Redis 真异步。
+
+Prompt 链六段固定角色：`system / history_context / scene / character / camera / style`，可分段编辑、可审计。
+
+ControlNet 信号按场景特征动态组装：人物 → pose；建筑 → lineart + depth；参考图 → reference；兜底 → scribble。
