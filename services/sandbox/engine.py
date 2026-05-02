@@ -121,7 +121,12 @@ def list_branches(scenario: Scenario, node_id: str, state: dict[str, int]) -> li
 _PLAYTHROUGHS: dict[str, PlaythroughSnapshot] = {}
 
 
-def new_playthrough(scenario_id: str, preset_state: dict[str, int] | None = None) -> PlaythroughSnapshot:
+def new_playthrough(
+    scenario_id: str,
+    preset_state: dict[str, int] | None = None,
+    task_id: str | None = None,
+    student_name: str | None = None,
+) -> PlaythroughSnapshot:
     scenario = get_scenario(scenario_id)
     if scenario is None:
         raise KeyError(scenario_id)
@@ -143,6 +148,8 @@ def new_playthrough(scenario_id: str, preset_state: dict[str, int] | None = None
         state_bits=encode_state(scenario, state),
         history=[start.node_id],
         is_terminal=start.is_terminal,
+        task_id=task_id,
+        student_name=student_name,
     )
     _PLAYTHROUGHS[snap.playthrough_id] = snap
     persistence.save_playthrough(snap)
@@ -182,6 +189,10 @@ def get_playthrough(playthrough_id: str) -> PlaythroughSnapshot | None:
 
 def list_playthroughs() -> list[PlaythroughSnapshot]:
     return list(_PLAYTHROUGHS.values())
+
+
+def list_playthroughs_by_task(task_id: str) -> list[PlaythroughSnapshot]:
+    return [s for s in _PLAYTHROUGHS.values() if s.task_id == task_id]
 
 
 def hydrate_from_db() -> int:

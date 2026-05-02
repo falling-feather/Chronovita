@@ -9,6 +9,7 @@ import {
   Col,
   Divider,
   Empty,
+  Input,
   List,
   Modal,
   Progress,
@@ -147,6 +148,7 @@ export default function SandboxPage() {
   const [loading, setLoading] = useState(false);
   const [incoming, setIncoming] = useState<{ title: string; keywords: string[] } | null>(null);
   const [task, setTask] = useState<ClassroomTaskLite | null>(null);
+  const [studentName, setStudentName] = useState<string>(() => sessionStorage.getItem('chrono.student_name') ?? '');
 
   useEffect(() => {
     const p = takeRecallToSandbox();
@@ -180,12 +182,18 @@ export default function SandboxPage() {
 
   const startPlaythrough = useCallback(async () => {
     if (!selectedId) return;
+    if (task && task.scenario_id === selectedId && !studentName.trim()) {
+      message.warning('任务模式请先填写学生姓名');
+      return;
+    }
     setLoading(true);
     try {
-      const url = task && task.scenario_id === selectedId
-        ? `/api/v1/sandbox/playthroughs?scenario_id=${selectedId}&task_id=${task.task_id}`
-        : `/api/v1/sandbox/playthroughs?scenario_id=${selectedId}`;
-      const r = await fetch(url, {
+      const params = new URLSearchParams({ scenario_id: selectedId });
+      if (task && task.scenario_id === selectedId) {
+        params.set('task_id', task.task_id);
+        params.set('student_name', studentName.trim());
+      }
+      const r = await fetch(`/api/v1/sandbox/playthroughs?${params.toString()}`, {
         method: 'POST',
       });
       if (!r.ok) {
@@ -199,7 +207,7 @@ export default function SandboxPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedId, fetchBranches, message, task]);
+  }, [selectedId, fetchBranches, message, task, studentName]);
 
   const checkTask = useCallback(async () => {
     if (!task || !snapshot) return;
@@ -437,6 +445,19 @@ export default function SandboxPage() {
           description={
             <Space direction="vertical" size={4} style={{ width: '100%' }}>
               {task.teacher_notes && <Text>{task.teacher_notes}</Text>}
+              <Space>
+                <Text>学生姓名：</Text>
+                <Input
+                  size="small"
+                  style={{ width: 160 }}
+                  value={studentName}
+                  placeholder="必填"
+                  onChange={(e) => {
+                    setStudentName(e.target.value);
+                    sessionStorage.setItem('chrono.student_name', e.target.value);
+                  }}
+                />
+              </Space>
               <Text type="secondary">
                 必经节点：{task.must_visit_nodes.length === 0 ? '—' : task.must_visit_nodes.join(' / ')} ·
                 合格终局：{task.accepted_terminals.length === 0 ? '不限' : task.accepted_terminals.join(' / ')}

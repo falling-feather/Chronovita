@@ -18,6 +18,7 @@ from .engine import (
     new_playthrough,
     get_playthrough,
     list_playthroughs,
+    list_playthroughs_by_task,
 )
 from .scenarios import list_scenarios, get_scenario, register_scenario
 
@@ -39,6 +40,7 @@ __all__ = [
     "new_playthrough",
     "get_playthrough",
     "list_playthroughs",
+    "list_playthroughs_by_task",
     "list_scenarios",
     "get_scenario",
     "register_scenario",

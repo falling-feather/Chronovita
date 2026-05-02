@@ -502,3 +502,18 @@ Mock LLM 策略：思辨派 `_thinker_compose` 模板生成开放反问，史实
 设计选择：preset_state 仅在 `new_playthrough` 时生效（不修改 advance 路径），保持 DAG 状态转移规则纯粹；推荐路径以 edge_id 列表表达，验收时反查 history 相邻节点对应的边求集合交集；must_visit_nodes 与 accepted_terminals 在创建时强制校验 id 合法性；任务 ID 短哈希形式 `task_xxxxxxxxxx`，可由学生在 URL 中直接粘贴。
 
 验证：端到端跑通——创建大禹治水任务（必经 n_reform/n_field_survey、合格终局 n_dynasty、4 条推荐边）→ 起新推演 → 沿推荐路径走 4 步 → `/check` 返回 `is_terminal=true / accepted=true / ratio=1.0 / must_hit_count=2 / miss_count=0`，summary 文案为「已圆满达成本任务的全部老师预设」。
+
+### v1.9.0（2026-05-03）学生作业 · 推演记录回放
+
+落地内容：
+
+- `services/sandbox/models.py`：`PlaythroughSnapshot` 增 `task_id: str | None`、`student_name: str | None` 字段（向后兼容，旧记录默认 None）
+- `services/sandbox/engine.py`：`new_playthrough` 增加 `task_id` / `student_name` 入参；新增 `list_playthroughs_by_task(task_id)`
+- `apps/api/routers/sandbox.py`：`POST /playthroughs` 增加可选 `student_name` 查询参数透传
+- `apps/api/routers/classroom.py`：抽离 `_check_one(task, snap)` 复用；新增 `GET /tasks/{id}/submissions` 端点，输出 `SubmissionsAggregate`（含 `node_visit_counts` / `edge_traverse_counts` / `terminal_distribution` / `accepted_count` / 逐学生 `SubmissionItem`）
+- 前端 `SandboxPage`：任务模式新增学生姓名 Input（sessionStorage 缓存），未填禁止开始推演；POST 携带 student_name
+- 前端 `ClassroomPage`：每张任务卡新增「作业回放」按钮，打开 760px Drawer——上方三宫格统计（提交总数 / 合格人次 / 合格率）+ 终局分布 Tag + 节点/边热力 Top 10 Progress 条 + 学生提交 Table（可展开看完整路径）
+
+设计选择：聚合接口在服务端一次性算完热力计数，前端只做排序与展示；提交分数不存历史快照，每次重新计算（数据集小、计算简单），不引入额外存储；学生姓名走前端 sessionStorage，避免每次推演都让学生重填。
+
+验证：用同一个大禹治水任务以「小明/小红/小李」三个 student_name 各跑一遍推荐路径，`GET /classroom/tasks/{id}/submissions` 返回 `total_count=3 / accepted_count=3`，`node_visit_counts` 五节点各 ×3，`edge_traverse_counts` 四边各 ×3，`terminal_distribution` `{n_dynasty: 3}`。

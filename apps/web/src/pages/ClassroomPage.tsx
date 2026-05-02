@@ -13,9 +13,12 @@ import {
   InputNumber,
   List,
   Popconfirm,
+  Progress,
   Row,
   Select,
   Space,
+  Statistic,
+  Table,
   Tag,
   Typography,
 } from 'antd';
@@ -68,6 +71,31 @@ interface ClassroomTask {
   created_at: string;
 }
 
+interface SubmissionItem {
+  playthrough_id: string;
+  student_name: string | null;
+  is_terminal: boolean;
+  terminal_node_id: string | null;
+  terminal_accepted: boolean;
+  must_visit_hit_count: number;
+  must_visit_total: number;
+  recommended_match_ratio: number;
+  history: string[];
+  created_at: string;
+  updated_at: string;
+  summary: string;
+}
+
+interface SubmissionsAggregate {
+  task: ClassroomTask;
+  submissions: SubmissionItem[];
+  node_visit_counts: Record<string, number>;
+  edge_traverse_counts: Record<string, number>;
+  terminal_distribution: Record<string, number>;
+  total_count: number;
+  accepted_count: number;
+}
+
 function maxValue(v: StateVar): number {
   return (1 << v.bits) - 1;
 }
@@ -80,6 +108,28 @@ export default function ClassroomPage() {
   const [open, setOpen] = useState(false);
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [form] = Form.useForm();
+  const [replayTask, setReplayTask] = useState<ClassroomTask | null>(null);
+  const [replay, setReplay] = useState<SubmissionsAggregate | null>(null);
+  const [replayLoading, setReplayLoading] = useState(false);
+
+  const openReplay = useCallback(
+    async (t: ClassroomTask) => {
+      setReplayTask(t);
+      setReplayLoading(true);
+      try {
+        const r = await fetch(`/api/v1/classroom/tasks/${t.task_id}/submissions`);
+        if (!r.ok) {
+          message.error('拉取作业失败');
+          setReplay(null);
+          return;
+        }
+        setReplay(await r.json());
+      } finally {
+        setReplayLoading(false);
+      }
+    },
+    [message],
+  );
 
   const refresh = useCallback(async () => {
     const r = await fetch('/api/v1/classroom/tasks');
@@ -206,6 +256,9 @@ export default function ClassroomPage() {
                 }
                 extra={
                   <Space>
+                    <Button size="small" onClick={() => openReplay(t)}>
+                      作业回放
+                    </Button>
                     <Button size="small" onClick={() => navigate(`/sandbox?task=${t.task_id}`)}>
                       去推演
                     </Button>
@@ -363,6 +416,162 @@ export default function ClassroomPage() {
             </>
           )}
         </Form>
+      </Drawer>
+
+      <Drawer
+        title={replayTask ? `作业回放：${replayTask.title}` : '作业回放'}
+        width={760}
+        open={!!replayTask}
+        onClose={() => {
+          setReplayTask(null);
+          setReplay(null);
+        }}
+        loading={replayLoading}
+      >
+        {replay ? (
+          replay.total_count === 0 ? (
+            <Empty description="尚无学生提交，分享任务链接给学生后再来查看吧" />
+          ) : (
+            <>
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <Statistic title="提交总数" value={replay.total_count} />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="合格人次"
+                    value={replay.accepted_count}
+                    suffix={` / ${replay.total_count}`}
+                    valueStyle={{ color: '#3F5F4D' }}
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="合格率"
+                    value={
+                      replay.total_count === 0
+                        ? 0
+                        : Math.round((replay.accepted_count / replay.total_count) * 100)
+                    }
+                    suffix="%"
+                    valueStyle={{ color: '#7A5C2E' }}
+                  />
+                </Col>
+              </Row>
+
+              <Card size="small" title="终局分布" style={{ marginBottom: 12 }}>
+                <Space wrap>
+                  {Object.entries(replay.terminal_distribution).map(([nid, c]) => (
+                    <Tag key={nid} color="#9F2E25">
+                      {nid} × {c}
+                    </Tag>
+                  ))}
+                </Space>
+              </Card>
+
+              <Card size="small" title="节点访问热力（前 10）" style={{ marginBottom: 12 }}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  {Object.entries(replay.node_visit_counts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10)
+                    .map(([nid, c]) => (
+                      <Row key={nid} gutter={8} align="middle">
+                        <Col span={8}>
+                          <Text code>{nid}</Text>
+                        </Col>
+                        <Col span={16}>
+                          <Progress
+                            percent={Math.round((c / replay.total_count) * 100)}
+                            size="small"
+                            strokeColor="#7A5C2E"
+                            format={() => `${c} 次`}
+                          />
+                        </Col>
+                      </Row>
+                    ))}
+                </Space>
+              </Card>
+
+              <Card size="small" title="边遍历热力（前 10）" style={{ marginBottom: 12 }}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  {Object.entries(replay.edge_traverse_counts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10)
+                    .map(([eid, c]) => (
+                      <Row key={eid} gutter={8} align="middle">
+                        <Col span={8}>
+                          <Text code>{eid}</Text>
+                        </Col>
+                        <Col span={16}>
+                          <Progress
+                            percent={Math.round((c / replay.total_count) * 100)}
+                            size="small"
+                            strokeColor="#3F5F4D"
+                            format={() => `${c} 次`}
+                          />
+                        </Col>
+                      </Row>
+                    ))}
+                </Space>
+              </Card>
+
+              <Table<SubmissionItem>
+                rowKey="playthrough_id"
+                size="small"
+                pagination={{ pageSize: 8 }}
+                dataSource={replay.submissions}
+                columns={[
+                  {
+                    title: '学生',
+                    dataIndex: 'student_name',
+                    render: (n: string | null) => n || <Text type="secondary">匿名</Text>,
+                  },
+                  {
+                    title: '终局',
+                    render: (_, r) =>
+                      r.is_terminal ? (
+                        <Tag color={r.terminal_accepted ? '#3F5F4D' : '#9F2E25'}>
+                          {r.terminal_node_id ?? '—'}
+                        </Tag>
+                      ) : (
+                        <Tag>未抵达</Tag>
+                      ),
+                  },
+                  {
+                    title: '必经',
+                    render: (_, r) => `${r.must_visit_hit_count} / ${r.must_visit_total}`,
+                  },
+                  {
+                    title: '推荐路径',
+                    dataIndex: 'recommended_match_ratio',
+                    render: (v: number) => `${Math.round(v * 100)}%`,
+                  },
+                  {
+                    title: '提交时间',
+                    dataIndex: 'updated_at',
+                    render: (t: string) => new Date(t).toLocaleString(),
+                  },
+                ]}
+                expandable={{
+                  expandedRowRender: (r) => (
+                    <Space direction="vertical" style={{ width: '100%' }} size={4}>
+                      <Text type="secondary">{r.summary}</Text>
+                      <div>
+                        <Text strong>路径：</Text>
+                        {r.history.map((nid, i) => (
+                          <span key={i}>
+                            <Tag color="#7A5C2E">{nid}</Tag>
+                            {i < r.history.length - 1 ? '→ ' : ''}
+                          </span>
+                        ))}
+                      </div>
+                    </Space>
+                  ),
+                }}
+              />
+            </>
+          )
+        ) : null}
       </Drawer>
     </div>
   );

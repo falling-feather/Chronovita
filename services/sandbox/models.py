@@ -83,6 +83,8 @@ class PlaythroughSnapshot(BaseModel):
     state_bits: int
     history: list[str] = []
     is_terminal: bool = False
+    task_id: str | None = None
+    student_name: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
