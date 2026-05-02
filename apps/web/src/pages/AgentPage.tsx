@@ -71,7 +71,15 @@ export default function AgentPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeCitations, setActiveCitations] = useState<Citation[]>([]);
   const [incomingKeywords, setIncomingKeywords] = useState<string[]>([]);
+  const [llmStatus, setLlmStatus] = useState<{ provider: string; is_real: boolean; model: string | null } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    fetch('/api/v1/agent/llm-status')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setLlmStatus(d))
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     const p = takeSandboxToAgent();
@@ -203,6 +211,17 @@ export default function AgentPage() {
         左栏「思辨流派」抛出反问与多元解读，右栏「史实流派」援引典籍佐证，
         两者并置以制衡 LLM 单一叙事，引证条目可侧拉抽屉复核。
       </Paragraph>
+
+      {llmStatus && (
+        <Tag
+          color={llmStatus.is_real ? '#3F5F4D' : '#7A5C2E'}
+          style={{ marginBottom: 12 }}
+        >
+          {llmStatus.is_real
+            ? `LLM 已接入：${llmStatus.provider}${llmStatus.model ? ' · ' + llmStatus.model : ''}`
+            : 'LLM 未接入：当前为本地 mock 模板（设置 CHRONO_LLM_PROVIDER 后启用真模型）'}
+        </Tag>
+      )}
 
       <Space style={{ marginBottom: 12, width: '100%' }}>
         <Input

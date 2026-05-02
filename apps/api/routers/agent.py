@@ -18,12 +18,29 @@ from services.agent import (
     new_session,
     stream_answer,
 )
+from services.agent.llm import get_provider, is_real_llm
 
 router = APIRouter()
 
 
 class CreateSessionRequest(BaseModel):
     topic: str = Field(min_length=1, max_length=120)
+
+
+class LlmStatus(BaseModel):
+    provider: str
+    is_real: bool
+    model: str | None = None
+
+
+@router.get("/llm-status", response_model=LlmStatus, summary="当前 LLM 模式")
+async def llm_status() -> LlmStatus:
+    import os
+    return LlmStatus(
+        provider=get_provider(),
+        is_real=is_real_llm(),
+        model=os.environ.get("CHRONO_LLM_MODEL"),
+    )
 
 
 @router.get("/personas", response_model=list[AgentPersona], summary="智者列表")

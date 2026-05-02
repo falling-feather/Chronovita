@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import AsyncIterator
 
 from .corpus import search_corpus
+from .llm import is_real_llm, stream_chat
 from .models import (
     Citation,
     DialogueMessage,
@@ -13,6 +14,7 @@ from .models import (
     PersonaKind,
     StreamChunk,
 )
+from .personas import get_persona
 from services import persistence
 
 
@@ -80,6 +82,36 @@ async def _stream_text(persona: PersonaKind, text: str, citations: list[Citation
     yield StreamChunk(persona=persona, delta="", done=True, citations=citations)
 
 
+def _persona_system(persona: PersonaKind, citations: list[Citation]) -> str:
+    base = get_persona("thinker-mixtral" if persona == PersonaKind.THINKER else "historian-qwen")
+    sys = base.system_prompt if base else ""
+    if persona == PersonaKind.HISTORIAN and citations:
+        cite_block = "\n".join(f"- {c.title}：{c.excerpt}" for c in citations)
+        sys = f"{sys}\n\n你可以引用如下原典片段（必须保持原文）：\n{cite_block}"
+    return sys
+
+
+async def _stream_llm(persona: PersonaKind, question: str, citations: list[Citation]) -> AsyncIterator[StreamChunk]:
+    sys = _persona_system(persona, citations)
+    accumulated: list[str] = []
+    try:
+        async for piece in stream_chat(sys, question):
+            accumulated.append(piece)
+            yield StreamChunk(persona=persona, delta=piece, done=False)
+    except Exception as exc:
+        fallback = f"[LLM 调用失败，降级回 mock：{type(exc).__name__}] "
+        yield StreamChunk(persona=persona, delta=fallback, done=False)
+        text = (
+            _historian_compose(question, citations)
+            if persona == PersonaKind.HISTORIAN
+            else _thinker_compose(question)
+        )
+        async for ch in _stream_text(persona, text, citations):
+            yield ch
+        return
+    yield StreamChunk(persona=persona, delta="", done=True, citations=citations)
+
+
 async def stream_answer(session_id: str, question: str) -> AsyncIterator[StreamChunk]:
     sess = _SESSIONS.get(session_id)
     if sess is None:
@@ -88,13 +120,21 @@ async def stream_answer(session_id: str, question: str) -> AsyncIterator[StreamC
     sess.updated_at = datetime.utcnow()
 
     citations = search_corpus(question, top_k=3)
+    use_llm = is_real_llm()
     thinker_text = _thinker_compose(question)
     historian_text = _historian_compose(question, citations)
 
     queue: asyncio.Queue[StreamChunk | None] = asyncio.Queue()
+    captured: dict[PersonaKind, list[str]] = {PersonaKind.THINKER: [], PersonaKind.HISTORIAN: []}
 
-    async def pump(persona: PersonaKind, text: str, cites: list[Citation]) -> None:
-        async for ch in _stream_text(persona, text, cites):
+    async def pump(persona: PersonaKind, fallback_text: str, cites: list[Citation]) -> None:
+        if use_llm:
+            iterator = _stream_llm(persona, question, cites)
+        else:
+            iterator = _stream_text(persona, fallback_text, cites)
+        async for ch in iterator:
+            if ch.delta:
+                captured[persona].append(ch.delta)
             await queue.put(ch)
         await queue.put(None)
 
@@ -111,11 +151,14 @@ async def stream_answer(session_id: str, question: str) -> AsyncIterator[StreamC
 
     await asyncio.gather(t1, t2)
 
+    final_thinker = "".join(captured[PersonaKind.THINKER]) or thinker_text
+    final_historian = "".join(captured[PersonaKind.HISTORIAN]) or historian_text
+
     sess.messages.append(
-        DialogueMessage(role="thinker", content=thinker_text, citations=[])
+        DialogueMessage(role="thinker", content=final_thinker, citations=[])
     )
     sess.messages.append(
-        DialogueMessage(role="historian", content=historian_text, citations=citations)
+        DialogueMessage(role="historian", content=final_historian, citations=citations)
     )
     sess.updated_at = datetime.utcnow()
     persistence.save_session(sess)

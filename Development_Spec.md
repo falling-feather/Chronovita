@@ -543,3 +543,19 @@ Mock LLM 策略：思辨派 `_thinker_compose` 模板生成开放反问，史实
 设计选择：洋务剧本节点数（10）与变量数（5）控制在与王安石变法（11/5）相近规模，避免认知超载；海防塞防之争作为强制汇聚节点，让两条主线必然交汇并在后续的官督商办抉择中暴露「制度未变」的核心矛盾——剧本叙事内嵌于状态机结构。
 
 验证：`POST /classroom/tasks` 创建洋务任务（推荐路径 5 条边） → `/verify` 返回 `reachable_count=10 / total_node_count=10 / warnings=[] / ok=true`，所有节点全可达，推荐路径合法。
+
+### v2.1.0（2026-05-03）问模块 · 真 LLM 接入
+
+落地内容：
+
+- 新增 `services/agent/llm.py`：异步适配层 `stream_chat(provider, model, messages, *, api_key, base_url) -> AsyncIterator[str]`，支持 `mock` / `openai` / `deepseek`（OpenAI 兼容） / `ollama`；OpenAI 兼容路径走 `{base_url}/chat/completions` SSE，Ollama 走 `{base_url}/api/chat` NDJSON；任何异常内部捕获后回落 mock，对外不抛
+- `services/agent/dialogue.py`：`stream_answer` 按 `settings.llm_provider` 分支——mock 维持原 `_stream_text` 字符块路径，零行为差异；非 mock 时两派 Persona 各起 task 把 LLM chunk 推入 `asyncio.Queue` 串成 SSE；引证仍由后端在 LLM 输出完成后追加 `【引证】...`，**不让 LLM 自己编引证**；末尾持久化 `sess.messages`
+- `apps/api/settings.py` + `.env.example`：新增 `CHRONO_LLM_PROVIDER`（默认 `mock`）/ `CHRONO_LLM_MODEL` / `CHRONO_LLM_API_KEY` / `CHRONO_LLM_BASE_URL`
+- `apps/api/routers/agent.py`：新增 `GET /api/v1/agent/status` → `{provider, model, base_url, has_api_key}`
+- `apps/web/src/pages/AgentPage.tsx`：顶部 AntD Tag 显示当前 provider/model；mock 模式标识「模拟模式」，老师一眼可知课堂是否在跑真模型
+- 版本号 → 2.1.0：问模块从硬编码语料演示走向真模型接入，同时保留 mock 兜底确保离线/无 key 课堂可用
+
+设计选择：适配层一函数三协议（OpenAI SSE / Ollama NDJSON / mock 字符块），避免引入 LangChain 等重型依赖；引证后置策略保证「史料可追溯」原则不被 LLM 幻觉污染；失败回退 mock 而非报错，保证课堂连续性优先于功能完备性。
+
+验证：`CHRONO_LLM_PROVIDER=mock` 默认配置下 e2e 回归通过——`POST /api/v1/agent/answer` 流式两派输出 + 引证后置正常，`GET /api/v1/agent/status` 返回 `{provider: "mock"}`，AgentPage 顶部 Tag 显示「模拟模式」；真 provider 联调待用户提供 key 后逐家压测。
+
