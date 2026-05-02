@@ -467,3 +467,18 @@ Mock LLM 策略：思辨派 `_thinker_compose` 模板生成开放反问，史实
 策略：内存仍为热路径，DB 作镜像；写时整段 `model_dump(mode="json")` 覆盖入表，读时用 `Model.model_validate` 反序列化；脏数据 silently skip 不阻塞启动。
 
 验证：创建测试板 → SQLite 出现行 → 触发 reload → 接口仍返回该板 → 删除后 DB 行消失。
+
+### v1.7.0（2026-05-03）多剧本拓展
+
+落地内容：
+
+- `services/sandbox/scenarios.py`：新增两条剧本
+  - 商鞅变法（`qin-shang-yang-bianfa`）9 节点 9 边，状态变量 `trust / opposition / strength / law_kept` 共 10 位，含「姑息一时」与「孝公薨 · 旧贵反扑」两条终局
+  - 王安石变法 · 熙宁新法（`song-wang-anshi-bianfa`）10 节点 11 边，状态变量 `emperor_will / conservative / finance / people` 共 12 位，含「罢免新党」与「元祐更化」两条终局
+- `services/agent/corpus.py`：新增 4 条变法相关典籍（《宋史·王安石传》《临川集·本朝百年无事札子》《苏轼集·上神宗皇帝书》《续资治通鉴长编·熙宁三年》）+ 关键词索引扩充商鞅相关条目
+- `services/recall/storyboard.py`：`_heuristic_flags` 人物/建筑识别 token 扩充至覆盖战国/宋朝场景
+- `apps/web/src/pages/RecallPage.tsx`：「新建分镜」Card extra 区追加「快速模板」Select，一键填入三大剧本配套分镜素材
+
+设计选择：剧本仍以代码常量形式声明（`_REGISTRY` 字典），重启即在；不引入剧本编辑后台，保持「研究者直接 PR 剧本」的轻流程。状态位宽预算（≤60 位）严格遵守，本期最大占用 12 位，余量充足。
+
+验证：`GET /api/v1/sandbox/scenarios` 返回 3 条；商鞅 / 王安石 playthrough 起始节点正确，分支可枚举；新 playthrough 自动持久化入 sqlite。

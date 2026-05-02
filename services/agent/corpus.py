@@ -46,6 +46,30 @@ _CORPUS: list[Citation] = [
         excerpt="一法度衡石丈尺。车同轨，书同文字。",
         relevance=0.0,
     ),
+    Citation(
+        source_id="songshi-wang-anshi",
+        title="《宋史 · 王安石传》",
+        excerpt="安石性强忮，遇事无可否，自信所见，执意不回。议者讥其专。",
+        relevance=0.0,
+    ),
+    Citation(
+        source_id="linchuan-jizhi-benchao",
+        title="《临川集 · 本朝百年无事札子》",
+        excerpt="夫合天下之众者财，理天下之财者法，守天下之法者吏也。",
+        relevance=0.0,
+    ),
+    Citation(
+        source_id="sushi-on-xinfa",
+        title="《苏轼集 · 上神宗皇帝书》",
+        excerpt="国家之所以存亡者，在道德之浅深，不在乎强与弱；历数之所以长短者，在风俗之厚薄，不在乎富与贫。",
+        relevance=0.0,
+    ),
+    Citation(
+        source_id="zizhitongjian-xining",
+        title="《续资治通鉴长编 · 熙宁三年》",
+        excerpt="光（司马光）言：青苗之法，名为利民，实则害民，州县抑配，民被其扰。",
+        relevance=0.0,
+    ),
 ]
 
 
@@ -53,10 +77,14 @@ _KEYWORDS: dict[str, list[str]] = {
     "shiji-xia-benji": ["禹", "治水", "夏", "鲧"],
     "shangshu-yu-gong": ["禹", "九州", "山川", "贡赋"],
     "mengzi-tengwengong": ["禹", "九河", "疏导", "江"],
-    "shangjun-shu": ["商鞅", "变法", "更法", "强国"],
-    "shiji-shang-jun-liezhuan": ["商鞅", "太子", "法", "卫鞅"],
+    "shangjun-shu": ["商鞅", "变法", "更法", "强国", "卫鞅", "新法"],
+    "shiji-shang-jun-liezhuan": ["商鞅", "太子", "法", "卫鞅", "徙木", "刑"],
     "shiji-zheng-he": ["郑和", "下西洋", "明", "三宝"],
     "shiji-qin-shi-huang": ["秦", "始皇", "统一", "度量衡", "车同轨"],
+    "songshi-wang-anshi": ["王安石", "新法", "熙宁", "执意"],
+    "linchuan-jizhi-benchao": ["王安石", "理财", "法", "吏", "本朝"],
+    "sushi-on-xinfa": ["苏轼", "新法", "道德", "风俗", "强弱"],
+    "zizhitongjian-xining": ["青苗", "司马光", "熙宁", "抑配", "民"],
 }
 
 

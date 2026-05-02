@@ -184,7 +184,53 @@ export default function RecallPage() {
 
       <Row gutter={24}>
         <Col xs={24} lg={10}>
-          <Card title="新建分镜">
+          <Card
+            title="新建分镜"
+            extra={
+              <Select
+                size="small"
+                style={{ width: 180 }}
+                placeholder="快速模板"
+                options={[
+                  { value: 'xia-dayu', label: '大禹治水' },
+                  { value: 'qin-shang-yang', label: '商鞅变法' },
+                  { value: 'song-wang-anshi', label: '王安石变法' },
+                ]}
+                onChange={(v) => {
+                  const presets: Record<string, Record<string, unknown>> = {
+                    'xia-dayu': {
+                      chapter_id: 'xia-001',
+                      title: '大禹治水',
+                      history_context:
+                        '约公元前 2070 年，禹承父业，划九州、定贡赋，疏导河川以解水患。',
+                      keywords: '黄河, 堤坝, 九州, 民众',
+                      style: '工笔淡彩',
+                      target_shot_count: 4,
+                    },
+                    'qin-shang-yang': {
+                      chapter_id: 'qin-001',
+                      title: '商鞅变法',
+                      history_context:
+                        '战国秦孝公时期，卫鞅入秦，徙木立信、奖励耕战、废井田、行县制，新法立威，秦国大强。',
+                      keywords: '徙木, 阡陌, 县制, 耕战',
+                      style: '青绿山水',
+                      target_shot_count: 4,
+                    },
+                    'song-wang-anshi': {
+                      chapter_id: 'song-001',
+                      title: '王安石变法',
+                      history_context:
+                        '北宋熙宁年间，王安石入相，行青苗、均输、免役、市易诸法，新党旧党激辩，财政与民生天平摇摆。',
+                      keywords: '青苗, 免役, 市易, 流民图',
+                      style: '帛画绢本',
+                      target_shot_count: 4,
+                    },
+                  };
+                  form.setFieldsValue(presets[v as keyof typeof presets]);
+                }}
+              />
+            }
+          >
             <Form
               form={form}
               layout="vertical"

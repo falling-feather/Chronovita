@@ -20,8 +20,14 @@ def _pick_scene(index: int) -> tuple[str, str, str]:
 
 
 def _heuristic_flags(text: str) -> tuple[bool, bool]:
-    has_character = any(token in text for token in ["人", "王", "帝", "将", "士", "民", "禹", "舜", "尧"])
-    has_architecture = any(token in text for token in ["城", "宫", "阙", "台", "堤", "坝", "庙", "渠"])
+    has_character = any(token in text for token in [
+        "人", "王", "帝", "将", "士", "民", "禹", "舜", "尧",
+        "鞅", "公", "君", "相", "宰", "卿", "光", "轼", "宗", "侠",
+    ])
+    has_architecture = any(token in text for token in [
+        "城", "宫", "阙", "台", "堤", "坝", "庙", "渠",
+        "门", "阡", "陌", "县", "府", "署", "市", "驿",
+    ])
     return has_character, has_architecture
 
 
