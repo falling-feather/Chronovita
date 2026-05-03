@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chronovita-postgres
+    environment:
+      POSTGRES_USER: chrono
+      POSTGRES_PASSWORD: chrono
+      POSTGRES_DB: chronovita
+    ports:
+      - "5432:5432"
+    volumes:
+      - ../.pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chrono"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: chronovita-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../.redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: chronovita-chroma
+    ports:
+      - "8001:8000"
+    volumes:
+      - ../.chroma:/chroma/chroma
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
