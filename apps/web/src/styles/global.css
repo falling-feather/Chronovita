@@ -719,3 +719,49 @@ body,
   0% { stroke-dashoffset: 0; }
   100% { stroke-dashoffset: -120; }
 }
+
+/* ========== Saga 互动小说 v0.3.0 ========== */
+.chrono-saga-stage {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, #FBF5E9 0%, #F7EFDF 100%);
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  font-family: ''霞鹜文楷'', ''Noto Serif SC'', ''KaiTi'', serif;
+  max-height: 540px;
+  cursor: text;
+}
+.chrono-saga-narrator p {
+  font-size: 15px;
+  line-height: 2;
+  color: #3A2A1C;
+  margin: 0 0 12px;
+  text-indent: 2em;
+}
+.chrono-saga-caret {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--accent-gold);
+  animation: chrono-saga-blink 0.9s step-start infinite;
+}
+@keyframes chrono-saga-blink { 50% { opacity: 0; } }
+.chrono-saga-player {
+  margin: 18px 0 16px;
+  padding: 10px 14px;
+  background: rgba(212, 169, 92, 0.10);
+  border-left: 3px solid var(--accent-gold);
+  border-radius: 4px;
+}
+.chrono-saga-player-tag {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--accent-bronze);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.chrono-saga-player-text {
+  font-size: 14px;
+  color: var(--text-dark);
+  line-height: 1.7;
+}

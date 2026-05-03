@@ -50,7 +50,47 @@ export const api = {
   canvasGet: (lid: string) => jsonFetch<{ nodes: any[]; edges: any[] }>(`/practice/canvas/${lid}`),
   canvasSave: (lid: string, payload: { nodes: any[]; edges: any[] }) =>
     jsonFetch<{ ok: boolean }>(`/practice/canvas/${lid}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  canvasGenerate: (body: { lesson_id: string; lesson_title: string; abstract: string; keywords: string[]; seed: string[] }) =>
+    jsonFetch<{ nodes: any[]; edges: any[] }>(`/practice/canvas/generate`, { method: 'POST', body: JSON.stringify(body) }),
+  sagaTemplates: () => jsonFetch<{ items: SagaTemplate[] }>(`/practice/saga/templates`),
+  sagaStart: (lesson_id: string) => jsonFetch<SagaState>(`/practice/saga/start`, { method: 'POST', body: JSON.stringify({ lesson_id }) }),
+  sagaGet: (saga_id: string) => jsonFetch<SagaState>(`/practice/saga/${saga_id}`),
 };
+
+export interface SagaTemplate {
+  lesson_id: string; title: string; era: string; persona: string; keywords: string[];
+}
+export interface SagaEntity { name: string; type: string; desc: string }
+export interface SagaState {
+  saga_id: string; lesson_id: string; title: string; era: string; persona: string;
+  history: { role: 'narrator' | 'player'; text: string }[];
+  summary: string; choices: string[]; flags: Record<string, any>;
+  entities: SagaEntity[]; step: number; ended: boolean; keywords: string[];
+}
+
+// Saga · 流式行动（与 streamAsk 同形式；末尾会出现 \n\n[META]{...json...}）
+export async function streamSagaAct(
+  saga_id: string,
+  action: string,
+  onChunk: (text: string) => void,
+): Promise<void> {
+  const r = await fetch(BASE + `/practice/saga/${saga_id}/act`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action }),
+  });
+  if (!r.ok || !r.body) {
+    onChunk(`[请求失败 ${r.status}]`);
+    return;
+  }
+  const reader = r.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    if (value) onChunk(decoder.decode(value, { stream: true }));
+  }
+}
 
 // 流式聊天（手动读 ReadableStream）
 export async function streamAsk(

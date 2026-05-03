@@ -45,12 +45,16 @@ async def _deepseek_stream(messages: list[Message]) -> AsyncIterator[str]:
         "Authorization": f"Bearer {settings.deepseek_api_key}",
         "Content-Type": "application/json",
     }
-    payload = {
+    payload: dict = {
         "model": settings.deepseek_model,
         "messages": messages,
         "stream": True,
         "temperature": 0.7,
     }
+    # DeepSeek V4 思考模式开关（仅对 v4-flash / v4-pro 生效）
+    thinking_mode = (settings.deepseek_thinking or "disabled").lower()
+    if settings.deepseek_model.startswith("deepseek-v4") and thinking_mode in ("enabled", "disabled"):
+        payload["thinking"] = {"type": thinking_mode}
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             async with client.stream("POST", url, headers=headers, json=payload) as resp:

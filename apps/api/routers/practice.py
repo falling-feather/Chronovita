@@ -6,9 +6,93 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from services import llm, persistence, sandbox
+from services import llm, persistence, sandbox, saga
 
 router = APIRouter()
+
+
+# ============= 「练」 互动小说 saga（V0.3.0 新） =============
+
+class SagaStartRequest(BaseModel):
+    lesson_id: str
+
+
+class SagaActRequest(BaseModel):
+    action: str = Field(..., min_length=1, max_length=400)
+
+
+@router.get("/saga/templates")
+async def saga_templates():
+    return {"items": saga.list_templates()}
+
+
+@router.post("/saga/start")
+async def saga_start(req: SagaStartRequest):
+    state = saga.start(req.lesson_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="该课程暂无互动剧本")
+    return state.public()
+
+
+@router.get("/saga/{saga_id}")
+async def saga_get(saga_id: str):
+    state = saga.get(saga_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="saga 不存在或已过期")
+    return state.public()
+
+
+@router.post("/saga/{saga_id}/act")
+async def saga_act(saga_id: str, req: SagaActRequest):
+    state = saga.get(saga_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="saga 不存在或已过期")
+
+    async def gen():
+        async for chunk in saga.act_stream(saga_id, req.action):
+            yield chunk
+
+    return StreamingResponse(gen(), media_type="text/plain; charset=utf-8")
+
+
+# ============= 「创」 知识画板 LLM 自动生成（V0.3.0 新） =============
+
+class CanvasGenRequest(BaseModel):
+    lesson_id: str
+    lesson_title: str
+    abstract: str
+    keywords: list[str] = []
+    seed: list[str] = []  # 已有节点 label
+
+
+@router.post("/canvas/generate")
+async def canvas_generate(req: CanvasGenRequest):
+    sys = (
+        "你是一名历史教师，正在为学生构建一张「知识谱系图」。"
+        "给定一节课程的标题与摘要，输出 6-9 个核心知识节点与它们之间的关系（边）。\n"
+        "严格输出 JSON：{\"nodes\":[{\"id\":\"n1\",\"label\":\"...\",\"category\":\"事件|人物|制度|概念|地点\"}],"
+        "\"edges\":[{\"from\":\"n1\",\"to\":\"n2\",\"label\":\"导致|包含|对应|继承|对立\"}]}\n"
+        "不要输出任何 JSON 之外的文字。"
+    )
+    user = (
+        f"课程：{req.lesson_title}\n"
+        f"摘要：{req.abstract}\n"
+        f"关键词：{', '.join(req.keywords) or '（无）'}\n"
+        f"已有节点：{', '.join(req.seed) or '（无）'}\n"
+        "请生成 6-9 个节点与若干边。"
+    )
+    full = ""
+    async for c in llm.stream_chat([{"role": "system", "content": sys}, {"role": "user", "content": user}]):
+        full += c
+    # 提取 JSON
+    import json as _json
+    import re as _re
+    m = _re.search(r"\{[\s\S]*\}", full)
+    try:
+        data = _json.loads(m.group(0)) if m else {"nodes": [], "edges": []}
+    except Exception:
+        data = {"nodes": [], "edges": [], "raw": full[:500]}
+    return data
 
 
 # ============= 「问」 跨时对话 =============

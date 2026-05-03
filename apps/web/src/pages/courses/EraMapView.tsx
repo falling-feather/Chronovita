@@ -1,7 +1,7 @@
 // 时空地图入场组件 · 纯 SVG · v0.2.8
 // v0.2.8：① 子时段（朝代切片）chip 切换 ② 鼠标滚轮缩放 + 拖拽平移 + 复位按钮
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CHINA_OUTLINE, RIVERS, type EraMapCity, type EraOverlay } from './eraMap';
+import { CHINA_OUTLINE, RIVERS, MOUNTAINS, type EraMapCity, type EraOverlay } from './eraMap';
 
 interface Props {
   era: EraOverlay;
@@ -66,6 +66,21 @@ const StaticLayer = memo(function StaticLayer() {
             strokeWidth={r.id === 'yellow' || r.id === 'yangtze' ? 2.4 : 1.4}
             strokeLinecap="round"
             opacity={r.id === 'yellow' || r.id === 'yangtze' ? 0.9 : 0.55}
+          />
+        ))}
+      </g>
+
+      {/* 山脉脊线 — v0.3.0 锯齿描边 */}
+      <g opacity={0.55}>
+        {MOUNTAINS.map((m) => (
+          <path
+            key={m.id}
+            d={m.geometry}
+            fill="none"
+            stroke="#8B6F47"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeDasharray="1 4"
           />
         ))}
       </g>
@@ -268,10 +283,38 @@ export default function EraMap({ era, onCityClick, activeSubEraId, onSubEraChang
           <path
             d={era.outline ?? CHINA_OUTLINE}
             fill="url(#landFill)"
+            fillOpacity={0.55}
             stroke={era.hue.primary}
             strokeWidth={1.6}
             strokeOpacity={0.7}
           />
+        </g>
+
+        {/* 河流 / 山脉 — v0.3.0 改为绘制在朝代版图之上，避免被遮挡 */}
+        <g opacity={0.9} pointerEvents="none">
+          {RIVERS.map((r) => (
+            <path
+              key={`top-${r.id}`}
+              d={r.geometry}
+              fill="none"
+              stroke={r.color}
+              strokeWidth={r.id === 'yellow' || r.id === 'yangtze' ? 2.4 : 1.4}
+              strokeLinecap="round"
+              opacity={r.id === 'yellow' || r.id === 'yangtze' ? 0.95 : 0.65}
+            />
+          ))}
+          {MOUNTAINS.map((m) => (
+            <path
+              key={`top-${m.id}`}
+              d={m.geometry}
+              fill="none"
+              stroke="#8B6F47"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeDasharray="1 4"
+              opacity={0.55}
+            />
+          ))}
         </g>
 
         {/* 时代叠加 — 历史路径 */}

@@ -16,8 +16,10 @@ class Settings(BaseSettings):
     # LLM 适配层
     llm_provider: str = "mock"  # mock | deepseek
     deepseek_api_key: str = ""
-    deepseek_base_url: str = "https://api.deepseek.com/v1"
-    deepseek_model: str = "deepseek-chat"
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = "deepseek-v4-flash"
+    # V4 thinking 模式：disabled / enabled / auto（默认 disabled，互动小说要快）
+    deepseek_thinking: str = "disabled"
 
 
 settings = Settings()

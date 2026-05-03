@@ -6,7 +6,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Button, Input, Space, message } from 'antd';
-import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
+import { PlusOutlined, SaveOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import type { Lesson } from '../../utils/api';
 import { api } from '../../utils/api';
 
@@ -27,6 +27,7 @@ export default function LessonCreate({ lesson }: { lesson: Lesson }) {
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
   const [newLabel, setNewLabel] = useState('');
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     api.canvasGet(lesson.id).then((r) => {
@@ -59,6 +60,60 @@ export default function LessonCreate({ lesson }: { lesson: Lesson }) {
     setNewLabel('');
   };
 
+  const aiGenerate = async () => {
+    setGenerating(true);
+    try {
+      const r = await api.canvasGenerate({
+        lesson_id: lesson.id,
+        lesson_title: lesson.title,
+        abstract: (lesson as any).abstract || (lesson as any).intro || '',
+        keywords: (lesson as any).keywords || [],
+        seed: nodes.map((n) => String((n.data as any)?.label || '')).filter(Boolean),
+      });
+      const existing = new Set(nodes.map((n) => String((n.data as any)?.label || '').trim()));
+      const idMap: Record<string, string> = {};
+      const fresh: Node[] = [];
+      (r.nodes || []).forEach((nd: any, i: number) => {
+        const label = String(nd.label || '').trim();
+        if (!label || existing.has(label)) {
+          // 复用已有同名节点 id
+          const found = nodes.find((n) => String((n.data as any)?.label || '').trim() === label);
+          if (found) idMap[nd.id] = found.id;
+          return;
+        }
+        const newId = 'ai_' + Date.now() + '_' + i;
+        idMap[nd.id] = newId;
+        fresh.push({
+          id: newId,
+          position: { x: 120 + (i % 4) * 200 + Math.random() * 40, y: 320 + Math.floor(i / 4) * 130 + Math.random() * 40 },
+          data: { label: label + (nd.category ? `（${nd.category}）` : '') },
+          style: { background: '#FFFBEC', border: '1px dashed var(--accent-gold)', borderRadius: 8, padding: 8, fontSize: 13 },
+        });
+        existing.add(label);
+      });
+      setNodes((ns) => [...ns, ...fresh]);
+      const existingEdges = new Set(edges.map((e) => `${e.source}->${e.target}`));
+      const freshEdges: Edge[] = [];
+      (r.edges || []).forEach((ed: any, i: number) => {
+        const src = idMap[ed.from]; const dst = idMap[ed.to];
+        if (!src || !dst || src === dst) return;
+        const key = `${src}->${dst}`;
+        if (existingEdges.has(key)) return;
+        existingEdges.add(key);
+        freshEdges.push({
+          id: 'ae_' + Date.now() + '_' + i, source: src, target: dst,
+          label: ed.label || undefined, animated: true,
+          style: { stroke: '#D4A95C', strokeDasharray: '4 3' },
+          labelStyle: { fontSize: 11, fill: 'var(--text-mute)' },
+        });
+      });
+      setEdges((es) => [...es, ...freshEdges]);
+      message.success(`AI 已扩充 ${fresh.length} 个节点 / ${freshEdges.length} 条关系`);
+    } catch (e: any) {
+      message.error('生成失败：' + e.message);
+    } finally { setGenerating(false); }
+  };
+
   const save = async () => {
     setSaving(true);
     try {
@@ -77,6 +132,7 @@ export default function LessonCreate({ lesson }: { lesson: Lesson }) {
                  onPressEnter={addNode} style={{ width: 200 }} />
           <Button icon={<PlusOutlined />} onClick={addNode}>加节点</Button>
         </Space>
+        <Button icon={<ThunderboltOutlined />} loading={generating} onClick={aiGenerate}>AI 扩充图谱</Button>
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: 12, color: 'var(--text-mute)' }}>拖动节点 · 从节点圆点连线 · 点击 Backspace 删除</span>
         <Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={save}>保存到云端</Button>
