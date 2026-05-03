@@ -576,3 +576,18 @@ body,
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+.chrono-track {
+  animation: chrono-track-in 0.9s ease-out both;
+}
+.chrono-track path:nth-child(2) {
+  stroke-dasharray: 6 6;
+  animation: chrono-track-flow 6s linear infinite;
+}
+@keyframes chrono-track-in {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes chrono-track-flow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -120; }
+}

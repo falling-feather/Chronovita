@@ -97,6 +97,39 @@ export default function EraMap({ era, onCityClick }: Props) {
       >
         <StaticLayer />
 
+        {/* 时代叠加 — 历史路径（长城/丝路/运河/航路 …） */}
+        {era.tracks && era.tracks.length > 0 && (
+          <g key={`${pulseKey}-tracks`} className="chrono-era-tracks" pointerEvents="none">
+            {era.tracks.map((t, i) => (
+              <g key={t.id} className="chrono-track" style={{ animationDelay: `${120 + i * 90}ms` }}>
+                {/* 外发光底线 */}
+                <path
+                  d={t.geometry}
+                  fill="none"
+                  stroke={t.color}
+                  strokeWidth={(t.width ?? 1.6) + 3}
+                  opacity={0.18}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                {/* 主线 */}
+                <path
+                  d={t.geometry}
+                  fill="none"
+                  stroke={t.color}
+                  strokeWidth={t.width ?? 1.6}
+                  strokeDasharray={t.dash ?? '6 6'}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={0.9}
+                >
+                  <title>{t.name}</title>
+                </path>
+              </g>
+            ))}
+          </g>
+        )}
+
         {/* 时代叠加 — 城市与都城 */}
         <g key={pulseKey} className="chrono-era-overlay">
           {era.cities.map((c, i) => (

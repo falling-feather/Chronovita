@@ -17,6 +17,20 @@ export interface EraMapEvent {
   text: string;
 }
 
+export interface EraMapTrack {
+  id: string;
+  /** 线名 */
+  name: string;
+  /** SVG path（M..C..L 等） */
+  geometry: string;
+  /** 颜色 */
+  color: string;
+  /** 虚线样式 */
+  dash?: string;
+  /** 线宽 */
+  width?: number;
+}
+
 export interface EraOverlay {
   id: string;
   name: string;
@@ -31,6 +45,8 @@ export interface EraOverlay {
   events: EraMapEvent[];
   /** 当代具有代表性的疆域注脚（短语） */
   frontier: string;
+  /** 当代历史路径（长城/丝路/运河/航路 …） */
+  tracks?: EraMapTrack[];
 }
 
 // 6 个时代 — id 与 services/courses/__init__.py 中的 ERAS 一致。
@@ -56,6 +72,16 @@ export const ERA_OVERLAYS: EraOverlay[] = [
       { year: -221, text: '秦灭六国 · 一统天下' },
     ],
     frontier: '诸夏分封 · 戎狄环伺',
+    tracks: [
+      {
+        id: 'zhou-fengjian',
+        name: '周王畿与诸侯封域',
+        color: '#C9A46E',
+        dash: '6 6',
+        width: 1.4,
+        geometry: 'M 380 320 C 460 305 540 305 620 320 C 660 360 660 410 620 440 C 540 460 460 460 380 440 C 340 410 340 360 380 320 Z',
+      },
+    ],
   },
   {
     id: 'qinhan',
@@ -78,6 +104,24 @@ export const ERA_OVERLAYS: EraOverlay[] = [
       { year: 25, text: '光武中兴 · 东汉立洛阳' },
     ],
     frontier: '北抗匈奴 · 西通西域',
+    tracks: [
+      {
+        id: 'great-wall-han',
+        name: '汉长城',
+        color: '#E8D7A8',
+        dash: '4 5',
+        width: 1.6,
+        geometry: 'M 200 270 L 270 258 L 360 248 L 460 240 L 550 232 L 640 232 L 720 246',
+      },
+      {
+        id: 'silk-road',
+        name: '丝绸之路（陆路）',
+        color: '#E2A03F',
+        dash: '8 4',
+        width: 1.8,
+        geometry: 'M 388 378 C 340 360 295 340 250 308 C 200 282 150 268 110 250',
+      },
+    ],
   },
   {
     id: 'weijin',
@@ -100,6 +144,24 @@ export const ERA_OVERLAYS: EraOverlay[] = [
       { year: 494, text: '孝文帝迁都洛阳 · 汉化改革' },
     ],
     frontier: '南北对峙 · 胡汉交融',
+    tracks: [
+      {
+        id: 'wei-jin-divide',
+        name: '南北分界（淮河—秦岭）',
+        color: '#A6B4D0',
+        dash: '5 5',
+        width: 1.6,
+        geometry: 'M 250 410 C 320 400 400 405 480 410 C 560 415 640 422 720 432',
+      },
+      {
+        id: 'yiguan-nandu',
+        name: '衣冠南渡',
+        color: '#9BB7E2',
+        dash: '2 6',
+        width: 1.6,
+        geometry: 'M 462 374 C 510 388 555 408 600 432',
+      },
+    ],
   },
   {
     id: 'suitang',
@@ -122,6 +184,32 @@ export const ERA_OVERLAYS: EraOverlay[] = [
       { year: 755, text: '安史之乱 · 由盛转衰' },
     ],
     frontier: '都护四方 · 万邦来朝',
+    tracks: [
+      {
+        id: 'grand-canal-sui',
+        name: '隋唐大运河',
+        color: '#C9A35E',
+        dash: '7 4',
+        width: 1.9,
+        geometry: 'M 540 290 C 525 320 488 350 488 380 C 488 405 540 410 582 410 C 612 426 626 446 632 462',
+      },
+      {
+        id: 'silk-road-tang',
+        name: '丝绸之路（盛唐）',
+        color: '#E2A03F',
+        dash: '8 4',
+        width: 1.8,
+        geometry: 'M 388 378 C 320 350 250 318 178 286 C 130 270 100 262 80 262',
+      },
+      {
+        id: 'sea-silk-tang',
+        name: '海上丝路',
+        color: '#5BA3D0',
+        dash: '3 6',
+        width: 1.6,
+        geometry: 'M 560 582 C 600 610 640 640 660 670',
+      },
+    ],
   },
   {
     id: 'songyuan',
@@ -144,6 +232,32 @@ export const ERA_OVERLAYS: EraOverlay[] = [
       { year: 1279, text: '崖山之战 · 元一统四海' },
     ],
     frontier: '海舶通蕃 · 草原汗国',
+    tracks: [
+      {
+        id: 'song-sea-trade',
+        name: '宋代海贸航线',
+        color: '#7FCBE8',
+        dash: '4 6',
+        width: 1.8,
+        geometry: 'M 600 540 C 640 580 660 620 670 660 C 660 690 600 700 540 690',
+      },
+      {
+        id: 'mongol-west',
+        name: '蒙古西征路线',
+        color: '#B8A580',
+        dash: '2 6',
+        width: 1.6,
+        geometry: 'M 562 278 C 460 250 350 232 240 232 C 160 240 100 248 60 260',
+      },
+      {
+        id: 'jin-song-divide',
+        name: '宋金分界（淮河—秦岭）',
+        color: '#9DB7C6',
+        dash: '5 5',
+        width: 1.4,
+        geometry: 'M 250 410 C 340 405 440 410 540 415 C 620 420 700 428 760 438',
+      },
+    ],
   },
   {
     id: 'mingqing',
@@ -166,6 +280,32 @@ export const ERA_OVERLAYS: EraOverlay[] = [
       { year: 1840, text: '鸦片战争 · 千年变局' },
     ],
     frontier: '海禁开关 · 边疆奠定',
+    tracks: [
+      {
+        id: 'great-wall-ming',
+        name: '明长城',
+        color: '#F0DCAD',
+        dash: '4 4',
+        width: 1.8,
+        geometry: 'M 178 252 L 240 240 L 310 232 L 380 226 L 462 224 L 540 230 L 620 240 L 700 256',
+      },
+      {
+        id: 'zhenghe',
+        name: '郑和下西洋',
+        color: '#5BA3D0',
+        dash: '8 4',
+        width: 2,
+        geometry: 'M 600 432 C 612 470 600 510 580 540 C 560 580 540 620 510 660 C 460 685 400 690 340 680',
+      },
+      {
+        id: 'qing-frontier',
+        name: '清代藩部边界',
+        color: '#C8A78E',
+        dash: '2 6',
+        width: 1.4,
+        geometry: 'M 130 252 C 220 232 320 220 410 218 C 500 218 590 224 656 256',
+      },
+    ],
   },
 ];
 
