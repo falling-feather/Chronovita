@@ -60,6 +60,7 @@
 - [v1.9.1][2026-05-04] 课堂化精修：sandbox.engine 新增 reachable_nodes BFS（按 (节点, 状态位) 去重）；新增 GET /classroom/tasks/{id}/verify 端点输出可达节点数、不可达必经/终局/推荐边；前端 ClassroomPage 任务卡加「预检」「复制为模板」按钮（复制时回填 form 字段）；SandboxPage DAG 在任务模式下用青色虚线 + ★ 标注推荐路径边
 - [v2.0.0][2026-05-05] 第四条剧本 · 洋务运动：services/sandbox/scenarios 新增 qing-yangwu-yundong（10 节点 / 12 边 / 5 状态变量），覆盖总理衙门→江南制造/福州船政→海防塞防之争→西征/北洋→官督商办→甲午之殇 / 维新前夜两类终局；agent/corpus 增 4 条洋务史料关键词索引；通过 /verify 校验 10/10 可达，标志 v2 大版本——四条剧本贯通先秦至晚清，「看练问创」全链路在四个史阶完整运行
 - [v2.1.0][2026-05-03] 问模块 · 真 LLM 接入：新增 services/agent/llm.py 适配层 stream_chat（mock / openai / deepseek（OpenAI 兼容） / ollama），dialogue.stream_answer 按 settings.llm_provider 切换 mock 字符块或 LLM async chunk 队列、引证仍由后端后置追加避免编造；apps/api/.env.example + settings.py 新增 CHRONO_LLM_PROVIDER/MODEL/API_KEY/BASE_URL；GET /api/v1/agent/status 暴露当前 provider，AgentPage 顶部 Tag 显示「模拟模式 / {provider}·{model}」；任意 provider 异常自动回落 mock 保底课堂；mock e2e 回归通过，详见 ADR-0011
+- [v2.1.1][2026-05-03] 工作区全局记忆：新增 .github/AGENT.md 作为多会话并行开发的智能体冷启动手册，覆盖项目身份/技术栈/目录结构/四模块速览/版本里程碑/Git 规范/编码规范/启动方式/持久化/踩坑清单/行动建议十一节，便于新对话第一时间对齐项目上下文
 - _（后续追加）_
 
 ## 风险与对冲
