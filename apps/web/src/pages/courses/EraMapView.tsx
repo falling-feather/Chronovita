@@ -11,6 +11,8 @@ interface Props {
   activeSubEraId?: string | null;
   /** 子时段变化回调（用于父级保持 URL 同步等） */
   onSubEraChange?: (subEraId: string | null) => void;
+  /** 点击「进入课程列表 ↓」时回调（父级负责滚动到课程区） */
+  onJumpToCourses?: () => void;
 }
 
 const VW = 1000;
@@ -45,13 +47,13 @@ const StaticLayer = memo(function StaticLayer() {
 
       <rect x="0" y="0" width={VW} height={VH} fill="url(#seaGlow)" />
 
-      <path d={CHINA_OUTLINE} fill="rgba(0,0,0,0.35)" filter="url(#landShadow)" transform="translate(8 10)" />
+      {/* 现代中国轮廓 — 作为备考底图（超淮、虚线） */}
       <path
         d={CHINA_OUTLINE}
-        fill="url(#landFill)"
-        stroke="rgba(212,169,92,0.55)"
-        strokeWidth={1.4}
-        strokeDasharray="2 4"
+        fill="none"
+        stroke="rgba(11,30,58,0.12)"
+        strokeWidth={1}
+        strokeDasharray="3 5"
       />
 
       <g opacity={0.85}>
@@ -83,7 +85,7 @@ const StaticLayer = memo(function StaticLayer() {
 interface ViewBoxState { x: number; y: number; w: number; h: number }
 const INIT_VIEW: ViewBoxState = { x: 0, y: 0, w: VW, h: VH };
 
-export default function EraMap({ era, onCityClick, activeSubEraId, onSubEraChange }: Props) {
+export default function EraMap({ era, onCityClick, activeSubEraId, onSubEraChange, onJumpToCourses }: Props) {
   const [pulseKey, setPulseKey] = useState(era.id);
   useEffect(() => { setPulseKey(era.id); }, [era.id]);
 
@@ -220,6 +222,18 @@ export default function EraMap({ era, onCityClick, activeSubEraId, onSubEraChang
         <span className="chrono-eramap-zoom-level">{zoomLevel.toFixed(1)}×</span>
       </div>
 
+      {/* 进入课程列表 — 显眼按钮 */}
+      {onJumpToCourses && (
+        <button
+          type="button"
+          className="chrono-eramap-jump"
+          onClick={onJumpToCourses}
+          title="跳转到下方课程列表"
+        >
+          进入课程列表 <span className="chrono-eramap-jump-arrow">↓</span>
+        </button>
+      )}
+
       <svg
         ref={svgRef}
         viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
@@ -240,6 +254,25 @@ export default function EraMap({ era, onCityClick, activeSubEraId, onSubEraChang
         onPointerCancel={endDrag}
       >
         <StaticLayer />
+
+        {/* 朝代版图 — 受 era 切换驱动，有柔和过渡动画 */}
+        <g key={`${pulseKey}-outline`} className="chrono-era-outline">
+          {/* 阴影 */}
+          <path
+            d={era.outline ?? CHINA_OUTLINE}
+            fill="rgba(0,0,0,0.32)"
+            filter="url(#landShadow)"
+            transform="translate(8 10)"
+          />
+          {/* 实身 */}
+          <path
+            d={era.outline ?? CHINA_OUTLINE}
+            fill="url(#landFill)"
+            stroke={era.hue.primary}
+            strokeWidth={1.6}
+            strokeOpacity={0.7}
+          />
+        </g>
 
         {/* 时代叠加 — 历史路径 */}
         {era.tracks && era.tracks.length > 0 && (

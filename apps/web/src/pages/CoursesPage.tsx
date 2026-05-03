@@ -108,6 +108,7 @@ export default function CoursesPage() {
               onCityClick={onPickCity}
               activeSubEraId={subEra || null}
               onSubEraChange={(id) => setParam('sub', id ?? '')}
+              onJumpToCourses={() => gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             />
           </Suspense>
         </div>
