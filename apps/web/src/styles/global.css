@@ -232,3 +232,335 @@ body,
     grid-template-columns: 1fr;
   }
 }
+
+/* ========== 课程中心 · 时空地图入场 v0.2.2 ========== */
+.chrono-hero-head {
+  text-align: left;
+  padding: 8px 4px 4px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.chrono-hero-head.entered {
+  opacity: 1;
+  transform: none;
+}
+.chrono-hero-eyebrow {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--accent-gold);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.chrono-hero-title {
+  font-size: 30px;
+  margin: 0 0 8px;
+  color: var(--text-dark);
+}
+.chrono-hero-sub {
+  font-size: 13px;
+  color: var(--text-mute);
+  line-height: 1.6;
+}
+
+.chrono-mapwrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  margin-top: 18px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .65s ease .12s, transform .65s ease .12s;
+}
+.chrono-mapwrap.entered {
+  opacity: 1;
+  transform: none;
+}
+
+.chrono-mapstage {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  background: var(--bg-warm-soft);
+  aspect-ratio: 1000 / 720;
+  min-height: 480px;
+  box-shadow: 0 6px 24px rgba(11,30,58,0.06);
+}
+.chrono-eramap {
+  width: 100%;
+  height: 100%;
+  transition: background .8s ease;
+}
+
+/* 城市入场动画 */
+@keyframes chrono-city-in {
+  from { opacity: 0; transform: scale(0.4) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes chrono-city-halo {
+  0%, 100% { opacity: 0.18; r: 16; }
+  50% { opacity: 0.32; r: 22; }
+}
+.chrono-era-overlay .chrono-city-node {
+  animation: chrono-city-in 0.55s cubic-bezier(.2,.8,.2,1) backwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.chrono-city-halo {
+  animation: chrono-city-halo 2.6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* 侧边时代信息面板 */
+.chrono-erapanel {
+  background: linear-gradient(180deg, var(--bg-warm-soft) 0%, var(--bg-page) 100%);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(11,30,58,0.05);
+}
+.chrono-erapanel-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-mute);
+  letter-spacing: 2px;
+}
+.chrono-erapanel-name {
+  font-size: 28px;
+  margin: 0;
+  color: var(--text-dark);
+}
+.chrono-erapanel-period {
+  font-size: 12px;
+  color: var(--accent-bronze);
+  letter-spacing: 1px;
+}
+.chrono-erapanel-blurb {
+  font-size: 13px;
+  color: var(--text-dark);
+  line-height: 1.7;
+  margin: 8px 0 4px;
+}
+.chrono-erapanel-events {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 6px;
+  padding: 12px 14px;
+  background: var(--bg-tint);
+  border-left: 2px solid var(--accent-gold);
+  border-radius: 4px;
+}
+.chrono-erapanel-event {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.chrono-erapanel-year {
+  flex-shrink: 0;
+  width: 64px;
+  font-family: '霞鹜文楷', 'Noto Serif SC', serif;
+  font-weight: 700;
+  color: var(--accent-bronze);
+}
+.chrono-erapanel-text {
+  color: var(--text-dark);
+}
+.chrono-erapanel-cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 10px;
+}
+.chrono-erapanel-cta-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mute);
+  letter-spacing: 1px;
+}
+.chrono-erapanel-cta-more {
+  font-size: 12px;
+  color: var(--accent-gold);
+  cursor: pointer;
+}
+.chrono-erapanel-cta-more:hover {
+  color: var(--accent-gold-hover);
+}
+.chrono-erapanel-empty {
+  margin-top: 10px;
+  padding: 18px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-disabled);
+  background: var(--bg-warm);
+  border-radius: 8px;
+}
+.chrono-erapanel-courses {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.chrono-erapanel-course {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--bg-page);
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.chrono-erapanel-course.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.chrono-erapanel-course:not(.disabled):hover {
+  transform: translateX(2px);
+  border-color: var(--accent-gold);
+  box-shadow: 0 2px 8px rgba(212,169,92,0.18);
+}
+.chrono-erapanel-course-bar {
+  width: 4px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.chrono-erapanel-course-section {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-gold);
+  letter-spacing: 1px;
+}
+.chrono-erapanel-course-title {
+  font-family: '霞鹜文楷', 'Noto Serif SC', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chrono-erapanel-course-sub {
+  font-size: 11px;
+  color: var(--text-mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========== 时间轴 ========== */
+.chrono-eratl-wrap {
+  margin-top: 18px;
+  padding: 18px 32px 26px;
+  background: linear-gradient(180deg, var(--bg-warm) 0%, var(--bg-warm-soft) 100%);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(11,30,58,0.06);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .7s ease .25s, transform .7s ease .25s;
+}
+.chrono-eratl-wrap.entered {
+  opacity: 1;
+  transform: none;
+}
+.chrono-eratl {
+  position: relative;
+  height: 64px;
+}
+.chrono-eratl-track {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 28px;
+  height: 3px;
+  background: var(--border-soft);
+  border-radius: 2px;
+}
+.chrono-eratl-progress {
+  position: absolute;
+  left: 24px;
+  top: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-bronze) 100%);
+  transition: width .6s cubic-bezier(.2,.8,.2,1);
+  pointer-events: none;
+}
+.chrono-eratl-rail {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 0;
+  bottom: 0;
+}
+.chrono-eratl-stop {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  outline: none;
+}
+.chrono-eratl-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-disabled);
+  border: 2px solid var(--bg-warm-soft);
+  margin-top: 22px;
+  transition: transform .25s ease, background .25s ease, box-shadow .25s ease;
+  box-shadow: 0 0 0 0 rgba(212,169,92,0.6);
+}
+.chrono-eratl-stop:hover .chrono-eratl-dot {
+  transform: scale(1.25);
+  background: var(--accent-gold);
+}
+.chrono-eratl-stop.active .chrono-eratl-dot {
+  width: 16px;
+  height: 16px;
+  margin-top: 20px;
+  background: var(--accent-gold);
+  box-shadow: 0 0 0 6px rgba(212,169,92,0.22);
+}
+.chrono-eratl-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+.chrono-eratl-name {
+  font-family: '霞鹜文楷', 'Noto Serif SC', serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-mute);
+  transition: color .25s ease, font-weight .25s ease;
+}
+.chrono-eratl-stop.active .chrono-eratl-name {
+  color: var(--text-dark);
+  font-weight: 700;
+}
+.chrono-eratl-period {
+  font-size: 10px;
+  color: var(--text-disabled);
+}
+
+@media (max-width: 1100px) {
+  .chrono-mapwrap { grid-template-columns: 1fr; }
+  .chrono-eratl-wrap { padding: 18px 16px 26px; }
+  .chrono-eratl-period { display: none; }
+}

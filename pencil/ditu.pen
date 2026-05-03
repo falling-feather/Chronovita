@@ -1,0 +1,645 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "LJ8U7",
+      "x": 0,
+      "y": 0,
+      "name": "课程中心-时空地图入场页",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": [
+        "#0E1116",
+        {
+          "type": "gradient",
+          "gradientType": "radial",
+          "enabled": true,
+          "rotation": 0,
+          "size": {
+            "width": 1.1,
+            "height": 1
+          },
+          "colors": [
+            {
+              "color": "#1B2030",
+              "position": 0
+            },
+            {
+              "color": "#0E1116",
+              "position": 1
+            }
+          ],
+          "center": {
+            "y": 0.4
+          }
+        }
+      ],
+      "layout": "none",
+      "children": [
+        {
+          "type": "text",
+          "id": "K35HgF",
+          "x": 0,
+          "y": 0,
+          "name": "eyebrow",
+          "fill": "#C9A35E",
+          "content": "CHRONOVITA · 课程中心",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "600",
+          "letterSpacing": 3
+        },
+        {
+          "type": "text",
+          "id": "l7d5C",
+          "x": 178,
+          "y": 0,
+          "name": "title",
+          "fill": "#F4ECDC",
+          "content": "在中国版图上，看见时代",
+          "fontFamily": "Noto Serif SC",
+          "fontSize": 44,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "B4g5i",
+          "x": 464,
+          "y": 0,
+          "name": "sub",
+          "fill": "#9AA3B2",
+          "textGrowth": "fixed-width",
+          "width": 900,
+          "content": "拖动下方时间轴 · 六大时代的疆域、都城与文明节点将在地图上动态浮现",
+          "lineHeight": 1.6,
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "qqWf2",
+          "x": 1364,
+          "y": 0,
+          "name": "stage",
+          "clip": true,
+          "width": 960,
+          "height": 540,
+          "fill": [
+            "#141926",
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "rotation": 0,
+              "size": {
+                "width": 0.9,
+                "height": 0.9
+              },
+              "colors": [
+                {
+                  "color": "#1F2840",
+                  "position": 0
+                },
+                {
+                  "color": "#141926",
+                  "position": 1
+                }
+              ]
+            }
+          ],
+          "cornerRadius": 16,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#2A3346"
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "path",
+              "id": "pLyCM",
+              "x": 80,
+              "y": 50,
+              "name": "china",
+              "geometry": "M60 200c20-60 60-100 120-110 60-10 100 10 140-10 40-20 100-10 150 10 50 20 110 10 170 40 60 30 100 70 80 120-20 50-60 70-100 60-40-10-80 10-110 40-30 30-70 40-110 30-40-10-80 0-110 20-30 20-70 10-100-20-30-30-60-60-80-90-20-30-40-50-50-90z",
+              "viewBox": [
+                0,
+                0,
+                820,
+                440
+              ],
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 135,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#2C3A55",
+                    "position": 0
+                  },
+                  {
+                    "color": "#1B2233",
+                    "position": 1
+                  }
+                ]
+              },
+              "width": 820,
+              "height": 440,
+              "stroke": {
+                "thickness": 1.5,
+                "fill": "#C9A35E"
+              }
+            },
+            {
+              "type": "path",
+              "id": "F7sHN",
+              "x": 100,
+              "y": 160,
+              "name": "riverY",
+              "geometry": "M30 40c70-20 150 0 230-10 80-10 160 20 240 5 80-15 160 5 230-5",
+              "viewBox": [
+                0,
+                0,
+                760,
+                80
+              ],
+              "fill": "#00000000",
+              "width": 760,
+              "height": 80,
+              "stroke": {
+                "thickness": 2,
+                "cap": "round",
+                "fill": "#D4A856"
+              }
+            },
+            {
+              "type": "path",
+              "id": "pRdDN",
+              "x": 100,
+              "y": 200,
+              "name": "riverC",
+              "geometry": "M20 60c60-30 140-10 220 10 80 20 160 0 240-10 80-10 160 10 240 30",
+              "viewBox": [
+                0,
+                0,
+                760,
+                120
+              ],
+              "fill": "#00000000",
+              "width": 760,
+              "height": 120,
+              "stroke": {
+                "thickness": 2,
+                "cap": "round",
+                "fill": "#5BA3D0"
+              }
+            },
+            {
+              "type": "ellipse",
+              "id": "c9f2Q",
+              "x": 300,
+              "y": 240,
+              "name": "city1",
+              "fill": "#F4ECDC",
+              "width": 14,
+              "height": 14,
+              "stroke": {
+                "thickness": 2,
+                "fill": "#C9A35E"
+              }
+            },
+            {
+              "type": "text",
+              "id": "UHvUx",
+              "x": 320,
+              "y": 236,
+              "name": "city1l",
+              "fill": "#F4ECDC",
+              "content": "长安",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "ellipse",
+              "id": "sXq6A",
+              "x": 440,
+              "y": 248,
+              "name": "city2",
+              "fill": "#F4ECDC",
+              "width": 12,
+              "height": 12,
+              "stroke": {
+                "thickness": 2,
+                "fill": "#C9A35E"
+              }
+            },
+            {
+              "type": "text",
+              "id": "m6qg6T",
+              "x": 460,
+              "y": 244,
+              "name": "city2l",
+              "fill": "#F4ECDC",
+              "content": "洛阳",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "ellipse",
+              "id": "calHV",
+              "x": 608,
+              "y": 328,
+              "name": "city3",
+              "fill": "#F4ECDC",
+              "width": 12,
+              "height": 12,
+              "stroke": {
+                "thickness": 2,
+                "fill": "#C9A35E"
+              }
+            },
+            {
+              "type": "text",
+              "id": "mrMf0",
+              "x": 628,
+              "y": 324,
+              "name": "city3l",
+              "fill": "#F4ECDC",
+              "content": "建康/南京",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "g4Fjg",
+              "x": 340,
+              "y": 80,
+              "name": "evt",
+              "fill": "#C9A35E",
+              "content": "☉ 公元前 221 · 嬴政称皇帝",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 13,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "m20rl",
+          "x": 1040,
+          "y": 230,
+          "name": "side",
+          "width": 340,
+          "height": 540,
+          "fill": "#171C28",
+          "cornerRadius": 14,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#2A3346"
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "text",
+              "id": "VfojP",
+              "x": 24,
+              "y": 22,
+              "name": "sideTag",
+              "fill": "#9AA3B2",
+              "content": "当前时代",
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "600",
+              "letterSpacing": 2
+            },
+            {
+              "type": "text",
+              "id": "HvkoN",
+              "x": 24,
+              "y": 42,
+              "name": "sideName",
+              "fill": "#F4ECDC",
+              "content": "秦汉",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 28,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "SMrcM",
+              "x": 24,
+              "y": 82,
+              "name": "sidePeriod",
+              "fill": "#9AA3B2",
+              "content": "前 221 — 220 · 大一统帝国奠基",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "zPZnQ",
+              "x": 24,
+              "y": 120,
+              "name": "cc1",
+              "width": 292,
+              "height": 92,
+              "fill": "#1F2638",
+              "cornerRadius": 10,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#2A3346"
+              },
+              "layout": "none",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": [
+                    10,
+                    0,
+                    0,
+                    10
+                  ],
+                  "id": "krXN3",
+                  "x": 0,
+                  "y": 0,
+                  "name": "cc1bar",
+                  "fill": "#7A2E2E",
+                  "width": 4,
+                  "height": 92
+                },
+                {
+                  "type": "text",
+                  "id": "e54WhR",
+                  "x": 16,
+                  "y": 12,
+                  "name": "cc1sec",
+                  "fill": "#C9A35E",
+                  "content": "通史",
+                  "fontFamily": "Inter",
+                  "fontSize": 10,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "zjFic",
+                  "x": 16,
+                  "y": 30,
+                  "name": "cc1ti",
+                  "fill": "#F4ECDC",
+                  "content": "两汉四百年 · 大一统的奠基",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 15,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "SZktY",
+                  "x": 16,
+                  "y": 54,
+                  "name": "cc1sub",
+                  "fill": "#9AA3B2",
+                  "content": "3 节 · 楚汉相争 / 文景汉武 / 光武",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "uQ3sc",
+              "x": 24,
+              "y": 224,
+              "name": "cc2",
+              "width": 292,
+              "height": 92,
+              "fill": "#1F2638",
+              "cornerRadius": 10,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#2A3346"
+              },
+              "layout": "none",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": [
+                    10,
+                    0,
+                    0,
+                    10
+                  ],
+                  "id": "kqXqs",
+                  "x": 0,
+                  "y": 0,
+                  "name": "cc2bar",
+                  "fill": "#B8860B",
+                  "width": 4,
+                  "height": 92
+                },
+                {
+                  "type": "text",
+                  "id": "XiFV3",
+                  "x": 16,
+                  "y": 12,
+                  "name": "cc2sec",
+                  "fill": "#C9A35E",
+                  "content": "文化",
+                  "fontFamily": "Inter",
+                  "fontSize": 10,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "wMq8I",
+                  "x": 16,
+                  "y": 30,
+                  "name": "cc2ti",
+                  "fill": "#F4ECDC",
+                  "content": "两汉思想与科技",
+                  "fontFamily": "Noto Serif SC",
+                  "fontSize": 15,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "fyQ6Y",
+                  "x": 16,
+                  "y": 54,
+                  "name": "cc2sub",
+                  "fill": "#9AA3B2",
+                  "content": "3 节 · 史记 / 经学 / 蔡伦张衡",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Cib01",
+          "x": 60,
+          "y": 800,
+          "name": "tl",
+          "width": 1320,
+          "height": 68,
+          "fill": "#171C28",
+          "cornerRadius": 34,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#2A3346"
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": 2,
+              "id": "AStXw",
+              "x": 60,
+              "y": 30,
+              "name": "track",
+              "fill": "#2A3346",
+              "width": 1200,
+              "height": 4
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 2,
+              "id": "Unnpt",
+              "x": 60,
+              "y": 30,
+              "name": "prog",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 90,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#C9A35E",
+                    "position": 0
+                  },
+                  {
+                    "color": "#7A2E2E",
+                    "position": 1
+                  }
+                ]
+              },
+              "width": 340,
+              "height": 4
+            },
+            {
+              "type": "text",
+              "id": "db3re",
+              "x": 60,
+              "y": 14,
+              "name": "e1",
+              "fill": "#9AA3B2",
+              "content": "先秦",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 12,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "bKU5v",
+              "x": 240,
+              "y": 14,
+              "name": "e2",
+              "fill": "#F4ECDC",
+              "content": "秦汉",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "eCCJH",
+              "x": 420,
+              "y": 14,
+              "name": "e3",
+              "fill": "#9AA3B2",
+              "content": "魏晋南北朝",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 12,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "tQ71C",
+              "x": 640,
+              "y": 14,
+              "name": "e4",
+              "fill": "#9AA3B2",
+              "content": "隋唐",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 12,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "YkQa4",
+              "x": 840,
+              "y": 14,
+              "name": "e5",
+              "fill": "#9AA3B2",
+              "content": "宋元",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 12,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "XoGxy",
+              "x": 1040,
+              "y": 14,
+              "name": "e6",
+              "fill": "#9AA3B2",
+              "content": "明清",
+              "fontFamily": "Noto Serif SC",
+              "fontSize": 12,
+              "fontWeight": "500"
+            },
+            {
+              "type": "ellipse",
+              "id": "fwGFj",
+              "x": 390,
+              "y": 22,
+              "name": "knob",
+              "fill": "#F4ECDC",
+              "width": 20,
+              "height": 20,
+              "stroke": {
+                "thickness": 3,
+                "fill": "#C9A35E"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#C9A35E80",
+                "blur": 12
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

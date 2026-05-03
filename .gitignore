@@ -68,3 +68,6 @@ uploads/
 .redisdata/
 .chroma/
 .minio/
+
+apps/web/.vite/
+
