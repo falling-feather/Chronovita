@@ -1,55 +1,105 @@
-import { Card, Col, Row, Steps, Typography } from 'antd';
-import { Link } from 'react-router-dom';
+import { Button, Row, Col } from 'antd';
+import { useNavigate } from 'react-router-dom';
 
-const { Title, Paragraph } = Typography;
+const recommended = [
+  { title: '先秦 · 礼乐之邦', meta: '七年级 · 8 章 · 已选 0 人' },
+  { title: '秦汉 · 大一统', meta: '七年级 · 10 章 · 已选 0 人' },
+  { title: '隋唐 · 风华长安', meta: '七年级 · 9 章 · 已选 0 人' },
+  { title: '隋唐 · 万邦来朝', meta: '七年级 · 9 章 · 已选 0 人' },
+];
 
-const modules = [
-  { path: '/recall', name: '看 · 沉浸叙事', desc: '历史文本化作高保真微视频，身临其境溯源华夏。' },
-  { path: '/sandbox', name: '练 · 沙盘推演', desc: '干预历史变量，于平行时空验证因果必然与偶然。' },
-  { path: '/agent', name: '问 · 双模智者', desc: '历史人物同伴与考古专家无缝切换，跨时空对话。' },
-  { path: '/canvas', name: '创 · 知识谱系', desc: '低代码画布编织个人知识脉络，从被动观看到主动创造。' },
-  { path: '/classroom', name: '课 · 老师预设', desc: '老师预调初始变量、必经节点与合格终局，生成任务 ID 分享学生。' },
+const pedagogy = [
+  { tag: '看', title: '沉浸情景', desc: 'AI 生成的微视频带你回到历史现场' },
+  { tag: '练', title: '决策沙盘', desc: '在关键节点做选择，看历史的另一种走向' },
+  { tag: '问', title: '跨时对话', desc: '与商鞅、王安石们对谈，问出你的疑问' },
+  { tag: '创', title: '历史画板', desc: '用节点和连线整理你眼中的因果脉络' },
 ];
 
 export default function HomePage() {
+  const nav = useNavigate();
   return (
-    <div>
-      <Title level={2} className="chrono-title">让史册化作可推演的时空</Title>
-      <Paragraph style={{ fontSize: 16, maxWidth: 720 }}>
-        史脉以生成式人工智能驱动的「看 · 练 · 问 · 创」四段式实践教学，
-        将固化的历史叙事重构为可干预、可量化、可创造的沙盘课堂。
-      </Paragraph>
-      <div className="chrono-divider" />
-      <Row gutter={[24, 24]}>
-        {modules.map((m) => (
-          <Col key={m.path} xs={24} sm={12} lg={6}>
-            <Link to={m.path}>
-              <Card hoverable title={<span className="chrono-title">{m.name}</span>}>
-                {m.desc}
-              </Card>
-            </Link>
+    <div style={{ maxWidth: 1392, margin: '0 auto' }}>
+      {/* Hero */}
+      <Row gutter={20} style={{ marginBottom: 32 }}>
+        <Col flex="auto">
+          <div className="chrono-hero" style={{ height: '100%' }}>
+            <div style={{ fontSize: 12, color: 'var(--accent-gold)', letterSpacing: 2, marginBottom: 8 }}>
+              CHRONOVITA · v0.1.0
+            </div>
+            <h1>以史为鉴 · 看练问创</h1>
+            <p>沉浸情景、决策沙盘、跨时对话、历史画板 — 让每一段历史都可以被推演、被追问、被再创作。</p>
+            <Button type="primary" size="large" style={{ marginRight: 12 }} onClick={() => nav('/courses')}>
+              进入课程中心
+            </Button>
+            <Button size="large" onClick={() => {
+              const el = document.getElementById('chrono-pedagogy');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}>
+              了解教学法
+            </Button>
+          </div>
+        </Col>
+        <Col flex="320px">
+          <div
+            className="chrono-card-dark"
+            style={{ height: '100%', cursor: 'pointer' }}
+            onClick={() => nav('/courses')}
+          >
+            <div style={{ color: 'var(--accent-gold)', fontSize: 12, marginBottom: 8 }}>本周精选</div>
+            <div className="chrono-title" style={{ fontSize: 22, marginBottom: 12 }}>
+              华夏文明的起源与发展
+            </div>
+            <div style={{ color: 'var(--text-cream-mute)', fontSize: 12 }}>
+              七年级 · 第一单元
+            </div>
+          </div>
+        </Col>
+      </Row>
+
+      {/* 推荐课程 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+        <h3 className="chrono-title" style={{ fontSize: 18, margin: 0 }}>推荐课程</h3>
+        <a style={{ color: 'var(--accent-gold)', fontSize: 12 }} onClick={() => nav('/courses')}>查看更多 ›</a>
+      </div>
+      <Row gutter={16} style={{ marginBottom: 32 }}>
+        {recommended.map((c) => (
+          <Col span={6} key={c.title}>
+            <div
+              className="chrono-card"
+              style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }}
+              onClick={() => nav('/courses')}
+            >
+              <div style={{ height: 120, background: 'var(--accent-bronze)' }} />
+              <div style={{ padding: 16 }}>
+                <div className="chrono-title" style={{ fontSize: 15, marginBottom: 6 }}>{c.title}</div>
+                <div style={{ color: 'var(--text-mute)', fontSize: 11 }}>{c.meta}</div>
+              </div>
+            </div>
           </Col>
         ))}
       </Row>
 
-      <div className="chrono-divider" />
-      <Card title={<span className="chrono-title">v1.5.0 · 全链路引导</span>} style={{ background: '#FBF6EC' }}>
-        <Paragraph>
-          四模块已贯通会话桥，按下列次序游历可一键串联整段课堂：
-        </Paragraph>
-        <Steps
-          direction="horizontal"
-          size="small"
-          current={-1}
-          items={[
-            { title: '看', description: '生成分镜后点「送入练模块」' },
-            { title: '练', description: '推演至终局后点「送入问模块」' },
-            { title: '问', description: '获得双派论述后点「沉淀为创模块谱系」' },
-            { title: '创', description: '自动生成论辩谱系节点与引证' },
-          ]}
-        />
-      </Card>
+      {/* 教学法 */}
+      <h3 id="chrono-pedagogy" className="chrono-title" style={{ fontSize: 18, marginBottom: 12 }}>教学法 · 看练问创</h3>
+      <Row gutter={16}>
+        {pedagogy.map((p) => (
+          <Col span={6} key={p.tag}>
+            <div
+              className="chrono-card-dark"
+              style={{ minHeight: 180, cursor: 'pointer' }}
+              onClick={() => nav('/practice')}
+            >
+              <div style={{ fontSize: 48, color: 'var(--accent-gold)', fontWeight: 700, marginBottom: 8 }}>
+                {p.tag}
+              </div>
+              <div className="chrono-title" style={{ fontSize: 16, marginBottom: 6, color: 'var(--text-cream)' }}>
+                {p.title}
+              </div>
+              <div style={{ color: 'var(--text-cream-mute)', fontSize: 12 }}>{p.desc}</div>
+            </div>
+          </Col>
+        ))}
+      </Row>
     </div>
   );
 }
-

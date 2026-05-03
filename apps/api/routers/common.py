@@ -1,18 +1,23 @@
 from fastapi import APIRouter
 
+from settings import settings
+
 router = APIRouter()
 
 
-@router.get("/courses")
-async def list_courses():
-    return {"items": []}
+@router.get("/version")
+async def version():
+    return {"name": settings.app_name, "version": settings.app_version}
 
 
-@router.get("/courses/{course_id}/chapters")
-async def list_chapters(course_id: str):
-    return {"course_id": course_id, "items": []}
-
-
-@router.get("/users/me")
-async def current_user():
-    return {"id": "anonymous", "name": "访客", "role": "student"}
+@router.get("/modules")
+async def modules():
+    return {
+        "items": [
+            {"key": "home", "label": "首页", "path": "/"},
+            {"key": "courses", "label": "课程中心", "path": "/courses"},
+            {"key": "learning", "label": "我的学习", "path": "/learning"},
+            {"key": "practice", "label": "实践课堂", "path": "/practice"},
+            {"key": "profile", "label": "个人中心", "path": "/profile"},
+        ]
+    }

@@ -10,28 +10,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from settings import settings
-from routers import recall, sandbox, agent, canvas, classroom, common
+from routers import common, home, courses, learning, practice, profile
 from services import persistence
-from services.canvas import store as canvas_store
-from services.sandbox import engine as sandbox_engine
-from services.agent import dialogue as agent_dialogue
-from services.classroom import store as classroom_store
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     persistence.init_engine(settings.sqlite_path)
-    canvas_store.hydrate_from_db()
-    sandbox_engine.hydrate_from_db()
-    agent_dialogue.hydrate_from_db()
-    classroom_store.hydrate_from_db()
     yield
 
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="史脉 Chronovita 后端服务 · 看 练 问 创 四模块统一入口",
+    description="历史未来课堂 Chronovita 后端 · 五模块平台壳",
     lifespan=lifespan,
 )
 
@@ -46,16 +38,20 @@ app.add_middleware(
 API_PREFIX = "/api/v1"
 
 app.include_router(common.router, prefix=API_PREFIX, tags=["通用"])
-app.include_router(recall.router, prefix=f"{API_PREFIX}/recall", tags=["看 · 沉浸叙事"])
-app.include_router(sandbox.router, prefix=f"{API_PREFIX}/sandbox", tags=["练 · 沙盘推演"])
-app.include_router(agent.router, prefix=f"{API_PREFIX}/agent", tags=["问 · 双模智者"])
-app.include_router(canvas.router, prefix=f"{API_PREFIX}/canvas", tags=["创 · 知识谱系"])
-app.include_router(classroom.router, prefix=f"{API_PREFIX}/classroom", tags=["课 · 老师预设"])
+app.include_router(home.router, prefix=f"{API_PREFIX}/home", tags=["首页"])
+app.include_router(courses.router, prefix=f"{API_PREFIX}/courses", tags=["课程中心"])
+app.include_router(learning.router, prefix=f"{API_PREFIX}/learning", tags=["我的学习"])
+app.include_router(practice.router, prefix=f"{API_PREFIX}/practice", tags=["实践课堂"])
+app.include_router(profile.router, prefix=f"{API_PREFIX}/profile", tags=["个人中心"])
 
 
 @app.get("/", tags=["通用"])
 async def root():
-    return {"name": settings.app_name, "version": settings.app_version, "modules": ["recall", "sandbox", "agent", "canvas", "classroom"]}
+    return {
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "modules": ["home", "courses", "learning", "practice", "profile"],
+    }
 
 
 @app.get("/healthz", tags=["通用"])
