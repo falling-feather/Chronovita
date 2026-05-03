@@ -1,11 +1,11 @@
 // 时空地图入场组件 · 纯 SVG · v0.2.2
 import { memo, useEffect, useState } from 'react';
-import { CHINA_OUTLINE, RIVERS, type EraOverlay } from './eraMap';
+import { CHINA_OUTLINE, RIVERS, type EraMapCity, type EraOverlay } from './eraMap';
 
 interface Props {
   era: EraOverlay;
-  /** 选择城市时回调（保留扩展位） */
-  onCityClick?: (cityName: string) => void;
+  /** 选择城市时回调（传出完整 city 对象） */
+  onCityClick?: (city: EraMapCity) => void;
 }
 
 const VW = 1000;
@@ -138,7 +138,7 @@ export default function EraMap({ era, onCityClick }: Props) {
               transform={`translate(${c.x} ${c.y})`}
               style={{ cursor: onCityClick ? 'pointer' : 'default', animationDelay: `${i * 80}ms` }}
               className="chrono-city-node"
-              onClick={() => onCityClick?.(c.name)}
+              onClick={() => onCityClick?.(c)}
             >
               {c.capital && (
                 <circle r={16} fill={era.hue.primary} opacity={0.18} className="chrono-city-halo" />

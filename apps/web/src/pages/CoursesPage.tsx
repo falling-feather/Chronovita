@@ -1,8 +1,8 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tag, Spin, Empty } from 'antd';
 import { api, type CourseSummary, type Era } from '../utils/api';
-import { ERA_OVERLAYS } from './courses/eraMap';
+import { ERA_OVERLAYS, type EraMapCity } from './courses/eraMap';
 import EraTimeline from './courses/EraTimeline';
 
 // 地图入场图层懒加载，首屏更快
@@ -19,6 +19,9 @@ export default function CoursesPage() {
   const courseEra = eraParam || 'all';
   const section = params.get('section') || 'all';
   const q = params.get('q') || '';
+  const city = params.get('city') || '';
+
+  const gridRef = useRef<HTMLDivElement | null>(null);
 
   const [eras, setEras] = useState<Era[]>([]);
   const [items, setItems] = useState<CourseSummary[]>([]);
@@ -56,6 +59,29 @@ export default function CoursesPage() {
 
   const setEra = (id: string) => setParam('era', id);
 
+  // 点击地图都城 → 设置 city 过滤 + 滚动到课程网格
+  const onPickCity = (c: EraMapCity) => {
+    const next = new URLSearchParams(params);
+    // 存古名，现名入 keywords
+    next.set('city', c.name);
+    if (c.modern && c.modern !== c.name) next.set('cityModern', c.modern);
+    else next.delete('cityModern');
+    setParams(next, { replace: true });
+    requestAnimationFrame(() => {
+      gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  // 前端按地点过滤（处理 title/subtitle 同时匹配古名与今名）
+  const cityModern = params.get('cityModern') || '';
+  const visibleItems = useMemo(() => {
+    if (!city) return items;
+    const keywords = [city, cityModern].filter(Boolean) as string[];
+    return items.filter((it) =>
+      keywords.some((k) => it.title.includes(k) || it.subtitle.includes(k)),
+    );
+  }, [items, city, cityModern]);
+
   return (
     <div style={{ maxWidth: 1392, margin: '0 auto' }}>
       {/* 入场标题 */}
@@ -71,7 +97,7 @@ export default function CoursesPage() {
       <div className={`chrono-mapwrap${entered ? ' entered' : ''}`}>
         <div className="chrono-mapstage">
           <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><Spin /></div>}>
-            <EraMap era={currentEra} />
+            <EraMap era={currentEra} onCityClick={onPickCity} />
           </Suspense>
         </div>
 
@@ -142,12 +168,14 @@ export default function CoursesPage() {
       </div>
 
       {/* 浏览全部课程（保留原 chips + 网格） */}
-      <div style={{ marginTop: 36, marginBottom: 12 }}>
+      <div ref={gridRef} style={{ marginTop: 36, marginBottom: 12 }}>
         <h2 className="chrono-title" style={{ fontSize: 20, margin: 0 }}>浏览全部课程</h2>
         <div style={{ color: 'var(--text-mute)', fontSize: 13, marginTop: 6 }}>
-          {courseEra === 'all'
-            ? '按板块筛选课程；点击卡片进入课程详情。'
-            : `已锁定时代 · ${currentEra.name}（${currentEra.period}）`}
+          {city
+            ? `已按地点 · ${city} 筛选，点击其他都城可切换，或点 × 清除。`
+            : courseEra === 'all'
+              ? '按板块筛选课程；点击卡片进入课程详情。'
+              : `已锁定时代 · ${currentEra.name}（${currentEra.period}）`}
         </div>
       </div>
 
@@ -185,15 +213,25 @@ export default function CoursesPage() {
             <a style={{ marginLeft: 8, color: 'var(--text-mute)' }} onClick={() => setParam('q', '')}>×</a>
           </span>
         )}
+        {city && (
+          <span className="chrono-chip" style={{ background: 'var(--bg-tint)', borderColor: 'var(--accent-gold)' }}>
+            地点: {city}{cityModern ? ` / ${cityModern}` : ''}
+            <a style={{ marginLeft: 8, color: 'var(--text-mute)' }} onClick={() => {
+              const next = new URLSearchParams(params);
+              next.delete('city'); next.delete('cityModern');
+              setParams(next, { replace: true });
+            }}>×</a>
+          </span>
+        )}
       </div>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div>
-      ) : items.length === 0 ? (
-        <Empty description="暂无符合条件的课程" />
+      ) : visibleItems.length === 0 ? (
+        <Empty description={city ? `未找到与「${city}」相关的课程` : '暂无符合条件的课程'} />
       ) : (
         <div className="chrono-course-grid">
-          {items.map((c) => {
+          {visibleItems.map((c) => {
             const disabled = c.lesson_count === 0;
             return (
               <div
