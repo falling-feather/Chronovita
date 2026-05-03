@@ -14,7 +14,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="repla
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 BASE = "http://127.0.0.1:8000/api/v1"
-MAX_ROUNDS = 6
+MAX_ROUNDS = 7
 
 
 def post(path, body=None):
