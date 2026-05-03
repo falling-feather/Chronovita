@@ -1755,12 +1755,17 @@ def _apply_meta(state: SagaState, narrative: str, meta: dict) -> None:
     # 仅当 meta 完全没有 choices 字段（解析失败/网络截断）才保留旧值作兜底。
     if isinstance(meta.get("choices"), list):
         new_choices = [str(c) for c in meta["choices"][:4]]
-        # 另一种退化：LLM 各谋身退直接复粘上一轮 choices（这会与新 narrative 脱节）。
-        # 此时主动清空，由 UI 引导玩家进入自由输入。
+        # 退化场景一：LLM 直接复粘上一轮 choices（与新 narrative 脱节）。主动清空，由 UI 引导自由输入。
         if new_choices and new_choices == state.choices:
+            print(f"[saga] step={state.step} dup choices, clearing", flush=True)
             state.choices = []
         else:
             state.choices = new_choices
+    else:
+        # 退化场景二：LLM 这轮 meta 完全没给 'choices' 字段。不能保留旧 choices（会与新情境脱节）。
+        if state.choices:
+            print(f"[saga] step={state.step} meta no choices, clearing stale", flush=True)
+        state.choices = []
     if meta.get("ended"):
         state.ended = True
     state.step += 1
