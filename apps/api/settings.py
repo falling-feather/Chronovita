@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-v4-flash"
+    # 「问 · 跨时对话」用更准的 pro 模型（saga 仍用 flash 以保证流式速度）
+    deepseek_model_pro: str = "deepseek-v4-pro"
     # V4 thinking 模式：disabled / enabled / auto（默认 disabled，互动小说要快）
     deepseek_thinking: str = "disabled"
 

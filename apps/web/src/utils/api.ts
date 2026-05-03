@@ -43,7 +43,7 @@ export const api = {
   },
   course: (id: string) => jsonFetch<CourseDetail>(`/courses/${id}`),
   lesson: (cid: string, lid: string) => jsonFetch<Lesson>(`/courses/${cid}/lessons/${lid}`),
-  llmInfo: () => jsonFetch<{ provider: string }>('/practice/llm/info'),
+  llmInfo: () => jsonFetch<{ provider: string; ask_provider?: string }>('/practice/llm/info'),
   sandboxGet: (sid: string) => jsonFetch<any>(`/practice/sandbox/${sid}`),
   sandboxStep: (sid: string, body: { node_id: string; choice: string; state: Record<string, number> }) =>
     jsonFetch<any>(`/practice/sandbox/${sid}/step`, { method: 'POST', body: JSON.stringify(body) }),
@@ -99,6 +99,8 @@ export async function streamAsk(
     persona?: 'expert' | 'peer';
     lesson_id?: string;
     lesson_title?: string;
+    peer_character?: string;
+    era?: string;
     history?: { role: 'user' | 'assistant'; content: string }[];
   },
   onChunk: (text: string) => void,

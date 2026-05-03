@@ -103,34 +103,67 @@ class AskRequest(BaseModel):
     lesson_title: str | None = None
     user_message: str
     history: list[dict] = []
+    # peer 模式下的对谈历史人物（如 "孔子"、"嵇康"）；为空时取课程默认 figure
+    peer_character: str | None = None
+    # 课程时期，用于把同窗回答框定在该时期之内
+    era: str | None = None
 
 
-def _system_prompt(persona: str, lesson_title: str | None) -> str:
-    base_expert = (
-        "你是一位中学历史教师，性格温和，讲解严谨。"
-        "回答时尽量贴近教材级别的表述，避免编造史料；不确定时直说「学界尚有争议」。"
-        "回答控制在 200 字以内，必要时分点。"
+def _system_prompt(
+    persona: str,
+    *,
+    lesson_title: str | None,
+    peer_character: str | None,
+    era: str | None,
+) -> str:
+    if persona == "peer":
+        # 同窗 = 同时期历史人物，第一人称代入
+        name = (peer_character or "").strip() or "孔子"
+        era_clause = f"你生活在{era}时期。" if era else ""
+        return (
+            f"你现在扮演中国历史上的真实人物：{name}。{era_clause}\n"
+            "请用第一人称（『吾』『余』『我』均可，依人物风格而定），以贴近该人物身份、思想、口吻的方式与用户对话。\n"
+            "硬性约束：\n"
+            "1. 严格遵守史实——只谈论你所处时代之前已发生的事件、你认识的人、你提出过或可能持有的观点；绝不预言后世（如『后来汉朝』『千年之后』之类一律禁止）。\n"
+            "2. 文风带文言色彩但保持可读，必要时附一句白话解释，让现代中学生能理解。\n"
+            "3. 当用户问到你不可能知晓的事，要诚实地以人物口吻反问或表示『此事吾未之闻』。\n"
+            "4. 单次回答控制在 200 字以内，避免长篇大论。\n"
+            f"当前课程上下文：「{lesson_title or '未指定'}」，对话宜围绕该主题展开。"
+        )
+    # 专家模式：历史学者/教师
+    return (
+        "你是一位资深的中国历史研究者兼中学历史教师，治学严谨、语言克制。\n"
+        "回答规范：\n"
+        "1. 优先依据通行的中学/大学历史教材与主流学界共识作答；不确定或学界有争议时明确标注『学界有争议』并简述两派观点。\n"
+        "2. 严禁编造史料、人名、年代；若用户提问超出可靠史实范围，应直说『目前尚无可靠史料证实』。\n"
+        "3. 鼓励对比同时期不同文明 / 不同思想流派，凸显历史脉络。\n"
+        "4. 单次回答控制在 250 字以内，必要时分点；可在末尾用一行『延伸阅读：…』推荐 1 本书或 1 段史料。\n"
+        f"当前课程上下文：「{lesson_title or '未指定'}」，请围绕该课程内容作答。"
     )
-    base_peer = (
-        "你是一位与用户同班的初中同学，对历史很有兴趣，喜欢用生活化的比喻聊历史。"
-        "回答简短活泼，不超过 150 字。"
-    )
-    sys = base_expert if persona == "expert" else base_peer
-    if lesson_title:
-        sys += f"\n当前课程上下文：「{lesson_title}」。优先围绕该课程内容作答。"
-    return sys
 
 
 @router.post("/ask")
 async def ask(req: AskRequest):
-    messages = [{"role": "system", "content": _system_prompt(req.persona, req.lesson_title)}]
+    messages = [{
+        "role": "system",
+        "content": _system_prompt(
+            req.persona,
+            lesson_title=req.lesson_title,
+            peer_character=req.peer_character,
+            era=req.era,
+        ),
+    }]
     for h in req.history[-6:]:
         if h.get("role") in ("user", "assistant") and h.get("content"):
             messages.append({"role": h["role"], "content": str(h["content"])})
     messages.append({"role": "user", "content": req.user_message})
 
+    # 「问」追求准确度而非速度 → 走 deepseek-v4-pro
+    from settings import settings as _settings
+    use_model = _settings.deepseek_model_pro
+
     async def gen():
-        async for chunk in llm.stream_chat(messages):
+        async for chunk in llm.stream_chat(messages, model=use_model):
             yield chunk
 
     return StreamingResponse(gen(), media_type="text/plain; charset=utf-8")
@@ -138,7 +171,11 @@ async def ask(req: AskRequest):
 
 @router.get("/llm/info")
 async def llm_info():
-    return {"provider": llm.current_provider_label()}
+    from settings import settings as _settings
+    return {
+        "provider": llm.current_provider_label(),
+        "ask_provider": llm.current_provider_label(_settings.deepseek_model_pro),
+    }
 
 
 # ============= 「练」 决策沙盘 =============

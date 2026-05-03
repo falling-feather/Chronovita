@@ -34,26 +34,27 @@ async def _mock_stream(messages: Iterable[Message]) -> AsyncIterator[str]:
         yield ch
 
 
-async def _deepseek_stream(messages: list[Message]) -> AsyncIterator[str]:
+async def _deepseek_stream(messages: list[Message], *, model: str | None = None) -> AsyncIterator[str]:
     if not settings.deepseek_api_key:
         async for c in _mock_stream(messages):
             yield c
         return
 
+    use_model = model or settings.deepseek_model
     url = f"{settings.deepseek_base_url.rstrip('/')}/chat/completions"
     headers = {
         "Authorization": f"Bearer {settings.deepseek_api_key}",
         "Content-Type": "application/json",
     }
     payload: dict = {
-        "model": settings.deepseek_model,
+        "model": use_model,
         "messages": messages,
         "stream": True,
         "temperature": 0.7,
     }
     # DeepSeek V4 思考模式开关（仅对 v4-flash / v4-pro 生效）
     thinking_mode = (settings.deepseek_thinking or "disabled").lower()
-    if settings.deepseek_model.startswith("deepseek-v4") and thinking_mode in ("enabled", "disabled"):
+    if use_model.startswith("deepseek-v4") and thinking_mode in ("enabled", "disabled"):
         payload["thinking"] = {"type": thinking_mode}
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
@@ -81,18 +82,23 @@ async def _deepseek_stream(messages: list[Message]) -> AsyncIterator[str]:
             yield c
 
 
-async def stream_chat(messages: list[Message], *, provider: str | None = None) -> AsyncIterator[str]:
+async def stream_chat(
+    messages: list[Message],
+    *,
+    provider: str | None = None,
+    model: str | None = None,
+) -> AsyncIterator[str]:
     p = (provider or settings.llm_provider or "mock").lower()
     if p == "deepseek":
-        async for c in _deepseek_stream(messages):
+        async for c in _deepseek_stream(messages, model=model):
             yield c
     else:
         async for c in _mock_stream(messages):
             yield c
 
 
-def current_provider_label() -> str:
+def current_provider_label(model: str | None = None) -> str:
     p = (settings.llm_provider or "mock").lower()
     if p == "deepseek" and settings.deepseek_api_key:
-        return f"deepseek · {settings.deepseek_model}"
+        return f"deepseek · {model or settings.deepseek_model}"
     return "mock（离线）"
