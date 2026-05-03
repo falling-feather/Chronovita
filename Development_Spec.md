@@ -11,6 +11,7 @@
 | 顶层 | [README.md](README.md) | 所有人 | 每个中版本 |
 | 顶层 | [Roadmap.md](Roadmap.md) | 项目管理 / 教师 | 每个大版本 |
 | 顶层 | Development_Spec.md（本文） | 全体研发 | 每次中版本递增 |
+| 交接 | [docs/Handoff-v0.1.0.md](docs/Handoff-v0.1.0.md) | 接手智能体 | 每个版本节点 |
 | 决策记录 | docs/adr/ADR-XXXX.md | 架构师 | 每次架构决策 |
 | UI 待补 | docs/UI-Backlog.md | 美术 / 前端 | 每周 |
 | 接口契约 | apps/api（FastAPI 自动生成 OpenAPI） | 前后端联调 | 每次接口变更 |
