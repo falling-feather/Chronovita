@@ -20,6 +20,7 @@ export default function CoursesPage() {
   const section = params.get('section') || 'all';
   const q = params.get('q') || '';
   const city = params.get('city') || '';
+  const subEra = params.get('sub') || '';
 
   const gridRef = useRef<HTMLDivElement | null>(null);
 
@@ -57,7 +58,12 @@ export default function CoursesPage() {
     setParams(next, { replace: true });
   };
 
-  const setEra = (id: string) => setParam('era', id);
+  const setEra = (id: string) => {
+    const next = new URLSearchParams(params);
+    if (id && id !== 'all') next.set('era', id); else next.delete('era');
+    next.delete('sub'); // 切换时代时清空子时段
+    setParams(next, { replace: true });
+  };
 
   // 点击地图都城 → 设置 city 过滤 + 滚动到课程网格
   const onPickCity = (c: EraMapCity) => {
@@ -97,7 +103,12 @@ export default function CoursesPage() {
       <div className={`chrono-mapwrap${entered ? ' entered' : ''}`}>
         <div className="chrono-mapstage">
           <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><Spin /></div>}>
-            <EraMap era={currentEra} onCityClick={onPickCity} />
+            <EraMap
+              era={currentEra}
+              onCityClick={onPickCity}
+              activeSubEraId={subEra || null}
+              onSubEraChange={(id) => setParam('sub', id ?? '')}
+            />
           </Suspense>
         </div>
 

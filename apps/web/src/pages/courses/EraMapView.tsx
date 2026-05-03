@@ -1,21 +1,27 @@
-// 时空地图入场组件 · 纯 SVG · v0.2.2
-import { memo, useEffect, useState } from 'react';
+// 时空地图入场组件 · 纯 SVG · v0.2.8
+// v0.2.8：① 子时段（朝代切片）chip 切换 ② 鼠标滚轮缩放 + 拖拽平移 + 复位按钮
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CHINA_OUTLINE, RIVERS, type EraMapCity, type EraOverlay } from './eraMap';
 
 interface Props {
   era: EraOverlay;
   /** 选择城市时回调（传出完整 city 对象） */
   onCityClick?: (city: EraMapCity) => void;
+  /** 当前激活的子时段 id（受控）；不传则不过滤 */
+  activeSubEraId?: string | null;
+  /** 子时段变化回调（用于父级保持 URL 同步等） */
+  onSubEraChange?: (subEraId: string | null) => void;
 }
 
 const VW = 1000;
 const VH = 720;
+const MIN_W = 160;   // 最大放大 ~6.25×
+const MAX_W = 1600;  // 缩到 0.625×
 
 // 静态层抽离 → 时代切换时不重绘，避免 path 抖动
 const StaticLayer = memo(function StaticLayer() {
   return (
     <>
-      {/* 海面填充（左上斜光） */}
       <defs>
         <radialGradient id="seaGlow" cx="0.55" cy="0.45" r="0.7">
           <stop offset="0%" stopColor="rgba(91,163,208,0.18)" />
@@ -37,12 +43,9 @@ const StaticLayer = memo(function StaticLayer() {
         </filter>
       </defs>
 
-      {/* 海面 */}
       <rect x="0" y="0" width={VW} height={VH} fill="url(#seaGlow)" />
 
-      {/* 陆地阴影 */}
       <path d={CHINA_OUTLINE} fill="rgba(0,0,0,0.35)" filter="url(#landShadow)" transform="translate(8 10)" />
-      {/* 陆地 */}
       <path
         d={CHINA_OUTLINE}
         fill="url(#landFill)"
@@ -51,7 +54,6 @@ const StaticLayer = memo(function StaticLayer() {
         strokeDasharray="2 4"
       />
 
-      {/* 河流 */}
       <g opacity={0.85}>
         {RIVERS.map((r) => (
           <path
@@ -66,7 +68,6 @@ const StaticLayer = memo(function StaticLayer() {
         ))}
       </g>
 
-      {/* 经纬刻度（暗淡装饰） */}
       <g stroke="rgba(11,30,58,0.06)" strokeWidth={0.6}>
         {[160, 240, 320, 400, 480, 560, 640].map((y) => (
           <line key={`h${y}`} x1={0} y1={y} x2={VW} y2={y} />
@@ -79,30 +80,172 @@ const StaticLayer = memo(function StaticLayer() {
   );
 });
 
-export default function EraMap({ era, onCityClick }: Props) {
-  // 切换时代时短暂强调动画
+interface ViewBoxState { x: number; y: number; w: number; h: number }
+const INIT_VIEW: ViewBoxState = { x: 0, y: 0, w: VW, h: VH };
+
+export default function EraMap({ era, onCityClick, activeSubEraId, onSubEraChange }: Props) {
   const [pulseKey, setPulseKey] = useState(era.id);
   useEffect(() => { setPulseKey(era.id); }, [era.id]);
 
+  // —— 视口（缩放 / 平移） ——
+  const [view, setView] = useState<ViewBoxState>(INIT_VIEW);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  // 切换时代/子时段时复位视口
+  useEffect(() => { setView(INIT_VIEW); }, [era.id, activeSubEraId]);
+
+  const clampView = useCallback((v: ViewBoxState): ViewBoxState => {
+    const w = Math.max(MIN_W, Math.min(MAX_W, v.w));
+    const ratio = VH / VW;
+    const h = w * ratio;
+    // 允许稍微越界，但限制在画布 1.2 倍内
+    const minX = -VW * 0.2;
+    const maxX = VW + VW * 0.2 - w;
+    const minY = -VH * 0.2;
+    const maxY = VH + VH * 0.2 - h;
+    return {
+      x: Math.max(minX, Math.min(maxX, v.x)),
+      y: Math.max(minY, Math.min(maxY, v.y)),
+      w,
+      h,
+    };
+  }, []);
+
+  // 滚轮缩放（围绕鼠标点）
+  const onWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
+    if (!svgRef.current) return;
+    e.preventDefault();
+    const rect = svgRef.current.getBoundingClientRect();
+    // 鼠标在 SVG 内的相对比例
+    const rx = (e.clientX - rect.left) / rect.width;
+    const ry = (e.clientY - rect.top) / rect.height;
+    setView((prev) => {
+      const factor = e.deltaY > 0 ? 1.18 : 1 / 1.18;
+      const newW = Math.max(MIN_W, Math.min(MAX_W, prev.w * factor));
+      const newH = newW * (VH / VW);
+      // 鼠标位置在 viewBox 中的实际坐标
+      const mx = prev.x + prev.w * rx;
+      const my = prev.y + prev.h * ry;
+      const nx = mx - newW * rx;
+      const ny = my - newH * ry;
+      return clampView({ x: nx, y: ny, w: newW, h: newH });
+    });
+  }, [clampView]);
+
+  // 拖拽平移
+  const dragRef = useRef<{ startX: number; startY: number; vx: number; vy: number; pid: number } | null>(null);
+  const onPointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    // 仅左键
+    if (e.button !== 0) return;
+    // 点击城市时由城市层处理，不发起拖拽
+    const target = e.target as Element;
+    if (target.closest('.chrono-city-node')) return;
+    (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+    dragRef.current = { startX: e.clientX, startY: e.clientY, vx: view.x, vy: view.y, pid: e.pointerId };
+  }, [view.x, view.y]);
+  const onPointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    if (!dragRef.current || !svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const dx = (e.clientX - dragRef.current.startX) * (view.w / rect.width);
+    const dy = (e.clientY - dragRef.current.startY) * (view.h / rect.height);
+    setView(clampView({ ...view, x: dragRef.current.vx - dx, y: dragRef.current.vy - dy }));
+  }, [view, clampView]);
+  const endDrag = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    if (dragRef.current && e.currentTarget.hasPointerCapture(dragRef.current.pid)) {
+      e.currentTarget.releasePointerCapture(dragRef.current.pid);
+    }
+    dragRef.current = null;
+  }, []);
+
+  const zoomBy = useCallback((factor: number) => {
+    setView((prev) => {
+      const newW = Math.max(MIN_W, Math.min(MAX_W, prev.w * factor));
+      const newH = newW * (VH / VW);
+      // 围绕中心缩放
+      const cx = prev.x + prev.w / 2;
+      const cy = prev.y + prev.h / 2;
+      return clampView({ x: cx - newW / 2, y: cy - newH / 2, w: newW, h: newH });
+    });
+  }, [clampView]);
+
+  // —— 子时段过滤 ——
+  const subEras = era.subEras ?? [];
+  const activeSub = useMemo(
+    () => subEras.find((s) => s.id === activeSubEraId) ?? null,
+    [subEras, activeSubEraId],
+  );
+  const visibleCities = useMemo(() => {
+    if (!activeSub) return era.cities;
+    const set = new Set(activeSub.dynasties);
+    return era.cities.filter((c) => !c.dynasty || set.has(c.dynasty));
+  }, [era.cities, activeSub]);
+
+  const zoomLevel = (VW / view.w);
+
   return (
-    <div className="chrono-eramap" style={{
-      background: `radial-gradient(ellipse at 50% 45%, ${era.hue.primary}33, ${era.hue.secondary}cc 70%, ${era.hue.secondary} 100%)`,
-    }}>
+    <div
+      className="chrono-eramap"
+      style={{
+        background: `radial-gradient(ellipse at 50% 45%, ${era.hue.primary}33, ${era.hue.secondary}cc 70%, ${era.hue.secondary} 100%)`,
+      }}
+    >
+      {/* 子时段切换条 */}
+      {subEras.length > 0 && (
+        <div className="chrono-eramap-subera">
+          <button
+            type="button"
+            className={`chrono-chip chrono-subera-chip${activeSub ? '' : ' active'}`}
+            onClick={() => onSubEraChange?.(null)}
+          >
+            全部 · {era.period}
+          </button>
+          {subEras.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={`chrono-chip chrono-subera-chip${activeSub?.id === s.id ? ' active' : ''}`}
+              onClick={() => onSubEraChange?.(s.id)}
+              title={s.period}
+            >
+              {s.name}<span className="chrono-chip-period">{s.period}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* 缩放工具条 */}
+      <div className="chrono-eramap-zoom" aria-label="地图缩放">
+        <button type="button" onClick={() => zoomBy(1 / 1.4)} title="放大">＋</button>
+        <button type="button" onClick={() => zoomBy(1.4)} title="缩小">－</button>
+        <button type="button" onClick={() => setView(INIT_VIEW)} title="复位">⟳</button>
+        <span className="chrono-eramap-zoom-level">{zoomLevel.toFixed(1)}×</span>
+      </div>
+
       <svg
-        viewBox={`0 0 ${VW} ${VH}`}
+        ref={svgRef}
+        viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={`${era.name}时代地图`}
-        style={{ width: '100%', height: '100%', display: 'block' }}
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          cursor: dragRef.current ? 'grabbing' : 'grab',
+          touchAction: 'none',
+        }}
+        onWheel={onWheel}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
       >
         <StaticLayer />
 
-        {/* 时代叠加 — 历史路径（长城/丝路/运河/航路 …） */}
+        {/* 时代叠加 — 历史路径 */}
         {era.tracks && era.tracks.length > 0 && (
           <g key={`${pulseKey}-tracks`} className="chrono-era-tracks" pointerEvents="none">
             {era.tracks.map((t, i) => (
               <g key={t.id} className="chrono-track" style={{ animationDelay: `${120 + i * 90}ms` }}>
-                {/* 外发光底线 */}
                 <path
                   d={t.geometry}
                   fill="none"
@@ -112,7 +255,6 @@ export default function EraMap({ era, onCityClick }: Props) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                {/* 主线 */}
                 <path
                   d={t.geometry}
                   fill="none"
@@ -131,12 +273,12 @@ export default function EraMap({ era, onCityClick }: Props) {
         )}
 
         {/* 时代叠加 — 城市与都城 */}
-        <g key={pulseKey} className="chrono-era-overlay">
-          {era.cities.map((c, i) => (
+        <g key={`${pulseKey}-${activeSub?.id ?? 'all'}`} className="chrono-era-overlay">
+          {visibleCities.map((c, i) => (
             <g
-              key={`${c.name}-${i}`}
+              key={`${c.dynasty ?? '_'}-${c.name}-${i}`}
               transform={`translate(${c.x} ${c.y})`}
-              style={{ cursor: onCityClick ? 'pointer' : 'default', animationDelay: `${i * 80}ms` }}
+              style={{ cursor: onCityClick ? 'pointer' : 'default', animationDelay: `${i * 60}ms` }}
               className="chrono-city-node"
               onClick={() => onCityClick?.(c)}
             >
@@ -145,11 +287,17 @@ export default function EraMap({ era, onCityClick }: Props) {
               )}
               <circle
                 r={c.capital ? 6 : 4}
-                fill={c.capital ? '#F4ECDC' : '#F4ECDC'}
+                fill="#F4ECDC"
                 stroke={c.capital ? era.hue.primary : 'rgba(11,30,58,0.55)'}
                 strokeWidth={c.capital ? 2.5 : 1.6}
                 filter="url(#cityGlow)"
               />
+              <title>
+                {c.name}
+                {c.modern && c.modern !== c.name ? `（今${c.modern}）` : ''}
+                {c.dynasty ? ` · ${c.dynasty}` : ''}
+                {c.note ? `\n${c.note}` : ''}
+              </title>
               <text
                 x={c.capital ? 12 : 9}
                 y={5}
@@ -167,7 +315,7 @@ export default function EraMap({ era, onCityClick }: Props) {
           ))}
         </g>
 
-        {/* 标题层 — 时代名称水印 */}
+        {/* 时代水印 */}
         <g pointerEvents="none">
           <text
             x={VW - 40}
@@ -190,7 +338,7 @@ export default function EraMap({ era, onCityClick }: Props) {
             opacity={0.55}
             style={{ letterSpacing: 2 }}
           >
-            {era.period}
+            {activeSub ? `${activeSub.name} · ${activeSub.period}` : era.period}
           </text>
         </g>
       </svg>
