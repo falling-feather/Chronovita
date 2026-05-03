@@ -17,6 +17,8 @@ const SAGA_LESSON_IDS = new Set([
   'L701', 'L703',
   // 隋唐 · 文化
   'L801', 'L802',
+  // 魏晋南北朝（ID 已迁移避免与秦汉冲突）
+  'L1501', 'L1502', 'L1503', 'L1504',
 ]);
 
 interface Paragraph {

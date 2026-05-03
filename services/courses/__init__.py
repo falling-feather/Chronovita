@@ -771,7 +771,7 @@ LESSON_INDEX.update({l.id: l for l in LESSONS_QINHAN_THOUGHT})
 # ---------- 课程：魏晋南北朝 · 分裂中的文化整合 ----------
 LESSONS_WEIJIN_FUSION: list[Lesson] = [
     Lesson(
-        id="L501",
+        id="L1501",
         course_id="C-weijin-fusion",
         num="1.1",
         title="三国鼎立 · 从黄巾之乱到三家归晋",
@@ -834,7 +834,7 @@ LESSONS_WEIJIN_FUSION: list[Lesson] = [
         ],
     ),
     Lesson(
-        id="L502",
+        id="L1502",
         course_id="C-weijin-fusion",
         num="1.2",
         title="清谈与玄学 · 竹林七贤与魏晋风度",
@@ -896,7 +896,7 @@ LESSONS_WEIJIN_FUSION: list[Lesson] = [
         ],
     ),
     Lesson(
-        id="L503",
+        id="L1503",
         course_id="C-weijin-fusion",
         num="1.3",
         title="孝文帝汉化 · 北魏从平城到洛阳",
@@ -968,7 +968,7 @@ LESSONS_WEIJIN_FUSION: list[Lesson] = [
         ],
     ),
     Lesson(
-        id="L504",
+        id="L1504",
         course_id="C-weijin-fusion",
         num="1.4",
         title="佛教东传 · 鸠摩罗什、慧远与达摩",
