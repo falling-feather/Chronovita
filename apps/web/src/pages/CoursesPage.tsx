@@ -40,9 +40,12 @@ export default function CoursesPage() {
   const currentEra = ERA_OVERLAYS.find((e) => e.id === mapEraId)!;
 
   // 拉取整个时代的课程（独立于过滤条件，用于侧栏精选）
-  const [eraCourses, setEraCourses] = useState<CourseSummary[]>([]);
+  const [eraCourses, setEraCourses] = useState<CourseSummary[] | null>(null); // null = 加载中
   useEffect(() => {
-    api.courses({ era: mapEraId }).then((r) => setEraCourses(r.items)).catch(() => setEraCourses([]));
+    setEraCourses(null);
+    api.courses({ era: mapEraId })
+      .then((r) => setEraCourses(r.items))
+      .catch(() => setEraCourses([]));
   }, [mapEraId]);
 
   const setParam = (k: string, v: string) => {
@@ -95,7 +98,20 @@ export default function CoursesPage() {
               查看全部 →
             </a>
           </div>
-          {eraCourses.length === 0 ? (
+          {eraCourses === null ? (
+            <div className="chrono-erapanel-courses">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="chrono-erapanel-course chrono-skeleton">
+                  <span className="chrono-erapanel-course-bar" style={{ background: 'var(--border-soft)' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="chrono-skel-line" style={{ width: 36 }} />
+                    <div className="chrono-skel-line" style={{ width: '80%', height: 14, marginTop: 6 }} />
+                    <div className="chrono-skel-line" style={{ width: '60%', marginTop: 6 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : eraCourses.length === 0 ? (
             <div className="chrono-erapanel-empty">尚未上线 · 敬请期待</div>
           ) : (
             <div className="chrono-erapanel-courses">

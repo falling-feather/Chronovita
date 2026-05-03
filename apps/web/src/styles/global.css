@@ -564,3 +564,15 @@ body,
   .chrono-eratl-wrap { padding: 18px 16px 26px; }
   .chrono-eratl-period { display: none; }
 }
+.chrono-skeleton { pointer-events: none; }
+.chrono-skel-line {
+  height: 10px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--border-soft) 0%, var(--bg-warm) 50%, var(--border-soft) 100%);
+  background-size: 200% 100%;
+  animation: chrono-skel-shimmer 1.4s linear infinite;
+}
+@keyframes chrono-skel-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
