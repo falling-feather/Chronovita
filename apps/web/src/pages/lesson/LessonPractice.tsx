@@ -201,14 +201,22 @@ function SagaPlayer({ lesson }: { lesson: Lesson }) {
           <Alert type="success" showIcon message="本剧本告一段落" description="你可以「重新开始」体验不同选择带来的历史分岔。" style={{ marginTop: 14 }} />
         ) : (
           <div style={{ marginTop: 14 }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-              {choices.map((c, i) => (
-                <Button key={i} disabled={loading} onClick={() => submit(c)}
-                  style={{ whiteSpace: 'normal', height: 'auto', padding: '8px 14px', textAlign: 'left', maxWidth: '100%' }}>
-                  <span style={{ color: 'var(--accent-gold)', marginRight: 6 }}>{i + 1}.</span>{c}
-                </Button>
-              ))}
-            </div>
+            {choices.length > 0 ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                {choices.map((c, i) => (
+                  <Button key={i} disabled={loading} onClick={() => submit(c)}
+                    style={{ whiteSpace: 'normal', height: 'auto', padding: '8px 14px', textAlign: 'left', maxWidth: '100%' }}>
+                    <span style={{ color: 'var(--accent-gold)', marginRight: 6 }}>{i + 1}.</span>{c}
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              !loading && (
+                <div style={{ marginBottom: 10, padding: '10px 12px', background: 'rgba(212,175,55,0.06)', border: '1px dashed var(--accent-gold)', borderRadius: 6, fontSize: 12, color: 'var(--text-mute)' }}>
+                  本回合需自由作答，请在下方输入你的行动。
+                </div>
+              )
+            )}
             <Input.TextArea
               value={free}
               onChange={e => setFree(e.target.value)}

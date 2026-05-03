@@ -1668,7 +1668,7 @@ _SYSTEM_PROMPT = """你是一位历史互动小说作家，正在与一名中学
 [META]{{"choices":["选项1","选项2","选项3"],"summary_delta":"本段一句话摘要","entities_delta":[{{"name":"人名","type":"人物|地点|物品|事件","desc":"一句话简介"}}],"flags_delta":{{"key":"value"}},"ended":false}}
 
 要求：
-- choices 给 2-4 个，每个 8-22 字，**每个选项都必须有不同的剧情走向（杀/活/逃/留/告发/隐瞒等）**，**禁止给出"继续请教/继续观察/继续等待"之类无推进的选项**
+- choices 给 2-4 个，每个 8-22 字，**每个选项都必须有不同的剧情走向（杀/活/逃/留/告发/隐瞒等）**，**禁止给出"继续请教/继续观察/继续等待"之类无推进的选项**，**严禁复制上一回合的 choices 原文，每轮必须基于本段最新情境重新生成**
 - summary_delta 一句话总结本段（≤30 字），用于后续记忆压缩
 - entities_delta 仅列出本段「新出现」的实体，已出现的不要重复
 - flags_delta 是本段产生的剧情标志（可空 {{}}）
@@ -1750,8 +1750,17 @@ def _apply_meta(state: SagaState, narrative: str, meta: dict) -> None:
             }
     if isinstance(meta.get("flags_delta"), dict):
         state.flags.update(meta["flags_delta"])
-    if isinstance(meta.get("choices"), list) and meta["choices"]:
-        state.choices = [str(c) for c in meta["choices"][:4]]
+    # V0.6.2 修复：总是用本轮 LLM 输出覆盖 choices（哪怕空数组），
+    # 避免 LLM 偶发漏吐 choices 时 UI 残留上一轮甚至更早的旧选项与新剧情脱节。
+    # 仅当 meta 完全没有 choices 字段（解析失败/网络截断）才保留旧值作兜底。
+    if isinstance(meta.get("choices"), list):
+        new_choices = [str(c) for c in meta["choices"][:4]]
+        # 另一种退化：LLM 各谋身退直接复粘上一轮 choices（这会与新 narrative 脱节）。
+        # 此时主动清空，由 UI 引导玩家进入自由输入。
+        if new_choices and new_choices == state.choices:
+            state.choices = []
+        else:
+            state.choices = new_choices
     if meta.get("ended"):
         state.ended = True
     state.step += 1
