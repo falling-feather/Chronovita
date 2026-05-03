@@ -1,40 +1,43 @@
-import { useState } from 'react';
-import { toast } from '../utils/toast';
-import { Button, Row, Col } from 'antd';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button, Tag, Row, Col } from 'antd';
+import { api } from '../utils/api';
 
-const filters = ['全部', '先秦', '秦汉', '隋唐', '宋元', '明清'];
-
-const panels = [
-  { tag: '练', title: '决策沙盘', desc: '在历史关键节点上做选择，体验事件的不同走向。', meta: 'v0.4.x · 决策推演引擎', cta: '进入沙盘', stage: 'v0.4.x' },
-  { tag: '问', title: '跨时对话', desc: '与历史人物面对面追问 — 由 LLM 适配层驱动，可切换专家视角。', meta: 'v0.5.x · 双模智者', cta: '开始对话', stage: 'v0.5.x' },
-  { tag: '创', title: '历史画板', desc: '用节点与连线整理因果脉络，把「我学到了什么」画成一张图谱。', meta: 'v0.6.x · 知识谱系画布', cta: '进入画板', stage: 'v0.6.x' },
+const PANELS = [
+  {
+    tag: '练', title: '决策沙盘', desc: '在历史关键节点上做选择，体验事件的不同走向。',
+    target: '/courses/C-prequin-state/lessons/L103?layer=practice',
+    cta: '进入「商鞅变法」沙盘',
+  },
+  {
+    tag: '问', title: '跨时对话', desc: '与历史教师/同窗对话 — 由 DeepSeek 驱动，可流式输出。',
+    target: '/courses/C-prequin-state/lessons/L103?layer=ask',
+    cta: '开始对话',
+  },
+  {
+    tag: '创', title: '历史画板', desc: '用节点与连线整理因果脉络 — 节点会保存到云端。',
+    target: '/courses/C-prequin-state/lessons/L103?layer=create',
+    cta: '进入画板',
+  },
 ];
 
 export default function PracticePage() {
-  const [filter, setFilter] = useState(0);
   const nav = useNavigate();
+  const [provider, setProvider] = useState('');
+  useEffect(() => { api.llmInfo().then((r) => setProvider(r.provider)).catch(() => {}); }, []);
+
   return (
     <div style={{ maxWidth: 1392, margin: '0 auto' }}>
       <div style={{ marginBottom: 16 }}>
         <h1 className="chrono-title" style={{ fontSize: 26, margin: 0 }}>实践课堂</h1>
         <div style={{ color: 'var(--text-mute)', fontSize: 13, marginTop: 6 }}>
           自己上沙盘、找古人对谈、把所学画成图 — 在做中学，用历史解释当下。
+          {provider && <Tag color="gold" style={{ marginLeft: 12 }}>当前 LLM：{provider}</Tag>}
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-        {filters.map((f, i) => (
-          <span key={f}
-                onClick={() => setFilter(i)}
-                className={`chrono-chip${i === filter ? ' active' : ''}`}>
-            {f}
-          </span>
-        ))}
-      </div>
-
       <Row gutter={16} style={{ marginBottom: 32 }}>
-        {panels.map((p) => (
+        {PANELS.map((p) => (
           <Col span={8} key={p.tag}>
             <div className="chrono-card" style={{ padding: 0, overflow: 'hidden' }}>
               <div style={{
@@ -45,25 +48,26 @@ export default function PracticePage() {
               </div>
               <div style={{ padding: 20 }}>
                 <div className="chrono-title" style={{ fontSize: 18, marginBottom: 6 }}>{p.title}</div>
-                <div style={{ color: 'var(--text-mute)', fontSize: 12, marginBottom: 8 }}>{p.desc}</div>
-                <div style={{ color: 'var(--text-disabled)', fontSize: 10, marginBottom: 14 }}>{p.meta}</div>
-                <Button type="primary"
-                        onClick={() => {
-                          toast.info(`「${p.title}」将在 ${p.stage} 上线，先到课程中心看看吧`);
-                          nav('/courses');
-                        }}>
-                  {p.cta} ›
-                </Button>
+                <div style={{ color: 'var(--text-mute)', fontSize: 12, marginBottom: 14 }}>{p.desc}</div>
+                <Button type="primary" onClick={() => nav(p.target)}>{p.cta} ›</Button>
               </div>
             </div>
           </Col>
         ))}
       </Row>
 
-      <h3 className="chrono-title" style={{ fontSize: 16, marginBottom: 12 }}>我的实践记录</h3>
-      <div className="chrono-empty">
-        <div style={{ color: 'var(--text-disabled)', marginBottom: 4 }}>暂无实践记录</div>
-        <div style={{ fontSize: 12 }}>完成的沙盘、对话与画板会出现在这里</div>
+      <h3 className="chrono-title" style={{ fontSize: 16, marginBottom: 12 }}>已上线剧本</h3>
+      <div className="chrono-card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <Tag color="gold">先秦</Tag>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14 }}>商鞅变法 · 你是秦孝公的谋臣</div>
+          <div style={{ fontSize: 12, color: 'var(--text-mute)' }}>5 个决策节点 · 3 种结局 · 含国力/民心/贵族支持三维状态</div>
+        </div>
+        <Button onClick={() => nav('/courses/C-prequin-state/lessons/L103?layer=practice')}>立即进入</Button>
+      </div>
+
+      <div style={{ marginTop: 24, color: 'var(--text-disabled)', fontSize: 12 }}>
+        更多剧本将在后续版本上线 · 也可以在课程页面中按节进入对应的练问创层。
       </div>
     </div>
   );

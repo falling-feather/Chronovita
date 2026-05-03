@@ -13,5 +13,11 @@ class Settings(BaseSettings):
     ]
     sqlite_path: str = "../../data/chronovita.db"
 
+    # LLM 适配层
+    llm_provider: str = "mock"  # mock | deepseek
+    deepseek_api_key: str = ""
+    deepseek_base_url: str = "https://api.deepseek.com/v1"
+    deepseek_model: str = "deepseek-chat"
+
 
 settings = Settings()

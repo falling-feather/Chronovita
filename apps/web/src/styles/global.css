@@ -198,6 +198,21 @@ body,
   color: var(--text-mute);
 }
 
+/* 课程卡网格 */
+.chrono-course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.chrono-course-card {
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.chrono-course-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(11,30,58,0.08);
+  border-color: var(--accent-gold);
+}
+
 .chrono-courses-grid {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr) 300px;

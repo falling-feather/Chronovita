@@ -4,6 +4,8 @@ import { Link, Route, Routes, Navigate, useLocation, useNavigate } from 'react-r
 import { useEffect, useState } from 'react';
 import HomePage from './pages/HomePage';
 import CoursesPage from './pages/CoursesPage';
+import CourseDetailPage from './pages/CourseDetailPage';
+import LessonPage from './pages/lesson/LessonPage';
 import LearningPage from './pages/LearningPage';
 import PracticePage from './pages/PracticePage';
 import ProfilePage from './pages/ProfilePage';
@@ -109,12 +111,14 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+            <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
             <Route path="/learning" element={<LearningPage />} />
             <Route path="/practice" element={<PracticePage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </Content>
+        </Content>2
         <Footer style={{ textAlign: 'center', color: 'var(--text-disabled)', fontSize: 12, background: 'var(--bg-page)' }}>
           历史未来课堂 · Chronovita · v0.1.0 · 看 练 问 创 · 让历史可推演
         </Footer>
