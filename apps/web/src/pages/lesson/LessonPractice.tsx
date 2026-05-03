@@ -4,7 +4,14 @@ import { ReloadOutlined, SendOutlined, ReadOutlined } from '@ant-design/icons';
 import type { Lesson, SagaState, SagaEntity } from '../../utils/api';
 import { api, streamSagaAct } from '../../utils/api';
 
-const SAGA_LESSON_IDS = new Set(['L101', 'L102', 'L103', 'L104', 'L105']);
+const SAGA_LESSON_IDS = new Set([
+  // 先秦
+  'L101', 'L102', 'L103', 'L104', 'L105',
+  // 秦汉 · 一统肇基
+  'L401', 'L402', 'L403',
+  // 秦汉 · 两汉思想与科技
+  'L501', 'L502', 'L503',
+]);
 
 interface Paragraph {
   role: 'narrator' | 'player';
