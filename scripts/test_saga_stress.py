@@ -2,11 +2,16 @@
 用法: python scripts/test_saga_stress.py [lesson_id1 lesson_id2 ...] [--rounds N]
 默认: L102 L901 L1402 L1502 ，每课最多 6 轮或直到 ended。
 """
+import io
 import json
 import sys
 import time
 import urllib.request
 import re
+
+# 强制 stdout/stderr 用 UTF-8，避免 GBK 终端把 emoji/中文写文件时崩
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 BASE = "http://127.0.0.1:8000/api/v1"
 MAX_ROUNDS = 6
