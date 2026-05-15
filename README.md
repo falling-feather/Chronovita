@@ -1,8 +1,8 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学的 AI 实践平台。先把"未来课堂"的壳搭好，再让历史课程一节一节长进来。
+> 面向中小学历史教学的 AI 实践平台。当前版本 **V0.7.0**：14 朝代 48 节教材级正文 + 全朝代 saga 互动剧本 + DeepSeek v4-pro 跨时对话 + 知识画板 AI 扩充。
 
-[远端仓库](https://github.com/falling-feather/Chronovita) · [开发文档](Development_Spec.md) · [研发路线](Roadmap.md)
+[远端仓库](https://github.com/falling-feather/Chronovita) · [开发文档](Development_Spec.md) · [研发路线](Roadmap.md) · [规划](docs/Planning.md)
 
 ## 一句话定位
 
@@ -12,21 +12,22 @@
 
 ## 平台五大模块
 
-| 模块 | 职责 |
-| --- | --- |
-| 首页 | 学情概览、今日课表、推荐课程、平台公告 |
-| 课程中心 | 按学段/年级/单元浏览课程，进入"看练问创"四层学习 |
-| 我的学习 | 已选课程、学习进度、笔记、作业、错题与回放 |
-| 实践课堂 | 决策推演、沙盘剧本、即时反馈与课堂任务 |
-| 个人中心 | 账号信息、学习偏好、设置、消息中心 |
+| 模块 | 职责 | 状态 |
+| --- | --- | --- |
+| 首页 | 学情概览、今日课表、推荐课程、平台公告 | 占位 · 待 v0.8 接入进度 |
+| 课程中心 | 以 SVG 历史地图为入口，按朝代 / 板块 / 关键字浏览进入课程 | ✅ |
+| 我的学习 | 已选课程、学习进度、笔记、作业、错题与回放 | 占位 · 进度未持久化 |
+| 实践课堂 | 决策推演、沙盘剧本、即时反馈与课堂任务 | ✅ saga 全朝代覆盖 |
+| 个人中心 | 账号信息、学习偏好、设置、消息中心 | 本地 localStorage |
 
-每一节课内部都按「看 · 沉浸叙事 → 练 · 沙盘推演 → 问 · 双模智者 → 创 · 知识谱系」的四层流程组织，环环相扣、逐步递进。
+每一节课内部都按「**看** · 沉浸叙事 → **练** · 沙盘推演 → **问** · 双模智者 → **创** · 知识谱系」的四层流程组织，环环相扣、逐步递进。各层实装状态见 [Development_Spec.md](Development_Spec.md) §3。
 
-## 技术栈（保持不变）
+## 技术栈
 
-- 前端：React 18 + Vite 5 + TypeScript 5 + Ant Design 5 + React Router 6 + Zustand
-- 后端：Python 3.12（强制）+ FastAPI + Pydantic v2 + SQLAlchemy 2.0 + SQLite（开发）
-- 包管理：pnpm 9 / Node 20 LTS / uv 或 venv
+- 前竲：React 18 + Vite 5 + TypeScript 5 + Ant Design 5 + React Router 6 + React Flow 11 + Zustand
+- 后竲：Python 3.11/3.12 + FastAPI + Pydantic v2 + SQLAlchemy 2.0 + SQLite（开发）
+- LLM：DeepSeek v4-flash（saga 流式叙事） + DeepSeek v4-pro（「问」跨时对话，准确度优先） + mock 回落
+- 包管理：pnpm 9 / Node 20 LTS / venv
 - 设计：Pencil（`assets/design/*.pen`）
 - 基础设施：Docker Compose（中长期接入 Postgres / Redis / 向量库）
 
@@ -35,21 +36,25 @@
 ```
 .
 ├── apps/
-│   ├── web/                  前端平台壳（5 模块）
-│   └── api/                  后端 FastAPI（5 模块占位 + 持久化）
+│   ├── web/                  前端平台壳（5 模块 + lesson 四层面板）
+│   └── api/                  后端 FastAPI（5 路由 + practice 下 saga/sandbox/canvas/ask）
 ├── packages/
 │   └── shared/               前后端共享类型与常量
 ├── services/
-│   └── persistence/          SQLAlchemy + SQLite 持久化层
+│   ├── persistence/          SQLAlchemy + SQLite 持久化层
+│   ├── courses/              14 朝代 48 节课程数据集
+│   ├── saga/                 互动剧本引擎 + 48 个模板
+│   ├── sandbox/              决策推演通用引擎（商鞅变法首发）
+│   └── llm/                  DeepSeek + mock 适配层
 ├── infra/                    docker-compose 与基础设施
 ├── assets/design/            Pencil 设计稿（.pen）
-├── muban/                    可复用页面 / 区块模板（开发参考）
-├── docs/                     ADR 与设计决策
+├── muban/                    可复用页面 / 区块模板
+├── docs/                     ADR 与设计决策、规划文档
 ├── UI/                       美术绘制的 UI 视觉稿
 └── todo/                     立项申报书与初始引导
 ```
 
-> 课程级业务（看练问创各自的具体引擎、剧本、人物语料）在框架打稳后，按课程一节一节追加到 `services/` 与 `apps/api/routers/` 中。
+> 课程级业务（看练问创各自的具体引擎、剧本、人物语料）已随朝代详表完成于 `services/courses/`、`services/saga/`、`services/sandbox/`中。
 
 ## 视觉规范
 
@@ -61,16 +66,20 @@
 
 ### 先决条件
 - Node.js 20 LTS · pnpm 9
-- Python 3.12（强制）
+- Python 3.11/3.12（避免 3.14，部分依赖缺 wheel）
+- 项目根虚拟环境 `.venv/`，后端以 PowerShell `& ".\.venv\Scripts\python.exe" -m uvicorn ...` 启动
 
 ### 启动后端
 ```powershell
+# 仓库根
+Python -m venv .venv
+& ".\.venv\Scripts\python.exe" -m pip install -r apps/api/requirements.txt
 cd apps/api
-python -m venv .venv
-& ".\.venv\Scripts\python.exe" -m pip install -r requirements.txt
-& ".\.venv\Scripts\uvicorn.exe" main:app --reload --port 8000
+& "..\..\.venv\Scripts\python.exe" -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 后端文档：`http://127.0.0.1:8000/docs`
+
+> 访问真 DeepSeek：复制 `apps/api/.env.example` 为 `apps/api/.env`，填入 `CHRONO_DEEPSEEK_API_KEY`，并将 `CHRONO_LLM_PROVIDER=deepseek`；`.env` 已在 `.gitignore`。
 
 ### 启动前端
 ```powershell
@@ -82,9 +91,9 @@ pnpm dev
 
 ## 提交规范
 
-- 提交信息：`v大.中.小 - 中文版本说明`，例如 `v0.1.0 - 平台五模块壳层落地`
-- 微小修复合并入下一次正式提交
-- 详见 [Development_Spec.md](Development_Spec.md)
+- 提交信息：`V大.中.小 中文提交信息`，例如 `V0.7.0 「问」板块接入 deepseek-v4-pro`
+- 中版本递增时同步创建 `backup/v0.X.0` 分支作为历史可查点
+- 详见 [Development_Spec.md](Development_Spec.md) §5 与 [docs/Planning.md](docs/Planning.md) 末尾所附版本节奏
 
 ## 许可
 
