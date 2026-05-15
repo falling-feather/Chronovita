@@ -1,5 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Button, Row, Col } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { api, type ProgressItem } from '../utils/api';
+
+const LAYER_LABEL: Record<string, string> = { watch: '看', practice: '练', ask: '问', create: '创' };
 
 const recommended = [
   { title: '先秦 · 礼乐之邦', meta: '七年级 · 8 章 · 已选 0 人' },
@@ -17,6 +21,11 @@ const pedagogy = [
 
 export default function HomePage() {
   const nav = useNavigate();
+  const [resume, setResume] = useState<ProgressItem | null>(null);
+
+  useEffect(() => {
+    api.progressLatest().then((r) => setResume(r.item)).catch(() => {});
+  }, []);
   return (
     <div style={{ maxWidth: 1392, margin: '0 auto' }}>
       {/* Hero */}
@@ -24,7 +33,7 @@ export default function HomePage() {
         <Col flex="auto">
           <div className="chrono-hero" style={{ height: '100%' }}>
             <div style={{ fontSize: 12, color: 'var(--accent-gold)', letterSpacing: 2, marginBottom: 8 }}>
-              CHRONOVITA · v0.1.0
+              CHRONOVITA · V0.7.0
             </div>
             <h1>以史为鉴 · 看练问创</h1>
             <p>沉浸情景、决策沙盘、跨时对话、历史画板 — 让每一段历史都可以被推演、被追问、被再创作。</p>
@@ -43,14 +52,24 @@ export default function HomePage() {
           <div
             className="chrono-card-dark"
             style={{ height: '100%', cursor: 'pointer' }}
-            onClick={() => nav('/courses')}
+            onClick={() => {
+              if (resume?.course_id) {
+                nav(`/courses/${resume.course_id}/lessons/${resume.lesson_id}?layer=${resume.last_layer}`);
+              } else {
+                nav('/courses');
+              }
+            }}
           >
-            <div style={{ color: 'var(--accent-gold)', fontSize: 12, marginBottom: 8 }}>本周精选</div>
+            <div style={{ color: 'var(--accent-gold)', fontSize: 12, marginBottom: 8 }}>
+              {resume ? '继续学习' : '本周精选'}
+            </div>
             <div className="chrono-title" style={{ fontSize: 22, marginBottom: 12 }}>
-              华夏文明的起源与发展
+              {resume?.title ?? '华夏文明的起源与发展'}
             </div>
             <div style={{ color: 'var(--text-cream-mute)', fontSize: 12 }}>
-              七年级 · 第一单元
+              {resume
+                ? `上次到：${LAYER_LABEL[resume.last_layer] ?? resume.last_layer} 层`
+                : '七年级 · 第一单元'}
             </div>
           </div>
         </Col>

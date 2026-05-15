@@ -32,7 +32,7 @@ export default function LessonAsk({ lesson }: { lesson: Lesson }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    api.course(lesson.course_id).then((c) => setEra(c.summary.era)).catch(() => {});
+    api.course(lesson.course_id).then((c) => setEra(c.summary.era_id)).catch(() => {});
   }, [lesson.course_id]);
 
   useEffect(() => { api.llmInfo().then(setLlmInfo).catch(() => {}); }, []);

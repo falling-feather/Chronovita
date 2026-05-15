@@ -55,7 +55,21 @@ export const api = {
   sagaTemplates: () => jsonFetch<{ items: SagaTemplate[] }>(`/practice/saga/templates`),
   sagaStart: (lesson_id: string) => jsonFetch<SagaState>(`/practice/saga/start`, { method: 'POST', body: JSON.stringify({ lesson_id }) }),
   sagaGet: (saga_id: string) => jsonFetch<SagaState>(`/practice/saga/${saga_id}`),
+  progressList: () => jsonFetch<{ items: ProgressItem[] }>(`/learning/progress`),
+  progressLatest: () => jsonFetch<{ item: ProgressItem | null }>(`/learning/progress/latest`),
+  progressGet: (lesson_id: string) => jsonFetch<{ item: ProgressItem | null }>(`/learning/progress/${lesson_id}`),
+  progressTouch: (body: { lesson_id: string; layer: string; completed?: boolean }) =>
+    jsonFetch<{ ok: boolean; item: ProgressItem }>(`/learning/progress/touch`, { method: 'POST', body: JSON.stringify(body) }),
 };
+
+export interface ProgressItem {
+  lesson_id: string;
+  course_id?: string;
+  title?: string;
+  last_layer: string;
+  layers: { watch: boolean; practice: boolean; ask: boolean; create: boolean };
+  updated_at: string;
+}
 
 export interface SagaTemplate {
   lesson_id: string; title: string; era: string; persona: string; keywords: string[];

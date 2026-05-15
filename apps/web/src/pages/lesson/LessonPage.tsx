@@ -27,6 +27,12 @@ export default function LessonPage() {
     api.lesson(courseId, lessonId).then(setLesson).finally(() => setLoading(false));
   }, [courseId, lessonId]);
 
+  // 学习进度打点：每次 lessonId 或 layer 变更，touch 一次
+  useEffect(() => {
+    if (!lessonId) return;
+    api.progressTouch({ lesson_id: lessonId, layer: layer as any }).catch(() => {});
+  }, [lessonId, layer]);
+
   const items = useMemo(() => LAYERS.map((l) => ({
     key: l.key,
     label: l.label,
