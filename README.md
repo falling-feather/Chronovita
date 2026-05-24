@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学的 AI 实践平台。当前版本 **V0.7.0**：14 朝代 48 节教材级正文 + 全朝代 saga 互动剧本 + DeepSeek v4-pro 跨时对话 + 知识画板 AI 扩充。
+> 面向中小学历史教学的 AI 实践平台。当前版本 **V0.7.3**：14 朝代 48 节教材级正文 + 全朝代 saga 互动剧本 + DeepSeek v4-pro 跨时对话 + 知识画板 AI 扩充（已接入学习进度持久化与画板自动保存）。
 
 [远端仓库](https://github.com/falling-feather/Chronovita) · [开发文档](Development_Spec.md) · [研发路线](Roadmap.md) · [规划](docs/Planning.md)
 

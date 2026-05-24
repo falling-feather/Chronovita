@@ -1,7 +1,7 @@
 # Chronovita 演进规划 · Planning
 
 > 与 [Roadmap.md](../Roadmap.md) 阶段表呼应：Roadmap 记录"做了什么"，本文件记录"接下来做什么、为什么、怎么做、怎么验收"。
-> 当前基线：**V0.7.0**。短期面向 v0.8.x，中期面向 v0.9 ~ v1.x，长期面向 v2.x+。
+> 当前基线：**V0.7.3**（S1/S2/S3 已落地）。短期面向 v0.8.x，中期面向 v0.9 ~ v1.x，长期面向 v2.x+。
 
 ---
 
@@ -9,7 +9,7 @@
 
 聚焦"把现有体验做扎实"，让一个学生从首页进入到完成一节课的闭环可用。
 
-### S1. 学习进度持久化　【优先级 P0】
+### S1. 学习进度持久化　【优先级 P0】　✅ V0.7.2 已完成
 - **为什么**：刷新/换设备后无法继续，「我的学习」目前是占位假数据。
 - **怎么做**：
   - 后端：在 [services/persistence/db.py](../services/persistence/db.py) 增加 `LessonProgress(user_id, lesson_id, layer, status, last_visited_at)`；先单用户 `default`，多用户在中期接入后扩
@@ -18,12 +18,12 @@
   - 前端：[LearningPage](../apps/web/src/pages/LearningPage.tsx) 接通真实数据，"今日继续"取最近 1 条
 - **验收**：刷新后能恢复"上次到 X 课 X 层"；卸载浏览器缓存后从后端拉回相同进度。
 
-### S2. 画板自动保存　【P0】
+### S2. 画板自动保存　【P0】　✅ V0.7.3 已完成
 - **为什么**：[LessonCreate](../apps/web/src/pages/lesson/LessonCreate.tsx) 当前需手动点"保存到云端"，断网或忘点即丢。
 - **怎么做**：debounce 800ms 监听 nodes/edges 变化 → 后台静默 `PUT /practice/canvas/:lid`；右上角 chip 显示"已保存于 HH:mm"。
 - **验收**：拖动节点 1 秒后状态自动同步；toast 不打扰；网络失败显示一次降级提示。
 
-### S3. 首页接入真实数据　【P0】
+### S3. 首页接入真实数据　【P0】　✅ V0.7.2 已完成
 - **为什么**：[HomePage](../apps/web/src/pages/HomePage.tsx) 当前是静态占位，与 LearningPage 数据脱节。
 - **怎么做**：复用 S1 的 progress 接口，"继续学习"取最近 1 条；"今日推荐"按时代 cursor 推下一节。
 - **验收**：首屏卡片可点击直达正确 lesson + layer。
