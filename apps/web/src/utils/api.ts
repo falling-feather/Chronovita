@@ -114,6 +114,7 @@ export async function streamAsk(
     lesson_id?: string;
     lesson_title?: string;
     peer_character?: string;
+    peer_intro?: string;
     era?: string;
     history?: { role: 'user' | 'assistant'; content: string }[];
   },
