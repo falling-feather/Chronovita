@@ -11,7 +11,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://localhost:5173",
     ]
-    sqlite_path: str = "../../data/chronovita.db"
+    sqlite_path: str = "data/chronovita.db"
     content_root: str = "content"
     admin_token: str = "dev-admin-token"
 
