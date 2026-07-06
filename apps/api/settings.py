@@ -12,6 +12,8 @@ class Settings(BaseSettings):
         "http://localhost:5173",
     ]
     sqlite_path: str = "../../data/chronovita.db"
+    content_root: str = "content"
+    admin_token: str = "dev-admin-token"
 
     # LLM 适配层
     llm_provider: str = "mock"  # mock | deepseek

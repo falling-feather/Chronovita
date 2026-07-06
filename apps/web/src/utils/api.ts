@@ -13,6 +13,16 @@ async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return r.json() as Promise<T>;
 }
 
+async function adminFetch<T>(token: string, path: string, init?: RequestInit): Promise<T> {
+  return jsonFetch<T>(path, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(init?.headers || {}),
+    },
+  });
+}
+
 export interface Era { id: string; name: string; period: string; summary: string }
 export interface CourseSummary {
   id: string; era_id: string; title: string; subtitle: string;
@@ -23,12 +33,43 @@ export interface CourseDetail {
   summary: CourseSummary; intro: string; lessons: LessonSummary[];
 }
 export interface Keyword { word: string; pinyin: string; gloss: string }
+export interface PersonCard {
+  name: string; role?: string; summary?: string; persona?: string; boundaries?: string[];
+}
+export interface MapPoint {
+  label: string; region?: string; lat?: number | null; lng?: number | null; note?: string; kind?: string;
+}
+export interface SourceRef {
+  title: string; source?: string; url_or_path?: string; citation_note?: string; reliability?: string;
+}
+export interface MaterialPlaceholder {
+  title?: string; objective?: string; notes?: string; assets?: string[];
+}
+export interface LessonContentPackage {
+  lesson_id: string; title: string; unit: string; era: string; body: string[];
+  course_id?: string; course_title?: string; era_id?: string; section?: string;
+  lesson_no?: string; duration?: string; abstract?: string;
+  keywords?: Keyword[]; people?: PersonCard[]; map_points?: MapPoint[]; source_refs?: SourceRef[];
+  facts?: string[]; qa_points?: string[]; level_goals?: string[];
+  saga_material?: MaterialPlaceholder; sandbox_material?: MaterialPlaceholder;
+  seed_canvas?: { id?: string; label: string; note?: string }[];
+  teacher_notes?: string;
+  status?: 'draft' | 'sealed'; version?: number;
+  created_at?: string | null; updated_at?: string | null; sealed_at?: string | null; sealed_by?: string | null;
+  checksum?: string | null;
+}
 export interface Lesson {
   id: string; course_id: string; num: string; title: string;
   duration: string; abstract: string; body: string[];
   keywords: Keyword[]; figures: string[];
   sandbox_id: string | null;
   seed_canvas: { id: string; label: string }[];
+  unit?: string; era?: string;
+  people?: PersonCard[]; map_points?: MapPoint[]; source_refs?: SourceRef[];
+  facts?: string[]; qa_points?: string[]; level_goals?: string[];
+  saga_material?: MaterialPlaceholder | null; sandbox_material?: MaterialPlaceholder | null;
+  content_status?: string; content_version?: number; sealed_at?: string | null; sealed_by?: string | null;
+  content_checksum?: string | null;
 }
 
 export const api = {
@@ -60,6 +101,17 @@ export const api = {
   progressGet: (lesson_id: string) => jsonFetch<{ item: ProgressItem | null }>(`/learning/progress/${lesson_id}`),
   progressTouch: (body: { lesson_id: string; layer: string; completed?: boolean }) =>
     jsonFetch<{ ok: boolean; item: ProgressItem }>(`/learning/progress/touch`, { method: 'POST', body: JSON.stringify(body) }),
+  adminContentTemplate: (token: string) => adminFetch<LessonContentPackage>(token, '/admin/content/template'),
+  adminContentPreview: (token: string, body: LessonContentPackage) =>
+    adminFetch<{ item: LessonContentPackage }>(token, '/admin/content/preview', { method: 'POST', body: JSON.stringify(body) }),
+  adminContentSaveDraft: (token: string, body: LessonContentPackage) =>
+    adminFetch<{ item: LessonContentPackage }>(token, '/admin/content/drafts', { method: 'POST', body: JSON.stringify(body) }),
+  adminContentSeal: (token: string, lesson_id: string, sealed_by: string) =>
+    adminFetch<{ item: LessonContentPackage; record: { path: string } }>(
+      token,
+      `/admin/content/drafts/${lesson_id}/seal`,
+      { method: 'POST', body: JSON.stringify({ sealed_by }) },
+    ),
 };
 
 export interface ProgressItem {

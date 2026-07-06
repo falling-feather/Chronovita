@@ -7,7 +7,9 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from services import content as content_data
 
 
 class Era(BaseModel):
@@ -49,10 +51,25 @@ class Lesson(BaseModel):
     duration: str
     abstract: str
     body: list[str]                # 教材级正文段落
-    keywords: list[Keyword] = []
-    figures: list[str] = []        # 关键人物
+    keywords: list[Keyword] = Field(default_factory=list)
+    figures: list[str] = Field(default_factory=list)        # 关键人物
     sandbox_id: Optional[str] = None
-    seed_canvas: list[dict] = []   # 「创」层默认知识节点
+    seed_canvas: list[dict] = Field(default_factory=list)   # 「创」层默认知识节点
+    unit: str = ""
+    era: str = ""
+    people: list[dict] = Field(default_factory=list)
+    map_points: list[dict] = Field(default_factory=list)
+    source_refs: list[dict] = Field(default_factory=list)
+    facts: list[str] = Field(default_factory=list)
+    qa_points: list[str] = Field(default_factory=list)
+    level_goals: list[str] = Field(default_factory=list)
+    saga_material: dict | None = None
+    sandbox_material: dict | None = None
+    content_status: str = "builtin"
+    content_version: int = 0
+    sealed_at: str | None = None
+    sealed_by: str | None = None
+    content_checksum: str | None = None
 
 
 class Course(BaseModel):
@@ -2845,15 +2862,31 @@ COURSES: list[Course] = [
 ]
 
 COURSE_INDEX: dict[str, Course] = {c.summary.id: c for c in COURSES}
+CONTENT_COVER_COLOR = "#2F6F71"
 
 
 def list_eras() -> list[Era]:
-    return ERAS
+    items = list(ERAS)
+    seen = {era.id for era in items}
+    for pkg in content_data.load_sealed_packages():
+        era_id = pkg.era_id or "content"
+        if era_id in seen:
+            continue
+        seen.add(era_id)
+        items.append(
+            Era(
+                id=era_id,
+                name=pkg.era or "内容包",
+                period="封存内容",
+                summary="管理员封存的课程内容，可由课程服务动态读取。",
+            )
+        )
+    return items
 
 
 def list_courses(era_id: Optional[str] = None, section: Optional[str] = None,
                  q: Optional[str] = None) -> list[CourseSummary]:
-    items = [c.summary for c in COURSES]
+    items = [c.summary for c in _all_courses()]
     if era_id and era_id != "all":
         items = [c for c in items if c.era_id == era_id]
     if section and section != "all":
@@ -2865,8 +2898,119 @@ def list_courses(era_id: Optional[str] = None, section: Optional[str] = None,
 
 
 def get_course(course_id: str) -> Optional[Course]:
-    return COURSE_INDEX.get(course_id)
+    packages = _content_packages_by_course()
+    base = COURSE_INDEX.get(course_id)
+    if base:
+        return _merge_course(base, packages.get(course_id, []))
+    if course_id in packages:
+        return _content_course(course_id, packages[course_id])
+    return None
 
 
 def get_lesson(lesson_id: str) -> Optional[Lesson]:
+    for pkg in content_data.load_sealed_packages():
+        if pkg.lesson_id == lesson_id:
+            return _lesson_from_content(pkg)
     return LESSON_INDEX.get(lesson_id)
+
+
+def _all_courses() -> list[Course]:
+    packages = _content_packages_by_course()
+    items: list[Course] = []
+    for course in COURSES:
+        items.append(_merge_course(course, packages.pop(course.summary.id, [])))
+    for course_id, course_packages in packages.items():
+        items.append(_content_course(course_id, course_packages))
+    return items
+
+
+def _content_packages_by_course() -> dict[str, list[content_data.LessonContentPackage]]:
+    groups: dict[str, list[content_data.LessonContentPackage]] = {}
+    for pkg in content_data.load_sealed_packages():
+        groups.setdefault(pkg.course_id, []).append(pkg)
+    for course_id in groups:
+        groups[course_id] = sorted(groups[course_id], key=lambda item: (item.lesson_no, item.lesson_id))
+    return groups
+
+
+def _merge_course(base: Course, packages: list[content_data.LessonContentPackage]) -> Course:
+    if not packages:
+        return base
+    package_by_lesson = {pkg.lesson_id: pkg for pkg in packages}
+    merged: list[LessonSummary] = []
+    seen: set[str] = set()
+    for lesson in base.lessons:
+        pkg = package_by_lesson.get(lesson.id)
+        merged.append(_lesson_summary_from_content(pkg) if pkg else lesson)
+        seen.add(lesson.id)
+    for pkg in packages:
+        if pkg.lesson_id not in seen:
+            merged.append(_lesson_summary_from_content(pkg))
+    return Course(
+        summary=base.summary.model_copy(update={"lesson_count": len(merged)}),
+        intro=base.intro,
+        lessons=merged,
+    )
+
+
+def _content_course(course_id: str, packages: list[content_data.LessonContentPackage]) -> Course:
+    first = packages[0]
+    title = first.course_title or first.unit
+    subtitle = f"{first.era} · 封存内容"
+    return Course(
+        summary=CourseSummary(
+            id=course_id,
+            era_id=first.era_id or "content",
+            title=title,
+            subtitle=subtitle,
+            cover_color=CONTENT_COVER_COLOR,
+            section=first.section or "内容包",
+            lesson_count=len(packages),
+        ),
+        intro=f"管理员封存的课程内容包，共 {len(packages)} 节。教师团队可继续补充正文、人物、资料与互动素材。",
+        lessons=[_lesson_summary_from_content(pkg) for pkg in packages],
+    )
+
+
+def _lesson_summary_from_content(pkg: content_data.LessonContentPackage) -> LessonSummary:
+    return LessonSummary(
+        id=pkg.lesson_id,
+        num=pkg.lesson_no,
+        title=pkg.title,
+        duration=pkg.duration,
+        state="open",
+    )
+
+
+def _lesson_from_content(pkg: content_data.LessonContentPackage) -> Lesson:
+    return Lesson(
+        id=pkg.lesson_id,
+        course_id=pkg.course_id,
+        num=pkg.lesson_no,
+        title=pkg.title,
+        duration=pkg.duration,
+        abstract=pkg.abstract,
+        body=pkg.body,
+        keywords=[Keyword(word=k.word, pinyin=k.pinyin, gloss=k.gloss) for k in pkg.keywords],
+        figures=[person.name for person in pkg.people],
+        sandbox_id=pkg.sandbox_material.title or None,
+        seed_canvas=[
+            {**node.model_dump(mode="json"), "id": node.id or f"c{i + 1}"}
+            for i, node in enumerate(pkg.seed_canvas)
+        ],
+        unit=pkg.unit,
+        era=pkg.era,
+        people=[person.model_dump(mode="json") for person in pkg.people],
+        map_points=[point.model_dump(mode="json") for point in pkg.map_points],
+        source_refs=[ref.model_dump(mode="json") for ref in pkg.source_refs],
+        facts=pkg.facts,
+        qa_points=pkg.qa_points,
+        level_goals=pkg.level_goals,
+        saga_material=pkg.saga_material.model_dump(mode="json"),
+        sandbox_material=pkg.sandbox_material.model_dump(mode="json"),
+        content_status=pkg.status,
+        content_version=pkg.version,
+        sealed_at=pkg.sealed_at.isoformat() if pkg.sealed_at else None,
+        sealed_by=pkg.sealed_by,
+        content_checksum=pkg.checksum,
+    )
