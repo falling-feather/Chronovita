@@ -16,10 +16,13 @@ Teacher workflow:
 1. Open `scripts/teacher-editor.cmd` on Windows, or run `scripts/teacher-editor.ps1`.
 2. Choose a planned course from the editor's course-planning selector.
    - Or choose an existing implemented lesson from `已有课程初稿` and revise it directly.
-3. Write lesson body text directly. Supported inline syntax:
+3. Write lesson body text in the low-code body editor. Prefer the toolbar or the custom right-click menu for quick formatting:
    - `【keyword】` marks a keyword and auto-adds it to the keyword list.
    - `**bold text**` renders as bold.
    - `==red text==` renders as highlighted red text.
+   - `{{红色:text}}`, `{{蓝色:text}}`, and `{{金色:text}}` render as colored emphasis.
+   - `{{大字:text}}` and `{{小字:text}}` render as font-size emphasis.
+   - Lines beginning with `#`, `##`, or `###` render as lesson body headings.
    - Lines beginning with `重点:`, `问题:`, or `目标:` can be parsed into facts, QA points, and level goals.
 4. Click `Preview` to open the lesson preview page immediately.
 5. Click `Save draft` to persist the editable server-side draft.

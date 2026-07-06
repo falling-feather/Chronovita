@@ -1,13 +1,21 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Button, Divider, Empty, Input, Segmented, Select, Space, Tag } from 'antd';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
+import type { TextAreaRef } from 'antd/es/input/TextArea';
+import { Button, Divider, Empty, Input, Segmented, Select, Space, Tag, Tooltip } from 'antd';
 import {
+  BgColorsOutlined,
+  BoldOutlined,
   BookOutlined,
   DownloadOutlined,
   EyeOutlined,
   FileTextOutlined,
+  FontColorsOutlined,
+  FontSizeOutlined,
+  HighlightOutlined,
   LockOutlined,
   ReloadOutlined,
   SaveOutlined,
+  TagsOutlined,
 } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -20,7 +28,7 @@ import {
   type PersonProfilePackage,
 } from '../utils/api';
 import { ADMIN_CONTENT_PREVIEW_KEY } from '../utils/adminContentStorage';
-import { parseContentMarkup, renderMarkupHtml, stripInlineMarkup } from '../utils/contentMarkup';
+import { parseContentBlock, parseContentMarkup, renderMarkupHtml, stripInlineMarkup } from '../utils/contentMarkup';
 import { toast } from '../utils/toast';
 
 const { TextArea } = Input;
@@ -30,6 +38,19 @@ const LOCAL_PERSON_KEY = 'chrono.admin.content.person.v1';
 const LOCAL_KEYWORD_KEY = 'chrono.admin.content.keyword.v1';
 
 type EditorMode = 'lesson' | 'person' | 'keyword';
+type BodyInlineFormat = 'bold' | 'highlight' | 'keyword' | 'red' | 'blue' | 'gold' | 'large' | 'small';
+type BodyBlockFormat = 'paragraph' | 'heading1' | 'heading2' | 'heading3' | 'focus' | 'question' | 'goal';
+
+interface TextSelectionRange {
+  start: number;
+  end: number;
+}
+
+interface BodyContextMenuState {
+  x: number;
+  y: number;
+  selection: TextSelectionRange;
+}
 
 interface EditorState {
   lesson_id: string;
@@ -88,6 +109,35 @@ interface KeywordEditorState {
 }
 
 const baseInputStyle = { minWidth: 0 };
+
+const inlineFormatTokens: Record<BodyInlineFormat, { prefix: string; suffix: string; placeholder: string }> = {
+  bold: { prefix: '**', suffix: '**', placeholder: '加粗文字' },
+  highlight: { prefix: '==', suffix: '==', placeholder: '标红文字' },
+  keyword: { prefix: '【', suffix: '】', placeholder: '关键词' },
+  red: { prefix: '{{红色:', suffix: '}}', placeholder: '红色标识' },
+  blue: { prefix: '{{蓝色:', suffix: '}}', placeholder: '蓝色标识' },
+  gold: { prefix: '{{金色:', suffix: '}}', placeholder: '金色标识' },
+  large: { prefix: '{{大字:', suffix: '}}', placeholder: '大字号文字' },
+  small: { prefix: '{{小字:', suffix: '}}', placeholder: '小字号说明' },
+};
+
+const headingOptions = [
+  { label: '正文段落', value: 'paragraph' },
+  { label: '一级标题', value: 'heading1' },
+  { label: '二级标题', value: 'heading2' },
+  { label: '三级标题', value: 'heading3' },
+];
+
+const sizeOptions = [
+  { label: '大字', value: 'large' },
+  { label: '小字', value: 'small' },
+];
+
+const colorOptions = [
+  { label: '红色', value: 'red' },
+  { label: '蓝色', value: 'blue' },
+  { label: '金色', value: 'gold' },
+];
 
 const ERA_GUIDE = [
   { id: 'origins', name: '文明起源', needs: '遗址、器物、早期聚落、考古资料来源' },
@@ -500,11 +550,20 @@ function exportContentBundle(item: LessonContentPackage) {
       bold: '**文字**',
       highlight: '==标红文字==',
       keyword: '【关键词】',
+      heading: '# 一级标题 / ## 二级标题 / ### 三级标题',
+      colors: '{{红色:文字}} / {{蓝色:文字}} / {{金色:文字}}',
+      font_size: '{{大字:文字}} / {{小字:文字}}',
     },
-    paragraphs: (item.body || []).map((paragraph, index) => ({
-      index,
-      segments: parseContentMarkup(paragraph).filter((segment) => segment.marks.length > 0),
-    })),
+    paragraphs: (item.body || []).map((paragraph, index) => {
+      const block = parseContentBlock(paragraph);
+      return {
+        index,
+        raw: paragraph,
+        block: block.level > 0 ? `heading_${block.level}` : 'paragraph',
+        text: block.text,
+        segments: parseContentMarkup(block.text).filter((segment) => segment.marks.length > 0),
+      };
+    }),
   };
   downloadText(`${base}.json`, formatJson(item) + '\n');
   downloadText(`${base}-格式层.json`, formatJson(formatLayer) + '\n');
@@ -544,8 +603,17 @@ function buildTeacherMarkdown(item: LessonContentPackage): string {
   ].join('\n');
 }
 
+function buildPreviewBlockHtml(paragraph: string): string {
+  const block = parseContentBlock(paragraph);
+  if (block.level > 0) {
+    const tag = block.level === 1 ? 'h2' : block.level === 2 ? 'h3' : 'h4';
+    return `<${tag}>${renderMarkupHtml(block.text)}</${tag}>`;
+  }
+  return `<p>${renderMarkupHtml(paragraph)}</p>`;
+}
+
 function buildPreviewHtml(item: LessonContentPackage): string {
-  const body = (item.body || []).map((paragraph) => `<p>${renderMarkupHtml(paragraph)}</p>`).join('\n');
+  const body = (item.body || []).map(buildPreviewBlockHtml).join('\n');
   const keywords = (item.keywords || []).map((keyword) => `<li><strong>${escapeHtml(keyword.word)}</strong>${keyword.gloss ? `：${escapeHtml(keyword.gloss)}` : ''}</li>`).join('');
   const people = (item.people || []).map((person) => `<li><strong>${escapeHtml(person.name)}</strong>${person.role ? ` · ${escapeHtml(person.role)}` : ''}<br>${escapeHtml(person.summary || '')}</li>`).join('');
   return `<!doctype html>
@@ -557,10 +625,19 @@ function buildPreviewHtml(item: LessonContentPackage): string {
     body { margin: 0; padding: 40px; background: #F7F1E6; color: #2E2418; font-family: "Noto Serif SC", "Microsoft YaHei", serif; }
     main { max-width: 880px; margin: 0 auto; background: #FFFDF7; border: 1px solid #E6D9C3; border-radius: 8px; padding: 34px; }
     h1 { margin: 0 0 8px; font-size: 32px; }
+    h2, h3, h4 { margin: 24px 0 10px; line-height: 1.45; }
+    h2 { font-size: 24px; }
+    h3 { font-size: 21px; }
+    h4 { font-size: 18px; }
     .meta { color: #796C5A; margin-bottom: 24px; }
     p { font-size: 17px; line-height: 2; text-indent: 2em; }
     .keyword { color: #9B642E; font-weight: 700; border-bottom: 1px solid rgba(155,100,46,.35); }
     mark { color: #9F2D20; background: rgba(198,65,47,.14); border-radius: 3px; padding: 0 3px; }
+    .text-red { color: #9F2D20; }
+    .text-blue { color: #315F91; }
+    .text-gold { color: #8B641B; }
+    .text-large { font-size: 1.14em; }
+    .text-small { font-size: .88em; }
     aside { margin-top: 28px; display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     section { background: #F8F2E8; border-radius: 6px; padding: 16px; }
     li { margin: 8px 0; line-height: 1.6; }
@@ -589,6 +666,23 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function clampSelection(selection: TextSelectionRange, length: number): TextSelectionRange {
+  const start = Math.max(0, Math.min(selection.start, length));
+  const end = Math.max(start, Math.min(selection.end, length));
+  return { start, end };
+}
+
+function formatBodyLine(line: string, format: BodyBlockFormat): string {
+  const clean = line.replace(/^\s*#{1,6}\s+/, '').replace(/^\s*(重点|问题|目标)[:：]\s*/, '').trim();
+  if (format === 'paragraph') return clean || '正文段落';
+  if (format === 'heading1') return `# ${clean || '一级标题'}`;
+  if (format === 'heading2') return `## ${clean || '二级标题'}`;
+  if (format === 'heading3') return `### ${clean || '三级标题'}`;
+  if (format === 'focus') return `重点：${clean || '重点内容'}`;
+  if (format === 'question') return `问题：${clean || '可追问问题'}`;
+  return `目标：${clean || '关卡目标'}`;
+}
+
 export default function AdminContentPage() {
   const navigate = useNavigate();
   const [editorMode, setEditorMode] = useState<EditorMode>('lesson');
@@ -611,6 +705,9 @@ export default function AdminContentPage() {
   const [serverSavedAt, setServerSavedAt] = useState('');
   const [assetSavedAt, setAssetSavedAt] = useState('');
   const [busy, setBusy] = useState('');
+  const bodyTextAreaRef = useRef<TextAreaRef | null>(null);
+  const bodySelectionRef = useRef<TextSelectionRange>({ start: 0, end: 0 });
+  const [bodyContextMenu, setBodyContextMenu] = useState<BodyContextMenuState | null>(null);
 
   const currentPayload = useMemo(() => {
     try {
@@ -656,6 +753,19 @@ export default function AdminContentPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!bodyContextMenu) return;
+    const closeMenu = () => setBodyContextMenu(null);
+    window.addEventListener('click', closeMenu);
+    window.addEventListener('keydown', closeMenu);
+    window.addEventListener('scroll', closeMenu, true);
+    return () => {
+      window.removeEventListener('click', closeMenu);
+      window.removeEventListener('keydown', closeMenu);
+      window.removeEventListener('scroll', closeMenu, true);
+    };
+  }, [bodyContextMenu]);
+
   const rememberToken = (value: string) => {
     setToken(value);
     localStorage.setItem(TOKEN_KEY, value);
@@ -675,6 +785,102 @@ export default function AdminContentPage() {
     setKeywordEditor((current) => ({ ...current, ...patch }));
     setAssetSavedAt('');
   };
+
+  const getBodyTextArea = () => bodyTextAreaRef.current?.resizableTextArea?.textArea ?? null;
+
+  const rememberBodySelection = () => {
+    const textarea = getBodyTextArea();
+    if (!textarea) return;
+    bodySelectionRef.current = { start: textarea.selectionStart, end: textarea.selectionEnd };
+  };
+
+  const rememberBodySelectionSoon = () => {
+    window.requestAnimationFrame(rememberBodySelection);
+  };
+
+  const activeBodySelection = (override?: TextSelectionRange) => {
+    const textarea = getBodyTextArea();
+    if (override) return clampSelection(override, editor.bodyText.length);
+    const liveSelection = textarea ? { start: textarea.selectionStart, end: textarea.selectionEnd } : null;
+    const savedSelection = bodySelectionRef.current;
+    const selection = liveSelection && liveSelection.start !== liveSelection.end
+      ? liveSelection
+      : savedSelection.start !== savedSelection.end
+        ? savedSelection
+        : liveSelection ?? savedSelection;
+    return clampSelection(selection, editor.bodyText.length);
+  };
+
+  const replaceBodyRange = (selection: TextSelectionRange, nextText: string, selectStart: number, selectEnd: number) => {
+    const nextBody = `${editor.bodyText.slice(0, selection.start)}${nextText}${editor.bodyText.slice(selection.end)}`;
+    updateEditor({ bodyText: nextBody });
+    setBodyContextMenu(null);
+    window.requestAnimationFrame(() => {
+      const textarea = getBodyTextArea();
+      if (!textarea) return;
+      textarea.focus();
+      textarea.setSelectionRange(selectStart, selectEnd);
+      bodySelectionRef.current = { start: selectStart, end: selectEnd };
+    });
+  };
+
+  const applyBodyInlineFormat = (format: BodyInlineFormat, selectionOverride?: TextSelectionRange) => {
+    const token = inlineFormatTokens[format];
+    const selection = activeBodySelection(selectionOverride);
+    const selected = editor.bodyText.slice(selection.start, selection.end) || token.placeholder;
+    const nextText = `${token.prefix}${selected}${token.suffix}`;
+    const innerStart = selection.start + token.prefix.length;
+    replaceBodyRange(selection, nextText, innerStart, innerStart + selected.length);
+  };
+
+  const applyBodyBlockFormat = (format: BodyBlockFormat, selectionOverride?: TextSelectionRange) => {
+    const selection = activeBodySelection(selectionOverride);
+    const lineStart = editor.bodyText.lastIndexOf('\n', Math.max(0, selection.start - 1)) + 1;
+    const nextBreak = editor.bodyText.indexOf('\n', selection.end);
+    const lineEnd = nextBreak >= 0 ? nextBreak : editor.bodyText.length;
+    const blockSelection = { start: lineStart, end: lineEnd };
+    const currentBlock = editor.bodyText.slice(lineStart, lineEnd);
+    const nextText = (currentBlock ? currentBlock.split('\n') : ['']).map((line) => formatBodyLine(line, format)).join('\n');
+    replaceBodyRange(blockSelection, nextText, lineStart, lineStart + nextText.length);
+  };
+
+  const handleBodyContextMenu = (event: MouseEvent<HTMLTextAreaElement>) => {
+    event.preventDefault();
+    const liveSelection = { start: event.currentTarget.selectionStart, end: event.currentTarget.selectionEnd };
+    const savedSelection = bodySelectionRef.current;
+    const selection = liveSelection.start !== liveSelection.end
+      ? liveSelection
+      : savedSelection.start !== savedSelection.end
+        ? savedSelection
+        : liveSelection;
+    bodySelectionRef.current = selection;
+    setBodyContextMenu({
+      x: Math.max(8, Math.min(event.clientX, window.innerWidth - 248)),
+      y: Math.max(8, Math.min(event.clientY, window.innerHeight - 270)),
+      selection,
+    });
+  };
+
+  const renderFormatButton = (
+    format: BodyInlineFormat,
+    label: string,
+    icon: ReactNode,
+    selectionOverride?: TextSelectionRange,
+  ) => (
+    <Tooltip title={label}>
+      <Button
+        size="small"
+        icon={icon}
+        onMouseDown={(event) => {
+          event.preventDefault();
+          rememberBodySelection();
+        }}
+        onClick={() => applyBodyInlineFormat(format, selectionOverride)}
+      >
+        {label}
+      </Button>
+    </Tooltip>
+  );
 
   const refreshDrafts = async () => {
     setBusy('drafts');
@@ -1039,13 +1245,109 @@ export default function AdminContentPage() {
 
           <Divider style={{ margin: '16px 0 12px' }} />
           <div className="chrono-title" style={{ fontSize: 16, marginBottom: 10 }}>正文</div>
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              marginBottom: 8,
+              padding: 8,
+              border: '1px solid var(--border-soft)',
+              borderRadius: 6,
+              background: 'rgba(255, 253, 247, 0.72)',
+            }}
+          >
+            <Space size={[6, 6]} wrap>
+              {renderFormatButton('bold', '加粗', <BoldOutlined />)}
+              {renderFormatButton('highlight', '标红', <HighlightOutlined />)}
+              {renderFormatButton('keyword', '关键词', <TagsOutlined />)}
+              <Select
+                size="small"
+                aria-label="标题级别"
+                placeholder="标题级别"
+                style={{ width: 116 }}
+                onMouseDown={rememberBodySelection}
+                onChange={(value) => applyBodyBlockFormat(value as BodyBlockFormat)}
+                options={headingOptions}
+              />
+              <Select
+                size="small"
+                aria-label="字号"
+                placeholder="字号"
+                suffixIcon={<FontSizeOutlined />}
+                style={{ width: 92 }}
+                onMouseDown={rememberBodySelection}
+                onChange={(value) => applyBodyInlineFormat(value as BodyInlineFormat)}
+                options={sizeOptions}
+              />
+              <Select
+                size="small"
+                aria-label="标识颜色"
+                placeholder="颜色"
+                suffixIcon={<FontColorsOutlined />}
+                style={{ width: 96 }}
+                onMouseDown={rememberBodySelection}
+                onChange={(value) => applyBodyInlineFormat(value as BodyInlineFormat)}
+                options={colorOptions}
+              />
+              <Button size="small" icon={<BgColorsOutlined />} onMouseDown={(event) => { event.preventDefault(); rememberBodySelection(); }} onClick={() => applyBodyBlockFormat('focus')}>重点</Button>
+              <Button size="small" onMouseDown={(event) => { event.preventDefault(); rememberBodySelection(); }} onClick={() => applyBodyBlockFormat('question')}>问题</Button>
+              <Button size="small" onMouseDown={(event) => { event.preventDefault(); rememberBodySelection(); }} onClick={() => applyBodyBlockFormat('goal')}>目标</Button>
+            </Space>
+            <span style={{ color: 'var(--text-mute)', fontSize: 12 }}>选中文本后点按钮，或在正文里右键打开快捷格式菜单</span>
+          </div>
           <TextArea
+            ref={bodyTextAreaRef}
             aria-label="课文正文"
             value={editor.bodyText}
             onChange={(event) => updateEditor({ bodyText: event.target.value })}
+            onSelect={rememberBodySelection}
+            onKeyUp={rememberBodySelectionSoon}
+            onMouseUp={rememberBodySelectionSoon}
+            onClick={rememberBodySelectionSoon}
+            onContextMenu={handleBodyContextMenu}
             autoSize={{ minRows: 10, maxRows: 18 }}
             style={{ ...baseInputStyle, fontSize: 15, lineHeight: 1.8 }}
           />
+          {bodyContextMenu && (
+            <div
+              role="menu"
+              aria-label="正文格式快捷菜单"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={(event) => event.stopPropagation()}
+              style={{
+                position: 'fixed',
+                left: bodyContextMenu.x,
+                top: bodyContextMenu.y,
+                zIndex: 2400,
+                width: 236,
+                padding: 10,
+                border: '1px solid var(--border-soft)',
+                borderRadius: 6,
+                background: 'var(--bg-card)',
+                boxShadow: '0 14px 34px rgba(36, 28, 19, 0.18)',
+              }}
+            >
+              <div className="chrono-course-eyeline" style={{ marginBottom: 8 }}>格式快捷菜单</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 6 }}>
+                {renderFormatButton('bold', '加粗', <BoldOutlined />, bodyContextMenu.selection)}
+                {renderFormatButton('highlight', '标红', <HighlightOutlined />, bodyContextMenu.selection)}
+                {renderFormatButton('keyword', '关键词', <TagsOutlined />, bodyContextMenu.selection)}
+                {renderFormatButton('large', '大字', <FontSizeOutlined />, bodyContextMenu.selection)}
+                {renderFormatButton('red', '红色', <FontColorsOutlined />, bodyContextMenu.selection)}
+                {renderFormatButton('blue', '蓝色', <FontColorsOutlined />, bodyContextMenu.selection)}
+              </div>
+              <Divider style={{ margin: '10px 0' }} />
+              <Space size={[6, 6]} wrap>
+                <Button size="small" onClick={() => applyBodyBlockFormat('heading2', bodyContextMenu.selection)}>二级标题</Button>
+                <Button size="small" onClick={() => applyBodyBlockFormat('heading3', bodyContextMenu.selection)}>三级标题</Button>
+                <Button size="small" onClick={() => applyBodyBlockFormat('focus', bodyContextMenu.selection)}>重点</Button>
+                <Button size="small" onClick={() => applyBodyBlockFormat('question', bodyContextMenu.selection)}>问题</Button>
+              </Space>
+            </div>
+          )}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: 12, marginTop: 14 }}>
             <label>
@@ -1180,7 +1482,7 @@ export default function AdminContentPage() {
               <div style={{ fontSize: 12, color: 'var(--text-mute)', lineHeight: 1.7 }}>
                 <p><strong>课程 ID</strong>：同一门课共用，例如 <code>C-qin-han</code>。选“课程规划”会自动填写。</p>
                 <p><strong>课时 ID</strong>：每节课唯一，只用英文、数字、短横线；封存文件会用它命名。</p>
-                <p><strong>正文语法</strong>：<code>【关键词】</code> 自动进入关键词；<code>**加粗**</code> 加粗；<code>==标红==</code> 标红；<code>重点：</code>、<code>问题：</code>、<code>目标：</code> 可被“解析重点”分配到结构化字段。</p>
+                <p><strong>正文语法</strong>：优先用正文上方工具条或右键快捷菜单；底层会写成 <code>【关键词】</code>、<code>**加粗**</code>、<code>==标红==</code>、<code>{'{{红色:文字}}'}</code>、<code>{'{{大字:文字}}'}</code>、<code>## 标题</code>，封存和导出会保留这些格式层标记。</p>
                 <p><strong>人物/地图点/资料</strong>：一行一条，用 <code>|</code> 分列。人物：姓名 | 身份 | 摘要 | persona。地图：地点 | 区域 | 说明 | 类型。资料：标题 | 来源 | 链接 | 引文说明。</p>
                 <p><strong>保存草稿</strong>：写入 <code>content/drafts</code>，可在草稿库重新打开。<strong>封存</strong>：生成版本文件并导出内容层、格式层和 HTML 预览。</p>
                 <div style={{ marginTop: 8 }}>

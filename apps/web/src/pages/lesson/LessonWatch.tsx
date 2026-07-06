@@ -2,9 +2,26 @@ import { useState } from 'react';
 import { Button, Space, Tag } from 'antd';
 import { LinkOutlined, PlayCircleOutlined, SoundOutlined } from '@ant-design/icons';
 import type { Lesson } from '../../utils/api';
-import { renderContentMarkup } from '../../utils/contentMarkup';
+import { parseContentBlock, renderContentMarkup } from '../../utils/contentMarkup';
 import { toast } from '../../utils/toast';
 import { BILIBILI_PLACEHOLDER, uiAssets } from '../p0Route';
+
+function renderBodyBlock(paragraph: string, index: number) {
+  const block = parseContentBlock(paragraph);
+  if (block.level > 0) {
+    const headingStyle = {
+      margin: block.level === 1 ? '20px 0 10px' : '18px 0 8px',
+      color: 'var(--text-dark)',
+      lineHeight: 1.45,
+      fontSize: block.level === 1 ? 22 : block.level === 2 ? 19 : 17,
+    };
+    const content = renderContentMarkup(block.text);
+    if (block.level === 1) return <h2 key={index} style={headingStyle}>{content}</h2>;
+    if (block.level === 2) return <h3 key={index} style={headingStyle}>{content}</h3>;
+    return <h4 key={index} style={headingStyle}>{content}</h4>;
+  }
+  return <p key={index} style={{ marginBottom: 14, textIndent: '2em' }}>{renderContentMarkup(paragraph)}</p>;
+}
 
 export default function LessonWatch({ lesson }: { lesson: Lesson }) {
   const [expert, setExpert] = useState<'A' | 'B'>('A');
@@ -75,9 +92,7 @@ export default function LessonWatch({ lesson }: { lesson: Lesson }) {
             )}
           </div>
           <div className="chrono-serif" style={{ fontSize: 15, color: 'var(--text-dark)', lineHeight: 2 }}>
-            {lesson.body.map((p, i) => (
-              <p key={i} style={{ marginBottom: 14, textIndent: '2em' }}>{renderContentMarkup(p)}</p>
-            ))}
+            {lesson.body.map(renderBodyBlock)}
           </div>
         </div>
       </div>
