@@ -6,16 +6,41 @@ $ApiPort = 8000
 $WebHost = "127.0.0.1"
 $WebPort = 5173
 $EditorUrl = "http://$WebHost`:$WebPort/admin/content"
+$ApiDir = Join-Path $Root "apps\api"
 $WebDir = Join-Path $Root "apps\web"
-$PythonExe = Join-Path $Root ".venv\Scripts\python.exe"
+$Requirements = Join-Path $ApiDir "requirements.txt"
+$VenvDir = Join-Path $Root ".venv"
+$PythonExe = Join-Path $VenvDir "Scripts\python.exe"
+$LogDir = Join-Path $Root ".teacher-editor-logs"
+$ApiOutLog = Join-Path $LogDir "api.out.log"
+$ApiErrLog = Join-Path $LogDir "api.err.log"
+$WebOutLog = Join-Path $LogDir "web.out.log"
+$WebErrLog = Join-Path $LogDir "web.err.log"
 
-if (-not (Test-Path $PythonExe)) {
-  $PythonExe = "python"
-  Write-Warning "Python virtualenv was not found at .venv. Falling back to python on PATH."
+function Write-Step {
+  param([string] $Message)
+  Write-Host ""
+  Write-Host "== $Message ==" -ForegroundColor Cyan
 }
 
-if (-not (Test-Path (Join-Path $WebDir "node_modules"))) {
-  Write-Warning "apps\web\node_modules was not found. Run npm install inside apps\web before first use."
+function Test-Command {
+  param([string] $Name)
+  return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
+}
+
+function Invoke-Checked {
+  param(
+    [string] $Title,
+    [string] $FilePath,
+    [string[]] $Arguments,
+    [string] $WorkingDirectory = $Root
+  )
+
+  Write-Host $Title
+  $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments -WorkingDirectory $WorkingDirectory -NoNewWindow -Wait -PassThru
+  if ($process.ExitCode -ne 0) {
+    throw "$Title failed with exit code $($process.ExitCode)."
+  }
 }
 
 function Test-LocalPort {
@@ -39,43 +64,153 @@ function Test-LocalPort {
   }
 }
 
-function Start-HiddenPowerShell {
-  param([string] $Command)
-
-  Start-Process -FilePath "powershell" -WindowStyle Hidden -PassThru -ArgumentList @(
-    "-NoProfile",
-    "-ExecutionPolicy",
-    "Bypass",
-    "-Command",
-    $Command
+function Wait-LocalPort {
+  param(
+    [string] $Name,
+    [string] $HostName,
+    [int] $Port,
+    [System.Diagnostics.Process] $Process,
+    [string] $ErrorLog
   )
-}
 
-Write-Host "Starting Chronovita teacher editor..."
+  for ($i = 0; $i -lt 80; $i += 1) {
+    if (Test-LocalPort $HostName $Port) {
+      Write-Host "$Name is ready on http://$HostName`:$Port" -ForegroundColor Green
+      return
+    }
 
-if (Test-LocalPort $ApiHost $ApiPort) {
-  Write-Host "API is already available on http://$ApiHost`:$ApiPort"
-} else {
-  $apiCommand = "Set-Location -LiteralPath '$Root'; & '$PythonExe' -m uvicorn apps.api.main:app --host $ApiHost --port $ApiPort"
-  $apiProcess = Start-HiddenPowerShell $apiCommand
-  Write-Host "API process started: $($apiProcess.Id)"
-}
+    if ($Process -and $Process.HasExited) {
+      Write-Host "$Name process exited early. Error log:" -ForegroundColor Red
+      if (Test-Path $ErrorLog) {
+        Get-Content $ErrorLog -Tail 60
+      }
+      throw "$Name failed to start."
+    }
 
-if (Test-LocalPort $WebHost $WebPort) {
-  Write-Host "Web app is already available on http://$WebHost`:$WebPort"
-} else {
-  $webCommand = "Set-Location -LiteralPath '$WebDir'; npm run dev -- --host $WebHost --port $WebPort"
-  $webProcess = Start-HiddenPowerShell $webCommand
-  Write-Host "Web process started: $($webProcess.Id)"
-}
-
-for ($i = 0; $i -lt 40; $i += 1) {
-  if (Test-LocalPort $WebHost $WebPort) {
-    break
+    Start-Sleep -Milliseconds 500
   }
-  Start-Sleep -Milliseconds 500
+
+  Write-Host "$Name did not become ready in time. Error log:" -ForegroundColor Red
+  if (Test-Path $ErrorLog) {
+    Get-Content $ErrorLog -Tail 60
+  }
+  throw "$Name did not become ready on http://$HostName`:$Port."
 }
 
-Write-Host "Opening $EditorUrl"
-Start-Process $EditorUrl
-Write-Host "Done. Keep this window if you want the launch log."
+function Ensure-PythonEnvironment {
+  if (Test-Path $PythonExe) {
+    Write-Host "Python virtualenv found: $PythonExe"
+    return
+  }
+
+  Write-Step "Preparing Python virtualenv"
+
+  if (Test-Command "py") {
+    Invoke-Checked "Creating .venv with py -3" "py" @("-3", "-m", "venv", $VenvDir)
+  } elseif (Test-Command "python") {
+    Invoke-Checked "Creating .venv with python" "python" @("-m", "venv", $VenvDir)
+  } else {
+    throw "Python was not found. Please install Python 3 and run this launcher again."
+  }
+
+  if (-not (Test-Path $PythonExe)) {
+    throw "Virtualenv was created, but $PythonExe was not found."
+  }
+}
+
+function Ensure-ApiDependencies {
+  if (-not (Test-Path $Requirements)) {
+    throw "API requirements file was not found: $Requirements"
+  }
+
+  Write-Step "Installing API dependencies"
+  Invoke-Checked "Upgrading pip" $PythonExe @("-m", "pip", "install", "--upgrade", "pip")
+  Invoke-Checked "Installing apps\api requirements" $PythonExe @("-m", "pip", "install", "-r", $Requirements)
+}
+
+function Ensure-WebDependencies {
+  if (-not (Test-Path (Join-Path $WebDir "package.json"))) {
+    throw "Web package.json was not found: $WebDir"
+  }
+
+  if (-not (Test-Command "npm")) {
+    throw "npm was not found. Please install Node.js LTS and run this launcher again."
+  }
+
+  $viteBin = Join-Path $WebDir "node_modules\.bin\vite.cmd"
+  if (Test-Path $viteBin) {
+    Write-Host "Web dependencies found: apps\web\node_modules"
+    return
+  }
+
+  Write-Step "Installing web dependencies"
+  Invoke-Checked "Running npm install in apps\web" "npm" @("install") $WebDir
+}
+
+function Start-Api {
+  if (Test-LocalPort $ApiHost $ApiPort) {
+    Write-Host "API is already available on http://$ApiHost`:$ApiPort" -ForegroundColor Green
+    return $null
+  }
+
+  Write-Step "Starting API"
+  $process = Start-Process -FilePath $PythonExe `
+    -ArgumentList @("-m", "uvicorn", "apps.api.main:app", "--host", $ApiHost, "--port", "$ApiPort") `
+    -WorkingDirectory $Root `
+    -WindowStyle Hidden `
+    -RedirectStandardOutput $ApiOutLog `
+    -RedirectStandardError $ApiErrLog `
+    -PassThru
+  Write-Host "API process started: $($process.Id)"
+  return $process
+}
+
+function Start-Web {
+  if (Test-LocalPort $WebHost $WebPort) {
+    Write-Host "Web app is already available on http://$WebHost`:$WebPort" -ForegroundColor Green
+    return $null
+  }
+
+  Write-Step "Starting web editor"
+  $process = Start-Process -FilePath "cmd.exe" `
+    -ArgumentList @("/c", "npm run dev -- --host $WebHost --port $WebPort") `
+    -WorkingDirectory $WebDir `
+    -WindowStyle Hidden `
+    -RedirectStandardOutput $WebOutLog `
+    -RedirectStandardError $WebErrLog `
+    -PassThru
+  Write-Host "Web process started: $($process.Id)"
+  return $process
+}
+
+try {
+  New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+
+  Write-Host "Chronovita teacher editor launcher"
+  Write-Host "Project root: $Root"
+
+  Ensure-PythonEnvironment
+  Ensure-ApiDependencies
+  Ensure-WebDependencies
+
+  $apiProcess = Start-Api
+  $webProcess = Start-Web
+
+  Wait-LocalPort "API" $ApiHost $ApiPort $apiProcess $ApiErrLog
+  Wait-LocalPort "Web editor" $WebHost $WebPort $webProcess $WebErrLog
+
+  Write-Step "Opening editor"
+  Write-Host $EditorUrl -ForegroundColor Green
+  Start-Process $EditorUrl
+  Write-Host ""
+  Write-Host "Ready. Keep this window open if you want to read the launch log."
+  Write-Host "Runtime logs are saved in: $LogDir"
+} catch {
+  Write-Host ""
+  Write-Host "Launch failed:" -ForegroundColor Red
+  Write-Host $_.Exception.Message -ForegroundColor Red
+  Write-Host ""
+  Write-Host "Please send the logs in this folder to the developer team:"
+  Write-Host $LogDir
+  exit 1
+}

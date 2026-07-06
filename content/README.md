@@ -14,6 +14,8 @@ The browser keeps an unsaved local draft, `Save draft` persists a server-side fi
 Teacher workflow:
 
 1. On Windows, double-click `点我一键启动（部署）.cmd` in the project root.
+   - First launch prepares `.venv`, installs `apps/api/requirements.txt`, installs `apps/web` npm dependencies, starts the API and web editor, then opens `/admin/content`.
+   - The `.cmd` launcher intentionally prints ASCII-only text to avoid Windows command prompt encoding issues.
    - Developer fallback: open `scripts/teacher-editor.cmd`, or run `scripts/teacher-editor.ps1`.
 2. Choose a planned course from the editor's course-planning selector.
    - Or choose an existing implemented lesson from `已有课程初稿` and revise it directly.
