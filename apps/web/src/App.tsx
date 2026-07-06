@@ -10,6 +10,7 @@ import LearningPage from './pages/LearningPage';
 import PracticePage from './pages/PracticePage';
 import ProfilePage from './pages/ProfilePage';
 import AdminContentPage from './pages/AdminContentPage';
+import AdminContentPreviewPage from './pages/AdminContentPreviewPage';
 import { bindMessage } from './utils/toast';
 
 const { Header, Content, Footer } = Layout;
@@ -120,6 +121,7 @@ export default function App() {
             <Route path="/practice" element={<PracticePage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/admin/content" element={<AdminContentPage />} />
+            <Route path="/admin/content/preview" element={<AdminContentPreviewPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Content>

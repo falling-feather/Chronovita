@@ -62,6 +62,23 @@ export interface ContentFileRecord {
   lesson_id: string; title: string; status: string; version: number; path: string;
   updated_at?: string | null; sealed_at?: string | null; sealed_by?: string | null; checksum?: string | null;
 }
+export interface LessonSourceRecord {
+  lesson_id: string; course_id: string; course_title: string; title: string;
+  lesson_no: string; era_id: string; era: string; source: string;
+}
+export interface ContentAssetRecord {
+  asset_id: string; title: string; kind: 'person' | 'keyword'; path: string; updated_at?: string | null;
+}
+export interface PersonProfilePackage {
+  asset_id: string; name: string; role?: string; era?: string; summary?: string; persona?: string;
+  boundaries?: string[]; keywords?: string[]; related_lessons?: string[]; source_refs?: SourceRef[];
+  teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number; updated_at?: string | null;
+}
+export interface KeywordProfilePackage {
+  asset_id: string; word: string; pinyin?: string; gloss?: string; era?: string; category?: string;
+  examples?: string[]; related_people?: string[]; related_lessons?: string[]; source_refs?: SourceRef[];
+  teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number; updated_at?: string | null;
+}
 export interface Lesson {
   id: string; course_id: string; num: string; title: string;
   duration: string; abstract: string; body: string[];
@@ -106,6 +123,9 @@ export const api = {
   progressTouch: (body: { lesson_id: string; layer: string; completed?: boolean }) =>
     jsonFetch<{ ok: boolean; item: ProgressItem }>(`/learning/progress/touch`, { method: 'POST', body: JSON.stringify(body) }),
   adminContentTemplate: (token: string) => adminFetch<LessonContentPackage>(token, '/admin/content/template'),
+  adminContentSourceLessons: (token: string) => adminFetch<{ items: LessonSourceRecord[] }>(token, '/admin/content/source-lessons'),
+  adminContentSourceLesson: (token: string, lesson_id: string) =>
+    adminFetch<LessonContentPackage>(token, `/admin/content/source-lessons/${lesson_id}`),
   adminContentDrafts: (token: string) => adminFetch<{ items: ContentFileRecord[] }>(token, '/admin/content/drafts'),
   adminContentDraft: (token: string, lesson_id: string) =>
     adminFetch<LessonContentPackage>(token, `/admin/content/drafts/${lesson_id}`),
@@ -119,6 +139,18 @@ export const api = {
       `/admin/content/drafts/${lesson_id}/seal`,
       { method: 'POST', body: JSON.stringify({ sealed_by }) },
     ),
+  adminContentAssets: (token: string, kind?: 'person' | 'keyword') =>
+    adminFetch<{ items: ContentAssetRecord[] }>(token, `/admin/content/assets${kind ? `?kind=${kind}` : ''}`),
+  adminPersonTemplate: (token: string) => adminFetch<PersonProfilePackage>(token, '/admin/content/assets/people/template'),
+  adminPersonAsset: (token: string, asset_id: string) =>
+    adminFetch<PersonProfilePackage>(token, `/admin/content/assets/people/${asset_id}`),
+  adminSavePersonAsset: (token: string, body: PersonProfilePackage) =>
+    adminFetch<{ item: PersonProfilePackage }>(token, '/admin/content/assets/people', { method: 'POST', body: JSON.stringify(body) }),
+  adminKeywordTemplate: (token: string) => adminFetch<KeywordProfilePackage>(token, '/admin/content/assets/keywords/template'),
+  adminKeywordAsset: (token: string, asset_id: string) =>
+    adminFetch<KeywordProfilePackage>(token, `/admin/content/assets/keywords/${asset_id}`),
+  adminSaveKeywordAsset: (token: string, body: KeywordProfilePackage) =>
+    adminFetch<{ item: KeywordProfilePackage }>(token, '/admin/content/assets/keywords', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 export interface ProgressItem {

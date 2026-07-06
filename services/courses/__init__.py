@@ -2897,6 +2897,15 @@ def list_courses(era_id: Optional[str] = None, section: Optional[str] = None,
     return items
 
 
+def list_builtin_lessons() -> list[Lesson]:
+    return sorted(LESSON_INDEX.values(), key=lambda item: (item.course_id, item.num, item.id))
+
+
+def course_summary_for_lesson(lesson: Lesson) -> CourseSummary | None:
+    course = COURSE_INDEX.get(lesson.course_id)
+    return course.summary if course else None
+
+
 def get_course(course_id: str) -> Optional[Course]:
     packages = _content_packages_by_course()
     base = COURSE_INDEX.get(course_id)

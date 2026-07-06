@@ -1,19 +1,31 @@
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel
 
 from settings import settings
 from services import content
-from services.content import LessonContentPackage
+from services import courses as courses_data
+from services.content import KeywordProfilePackage, LessonContentPackage, PersonProfilePackage
 
 router = APIRouter()
 
 
 class SealRequest(BaseModel):
     sealed_by: str = "admin"
+
+
+class LessonSourceRecord(BaseModel):
+    lesson_id: str
+    course_id: str
+    course_title: str = ""
+    title: str
+    lesson_no: str = ""
+    era_id: str = ""
+    era: str = ""
+    source: str = "builtin"
 
 
 def require_admin(
@@ -40,10 +52,15 @@ async def overview(_: str = Depends(require_admin)):
         "sealed": len(content.list_sealed()),
         "endpoints": [
             "GET /api/v1/admin/content/template",
+            "GET /api/v1/admin/content/source-lessons",
+            "GET /api/v1/admin/content/source-lessons/{lesson_id}",
             "POST /api/v1/admin/content/drafts",
             "PUT /api/v1/admin/content/drafts/{lesson_id}",
             "POST /api/v1/admin/content/preview",
             "POST /api/v1/admin/content/drafts/{lesson_id}/seal",
+            "GET /api/v1/admin/content/assets",
+            "POST /api/v1/admin/content/assets/people",
+            "POST /api/v1/admin/content/assets/keywords",
         ],
     }
 
@@ -51,6 +68,24 @@ async def overview(_: str = Depends(require_admin)):
 @router.get("/template")
 async def template(_: str = Depends(require_admin)):
     return content.content_template().model_dump(mode="json")
+
+
+@router.get("/source-lessons")
+async def source_lessons(_: str = Depends(require_admin)):
+    return {
+        "items": [
+            _source_record(lesson).model_dump(mode="json")
+            for lesson in courses_data.list_builtin_lessons()
+        ]
+    }
+
+
+@router.get("/source-lessons/{lesson_id}")
+async def source_lesson_detail(lesson_id: str, _: str = Depends(require_admin)):
+    lesson = courses_data.get_lesson(lesson_id)
+    if lesson is None or lesson.content_status != "builtin":
+        raise HTTPException(status_code=404, detail="Source lesson not found.")
+    return _lesson_to_content_package(lesson).model_dump(mode="json")
 
 
 @router.get("/drafts")
@@ -111,6 +146,52 @@ async def sealed(_: str = Depends(require_admin)):
     return {"items": [item.model_dump(mode="json") for item in content.list_sealed()]}
 
 
+@router.get("/assets")
+async def assets(
+    kind: Literal["person", "keyword"] | None = None,
+    _: str = Depends(require_admin),
+):
+    return {"items": [item.model_dump(mode="json") for item in content.list_assets(kind)]}
+
+
+@router.get("/assets/people/template")
+async def person_template(_: str = Depends(require_admin)):
+    return content.person_template().model_dump(mode="json")
+
+
+@router.get("/assets/people/{asset_id}")
+async def person_detail(asset_id: str, _: str = Depends(require_admin)):
+    item = content.get_person_profile(asset_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Person profile not found.")
+    return item.model_dump(mode="json")
+
+
+@router.post("/assets/people")
+async def save_person(payload: PersonProfilePackage, _: str = Depends(require_admin)):
+    saved = content.save_person_profile(payload)
+    return {"item": saved.model_dump(mode="json")}
+
+
+@router.get("/assets/keywords/template")
+async def keyword_template(_: str = Depends(require_admin)):
+    return content.keyword_template().model_dump(mode="json")
+
+
+@router.get("/assets/keywords/{asset_id}")
+async def keyword_detail(asset_id: str, _: str = Depends(require_admin)):
+    item = content.get_keyword_profile(asset_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Keyword profile not found.")
+    return item.model_dump(mode="json")
+
+
+@router.post("/assets/keywords")
+async def save_keyword(payload: KeywordProfilePackage, _: str = Depends(require_admin)):
+    saved = content.save_keyword_profile(payload)
+    return {"item": saved.model_dump(mode="json")}
+
+
 def _bearer_token(authorization: str | None) -> str | None:
     if not authorization:
         return None
@@ -118,3 +199,59 @@ def _bearer_token(authorization: str | None) -> str | None:
     if scheme.lower() != "bearer" or not token:
         return None
     return token.strip()
+
+
+def _source_record(lesson: courses_data.Lesson) -> LessonSourceRecord:
+    course = courses_data.course_summary_for_lesson(lesson)
+    era = _era_name(course.era_id if course else "")
+    return LessonSourceRecord(
+        lesson_id=lesson.id,
+        course_id=lesson.course_id,
+        course_title=course.title if course else lesson.course_id,
+        title=lesson.title,
+        lesson_no=lesson.num,
+        era_id=course.era_id if course else "",
+        era=era or lesson.era,
+    )
+
+
+def _lesson_to_content_package(lesson: courses_data.Lesson) -> LessonContentPackage:
+    source = _source_record(lesson)
+    return LessonContentPackage(
+        lesson_id=lesson.id,
+        course_id=lesson.course_id,
+        course_title=source.course_title,
+        title=lesson.title,
+        unit=source.course_title,
+        era=source.era or lesson.era or source.era_id,
+        era_id=source.era_id or "content",
+        section=courses_data.course_summary_for_lesson(lesson).section if courses_data.course_summary_for_lesson(lesson) else "已实装课程",
+        lesson_no=lesson.num,
+        duration=lesson.duration,
+        abstract=lesson.abstract,
+        body=lesson.body,
+        keywords=[
+            content.KeywordCard(word=item.word, pinyin=item.pinyin, gloss=item.gloss)
+            for item in lesson.keywords
+        ],
+        people=[
+            content.PersonCard(name=name, role="", summary=f"{name} 与本课相关，待教师补充人物档案。")
+            for name in lesson.figures
+        ],
+        map_points=[content.MapPoint.model_validate(item) for item in lesson.map_points],
+        source_refs=[content.SourceRef.model_validate(item) for item in lesson.source_refs],
+        facts=lesson.facts,
+        qa_points=lesson.qa_points,
+        level_goals=lesson.level_goals,
+        saga_material=content.MaterialPlaceholder.model_validate(lesson.saga_material or {}),
+        sandbox_material=content.MaterialPlaceholder.model_validate(lesson.sandbox_material or {}),
+        seed_canvas=[content.SeedCanvasNode.model_validate(item) for item in lesson.seed_canvas],
+        teacher_notes=f"从已实装课程 {lesson.id} 导入，供教师二次修订。",
+    )
+
+
+def _era_name(era_id: str) -> str:
+    for era in courses_data.list_eras():
+        if era.id == era_id:
+            return era.name
+    return era_id

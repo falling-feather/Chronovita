@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Space, Tag } from 'antd';
 import { LinkOutlined, PlayCircleOutlined, SoundOutlined } from '@ant-design/icons';
 import type { Lesson } from '../../utils/api';
+import { renderContentMarkup } from '../../utils/contentMarkup';
 import { toast } from '../../utils/toast';
 import { BILIBILI_PLACEHOLDER, uiAssets } from '../p0Route';
 
@@ -75,7 +76,7 @@ export default function LessonWatch({ lesson }: { lesson: Lesson }) {
           </div>
           <div className="chrono-serif" style={{ fontSize: 15, color: 'var(--text-dark)', lineHeight: 2 }}>
             {lesson.body.map((p, i) => (
-              <p key={i} style={{ marginBottom: 14, textIndent: '2em' }}>{p}</p>
+              <p key={i} style={{ marginBottom: 14, textIndent: '2em' }}>{renderContentMarkup(p)}</p>
             ))}
           </div>
         </div>

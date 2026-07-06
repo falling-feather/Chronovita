@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Divider, Empty, Input, Select, Space, Tag } from 'antd';
+import { Button, Divider, Empty, Input, Segmented, Select, Space, Tag } from 'antd';
 import {
+  BookOutlined,
   DownloadOutlined,
   EyeOutlined,
   FileTextOutlined,
@@ -8,13 +9,27 @@ import {
   ReloadOutlined,
   SaveOutlined,
 } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
-import { api, type ContentFileRecord, type LessonContentPackage } from '../utils/api';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  api,
+  type ContentAssetRecord,
+  type ContentFileRecord,
+  type KeywordProfilePackage,
+  type LessonContentPackage,
+  type LessonSourceRecord,
+  type PersonProfilePackage,
+} from '../utils/api';
+import { ADMIN_CONTENT_PREVIEW_KEY } from '../utils/adminContentStorage';
+import { parseContentMarkup, renderMarkupHtml, stripInlineMarkup } from '../utils/contentMarkup';
 import { toast } from '../utils/toast';
 
 const { TextArea } = Input;
 const TOKEN_KEY = 'chrono.admin.token';
 const LOCAL_DRAFT_KEY = 'chrono.admin.content.editor.v1';
+const LOCAL_PERSON_KEY = 'chrono.admin.content.person.v1';
+const LOCAL_KEYWORD_KEY = 'chrono.admin.content.keyword.v1';
+
+type EditorMode = 'lesson' | 'person' | 'keyword';
 
 interface EditorState {
   lesson_id: string;
@@ -44,7 +59,60 @@ interface EditorState {
   teacher_notes: string;
 }
 
+interface PersonEditorState {
+  asset_id: string;
+  name: string;
+  role: string;
+  era: string;
+  summary: string;
+  persona: string;
+  boundariesText: string;
+  keywordsText: string;
+  relatedLessonsText: string;
+  sourcesText: string;
+  teacher_notes: string;
+}
+
+interface KeywordEditorState {
+  asset_id: string;
+  word: string;
+  pinyin: string;
+  gloss: string;
+  era: string;
+  category: string;
+  examplesText: string;
+  relatedPeopleText: string;
+  relatedLessonsText: string;
+  sourcesText: string;
+  teacher_notes: string;
+}
+
 const baseInputStyle = { minWidth: 0 };
+
+const ERA_GUIDE = [
+  { id: 'origins', name: '文明起源', needs: '遗址、器物、早期聚落、考古资料来源' },
+  { id: 'early-state', name: '早期国家', needs: '传说与史实边界、王权形成、部族关系、地图点' },
+  { id: 'spring-autumn', name: '春秋战国', needs: '制度变法、诸侯竞争、思想人物、抉择变量' },
+  { id: 'qin-han', name: '秦汉', needs: '统一制度、郡县/中央集权、人物立场、政策后果' },
+  { id: 'wei-jin', name: '魏晋南北朝', needs: '政权分合、民族交流、士族人物、空间迁徙' },
+  { id: 'sui-tang', name: '隋唐', needs: '制度整合、开放交流、边疆与都城、文化人物' },
+  { id: 'song-yuan', name: '宋元', needs: '经济网络、技术传播、制度争议、多民族互动' },
+  { id: 'ming-qing', name: '明清', needs: '海疆边疆、财政制度、思想转型、全球联系' },
+  { id: 'modern', name: '近现代', needs: '危机回应、改革方案、社会群体、史料争议' },
+  { id: 'contemporary', name: '当代中国', needs: '政策节点、社会变化、生活史材料、资料可靠性' },
+];
+
+const LESSON_BLUEPRINTS = [
+  { id: 'L101', era_id: 'early-state', era: '早期国家', course_id: 'C-early-state', course_title: '早期国家的形成', lesson_no: 'L101', title: '大禹治水与早期国家', unit: '洪水、部族与国家起源', section: 'P0 主线' },
+  { id: 'L103', era_id: 'spring-autumn', era: '春秋战国', course_id: 'C-spring-autumn', course_title: '春秋战国的制度竞争', lesson_no: 'L103', title: '商鞅变法', unit: '变法阻力与制度选择', section: 'P0 主线' },
+  { id: 'L302', era_id: 'qin-han', era: '秦汉', course_id: 'C-qin-han', course_title: '大一统帝国的建立', lesson_no: 'L302', title: '秦王嬴政与统一战争', unit: '战略、地图与诸侯', section: 'P0 主线' },
+  { id: 'L303', era_id: 'qin-han', era: '秦汉', course_id: 'C-qin-han', course_title: '大一统帝国的建立', lesson_no: 'L303', title: '始皇帝与中央集权帝国', unit: '郡县、书同文与车同轨', section: 'P0 主线' },
+  { id: 'L401', era_id: 'qin-han', era: '秦汉', course_id: 'C-qin-han-transition', course_title: '秦汉之际的抉择', lesson_no: 'L401', title: '秦的速亡与楚汉相争', unit: '多人立场与结局推演', section: 'P0 主线' },
+  { id: 'L402', era_id: 'qin-han', era: '秦汉', course_id: 'C-western-han', course_title: '西汉国家治理', lesson_no: 'L402', title: '文景之治与汉武大一统', unit: '政策组合与双模态问答', section: 'P0 主线' },
+  { id: 'L701', era_id: 'sui-tang', era: '隋唐', course_id: 'C-tang', course_title: '开放的隋唐世界', lesson_no: 'L701', title: '贞观之治', unit: '唐太宗与魏征同窗问答', section: 'P0 主线' },
+  { id: 'L703', era_id: 'sui-tang', era: '隋唐', course_id: 'C-tang', course_title: '开放的隋唐世界', lesson_no: 'L703', title: '安史之乱与藩镇', unit: '盛唐断裂与坏结局推演', section: 'P0 主线' },
+  { id: 'L803', era_id: 'sui-tang', era: '隋唐', course_id: 'C-silk-road', course_title: '丝路与世界中的长安', lesson_no: 'L803', title: '丝绸之路与世界中的长安', unit: '地图展开与开放交流', section: 'P0 主线' },
+];
 
 function newEditor(): EditorState {
   const stamp = Date.now().toString().slice(-8);
@@ -77,6 +145,38 @@ function newEditor(): EditorState {
   };
 }
 
+function newPersonEditor(): PersonEditorState {
+  return {
+    asset_id: 'person-sample',
+    name: '',
+    role: '',
+    era: '',
+    summary: '',
+    persona: '',
+    boundariesText: '',
+    keywordsText: '',
+    relatedLessonsText: '',
+    sourcesText: '',
+    teacher_notes: '',
+  };
+}
+
+function newKeywordEditor(): KeywordEditorState {
+  return {
+    asset_id: 'keyword-sample',
+    word: '',
+    pinyin: '',
+    gloss: '',
+    era: '',
+    category: '',
+    examplesText: '',
+    relatedPeopleText: '',
+    relatedLessonsText: '',
+    sourcesText: '',
+    teacher_notes: '',
+  };
+}
+
 function readLocalEditor(): EditorState {
   const saved = localStorage.getItem(LOCAL_DRAFT_KEY);
   if (!saved) return newEditor();
@@ -84,6 +184,26 @@ function readLocalEditor(): EditorState {
     return { ...newEditor(), ...(JSON.parse(saved) as Partial<EditorState>) };
   } catch {
     return newEditor();
+  }
+}
+
+function readLocalPersonEditor(): PersonEditorState {
+  const saved = localStorage.getItem(LOCAL_PERSON_KEY);
+  if (!saved) return newPersonEditor();
+  try {
+    return { ...newPersonEditor(), ...(JSON.parse(saved) as Partial<PersonEditorState>) };
+  } catch {
+    return newPersonEditor();
+  }
+}
+
+function readLocalKeywordEditor(): KeywordEditorState {
+  const saved = localStorage.getItem(LOCAL_KEYWORD_KEY);
+  if (!saved) return newKeywordEditor();
+  try {
+    return { ...newKeywordEditor(), ...(JSON.parse(saved) as Partial<KeywordEditorState>) };
+  } catch {
+    return newKeywordEditor();
   }
 }
 
@@ -101,7 +221,7 @@ function splitLines(value: string): string[] {
 function splitParagraphs(value: string): string[] {
   return value
     .split(/\n\s*\n/)
-    .map((item) => item.trim().replace(/【([^】]+)】/g, '$1'))
+    .map((item) => item.trim())
     .filter(Boolean);
 }
 
@@ -194,6 +314,42 @@ function packageToEditor(item: LessonContentPackage): EditorState {
   };
 }
 
+function personToEditor(item: PersonProfilePackage): PersonEditorState {
+  return {
+    asset_id: item.asset_id,
+    name: item.name,
+    role: item.role || '',
+    era: item.era || '',
+    summary: item.summary || '',
+    persona: item.persona || '',
+    boundariesText: (item.boundaries || []).join('\n'),
+    keywordsText: (item.keywords || []).join('\n'),
+    relatedLessonsText: (item.related_lessons || []).join('\n'),
+    sourcesText: (item.source_refs || [])
+      .map((source) => [source.title, source.source, source.url_or_path, source.citation_note].filter(Boolean).join(' | '))
+      .join('\n'),
+    teacher_notes: item.teacher_notes || '',
+  };
+}
+
+function keywordToEditor(item: KeywordProfilePackage): KeywordEditorState {
+  return {
+    asset_id: item.asset_id,
+    word: item.word,
+    pinyin: item.pinyin || '',
+    gloss: item.gloss || '',
+    era: item.era || '',
+    category: item.category || '',
+    examplesText: (item.examples || []).join('\n'),
+    relatedPeopleText: (item.related_people || []).join('\n'),
+    relatedLessonsText: (item.related_lessons || []).join('\n'),
+    sourcesText: (item.source_refs || [])
+      .map((source) => [source.title, source.source, source.url_or_path, source.citation_note].filter(Boolean).join(' | '))
+      .join('\n'),
+    teacher_notes: item.teacher_notes || '',
+  };
+}
+
 function buildPayload(editor: EditorState): LessonContentPackage {
   const required = [editor.lesson_id, editor.course_id, editor.title, editor.unit, editor.era];
   if (required.some((value) => !value.trim())) {
@@ -247,6 +403,54 @@ function buildPayload(editor: EditorState): LessonContentPackage {
   };
 }
 
+function buildPersonAsset(editor: PersonEditorState): PersonProfilePackage {
+  if (!editor.asset_id.trim() || !editor.name.trim()) {
+    throw new Error('请补齐档案 ID 和人物姓名');
+  }
+  const sourceRefs = parsePipeRecords(editor.sourcesText, ['title', 'source', 'url_or_path', 'citation_note'])
+    .filter((item) => item.title)
+    .map((item) => ({ title: item.title, source: item.source, url_or_path: item.url_or_path, citation_note: item.citation_note }));
+  return {
+    asset_id: editor.asset_id.trim(),
+    name: editor.name.trim(),
+    role: editor.role.trim(),
+    era: editor.era.trim(),
+    summary: editor.summary.trim(),
+    persona: editor.persona.trim(),
+    boundaries: splitLines(editor.boundariesText),
+    keywords: splitLines(editor.keywordsText),
+    related_lessons: splitLines(editor.relatedLessonsText),
+    source_refs: sourceRefs,
+    teacher_notes: editor.teacher_notes.trim(),
+    status: 'draft',
+    version: 0,
+  };
+}
+
+function buildKeywordAsset(editor: KeywordEditorState): KeywordProfilePackage {
+  if (!editor.asset_id.trim() || !editor.word.trim() || !editor.gloss.trim()) {
+    throw new Error('请补齐档案 ID、关键词和解释');
+  }
+  const sourceRefs = parsePipeRecords(editor.sourcesText, ['title', 'source', 'url_or_path', 'citation_note'])
+    .filter((item) => item.title)
+    .map((item) => ({ title: item.title, source: item.source, url_or_path: item.url_or_path, citation_note: item.citation_note }));
+  return {
+    asset_id: editor.asset_id.trim(),
+    word: editor.word.trim(),
+    pinyin: editor.pinyin.trim(),
+    gloss: editor.gloss.trim(),
+    era: editor.era.trim(),
+    category: editor.category.trim(),
+    examples: splitLines(editor.examplesText),
+    related_people: splitLines(editor.relatedPeopleText),
+    related_lessons: splitLines(editor.relatedLessonsText),
+    source_refs: sourceRefs,
+    teacher_notes: editor.teacher_notes.trim(),
+    status: 'draft',
+    version: 0,
+  };
+}
+
 function applyBodyParsing(editor: EditorState): EditorState {
   const keywordText = unique([...splitLines(editor.keywordsText), ...extractMarkedKeywords(editor.bodyText)]).join('\n');
   const focus: string[] = [];
@@ -269,27 +473,143 @@ function applyBodyParsing(editor: EditorState): EditorState {
   };
 }
 
-function downloadJson(item: LessonContentPackage) {
-  const suffix = item.status === 'sealed' ? `v${String(item.version || 1).padStart(3, '0')}` : 'draft';
-  const blob = new Blob([formatJson(item) + '\n'], { type: 'application/json;charset=utf-8' });
+function downloadText(filename: string, text: string, type = 'application/json;charset=utf-8') {
+  const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${item.lesson_id}-${suffix}.json`;
+  link.download = filename;
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function safeFileBase(value: string, fallback: string): string {
+  return (stripInlineMarkup(value).trim() || fallback)
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '')
+    .replace(/\s+/g, ' ')
+    .slice(0, 80);
+}
+
+function exportContentBundle(item: LessonContentPackage) {
+  const base = safeFileBase(item.title, item.lesson_id);
+  const formatLayer = {
+    lesson_id: item.lesson_id,
+    syntax: {
+      bold: '**文字**',
+      highlight: '==标红文字==',
+      keyword: '【关键词】',
+    },
+    paragraphs: (item.body || []).map((paragraph, index) => ({
+      index,
+      segments: parseContentMarkup(paragraph).filter((segment) => segment.marks.length > 0),
+    })),
+  };
+  downloadText(`${base}.json`, formatJson(item) + '\n');
+  downloadText(`${base}-格式层.json`, formatJson(formatLayer) + '\n');
+  downloadText(`${base}-预览.html`, buildPreviewHtml(item), 'text/html;charset=utf-8');
+  downloadText(`${base}-教师稿.md`, buildTeacherMarkdown(item), 'text/markdown;charset=utf-8');
+}
+
+function exportPersonAsset(item: PersonProfilePackage) {
+  const base = safeFileBase(`${item.name}-人物档案`, item.asset_id);
+  downloadText(`${base}.json`, formatJson(item) + '\n');
+}
+
+function exportKeywordAsset(item: KeywordProfilePackage) {
+  const base = safeFileBase(`${item.word}-关键词档案`, item.asset_id);
+  downloadText(`${base}.json`, formatJson(item) + '\n');
+}
+
+function buildTeacherMarkdown(item: LessonContentPackage): string {
+  return [
+    `# ${stripInlineMarkup(item.title)}`,
+    '',
+    `- lesson_id: ${item.lesson_id}`,
+    `- course_id: ${item.course_id}`,
+    `- unit: ${item.unit}`,
+    `- era: ${item.era}`,
+    `- status: ${item.status || 'draft'}`,
+    '',
+    '## 正文',
+    ...(item.body || []).map((paragraph) => `\n${paragraph}`),
+    '',
+    '## 关键词',
+    ...(item.keywords || []).map((keyword) => `- ${keyword.word}${keyword.gloss ? `：${keyword.gloss}` : ''}`),
+    '',
+    '## 重点块',
+    ...(item.facts || []).map((fact) => `- ${fact}`),
+    '',
+  ].join('\n');
+}
+
+function buildPreviewHtml(item: LessonContentPackage): string {
+  const body = (item.body || []).map((paragraph) => `<p>${renderMarkupHtml(paragraph)}</p>`).join('\n');
+  const keywords = (item.keywords || []).map((keyword) => `<li><strong>${escapeHtml(keyword.word)}</strong>${keyword.gloss ? `：${escapeHtml(keyword.gloss)}` : ''}</li>`).join('');
+  const people = (item.people || []).map((person) => `<li><strong>${escapeHtml(person.name)}</strong>${person.role ? ` · ${escapeHtml(person.role)}` : ''}<br>${escapeHtml(person.summary || '')}</li>`).join('');
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>${escapeHtml(stripInlineMarkup(item.title))}</title>
+  <style>
+    body { margin: 0; padding: 40px; background: #F7F1E6; color: #2E2418; font-family: "Noto Serif SC", "Microsoft YaHei", serif; }
+    main { max-width: 880px; margin: 0 auto; background: #FFFDF7; border: 1px solid #E6D9C3; border-radius: 8px; padding: 34px; }
+    h1 { margin: 0 0 8px; font-size: 32px; }
+    .meta { color: #796C5A; margin-bottom: 24px; }
+    p { font-size: 17px; line-height: 2; text-indent: 2em; }
+    .keyword { color: #9B642E; font-weight: 700; border-bottom: 1px solid rgba(155,100,46,.35); }
+    mark { color: #9F2D20; background: rgba(198,65,47,.14); border-radius: 3px; padding: 0 3px; }
+    aside { margin-top: 28px; display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    section { background: #F8F2E8; border-radius: 6px; padding: 16px; }
+    li { margin: 8px 0; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>${escapeHtml(stripInlineMarkup(item.title))}</h1>
+    <div class="meta">${escapeHtml(item.lesson_no || '')} · ${escapeHtml(item.unit)} · ${escapeHtml(item.era)} · ${escapeHtml(item.duration || '')}</div>
+    ${body}
+    <aside>
+      <section><h2>关键词</h2><ul>${keywords}</ul></section>
+      <section><h2>人物</h2><ul>${people}</ul></section>
+    </aside>
+  </main>
+</body>
+</html>`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 export default function AdminContentPage() {
+  const navigate = useNavigate();
+  const [editorMode, setEditorMode] = useState<EditorMode>('lesson');
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || 'dev-admin-token');
   const [sealedBy, setSealedBy] = useState('admin');
   const [editor, setEditor] = useState<EditorState>(() => readLocalEditor());
+  const [personEditor, setPersonEditor] = useState<PersonEditorState>(() => readLocalPersonEditor());
+  const [keywordEditor, setKeywordEditor] = useState<KeywordEditorState>(() => readLocalKeywordEditor());
   const [preview, setPreview] = useState<LessonContentPackage | null>(null);
   const [drafts, setDrafts] = useState<ContentFileRecord[]>([]);
+  const [sourceLessons, setSourceLessons] = useState<LessonSourceRecord[]>([]);
+  const [assets, setAssets] = useState<ContentAssetRecord[]>([]);
   const [selectedDraft, setSelectedDraft] = useState<string>();
+  const [selectedSourceLesson, setSelectedSourceLesson] = useState<string>();
+  const [selectedPersonAsset, setSelectedPersonAsset] = useState<string>();
+  const [selectedKeywordAsset, setSelectedKeywordAsset] = useState<string>();
+  const [showGuide, setShowGuide] = useState(false);
   const [sealedPath, setSealedPath] = useState('');
   const [localSavedAt, setLocalSavedAt] = useState('');
   const [serverSavedAt, setServerSavedAt] = useState('');
+  const [assetSavedAt, setAssetSavedAt] = useState('');
   const [busy, setBusy] = useState('');
 
   const currentPayload = useMemo(() => {
@@ -300,13 +620,39 @@ export default function AdminContentPage() {
     }
   }, [editor]);
 
+  const currentPersonAsset = useMemo(() => {
+    try {
+      return buildPersonAsset(personEditor);
+    } catch {
+      return null;
+    }
+  }, [personEditor]);
+
+  const currentKeywordAsset = useMemo(() => {
+    try {
+      return buildKeywordAsset(keywordEditor);
+    } catch {
+      return null;
+    }
+  }, [keywordEditor]);
+
   useEffect(() => {
     localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(editor));
     setLocalSavedAt(new Date().toLocaleTimeString());
   }, [editor]);
 
   useEffect(() => {
+    localStorage.setItem(LOCAL_PERSON_KEY, JSON.stringify(personEditor));
+  }, [personEditor]);
+
+  useEffect(() => {
+    localStorage.setItem(LOCAL_KEYWORD_KEY, JSON.stringify(keywordEditor));
+  }, [keywordEditor]);
+
+  useEffect(() => {
     void refreshDrafts();
+    void refreshSourceLessons();
+    void refreshAssets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -320,6 +666,16 @@ export default function AdminContentPage() {
     setSealedPath('');
   };
 
+  const updatePersonEditor = (patch: Partial<PersonEditorState>) => {
+    setPersonEditor((current) => ({ ...current, ...patch }));
+    setAssetSavedAt('');
+  };
+
+  const updateKeywordEditor = (patch: Partial<KeywordEditorState>) => {
+    setKeywordEditor((current) => ({ ...current, ...patch }));
+    setAssetSavedAt('');
+  };
+
   const refreshDrafts = async () => {
     setBusy('drafts');
     try {
@@ -329,6 +685,24 @@ export default function AdminContentPage() {
       toast.error(err?.message || '草稿库读取失败');
     } finally {
       setBusy('');
+    }
+  };
+
+  const refreshSourceLessons = async () => {
+    try {
+      const res = await api.adminContentSourceLessons(token);
+      setSourceLessons(res.items);
+    } catch (err: any) {
+      toast.error(err?.message || '已有课程读取失败');
+    }
+  };
+
+  const refreshAssets = async () => {
+    try {
+      const res = await api.adminContentAssets(token);
+      setAssets(res.items);
+    } catch (err: any) {
+      toast.error(err?.message || '资料档案读取失败');
     }
   };
 
@@ -358,6 +732,82 @@ export default function AdminContentPage() {
     }
   };
 
+  const loadSourceLesson = async () => {
+    if (!selectedSourceLesson) return;
+    setBusy('source');
+    try {
+      const item = await api.adminContentSourceLesson(token, selectedSourceLesson);
+      setEditor(packageToEditor(item));
+      setPreview(item);
+      setSelectedDraft(undefined);
+      setSealedPath('');
+      setServerSavedAt('');
+      toast.success('已读取课程初稿');
+    } catch (err: any) {
+      toast.error(err?.message || '课程初稿读取失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const loadPersonTemplate = async () => {
+    setBusy('person-template');
+    try {
+      const item = await api.adminPersonTemplate(token);
+      setPersonEditor(personToEditor(item));
+      setSelectedPersonAsset(undefined);
+      toast.success('人物模板已载入');
+    } catch (err: any) {
+      toast.error(err?.message || '人物模板载入失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const loadKeywordTemplate = async () => {
+    setBusy('keyword-template');
+    try {
+      const item = await api.adminKeywordTemplate(token);
+      setKeywordEditor(keywordToEditor(item));
+      setSelectedKeywordAsset(undefined);
+      toast.success('关键词模板已载入');
+    } catch (err: any) {
+      toast.error(err?.message || '关键词模板载入失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const loadPersonAsset = async () => {
+    if (!selectedPersonAsset) return;
+    setBusy('person-load');
+    try {
+      const item = await api.adminPersonAsset(token, selectedPersonAsset);
+      setPersonEditor(personToEditor(item));
+      setAssetSavedAt(item.updated_at ? new Date(item.updated_at).toLocaleString() : '');
+      toast.success('人物档案已打开');
+    } catch (err: any) {
+      toast.error(err?.message || '人物档案打开失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const loadKeywordAsset = async () => {
+    if (!selectedKeywordAsset) return;
+    setBusy('keyword-load');
+    try {
+      const item = await api.adminKeywordAsset(token, selectedKeywordAsset);
+      setKeywordEditor(keywordToEditor(item));
+      setAssetSavedAt(item.updated_at ? new Date(item.updated_at).toLocaleString() : '');
+      toast.success('关键词档案已打开');
+    } catch (err: any) {
+      toast.error(err?.message || '关键词档案打开失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
   const loadSelectedDraft = async () => {
     if (!selectedDraft) return;
     setBusy('load');
@@ -380,6 +830,24 @@ export default function AdminContentPage() {
     toast.success('重点块已解析');
   };
 
+  const applyBlueprint = (blueprintId: string) => {
+    const blueprint = LESSON_BLUEPRINTS.find((item) => item.id === blueprintId);
+    if (!blueprint) return;
+    const lessonId = `${blueprint.id.toLowerCase()}-${Date.now().toString().slice(-6)}`;
+    updateEditor({
+      lesson_id: lessonId,
+      course_id: blueprint.course_id,
+      course_title: blueprint.course_title,
+      title: blueprint.title,
+      unit: blueprint.unit,
+      era: blueprint.era,
+      era_id: blueprint.era_id,
+      section: blueprint.section,
+      lesson_no: blueprint.lesson_no,
+    });
+    toast.success('课程规划已填入');
+  };
+
   const previewContent = async () => {
     setBusy('preview');
     try {
@@ -387,7 +855,9 @@ export default function AdminContentPage() {
       const res = await api.adminContentPreview(token, payload);
       setPreview(res.item);
       setSealedPath('');
+      localStorage.setItem(ADMIN_CONTENT_PREVIEW_KEY, JSON.stringify(res.item));
       toast.success('预览已更新');
+      navigate('/admin/content/preview');
     } catch (err: any) {
       toast.error(err?.message || '预览失败');
     } finally {
@@ -412,6 +882,38 @@ export default function AdminContentPage() {
     }
   };
 
+  const savePersonAsset = async () => {
+    setBusy('person-save');
+    try {
+      const payload = buildPersonAsset(personEditor);
+      const res = await api.adminSavePersonAsset(token, payload);
+      setPersonEditor(personToEditor(res.item));
+      setAssetSavedAt(res.item.updated_at ? new Date(res.item.updated_at).toLocaleString() : new Date().toLocaleString());
+      await refreshAssets();
+      toast.success('人物档案已保存');
+    } catch (err: any) {
+      toast.error(err?.message || '人物档案保存失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const saveKeywordAsset = async () => {
+    setBusy('keyword-save');
+    try {
+      const payload = buildKeywordAsset(keywordEditor);
+      const res = await api.adminSaveKeywordAsset(token, payload);
+      setKeywordEditor(keywordToEditor(res.item));
+      setAssetSavedAt(res.item.updated_at ? new Date(res.item.updated_at).toLocaleString() : new Date().toLocaleString());
+      await refreshAssets();
+      toast.success('关键词档案已保存');
+    } catch (err: any) {
+      toast.error(err?.message || '关键词档案保存失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
   const sealDraft = async () => {
     setBusy('seal');
     try {
@@ -422,7 +924,7 @@ export default function AdminContentPage() {
       setSealedPath(res.record.path);
       setServerSavedAt(res.item.updated_at ? new Date(res.item.updated_at).toLocaleString() : new Date().toLocaleString());
       await refreshDrafts();
-      downloadJson(res.item);
+      exportContentBundle(res.item);
       toast.success('内容已封存');
     } catch (err: any) {
       toast.error(err?.message || '封存失败');
@@ -433,10 +935,28 @@ export default function AdminContentPage() {
 
   const exportCurrent = () => {
     try {
-      downloadJson(preview || buildPayload(editor));
-      toast.success('JSON 已导出');
+      exportContentBundle(preview || buildPayload(editor));
+      toast.success('文件包已导出');
     } catch (err: any) {
       toast.error(err?.message || '导出失败');
+    }
+  };
+
+  const exportCurrentPerson = () => {
+    try {
+      exportPersonAsset(buildPersonAsset(personEditor));
+      toast.success('人物档案已导出');
+    } catch (err: any) {
+      toast.error(err?.message || '人物档案导出失败');
+    }
+  };
+
+  const exportCurrentKeyword = () => {
+    try {
+      exportKeywordAsset(buildKeywordAsset(keywordEditor));
+      toast.success('关键词档案已导出');
+    } catch (err: any) {
+      toast.error(err?.message || '关键词档案导出失败');
     }
   };
 
@@ -466,6 +986,20 @@ export default function AdminContentPage() {
         </Space>
       </div>
 
+      <div className="chrono-card" style={{ padding: 12, marginBottom: 16 }}>
+        <div className="chrono-course-eyeline" style={{ marginBottom: 8 }}>编辑对象</div>
+        <Segmented
+          value={editorMode}
+          onChange={(value) => setEditorMode(value as EditorMode)}
+          options={[
+            { label: '课程内容', value: 'lesson' },
+            { label: '人物档案', value: 'person' },
+            { label: '关键词档案', value: 'keyword' },
+          ]}
+        />
+      </div>
+
+      {editorMode === 'lesson' && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 16, alignItems: 'start' }}>
         <section className="chrono-card" style={{ padding: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 12 }}>
@@ -593,24 +1127,83 @@ export default function AdminContentPage() {
         </section>
 
         <aside className="chrono-card" style={{ padding: 16 }}>
+          <div style={{ marginBottom: 12 }}>
+            <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>课程规划</div>
+            <Select
+              aria-label="课程规划"
+              placeholder="选择已整理的课程路径"
+              showSearch
+              optionFilterProp="label"
+              style={{ width: '100%' }}
+              onChange={applyBlueprint}
+              options={LESSON_BLUEPRINTS.map((item) => ({
+                value: item.id,
+                label: `${item.lesson_no} · ${item.era} · ${item.title}`,
+              }))}
+            />
+          </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>已有课程初稿</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Select
+                aria-label="已有课程初稿"
+                placeholder="读取已实装课程的一稿"
+                showSearch
+                optionFilterProp="label"
+                value={selectedSourceLesson}
+                onChange={setSelectedSourceLesson}
+                style={{ flex: 1 }}
+                options={sourceLessons.map((item) => ({
+                  value: item.lesson_id,
+                  label: `${item.lesson_id} · ${item.lesson_no} · ${item.course_title} · ${item.title}`,
+                }))}
+              />
+              <Button loading={busy === 'source'} disabled={!selectedSourceLesson} onClick={loadSourceLesson}>读取</Button>
+            </div>
+          </div>
+
           <Space wrap style={{ marginBottom: 12 }}>
             <Button icon={<FileTextOutlined />} onClick={createNew}>新建</Button>
             <Button icon={<FileTextOutlined />} loading={busy === 'template'} onClick={loadTemplate}>模板</Button>
+            <Button icon={<BookOutlined />} onClick={() => setShowGuide((value) => !value)}>文档</Button>
             <Button icon={<ReloadOutlined />} onClick={parseFocusBlocks}>解析重点</Button>
             <Button icon={<EyeOutlined />} loading={busy === 'preview'} onClick={previewContent}>预览</Button>
             <Button type="primary" icon={<SaveOutlined />} loading={busy === 'save'} onClick={saveDraft}>保存草稿</Button>
             <Button danger icon={<LockOutlined />} loading={busy === 'seal'} onClick={sealDraft}>封存</Button>
-            <Button icon={<DownloadOutlined />} onClick={exportCurrent}>导出</Button>
+            <Button icon={<DownloadOutlined />} onClick={exportCurrent}>导出文件包</Button>
           </Space>
+
+          {showGuide && (
+            <div style={{ border: '1px solid var(--border-soft)', borderRadius: 6, padding: 12, marginBottom: 12, background: 'var(--bg-warm-soft)' }}>
+              <div className="chrono-title" style={{ fontSize: 14, marginBottom: 8 }}>教师填写文档</div>
+              <div style={{ fontSize: 12, color: 'var(--text-mute)', lineHeight: 1.7 }}>
+                <p><strong>课程 ID</strong>：同一门课共用，例如 <code>C-qin-han</code>。选“课程规划”会自动填写。</p>
+                <p><strong>课时 ID</strong>：每节课唯一，只用英文、数字、短横线；封存文件会用它命名。</p>
+                <p><strong>正文语法</strong>：<code>【关键词】</code> 自动进入关键词；<code>**加粗**</code> 加粗；<code>==标红==</code> 标红；<code>重点：</code>、<code>问题：</code>、<code>目标：</code> 可被“解析重点”分配到结构化字段。</p>
+                <p><strong>人物/地图点/资料</strong>：一行一条，用 <code>|</code> 分列。人物：姓名 | 身份 | 摘要 | persona。地图：地点 | 区域 | 说明 | 类型。资料：标题 | 来源 | 链接 | 引文说明。</p>
+                <p><strong>保存草稿</strong>：写入 <code>content/drafts</code>，可在草稿库重新打开。<strong>封存</strong>：生成版本文件并导出内容层、格式层和 HTML 预览。</p>
+                <div style={{ marginTop: 8 }}>
+                  <strong>时代写作要求</strong>
+                  <ul style={{ paddingLeft: 18, margin: '6px 0 0' }}>
+                    {ERA_GUIDE.map((item) => (
+                      <li key={item.id}><span style={{ color: 'var(--text-dark)' }}>{item.name}</span>：{item.needs}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             <Select
               aria-label="草稿库"
               placeholder="草稿库"
               value={selectedDraft}
-              onChange={setSelectedDraft}
-              showSearch
-              style={{ flex: 1 }}
+                onChange={setSelectedDraft}
+                showSearch
+                optionFilterProp="label"
+                style={{ flex: 1 }}
               options={drafts.map((draft) => ({
                 value: draft.lesson_id,
                 label: `${draft.title || draft.lesson_id} · ${draft.lesson_id}`,
@@ -666,6 +1259,205 @@ export default function AdminContentPage() {
           )}
         </aside>
       </div>
+      )}
+
+      {editorMode === 'person' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(min(100%, 360px), 0.45fr)', gap: 16, alignItems: 'start' }}>
+          <section className="chrono-card" style={{ padding: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 12 }}>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>档案 ID</div>
+                <Input aria-label="人物档案 ID" value={personEditor.asset_id} onChange={(event) => updatePersonEditor({ asset_id: event.target.value })} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>人物姓名</div>
+                <Input aria-label="人物姓名" value={personEditor.name} onChange={(event) => updatePersonEditor({ name: event.target.value })} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>身份/立场</div>
+                <Input aria-label="人物身份" value={personEditor.role} onChange={(event) => updatePersonEditor({ role: event.target.value })} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>时代</div>
+                <Input aria-label="人物时代" value={personEditor.era} onChange={(event) => updatePersonEditor({ era: event.target.value })} />
+              </label>
+            </div>
+            <Divider style={{ margin: '16px 0 12px' }} />
+            <label>
+              <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>学生可读摘要</div>
+              <TextArea aria-label="人物摘要" value={personEditor.summary} onChange={(event) => updatePersonEditor({ summary: event.target.value })} autoSize={{ minRows: 4, maxRows: 8 }} />
+            </label>
+            <label>
+              <div className="chrono-course-eyeline" style={{ margin: '12px 0 6px' }}>AI persona</div>
+              <TextArea aria-label="人物 persona" value={personEditor.persona} onChange={(event) => updatePersonEditor({ persona: event.target.value })} autoSize={{ minRows: 5, maxRows: 9 }} />
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: 12, marginTop: 12 }}>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>史实边界</div>
+                <TextArea aria-label="人物史实边界" value={personEditor.boundariesText} onChange={(event) => updatePersonEditor({ boundariesText: event.target.value })} autoSize={{ minRows: 4, maxRows: 8 }} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>关联关键词</div>
+                <TextArea aria-label="人物关联关键词" value={personEditor.keywordsText} onChange={(event) => updatePersonEditor({ keywordsText: event.target.value })} autoSize={{ minRows: 4, maxRows: 8 }} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>关联课时</div>
+                <TextArea aria-label="人物关联课时" value={personEditor.relatedLessonsText} onChange={(event) => updatePersonEditor({ relatedLessonsText: event.target.value })} autoSize={{ minRows: 4, maxRows: 8 }} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>参考资料</div>
+                <TextArea aria-label="人物参考资料" value={personEditor.sourcesText} onChange={(event) => updatePersonEditor({ sourcesText: event.target.value })} autoSize={{ minRows: 4, maxRows: 8 }} />
+              </label>
+            </div>
+            <label>
+              <div className="chrono-course-eyeline" style={{ margin: '12px 0 6px' }}>教师备注</div>
+              <TextArea aria-label="人物教师备注" value={personEditor.teacher_notes} onChange={(event) => updatePersonEditor({ teacher_notes: event.target.value })} autoSize={{ minRows: 3, maxRows: 6 }} />
+            </label>
+          </section>
+
+          <aside className="chrono-card" style={{ padding: 16 }}>
+            <Space wrap style={{ marginBottom: 12 }}>
+              <Button icon={<FileTextOutlined />} onClick={loadPersonTemplate} loading={busy === 'person-template'}>模板</Button>
+              <Button type="primary" icon={<SaveOutlined />} onClick={savePersonAsset} loading={busy === 'person-save'}>保存档案</Button>
+              <Button icon={<DownloadOutlined />} onClick={exportCurrentPerson}>导出</Button>
+              <Button icon={<ReloadOutlined />} onClick={refreshAssets}>刷新</Button>
+            </Space>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <Select
+                aria-label="人物档案库"
+                placeholder="人物档案库"
+                value={selectedPersonAsset}
+                onChange={setSelectedPersonAsset}
+                showSearch
+                optionFilterProp="label"
+                style={{ flex: 1 }}
+                options={assets.filter((item) => item.kind === 'person').map((item) => ({
+                  value: item.asset_id,
+                  label: `${item.title} · ${item.asset_id}`,
+                }))}
+              />
+              <Button loading={busy === 'person-load'} disabled={!selectedPersonAsset} onClick={loadPersonAsset}>打开</Button>
+            </div>
+            <Space size={[6, 6]} wrap style={{ marginBottom: 12 }}>
+              <Tag color="blue">{personEditor.asset_id}</Tag>
+              {assetSavedAt && <Tag color="green">已保存 {assetSavedAt}</Tag>}
+            </Space>
+            {currentPersonAsset ? (
+              <div style={{ lineHeight: 1.75 }}>
+                <strong>{currentPersonAsset.name}</strong>
+                <div style={{ color: 'var(--text-mute)', fontSize: 12 }}>{currentPersonAsset.era} · {currentPersonAsset.role}</div>
+                <Space size={[6, 6]} wrap style={{ marginTop: 12 }}>
+                  <Tag>边界 {currentPersonAsset.boundaries?.length ?? 0}</Tag>
+                  <Tag>关键词 {currentPersonAsset.keywords?.length ?? 0}</Tag>
+                  <Tag>课时 {currentPersonAsset.related_lessons?.length ?? 0}</Tag>
+                  <Tag>资料 {currentPersonAsset.source_refs?.length ?? 0}</Tag>
+                </Space>
+              </div>
+            ) : (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="请填写人物姓名" />
+            )}
+          </aside>
+        </div>
+      )}
+
+      {editorMode === 'keyword' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(min(100%, 360px), 0.45fr)', gap: 16, alignItems: 'start' }}>
+          <section className="chrono-card" style={{ padding: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 12 }}>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>档案 ID</div>
+                <Input aria-label="关键词档案 ID" value={keywordEditor.asset_id} onChange={(event) => updateKeywordEditor({ asset_id: event.target.value })} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>关键词</div>
+                <Input aria-label="关键词词条" value={keywordEditor.word} onChange={(event) => updateKeywordEditor({ word: event.target.value })} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>拼音</div>
+                <Input aria-label="关键词拼音" value={keywordEditor.pinyin} onChange={(event) => updateKeywordEditor({ pinyin: event.target.value })} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>分类</div>
+                <Input aria-label="关键词分类" value={keywordEditor.category} onChange={(event) => updateKeywordEditor({ category: event.target.value })} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>时代</div>
+                <Input aria-label="关键词时代" value={keywordEditor.era} onChange={(event) => updateKeywordEditor({ era: event.target.value })} />
+              </label>
+            </div>
+            <Divider style={{ margin: '16px 0 12px' }} />
+            <label>
+              <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>学生可读解释</div>
+              <TextArea aria-label="关键词解释" value={keywordEditor.gloss} onChange={(event) => updateKeywordEditor({ gloss: event.target.value })} autoSize={{ minRows: 4, maxRows: 8 }} />
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: 12, marginTop: 12 }}>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>课堂用法</div>
+                <TextArea aria-label="关键词课堂用法" value={keywordEditor.examplesText} onChange={(event) => updateKeywordEditor({ examplesText: event.target.value })} autoSize={{ minRows: 4, maxRows: 8 }} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>关联人物</div>
+                <TextArea aria-label="关键词关联人物" value={keywordEditor.relatedPeopleText} onChange={(event) => updateKeywordEditor({ relatedPeopleText: event.target.value })} autoSize={{ minRows: 4, maxRows: 8 }} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>关联课时</div>
+                <TextArea aria-label="关键词关联课时" value={keywordEditor.relatedLessonsText} onChange={(event) => updateKeywordEditor({ relatedLessonsText: event.target.value })} autoSize={{ minRows: 4, maxRows: 8 }} />
+              </label>
+              <label>
+                <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>参考资料</div>
+                <TextArea aria-label="关键词参考资料" value={keywordEditor.sourcesText} onChange={(event) => updateKeywordEditor({ sourcesText: event.target.value })} autoSize={{ minRows: 4, maxRows: 8 }} />
+              </label>
+            </div>
+            <label>
+              <div className="chrono-course-eyeline" style={{ margin: '12px 0 6px' }}>教师备注</div>
+              <TextArea aria-label="关键词教师备注" value={keywordEditor.teacher_notes} onChange={(event) => updateKeywordEditor({ teacher_notes: event.target.value })} autoSize={{ minRows: 3, maxRows: 6 }} />
+            </label>
+          </section>
+
+          <aside className="chrono-card" style={{ padding: 16 }}>
+            <Space wrap style={{ marginBottom: 12 }}>
+              <Button icon={<FileTextOutlined />} onClick={loadKeywordTemplate} loading={busy === 'keyword-template'}>模板</Button>
+              <Button type="primary" icon={<SaveOutlined />} onClick={saveKeywordAsset} loading={busy === 'keyword-save'}>保存档案</Button>
+              <Button icon={<DownloadOutlined />} onClick={exportCurrentKeyword}>导出</Button>
+              <Button icon={<ReloadOutlined />} onClick={refreshAssets}>刷新</Button>
+            </Space>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <Select
+                aria-label="关键词档案库"
+                placeholder="关键词档案库"
+                value={selectedKeywordAsset}
+                onChange={setSelectedKeywordAsset}
+                showSearch
+                optionFilterProp="label"
+                style={{ flex: 1 }}
+                options={assets.filter((item) => item.kind === 'keyword').map((item) => ({
+                  value: item.asset_id,
+                  label: `${item.title} · ${item.asset_id}`,
+                }))}
+              />
+              <Button loading={busy === 'keyword-load'} disabled={!selectedKeywordAsset} onClick={loadKeywordAsset}>打开</Button>
+            </div>
+            <Space size={[6, 6]} wrap style={{ marginBottom: 12 }}>
+              <Tag color="blue">{keywordEditor.asset_id}</Tag>
+              {assetSavedAt && <Tag color="green">已保存 {assetSavedAt}</Tag>}
+            </Space>
+            {currentKeywordAsset ? (
+              <div style={{ lineHeight: 1.75 }}>
+                <strong>{currentKeywordAsset.word}</strong>
+                <div style={{ color: 'var(--text-mute)', fontSize: 12 }}>{currentKeywordAsset.era} · {currentKeywordAsset.category}</div>
+                <Space size={[6, 6]} wrap style={{ marginTop: 12 }}>
+                  <Tag>用法 {currentKeywordAsset.examples?.length ?? 0}</Tag>
+                  <Tag>人物 {currentKeywordAsset.related_people?.length ?? 0}</Tag>
+                  <Tag>课时 {currentKeywordAsset.related_lessons?.length ?? 0}</Tag>
+                  <Tag>资料 {currentKeywordAsset.source_refs?.length ?? 0}</Tag>
+                </Space>
+              </div>
+            ) : (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="请填写关键词和解释" />
+            )}
+          </aside>
+        </div>
+      )}
     </div>
   );
 }

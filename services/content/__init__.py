@@ -35,9 +35,23 @@ def sealed_dir() -> Path:
     return _CONTENT_ROOT / "sealed"
 
 
+def assets_dir() -> Path:
+    return _CONTENT_ROOT / "assets"
+
+
+def people_asset_dir() -> Path:
+    return assets_dir() / "people"
+
+
+def keyword_asset_dir() -> Path:
+    return assets_dir() / "keywords"
+
+
 def ensure_content_dirs() -> None:
     draft_dir().mkdir(parents=True, exist_ok=True)
     sealed_dir().mkdir(parents=True, exist_ok=True)
+    people_asset_dir().mkdir(parents=True, exist_ok=True)
+    keyword_asset_dir().mkdir(parents=True, exist_ok=True)
 
 
 class KeywordCard(BaseModel):
@@ -161,6 +175,62 @@ class ContentFileRecord(BaseModel):
     checksum: str | None = None
 
 
+class ContentAssetRecord(BaseModel):
+    asset_id: str
+    title: str
+    kind: Literal["person", "keyword"]
+    path: str
+    updated_at: datetime | None = None
+
+
+class PersonProfilePackage(BaseModel):
+    asset_id: str
+    name: str
+    role: str = ""
+    era: str = ""
+    summary: str = ""
+    persona: str = ""
+    boundaries: list[str] = Field(default_factory=list)
+    keywords: list[str] = Field(default_factory=list)
+    related_lessons: list[str] = Field(default_factory=list)
+    source_refs: list[SourceRef] = Field(default_factory=list)
+    teacher_notes: str = ""
+    status: Literal["draft", "sealed"] = "draft"
+    version: int = 0
+    updated_at: datetime | None = None
+
+    @field_validator("asset_id")
+    @classmethod
+    def _validate_asset_id(cls, value: str) -> str:
+        if not _ID_PATTERN.match(value):
+            raise ValueError("Use 2-64 characters: letters, numbers, dot, underscore or dash.")
+        return value
+
+
+class KeywordProfilePackage(BaseModel):
+    asset_id: str
+    word: str
+    pinyin: str = ""
+    gloss: str = ""
+    era: str = ""
+    category: str = ""
+    examples: list[str] = Field(default_factory=list)
+    related_people: list[str] = Field(default_factory=list)
+    related_lessons: list[str] = Field(default_factory=list)
+    source_refs: list[SourceRef] = Field(default_factory=list)
+    teacher_notes: str = ""
+    status: Literal["draft", "sealed"] = "draft"
+    version: int = 0
+    updated_at: datetime | None = None
+
+    @field_validator("asset_id")
+    @classmethod
+    def _validate_asset_id(cls, value: str) -> str:
+        if not _ID_PATTERN.match(value):
+            raise ValueError("Use 2-64 characters: letters, numbers, dot, underscore or dash.")
+        return value
+
+
 def content_template() -> LessonContentPackage:
     return LessonContentPackage(
         lesson_id="lesson-sample",
@@ -177,6 +247,36 @@ def content_template() -> LessonContentPackage:
         level_goals=["本课关卡目标或学习目标。"],
         saga_material=MaterialPlaceholder(title="saga 占位", objective="后续互动叙事目标"),
         sandbox_material=MaterialPlaceholder(title="sandbox 占位", objective="后续参数化推演目标"),
+    )
+
+
+def person_template() -> PersonProfilePackage:
+    return PersonProfilePackage(
+        asset_id="person-sample",
+        name="历史人物",
+        role="身份或立场",
+        era="示例时代",
+        summary="教师给学生看的简明人物说明。",
+        persona="后续 AI 人物智能体使用的语气、知识边界与立场提示。",
+        boundaries=["不要让人物知道其身后才发生的事件。"],
+        keywords=["关键词"],
+        related_lessons=["lesson-sample"],
+        source_refs=[SourceRef(title="资料标题", source="教材或史料", citation_note="页码或版本说明")],
+    )
+
+
+def keyword_template() -> KeywordProfilePackage:
+    return KeywordProfilePackage(
+        asset_id="keyword-sample",
+        word="关键词",
+        pinyin="",
+        gloss="给学生看的简明解释。",
+        era="示例时代",
+        category="制度/人物/事件/概念",
+        examples=["可放一条课堂中的典型用法。"],
+        related_people=["历史人物"],
+        related_lessons=["lesson-sample"],
+        source_refs=[SourceRef(title="资料标题", source="教材或史料", citation_note="页码或版本说明")],
     )
 
 
@@ -251,6 +351,54 @@ def list_sealed() -> list[ContentFileRecord]:
     ]
 
 
+def list_assets(kind: Literal["person", "keyword"] | None = None) -> list[ContentAssetRecord]:
+    ensure_content_dirs()
+    records: list[ContentAssetRecord] = []
+    if kind in (None, "person"):
+        records.extend(
+            _person_record(asset, path)
+            for path in sorted(people_asset_dir().glob("*.json"))
+            if (asset := _safe_read_person(path)) is not None
+        )
+    if kind in (None, "keyword"):
+        records.extend(
+            _keyword_record(asset, path)
+            for path in sorted(keyword_asset_dir().glob("*.json"))
+            if (asset := _safe_read_keyword(path)) is not None
+        )
+    return sorted(records, key=lambda item: (item.kind, item.title, item.asset_id))
+
+
+def get_person_profile(asset_id: str) -> PersonProfilePackage | None:
+    path = _person_path(asset_id)
+    if not path.exists():
+        return None
+    return _read_person(path)
+
+
+def save_person_profile(payload: PersonProfilePackage) -> PersonProfilePackage:
+    ensure_content_dirs()
+    data = payload.model_copy(deep=True)
+    data.updated_at = _now()
+    _write_asset_json(_person_path(data.asset_id), data)
+    return data
+
+
+def get_keyword_profile(asset_id: str) -> KeywordProfilePackage | None:
+    path = _keyword_path(asset_id)
+    if not path.exists():
+        return None
+    return _read_keyword(path)
+
+
+def save_keyword_profile(payload: KeywordProfilePackage) -> KeywordProfilePackage:
+    ensure_content_dirs()
+    data = payload.model_copy(deep=True)
+    data.updated_at = _now()
+    _write_asset_json(_keyword_path(data.asset_id), data)
+    return data
+
+
 def record_for_package(pkg: LessonContentPackage, path: Path) -> ContentFileRecord:
     return _record_from_package(pkg, path)
 
@@ -279,6 +427,18 @@ def _draft_path(lesson_id: str) -> Path:
     if not _ID_PATTERN.match(lesson_id):
         raise ValueError("Invalid lesson_id")
     return draft_dir() / f"{lesson_id}.json"
+
+
+def _person_path(asset_id: str) -> Path:
+    if not _ID_PATTERN.match(asset_id):
+        raise ValueError("Invalid asset_id")
+    return people_asset_dir() / f"{asset_id}.json"
+
+
+def _keyword_path(asset_id: str) -> Path:
+    if not _ID_PATTERN.match(asset_id):
+        raise ValueError("Invalid asset_id")
+    return keyword_asset_dir() / f"{asset_id}.json"
 
 
 def _next_version(lesson_id: str) -> int:
@@ -311,14 +471,63 @@ def _safe_read_package(path: Path) -> LessonContentPackage | None:
         return None
 
 
+def _safe_read_person(path: Path) -> PersonProfilePackage | None:
+    try:
+        return _read_person(path)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+
+
+def _safe_read_keyword(path: Path) -> KeywordProfilePackage | None:
+    try:
+        return _read_keyword(path)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+
+
 def _read_package(path: Path) -> LessonContentPackage:
     return LessonContentPackage.model_validate(json.loads(path.read_text(encoding="utf-8")))
+
+
+def _read_person(path: Path) -> PersonProfilePackage:
+    return PersonProfilePackage.model_validate(json.loads(path.read_text(encoding="utf-8")))
+
+
+def _read_keyword(path: Path) -> KeywordProfilePackage:
+    return KeywordProfilePackage.model_validate(json.loads(path.read_text(encoding="utf-8")))
 
 
 def _write_json(path: Path, payload: LessonContentPackage) -> None:
     path.write_text(
         json.dumps(payload.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
+    )
+
+
+def _write_asset_json(path: Path, payload: BaseModel) -> None:
+    path.write_text(
+        json.dumps(payload.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _person_record(asset: PersonProfilePackage, path: Path) -> ContentAssetRecord:
+    return ContentAssetRecord(
+        asset_id=asset.asset_id,
+        title=asset.name,
+        kind="person",
+        path=str(path.relative_to(_REPO_ROOT)) if path.is_relative_to(_REPO_ROOT) else str(path),
+        updated_at=asset.updated_at,
+    )
+
+
+def _keyword_record(asset: KeywordProfilePackage, path: Path) -> ContentAssetRecord:
+    return ContentAssetRecord(
+        asset_id=asset.asset_id,
+        title=asset.word,
+        kind="keyword",
+        path=str(path.relative_to(_REPO_ROOT)) if path.is_relative_to(_REPO_ROOT) else str(path),
+        updated_at=asset.updated_at,
     )
 
 

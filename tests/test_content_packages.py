@@ -47,6 +47,29 @@ class ContentPackageTests(unittest.TestCase):
         self.assertEqual(lesson.content_status, "sealed")
         self.assertEqual(lesson.body, payload.body)
 
+    def test_profile_and_keyword_assets(self):
+        content.configure(self.tmp_root)
+
+        person = content.person_template()
+        person.asset_id = "li-hongzhang"
+        person.name = "李鸿章"
+        person.related_lessons = ["L1403"]
+        saved_person = content.save_person_profile(person)
+
+        keyword = content.keyword_template()
+        keyword.asset_id = "yangwu-yundong"
+        keyword.word = "洋务运动"
+        keyword.related_people = ["李鸿章"]
+        saved_keyword = content.save_keyword_profile(keyword)
+
+        records = content.list_assets()
+
+        self.assertEqual(saved_person.name, "李鸿章")
+        self.assertEqual(saved_keyword.word, "洋务运动")
+        self.assertEqual(content.get_person_profile("li-hongzhang").related_lessons, ["L1403"])
+        self.assertEqual(content.get_keyword_profile("yangwu-yundong").related_people, ["李鸿章"])
+        self.assertEqual({record.kind for record in records}, {"person", "keyword"})
+
 
 if __name__ == "__main__":
     unittest.main()
