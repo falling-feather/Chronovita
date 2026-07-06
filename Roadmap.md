@@ -1,6 +1,6 @@
 # Chronovita 研发路线图
 
-> 当前版本：**V0.7.0**（「问」板块接入 deepseek-v4-pro + 同窗模式真实历史人物代入）。
+> 当前版本：**V0.7.4**（同窗自定义对象）。
 > 后续短/中/长期优化方案见 [docs/Planning.md](docs/Planning.md)。
 
 ---
@@ -25,6 +25,25 @@
 ## 优化构筑记录
 
 > 自 v0.1.0 起重新计数。每次正式提交追加一条。新条目置顶。
+
+- **V0.7.4 · 「同窗」自定义对象（S4）**
+  - 同窗下拉新增「自定义对象…」入口：Modal 输入姓名 + 一句话简介
+  - 本地缓存 5 个常用（`localStorage chronovita.custom_peers`），下次直接出现在下拉
+  - 后端 `AskRequest` 扩展 `peer_intro`，注入到 peer system prompt 帮助 LLM 锁定身份与时代
+  - 同名优先用课程内置；下拉按「课程内置 / 我的自定义 / 自定义入口」分组
+  - 切课时若 peerCharacter 不在新候选里自动回退第一个
+
+- **V0.7.3 · 画板自动保存（S2）**
+  - `LessonCreate` 增加 debounce 800ms 自动保存：节点/边变化静默 `PUT /practice/canvas/:lid`
+  - 工具栏右上 chip 替换原"保存到云端"按钮：加载中 / 保存中… / 已保存于 HH:mm / 保存失败（点击重试）
+  - 错误仅 toast 一次，下次成功时复位，避免连续失败刷屏
+  - 初次加载后下一帧才置 `loaded=true`，避免首次读出的种子节点触发误存
+
+- **V0.7.2 · 学习进度持久化 + 首页/我的学习接通真实数据（S1+S3）**
+  - 后端 `LessonProgress` 表 + `/learning/progress` 读写接口
+  - 前端 `LessonShell` 自动 touch，HomePage / LearningPage 取真实进度
+
+- **V0.7.1 · 文档体系刷新到 V0.7.0 + 新增 Planning 短中长期规划**
 
 - **V0.7.0 · 「问」板块接入 deepseek-v4-pro + 同窗模式真实历史人物代入**
   - ask 路由切换到 `deepseek-v4-pro`（准确度优先），与 saga 的 `v4-flash` 并存

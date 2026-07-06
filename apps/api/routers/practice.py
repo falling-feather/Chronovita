@@ -104,8 +104,8 @@ class AskRequest(BaseModel):
     user_message: str
     history: list[dict] = []
     # peer 模式下的对谈历史人物（如 "孔子"、"嵇康"）；为空时取课程默认 figure
-    peer_character: str | None = None
-    # 课程时期，用于把同窗回答框定在该时期之内
+    peer_character: str | None = None    # peer 自定义对象时由前端传入的一句简介，用于帮 LLM 锁定人物身份与时代
+    peer_intro: str | None = None    # 课程时期，用于把同窗回答框定在该时期之内
     era: str | None = None
 
 
@@ -114,14 +114,19 @@ def _system_prompt(
     *,
     lesson_title: str | None,
     peer_character: str | None,
+    peer_intro: str | None,
     era: str | None,
 ) -> str:
     if persona == "peer":
         # 同窗 = 同时期历史人物，第一人称代入
         name = (peer_character or "").strip() or "孔子"
         era_clause = f"你生活在{era}时期。" if era else ""
+        intro_clause = ""
+        if peer_intro and peer_intro.strip():
+            intro_clause = f"补充身份说明：{peer_intro.strip()}\n"
         return (
             f"你现在扮演中国历史上的真实人物：{name}。{era_clause}\n"
+            f"{intro_clause}"
             "请用第一人称（『吾』『余』『我』均可，依人物风格而定），以贴近该人物身份、思想、口吻的方式与用户对话。\n"
             "硬性约束：\n"
             "1. 严格遵守史实——只谈论你所处时代之前已发生的事件、你认识的人、你提出过或可能持有的观点；绝不预言后世（如『后来汉朝』『千年之后』之类一律禁止）。\n"
@@ -150,6 +155,7 @@ async def ask(req: AskRequest):
             req.persona,
             lesson_title=req.lesson_title,
             peer_character=req.peer_character,
+            peer_intro=req.peer_intro,
             era=req.era,
         ),
     }]
