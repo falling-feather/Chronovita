@@ -9,6 +9,8 @@ import LessonPage from './pages/lesson/LessonPage';
 import LearningPage from './pages/LearningPage';
 import PracticePage from './pages/PracticePage';
 import ProfilePage from './pages/ProfilePage';
+import AdminContentPage from './pages/AdminContentPage';
+import AdminContentPreviewPage from './pages/AdminContentPreviewPage';
 import { bindMessage } from './utils/toast';
 
 const { Header, Content, Footer } = Layout;
@@ -19,6 +21,7 @@ const navItems = [
   { key: '/learning', label: <Link to="/learning">我的学习</Link> },
   { key: '/practice', label: <Link to="/practice">实践课堂</Link> },
   { key: '/profile', label: <Link to="/profile">个人中心</Link> },
+  { key: '/admin', label: <Link to="/admin/content">内容编辑</Link> },
 ];
 
 function selectedKey(pathname: string): string {
@@ -32,7 +35,7 @@ function Logo() {
       <div className="chrono-logo-mark">历</div>
       <div>
         <div className="chrono-logo-cn">历史未来课堂</div>
-        <div className="chrono-logo-en">FUTURE CLASSROOM</div>
+        <div className="chrono-logo-en">Chronovita</div>
       </div>
     </div>
   );
@@ -85,6 +88,7 @@ export default function App() {
       <MessageBinder />
       <Layout style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
         <Header
+          className="chrono-shell-header"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -116,11 +120,13 @@ export default function App() {
             <Route path="/learning" element={<LearningPage />} />
             <Route path="/practice" element={<PracticePage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/admin/content" element={<AdminContentPage />} />
+            <Route path="/admin/content/preview" element={<AdminContentPreviewPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </Content>2
+        </Content>
         <Footer style={{ textAlign: 'center', color: 'var(--text-disabled)', fontSize: 12, background: 'var(--bg-page)' }}>
-          历史未来课堂 · Chronovita · v0.1.0 · 看 练 问 创 · 让历史可推演
+          历史未来课堂 · Chronovita · V0.7.5 · 踏勘遗址 · 进入抉择 · 召见人物 · 整理卷宗
         </Footer>
       </Layout>
     </AntdApp>

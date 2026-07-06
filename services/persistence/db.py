@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -19,11 +19,12 @@ from sqlalchemy import (
     select,
     update,
 )
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Engine, URL
 
 _LOCK = threading.RLock()
 _ENGINE: Engine | None = None
 _METADATA = MetaData()
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 kv_table = Table(
@@ -42,11 +43,21 @@ def init_engine(sqlite_path: str) -> Engine:
         if _ENGINE is not None:
             return _ENGINE
         path = Path(sqlite_path)
+        if not path.is_absolute():
+            path = (_REPO_ROOT / path).resolve()
         path.parent.mkdir(parents=True, exist_ok=True)
-        url = f"sqlite:///{path.as_posix()}"
+        url = URL.create("sqlite", database=str(path))
         _ENGINE = create_engine(url, connect_args={"check_same_thread": False}, future=True)
         _METADATA.create_all(_ENGINE)
         return _ENGINE
+
+
+def close_engine() -> None:
+    global _ENGINE
+    with _LOCK:
+        if _ENGINE is not None:
+            _ENGINE.dispose()
+            _ENGINE = None
 
 
 def _engine() -> Engine:
@@ -69,7 +80,7 @@ def _json_default(o: Any) -> Any:
 
 def kv_set(namespace: str, key: str, data: Any) -> None:
     payload = _dumps(data)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     with _engine().begin() as conn:
         existing = conn.execute(
             select(kv_table.c.key).where(
