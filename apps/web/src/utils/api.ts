@@ -58,6 +58,10 @@ export interface LessonContentPackage {
   created_at?: string | null; updated_at?: string | null; sealed_at?: string | null; sealed_by?: string | null;
   checksum?: string | null;
 }
+export interface ContentFileRecord {
+  lesson_id: string; title: string; status: string; version: number; path: string;
+  updated_at?: string | null; sealed_at?: string | null; sealed_by?: string | null; checksum?: string | null;
+}
 export interface Lesson {
   id: string; course_id: string; num: string; title: string;
   duration: string; abstract: string; body: string[];
@@ -102,6 +106,9 @@ export const api = {
   progressTouch: (body: { lesson_id: string; layer: string; completed?: boolean }) =>
     jsonFetch<{ ok: boolean; item: ProgressItem }>(`/learning/progress/touch`, { method: 'POST', body: JSON.stringify(body) }),
   adminContentTemplate: (token: string) => adminFetch<LessonContentPackage>(token, '/admin/content/template'),
+  adminContentDrafts: (token: string) => adminFetch<{ items: ContentFileRecord[] }>(token, '/admin/content/drafts'),
+  adminContentDraft: (token: string, lesson_id: string) =>
+    adminFetch<LessonContentPackage>(token, `/admin/content/drafts/${lesson_id}`),
   adminContentPreview: (token: string, body: LessonContentPackage) =>
     adminFetch<{ item: LessonContentPackage }>(token, '/admin/content/preview', { method: 'POST', body: JSON.stringify(body) }),
   adminContentSaveDraft: (token: string, body: LessonContentPackage) =>
