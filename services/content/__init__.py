@@ -62,6 +62,18 @@ def package_dir() -> Path:
     return _CONTENT_ROOT / "packages" / "v1"
 
 
+def runtime_dir() -> Path:
+    return _CONTENT_ROOT / "runtime" / "v1"
+
+
+def runtime_course_package_dir() -> Path:
+    return runtime_dir() / "course-packages"
+
+
+def runtime_scenario_dir() -> Path:
+    return runtime_dir() / "scenarios"
+
+
 def assets_dir() -> Path:
     return _CONTENT_ROOT / "assets"
 
@@ -80,6 +92,8 @@ def ensure_content_dirs() -> None:
     workflow_dir().mkdir(parents=True, exist_ok=True)
     release_dir().mkdir(parents=True, exist_ok=True)
     package_dir().mkdir(parents=True, exist_ok=True)
+    runtime_course_package_dir().mkdir(parents=True, exist_ok=True)
+    runtime_scenario_dir().mkdir(parents=True, exist_ok=True)
     people_asset_dir().mkdir(parents=True, exist_ok=True)
     keyword_asset_dir().mkdir(parents=True, exist_ok=True)
 

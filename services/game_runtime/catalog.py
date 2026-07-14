@@ -5,9 +5,31 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    ValidationError,
+    model_validator,
+)
 
-from services.contracts.v1 import Checksum, ContractId
+from services import content as content_data
+from services.content import runtime_artifacts
+from services.contracts.release_v2 import (
+    ActiveReleasePointerV1,
+    CourseReleaseItemV2,
+    CourseReleaseManifestAny,
+    CourseReleaseManifestV2,
+    RuntimeArtifactDescriptorV1,
+    parse_signed_course_release_manifest,
+    verify_release_metadata_checksum,
+)
+from services.contracts.v1 import (
+    Checksum,
+    ContractId,
+    RuntimeBundleV1,
+)
 from services.game_runtime import (
     ScenarioFileError,
     ScenarioIntegrityError,
@@ -56,6 +78,10 @@ class ScenarioCatalogV1(BaseModel):
 
     @model_validator(mode="after")
     def validate_entries(self) -> "ScenarioCatalogV1":
+        if any(entry.audience != "development" for entry in self.entries):
+            raise ValueError(
+                "static scenario catalog entries must use audience=development"
+            )
         identities: set[tuple[str, int]] = set()
         course_paths: dict[str, tuple[str, str, int, str]] = {}
         scenario_paths: set[str] = set()
@@ -107,6 +133,16 @@ class LoadedScenarioV1:
     engine: SituationEngineV1
 
 
+@dataclass(frozen=True)
+class _CapturedReleaseV1:
+    pointer: ActiveReleasePointerV1
+    manifest: CourseReleaseManifestAny
+
+
+class _ReleaseManifestDocument(RootModel[dict[str, object]]):
+    pass
+
+
 class ScenarioCatalogRepository:
     """Loads only explicitly allowlisted and checksum-pinned runtime artifacts."""
 
@@ -139,54 +175,326 @@ class ScenarioCatalogRepository:
 
     def list_active_records(self) -> tuple[LoadedScenarioV1, ...]:
         catalog = self.load_catalog()
-        entries = sorted(
-            (entry for entry in catalog.entries if entry.active),
-            key=lambda item: (item.course_id, item.lesson_id, item.scenario_id),
-        )
-        return tuple(
+        static_records = tuple(
             LoadedScenarioV1(entry=entry, engine=self._load_entry(entry))
-            for entry in entries
+            for entry in catalog.entries
+            if entry.active
+        )
+        published_records = tuple(
+            record
+            for captured in self._capture_active_releases()
+            if isinstance(captured.manifest, CourseReleaseManifestV2)
+            for record in self._load_release_records(captured.manifest)
+        )
+        records = self._merge_active_records(static_records, published_records)
+        return tuple(
+            sorted(
+                records,
+                key=lambda item: (
+                    item.entry.course_id,
+                    item.entry.lesson_id,
+                    item.entry.scenario_id,
+                ),
+            )
         )
 
     def get_active(self, scenario_id: str) -> SituationEngineV1:
         return self.get_active_record(scenario_id).engine
 
     def get_active_record(self, scenario_id: str) -> LoadedScenarioV1:
-        catalog = self.load_catalog()
-        entry = next(
+        record = next(
             (
                 item
-                for item in catalog.entries
-                if item.active and item.scenario_id == scenario_id
+                for item in self.list_active_records()
+                if item.entry.scenario_id == scenario_id
             ),
             None,
         )
-        if entry is None:
+        if record is None:
             raise ScenarioCatalogNotFound(f"active scenario not found: {scenario_id}")
-        return LoadedScenarioV1(entry=entry, engine=self._load_entry(entry))
+        return record
 
     def get_exact(
         self,
         scenario_id: str,
         scenario_version: int,
         scenario_checksum: str,
+        *,
+        course_id: str | None = None,
+        lesson_id: str | None = None,
+        course_content_version: int | None = None,
+        course_checksum: str | None = None,
     ) -> SituationEngineV1:
         catalog = self.load_catalog()
-        entry = next(
-            (
-                item
-                for item in catalog.entries
-                if item.scenario_id == scenario_id
-                and item.scenario_version == scenario_version
-                and item.scenario_checksum == scenario_checksum
-            ),
-            None,
-        )
-        if entry is None:
+        matches = [
+            LoadedScenarioV1(entry=entry, engine=self._load_entry(entry))
+            for entry in catalog.entries
+            if _matches_exact_identity(
+                entry,
+                scenario_id=scenario_id,
+                scenario_version=scenario_version,
+                scenario_checksum=scenario_checksum,
+                course_id=course_id,
+                lesson_id=lesson_id,
+                course_content_version=course_content_version,
+                course_checksum=course_checksum,
+            )
+        ]
+
+        captured_releases = self._capture_active_releases(course_id=course_id)
+        for manifest in self._reachable_release_history(captured_releases):
+            if not isinstance(manifest, CourseReleaseManifestV2):
+                continue
+            for item in manifest.items:
+                for descriptor in item.scenarios:
+                    entry = self._release_entry(item, descriptor)
+                    if not _matches_exact_identity(
+                        entry,
+                        scenario_id=scenario_id,
+                        scenario_version=scenario_version,
+                        scenario_checksum=scenario_checksum,
+                        course_id=course_id,
+                        lesson_id=lesson_id,
+                        course_content_version=course_content_version,
+                        course_checksum=course_checksum,
+                    ):
+                        continue
+                    matches.extend(
+                        self._load_release_item_records(item, (descriptor,))
+                    )
+
+        unique_matches = {
+            _complete_identity(record.entry): record for record in matches
+        }
+        if not unique_matches:
             raise ScenarioCatalogNotFound(
                 f"pinned scenario not found: {scenario_id} v{scenario_version}"
             )
-        return self._load_entry(entry)
+        if len(unique_matches) != 1:
+            raise ScenarioIntegrityError(
+                f"pinned scenario identity is ambiguous: {scenario_id} v{scenario_version}"
+            )
+        return next(iter(unique_matches.values())).engine
+
+    def _capture_active_releases(
+        self,
+        *,
+        course_id: str | None = None,
+    ) -> tuple[_CapturedReleaseV1, ...]:
+        active_root = self.content_root / "releases" / "active"
+        try:
+            if not active_root.exists() and not active_root.is_symlink():
+                return ()
+            if active_root.is_symlink() or not active_root.is_dir():
+                raise ScenarioFileError(
+                    f"active release root must be a real directory: {active_root}"
+                )
+            pointer_paths = tuple(
+                path
+                for path in sorted(
+                    active_root.glob("*.json"), key=lambda item: item.name
+                )
+                if course_id is None or path.name == f"{course_id}.json"
+            )
+        except ScenarioFileError:
+            raise
+        except OSError as exc:
+            raise ScenarioFileError(
+                f"cannot enumerate active release pointers: {exc}"
+            ) from exc
+
+        captured: list[_CapturedReleaseV1] = []
+        course_ids: set[str] = set()
+        for pointer_path in pointer_paths:
+            pointer = load_contract_file(pointer_path, ActiveReleasePointerV1)
+            if not verify_release_metadata_checksum(pointer):
+                raise ScenarioIntegrityError(
+                    f"active release pointer checksum mismatch: {pointer_path.name}"
+                )
+            expected_name = f"{pointer.course_id}.json"
+            if pointer_path.name != expected_name:
+                raise ScenarioIntegrityError(
+                    f"active release pointer path identity mismatch: {pointer_path.name}"
+                )
+            if pointer.course_id in course_ids:
+                raise ScenarioIntegrityError(
+                    f"duplicate active release pointer for course: {pointer.course_id}"
+                )
+            course_ids.add(pointer.course_id)
+
+            manifest = self._load_signed_manifest(
+                self._artifact_path(pointer.manifest_path)
+            )
+            actual_identity = (
+                manifest.course_id,
+                manifest.release_id,
+                manifest.release_no,
+                manifest.checksum,
+            )
+            expected_identity = (
+                pointer.course_id,
+                pointer.release_id,
+                pointer.release_no,
+                pointer.manifest_checksum,
+            )
+            if actual_identity != expected_identity:
+                raise ScenarioIntegrityError(
+                    f"active pointer and release manifest disagree: {pointer.course_id}"
+                )
+            captured.append(_CapturedReleaseV1(pointer=pointer, manifest=manifest))
+        return tuple(captured)
+
+    def _reachable_release_history(
+        self,
+        captured_releases: tuple[_CapturedReleaseV1, ...],
+    ) -> tuple[CourseReleaseManifestAny, ...]:
+        history: list[CourseReleaseManifestAny] = []
+        for captured in captured_releases:
+            manifest = captured.manifest
+            seen: set[str] = set()
+            while True:
+                if manifest.release_id in seen:
+                    raise ScenarioIntegrityError(
+                        f"release history contains a cycle: {manifest.course_id}"
+                    )
+                seen.add(manifest.release_id)
+                history.append(manifest)
+                parent_release_id = manifest.parent_release_id
+                if parent_release_id is None:
+                    break
+                parent_path = self._artifact_path(
+                    PurePosixPath(
+                        "releases",
+                        "manifests",
+                        manifest.course_id,
+                        f"{parent_release_id}.json",
+                    ).as_posix()
+                )
+                parent = self._load_signed_manifest(parent_path)
+                if (
+                    parent.course_id != manifest.course_id
+                    or parent.release_id != parent_release_id
+                ):
+                    raise ScenarioIntegrityError(
+                        f"release parent identity mismatch: {parent_release_id}"
+                    )
+                if parent.release_no >= manifest.release_no:
+                    raise ScenarioIntegrityError(
+                        f"release parent does not precede child: {parent_release_id}"
+                    )
+                manifest = parent
+        return tuple(history)
+
+    @staticmethod
+    def _merge_active_records(
+        static_records: tuple[LoadedScenarioV1, ...],
+        published_records: tuple[LoadedScenarioV1, ...],
+    ) -> tuple[LoadedScenarioV1, ...]:
+        published_by_id: dict[str, LoadedScenarioV1] = {}
+        for record in published_records:
+            scenario_id = record.entry.scenario_id
+            if scenario_id in published_by_id:
+                raise ScenarioIntegrityError(
+                    f"duplicate published scenario_id: {scenario_id}"
+                )
+            published_by_id[scenario_id] = record
+        return tuple(
+            [
+                record
+                for record in static_records
+                if record.entry.scenario_id not in published_by_id
+            ]
+            + list(published_by_id.values())
+        )
+
+    def _load_signed_manifest(self, path: Path) -> CourseReleaseManifestAny:
+        document = load_contract_file(path, _ReleaseManifestDocument)
+        try:
+            return parse_signed_course_release_manifest(document.root)
+        except (TypeError, ValueError, ValidationError) as exc:
+            raise ScenarioIntegrityError(
+                f"invalid signed course release manifest {path}: {exc}"
+            ) from exc
+
+    def _load_release_records(
+        self,
+        manifest: CourseReleaseManifestV2,
+    ) -> tuple[LoadedScenarioV1, ...]:
+        records: list[LoadedScenarioV1] = []
+        for item in manifest.items:
+            records.extend(self._load_release_item_records(item, item.scenarios))
+        return tuple(records)
+
+    def _load_release_item_records(
+        self,
+        item: CourseReleaseItemV2,
+        scenario_descriptors: tuple[RuntimeArtifactDescriptorV1, ...],
+    ) -> tuple[LoadedScenarioV1, ...]:
+        configured_root = _resolve_path(
+            content_data.content_root(),
+            "runtime artifact content_root",
+        )
+        if configured_root != self.content_root:
+            raise ScenarioFileError(
+                "runtime artifact content_root does not match scenario repository"
+            )
+        course_descriptor = item.course_package
+        try:
+            course = runtime_artifacts.load_course_package(course_descriptor)
+        except runtime_artifacts.RuntimeArtifactError as exc:
+            raise ScenarioIntegrityError(
+                f"published course package failed verification: {exc}"
+            ) from exc
+
+        records: list[LoadedScenarioV1] = []
+        for scenario_descriptor in scenario_descriptors:
+            try:
+                scenario = runtime_artifacts.load_runtime_scenario(
+                    scenario_descriptor
+                )
+            except runtime_artifacts.RuntimeArtifactError as exc:
+                raise ScenarioIntegrityError(
+                    f"published scenario failed verification: {exc}"
+                ) from exc
+            try:
+                bundle = RuntimeBundleV1.model_validate(
+                    {
+                        "course": course.model_dump(mode="json"),
+                        "scenario": scenario.model_dump(mode="json"),
+                    }
+                )
+            except ValidationError as exc:
+                raise ScenarioIntegrityError(
+                    "published course and scenario cannot form a runtime bundle: "
+                    f"{scenario_descriptor.artifact_id}: {exc}"
+                ) from exc
+            records.append(
+                LoadedScenarioV1(
+                    entry=self._release_entry(item, scenario_descriptor),
+                    engine=SituationEngineV1(bundle.course, bundle.scenario),
+                )
+            )
+        return tuple(records)
+
+    @staticmethod
+    def _release_entry(
+        item: CourseReleaseItemV2,
+        scenario_descriptor: RuntimeArtifactDescriptorV1,
+    ) -> ScenarioCatalogEntryV1:
+        course_descriptor = item.course_package
+        return ScenarioCatalogEntryV1(
+            scenario_id=scenario_descriptor.artifact_id,
+            scenario_version=scenario_descriptor.version,
+            scenario_checksum=scenario_descriptor.checksum,
+            course_id=course_descriptor.course_id,
+            lesson_id=course_descriptor.lesson_id,
+            course_content_version=course_descriptor.version,
+            course_checksum=course_descriptor.checksum,
+            course_path=course_descriptor.path,
+            scenario_path=scenario_descriptor.path,
+            active=True,
+            audience=item.audience,
+        )
 
     def _load_entry(self, entry: ScenarioCatalogEntryV1) -> SituationEngineV1:
         course_path = self._artifact_path(entry.course_path)
@@ -226,6 +534,48 @@ class ScenarioCatalogRepository:
             "artifact path",
         )
         return path
+
+
+def _matches_exact_identity(
+    entry: ScenarioCatalogEntryV1,
+    *,
+    scenario_id: str,
+    scenario_version: int,
+    scenario_checksum: str,
+    course_id: str | None,
+    lesson_id: str | None,
+    course_content_version: int | None,
+    course_checksum: str | None,
+) -> bool:
+    required = (
+        entry.scenario_id == scenario_id
+        and entry.scenario_version == scenario_version
+        and entry.scenario_checksum == scenario_checksum
+    )
+    optional = (
+        (course_id is None or entry.course_id == course_id)
+        and (lesson_id is None or entry.lesson_id == lesson_id)
+        and (
+            course_content_version is None
+            or entry.course_content_version == course_content_version
+        )
+        and (course_checksum is None or entry.course_checksum == course_checksum)
+    )
+    return required and optional
+
+
+def _complete_identity(
+    entry: ScenarioCatalogEntryV1,
+) -> tuple[str, int, str, str, str, int, str]:
+    return (
+        entry.scenario_id,
+        entry.scenario_version,
+        entry.scenario_checksum,
+        entry.course_id,
+        entry.lesson_id,
+        entry.course_content_version,
+        entry.course_checksum,
+    )
 
 
 def _validate_relative_json_path(value: str, label: str) -> None:

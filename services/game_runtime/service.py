@@ -345,6 +345,10 @@ class GameRuntimeService:
                 session.scenario_id,
                 session.scenario_version,
                 session.scenario_checksum,
+                course_id=session.course_id,
+                lesson_id=session.lesson_id,
+                course_content_version=session.course_content_version,
+                course_checksum=session.course_checksum,
             )
         except ScenarioCatalogNotFound as exc:
             raise SessionIntegrityError(

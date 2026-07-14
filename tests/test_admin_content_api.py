@@ -5,6 +5,7 @@ import uuid
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import Barrier, Thread
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -17,6 +18,7 @@ if str(API_ROOT) not in sys.path:
 from routers import admin_content, courses as courses_router
 from settings import settings
 from services import content
+from services.contracts.v1 import ScenarioTemplateV1, calculate_contract_checksum
 
 
 class AdminContentApiTests(unittest.TestCase):
@@ -227,6 +229,116 @@ class AdminContentApiTests(unittest.TestCase):
         self.assertEqual(list(content.draft_dir().glob("*.json")), [])
         self.assertEqual(list(content.workflow_dir().glob("*.json")), [])
 
+    def test_admin_can_stage_and_jointly_publish_a_scenario(self):
+        payload = self._payload()
+        self._seal_through_api(payload)
+        scenario = self._scenario_payload(
+            "api-joint-scenario",
+            payload["course_id"],
+            payload["lesson_id"],
+        )
+
+        unauthorized = self.client.post(
+            "/api/v1/admin/content/runtime-scenarios",
+            json=scenario,
+        )
+        self.assertEqual(unauthorized.status_code, 403)
+        staged = self.client.post(
+            "/api/v1/admin/content/runtime-scenarios",
+            headers=self.headers,
+            json=scenario,
+        )
+        self.assertEqual(staged.status_code, 200, staged.text)
+        descriptor = staged.json()["item"]["descriptor"]
+        self.assertEqual(
+            self.client.get(
+                f"/api/v1/courses/{payload['course_id']}/lessons/{payload['lesson_id']}"
+            ).status_code,
+            404,
+        )
+        listed = self.client.get(
+            "/api/v1/admin/content/runtime-scenarios",
+            headers=self.headers,
+        )
+        self.assertEqual(len(listed.json()["items"]), 1)
+
+        published = self.client.post(
+            f"/api/v1/admin/content/sealed/{payload['lesson_id']}/versions/1/publish",
+            headers=self.headers,
+            json={
+                "scenarios": [
+                    {
+                        "scenario_id": descriptor["artifact_id"],
+                        "scenario_version": descriptor["version"],
+                        "scenario_checksum": descriptor["checksum"],
+                        "primary": True,
+                    }
+                ]
+            },
+        )
+        self.assertEqual(published.status_code, 200, published.text)
+        self.assertEqual(published.json()["release"]["schema_version"], "course-release/v2")
+        self.assertEqual(
+            published.json()["release"]["items"][0]["primary_scenario_id"],
+            scenario["scenario_id"],
+        )
+        self.assertEqual(
+            self.client.get(
+                f"/api/v1/courses/{payload['course_id']}/lessons/{payload['lesson_id']}"
+            ).status_code,
+            200,
+        )
+
+    def test_concurrent_divergent_scenario_registration_has_one_winner(self):
+        first = self._scenario_payload(
+            "api-race-scenario",
+            "C-api-race",
+            "api-race-lesson",
+        )
+        second = dict(first)
+        second["title"] = "Divergent scenario content"
+        second["checksum"] = "0" * 64
+        provisional = ScenarioTemplateV1.model_validate(second)
+        second["checksum"] = calculate_contract_checksum(provisional)
+        second = ScenarioTemplateV1.model_validate(second).model_dump(mode="json")
+        barrier = Barrier(2)
+        responses = []
+
+        def register(payload):
+            barrier.wait(2)
+            responses.append(
+                self.client.post(
+                    "/api/v1/admin/content/runtime-scenarios",
+                    headers=self.headers,
+                    json=payload,
+                )
+            )
+
+        threads = [Thread(target=register, args=(payload,)) for payload in (first, second)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(5)
+
+        self.assertTrue(all(not thread.is_alive() for thread in threads))
+        self.assertEqual(sorted(response.status_code for response in responses), [200, 409])
+        conflict = next(response for response in responses if response.status_code == 409)
+        self.assertEqual(conflict.json()["detail"]["code"], "content_conflict")
+        self.assertEqual(len(list(content.runtime_scenario_dir().rglob("*.json"))), 1)
+
+        invalid = dict(first)
+        invalid["checksum"] = "0" * 64
+        rejected = self.client.post(
+            "/api/v1/admin/content/runtime-scenarios",
+            headers=self.headers,
+            json=invalid,
+        )
+        self.assertEqual(rejected.status_code, 422, rejected.text)
+        self.assertEqual(
+            rejected.json()["detail"]["code"],
+            "content_validation_failed",
+        )
+
     def test_legacy_bootstrap_is_explicit_and_admin_sealed_reads_fail_stably(self):
         payload = self._payload()
         payload["lesson_id"] = "legacy-api-lesson"
@@ -351,6 +463,66 @@ class AdminContentApiTests(unittest.TestCase):
         package.era = "Test era"
         package.body = ["First paragraph.", "Second paragraph.", "Third paragraph."]
         return package.model_dump(mode="json")
+
+    @staticmethod
+    def _scenario_payload(scenario_id: str, course_id: str, lesson_id: str) -> dict:
+        now = datetime.now(timezone.utc)
+        payload = {
+            "scenario_id": scenario_id,
+            "scenario_version": 1,
+            "status": "sealed",
+            "course_id": course_id,
+            "lesson_id": lesson_id,
+            "title": "API joint scenario",
+            "scenario_type": "crisis_governance",
+            "student_role": "Decision maker",
+            "objective": "Reach a valid ending",
+            "opening": "The situation requires a decision.",
+            "variables": [
+                {
+                    "variable_id": "progress",
+                    "label": "Progress",
+                    "initial": 0,
+                    "minimum": 0,
+                    "maximum": 10,
+                }
+            ],
+            "action_rules": [
+                {
+                    "action_id": "advance",
+                    "label": "Advance",
+                    "effects": [
+                        {
+                            "kind": "state",
+                            "variable_id": "progress",
+                            "operation": "add",
+                            "value": 1,
+                        }
+                    ],
+                }
+            ],
+            "ending_rules": [
+                {
+                    "ending_id": "complete",
+                    "title": "Complete",
+                    "conditions": [
+                        {
+                            "kind": "state",
+                            "variable_id": "progress",
+                            "operator": "gte",
+                            "value": 1,
+                        }
+                    ],
+                    "summary": "The decision reached the ending.",
+                }
+            ],
+            "sealed_at": now,
+            "sealed_by": "scenario-reviewer",
+            "checksum": "0" * 64,
+        }
+        provisional = ScenarioTemplateV1.model_validate(payload)
+        payload["checksum"] = calculate_contract_checksum(provisional)
+        return ScenarioTemplateV1.model_validate(payload).model_dump(mode="json")
 
 
 if __name__ == "__main__":

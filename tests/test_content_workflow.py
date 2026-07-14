@@ -446,7 +446,7 @@ class ContentWorkflowTests(unittest.TestCase):
             2,
             actor="publisher",
         )
-        package_path = content.package_dir() / "rollback-check-v001.json"
+        package_path = content.content_root() / release_v1.items[0].course_package.path
         raw = json.loads(package_path.read_text(encoding="utf-8"))
         raw["title"] = "Tampered historical package"
         package_path.write_text(json.dumps(raw), encoding="utf-8")
@@ -566,7 +566,7 @@ class ContentWorkflowTests(unittest.TestCase):
         self.assertEqual(workflow.get_workflow("pointer-lesson"), before_record)
         self.assertEqual(courses.get_lesson("pointer-lesson").body[0], "Version one")
 
-    def test_manifest_pointer_and_canonical_package_tampering_fail_closed(self):
+    def test_manifest_pointer_and_runtime_package_tampering_fail_closed(self):
         release = self._publish("tamper-lesson", "C-tamper", "Trusted content")
         pointer_path = content.release_dir() / "active" / "C-tamper.json"
         manifest_path = (
@@ -575,7 +575,7 @@ class ContentWorkflowTests(unittest.TestCase):
             / "C-tamper"
             / f"{release.release_id}.json"
         )
-        package_path = content.package_dir() / "tamper-lesson-v001.json"
+        package_path = content.content_root() / release.items[0].course_package.path
 
         for path, field, value in (
             (pointer_path, "generation", 999),

@@ -5,10 +5,11 @@ This directory is the file-based content handoff area for the current admin cont
 - `drafts/`: editable JSON drafts saved by `/api/v1/admin/content/drafts`.
 - `sealed/`: versioned JSON files created by `/api/v1/admin/content/drafts/{lesson_id}/seal`.
 - `workflows/`: signed per-lesson review state, validation report and audit events.
-- `packages/v1/`: immutable canonical `CoursePackageV1` artifacts materialized at publish time.
+- `packages/v1/`: immutable legacy-compatibility `CoursePackageV1` mirrors; active V2 readers use the manifest's content-addressed runtime package instead.
 - `schemas/releases/v2/`: generated JSON Schema for the joint course/runtime release manifest.
 - `examples/releases/v2/`: development-only V2 release fixture; it is never scanned as published content.
-- `runtime/v1/`: reserved content-addressed course-package and scenario artifacts used by V2 releases.
+- `runtime/v1/course-packages/`: immutable content-addressed course packages bound to exact scenario refs.
+- `runtime/v1/scenarios/`: sealed scenario staging area and immutable artifacts referenced by V2 releases; file presence alone never publishes a scenario.
 - `releases/manifests/{course_id}/`: immutable full-course release snapshots.
 - `releases/active/{course_id}.json`: atomically replaced pointer to the student-visible release.
 - `releases/transactions/{course_id}.json`: short-lived crash-recovery journal removed after a completed release.
@@ -40,9 +41,10 @@ Teacher workflow:
 5. Click `Save draft`, then use `Validate` to run the minimum publication checks.
 6. Submit the validated draft for review. The reviewer may return it with a required note or approve it.
 7. Seal an approved draft. The student course API still serves the previously published release.
-8. Publish the sealed version to create a full-course release manifest and move the active pointer.
-9. Use release history to roll back. Rollback creates a new immutable release instead of editing old files.
-10. Click `Export bundle` at any time to download:
+8. Optionally register a sealed `ScenarioTemplateV1` with `POST /api/v1/admin/content/runtime-scenarios`, then select its exact ID, version and checksum during publish.
+9. Publish the sealed version to create a full-course V2 release manifest and move the active pointer. Omit `scenarios` or send `null` to preserve current bindings, send `[]` to remove them, or send an explicit list with exactly one `primary` item to replace them.
+10. Use release history to roll back. Rollback creates a new immutable release, revalidates the historical course/scenario bundle, and switches both together.
+11. Click `Export bundle` at any time to download:
    - `课程标题.json`: the canonical content layer.
    - `课程标题-格式层.json`: parsed rich-text segment metadata for 1:1 rendering checks.
    - `课程标题-预览.html`: standalone visual preview.
@@ -63,6 +65,8 @@ Runtime contract artifacts:
 - `services/contracts/`: the authoritative Pydantic models, cross-reference validation, checksum helpers, and the legacy lesson-package adapter.
 - `scripts/export_runtime_contracts.py`: deterministic exporter for the committed schema and example files.
 - `services/contracts/release_v2.py`: strict V1/V2 manifest reader, content-addressed descriptors and release metadata checksum helpers.
+- `services/content/runtime_artifacts.py`: sealed scenario registration, immutable runtime materialization and `RuntimeBundleV1` validation.
+- `services/game_runtime/catalog.py`: development-only static catalog plus active V2 published scenarios and reachable-history exact lookup.
 
 Regenerate and validate from the repository root:
 
@@ -75,4 +79,4 @@ The Dayu fixtures are development data. Historical body text, facts, persona mat
 
 Sealed files are immutable source artifacts for review and Git submission. The active release manifest, not the highest sealed filename, is authoritative for the course service. Public reads never scan `sealed/` for a presumed latest version. A pre-workflow sealed package must be explicitly whitelisted through `POST /api/v1/admin/content/releases/{course_id}/bootstrap-legacy` with exact `lesson_id` and `content_version` selections.
 
-Publication and rollback prepare immutable manifests and all affected lesson workflow projections before atomically replacing the active pointer as the final student-visible commit. A signed transaction journal restores the previous projections when a process stops before activation, or finishes the target projections when activation already succeeded; API startup performs this recovery under a cross-process global workflow lock shared by save, review, seal, publish and rollback operations. Release activation revalidates every referenced source/V1 artifact and rejects a `lesson_id` already active in another course. Unreachable manifests left before a transaction journal was written are excluded from release history. Every read verifies signed metadata, source and V1 checksums, canonical paths, IDs and versions; corruption fails closed. Keep historical facts traceable through `source_refs`, and keep AI/RAG-facing material in `facts`, `people[].persona`, `qa_points`, `level_goals`, `saga_material` and `sandbox_material`.
+Publication and rollback prepare immutable manifests and all affected lesson workflow projections before atomically replacing the active pointer as the final student-visible commit. A signed transaction journal restores the previous projections when a process stops before activation, or finishes the target projections when activation already succeeded; API startup performs this recovery under a cross-process global workflow lock shared by save, review, seal, publish and rollback operations. Release activation revalidates every referenced sealed source, course package, scenario and `RuntimeBundleV1`, rejects a `lesson_id` or published `scenario_id` already active in another course, and uses optimistic preflight identity so concurrent publishers do not both move the same old pointer. Unreachable manifests left before a transaction journal was written are excluded from release history. Every read verifies signed metadata, checksums, canonical paths, IDs and versions; corruption fails closed. The static `content/scenarios/catalog.v1.json` accepts only `audience=development`; formal `audience=published` scenarios come exclusively from the active V2 release. Historical sessions resolve the full pinned course/scenario identity through reachable release history, so a later publish or rollback cannot silently substitute a newer artifact. Keep historical facts traceable through `source_refs`, and keep AI/RAG-facing material in `facts`, `people[].persona`, `qa_points`, `level_goals`, `saga_material` and `sandbox_material`.

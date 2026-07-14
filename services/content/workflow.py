@@ -17,12 +17,20 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
+    TypeAdapter,
     model_validator,
 )
 
 from services import content as content_data
+from services.content import runtime_artifacts
+from services.contracts.release_v2 import (
+    CourseReleaseItemV2,
+    CourseReleaseManifestV2,
+)
 from services.contracts.v1 import (
     CoursePackageV1,
+    RuntimeBundleV1,
+    ScenarioTemplateV1,
     course_package_from_legacy,
     verify_contract_checksum,
 )
@@ -206,6 +214,13 @@ class LegacyReleaseSelection(LifecycleModel):
     content_version: int = Field(ge=1)
 
 
+class ScenarioReleaseSelection(LifecycleModel):
+    scenario_id: ContractId
+    scenario_version: int = Field(ge=1)
+    scenario_checksum: Checksum
+    primary: bool = False
+
+
 class CourseReleaseManifest(LifecycleModel):
     schema_version: Literal["course-release/v1"] = "course-release/v1"
     release_id: NonEmptyText
@@ -242,6 +257,13 @@ class CourseReleaseManifest(LifecycleModel):
         if self.operation != "rollback" and self.restored_from_release_id is not None:
             raise ValueError("only rollback releases may restore another release")
         return self
+
+
+CourseReleaseManifestAny = Annotated[
+    CourseReleaseManifest | CourseReleaseManifestV2,
+    Field(discriminator="schema_version"),
+]
+_COURSE_RELEASE_MANIFEST_ADAPTER = TypeAdapter(CourseReleaseManifestAny)
 
 
 class ActiveReleasePointer(LifecycleModel):
@@ -291,7 +313,7 @@ class ReleaseTransactionJournal(LifecycleModel):
         "course-release-transaction/v1"
     )
     course_id: ContractId
-    manifest: CourseReleaseManifest
+    manifest: CourseReleaseManifestAny
     pointer: ActiveReleasePointer
     previous_pointer: ActiveReleasePointer | None = None
     original_workflows: tuple[ContentWorkflowRecord, ...] = ()
@@ -636,9 +658,17 @@ def publish_version(
     *,
     actor: str,
     note: str = "",
-) -> tuple[CourseReleaseManifest, ContentWorkflowRecord]:
+    scenario_selections: Sequence[ScenarioReleaseSelection] | None = None,
+) -> tuple[CourseReleaseManifestAny, ContentWorkflowRecord]:
+    preflight_source = content_data.get_sealed_package(lesson_id, version)
+    preflight_pointer = _load_pointer(preflight_source.course_id, required=False)
     with _release_operation_lock():
         record = _load_workflow(lesson_id)
+        observed_pointer = _load_pointer(record.course_id, required=False)
+        if _pointer_identity(observed_pointer) != _pointer_identity(preflight_pointer):
+            raise ContentConflict(
+                "Active release changed after publication preparation began; retry publication."
+            )
         if record.state not in {"sealed", "published"}:
             raise InvalidTransition(f"Cannot publish content in {record.state} state.")
         if record.sealed_version != version:
@@ -653,9 +683,22 @@ def publish_version(
         if not report.valid:
             raise ContentValidationFailed("Sealed content does not pass publication validation.", report)
 
-        item = _materialize_release_item(sealed)
-        previous_pointer = _load_pointer(record.course_id, required=False)
+        previous_pointer = observed_pointer
         current = get_current_release(record.course_id)
+        current_item = next(
+            (
+                existing
+                for existing in (current.items if current is not None else ())
+                if existing.lesson_id == lesson_id
+            ),
+            None,
+        )
+        selected_scenarios = _resolve_release_scenarios(
+            sealed,
+            current_item=current_item,
+            selections=scenario_selections,
+        )
+        item = _materialize_release_item_v2(sealed, selected_scenarios)
         cleanup_paths: list[Path] = []
         if current is None:
             current, baseline_path = _write_release_manifest(
@@ -668,7 +711,10 @@ def publish_version(
             )
             cleanup_paths.append(baseline_path)
 
-        by_lesson = {existing.lesson_id: existing for existing in current.items}
+        by_lesson = {
+            existing.lesson_id: _upgrade_release_item(existing)
+            for existing in current.items
+        }
         if by_lesson.get(lesson_id) == item:
             if cleanup_paths:
                 for path in cleanup_paths:
@@ -724,7 +770,7 @@ def bootstrap_legacy_release(
     *,
     actor: str,
     note: str = "",
-) -> CourseReleaseManifest:
+) -> CourseReleaseManifestAny:
     """Explicitly publish a whitelisted set of pre-workflow sealed packages."""
     with _release_operation_lock():
         course_id = _validated_id(course_id)
@@ -737,7 +783,7 @@ def bootstrap_legacy_release(
         if len(lesson_ids) != len(set(lesson_ids)):
             raise ContentValidationFailed("Legacy bootstrap selections must use unique lesson_id values.")
 
-        items: list[ReleaseItem] = []
+        items: list[CourseReleaseItemV2] = []
         for selection in selections:
             sealed = content_data.get_sealed_package(
                 selection.lesson_id,
@@ -753,7 +799,7 @@ def bootstrap_legacy_release(
                     f"Legacy package {sealed.lesson_id} does not pass publication validation.",
                     report,
                 )
-            items.append(_materialize_release_item(sealed))
+            items.append(_materialize_release_item_v2(sealed, ()))
 
         manifest, manifest_path = _write_release_manifest(
             course_id=course_id,
@@ -780,7 +826,7 @@ def rollback_release(
     actor: str,
     target_release_id: str | None = None,
     note: str = "",
-) -> CourseReleaseManifest:
+) -> CourseReleaseManifestAny:
     with _release_operation_lock():
         current = get_current_release(course_id)
         if current is None:
@@ -792,10 +838,11 @@ def rollback_release(
             raise ContentConflict("Rollback target is already active.")
         target = get_release(course_id, target_id)
         previous_pointer = _load_pointer(course_id)
+        restored_items = [_upgrade_release_item(item) for item in target.items]
         manifest, manifest_path = _write_release_manifest(
             course_id=course_id,
             operation="rollback",
-            items=target.items,
+            items=restored_items,
             actor=actor,
             note=note or f"Restore content snapshot from {target.release_id}.",
             parent=current,
@@ -812,7 +859,7 @@ def rollback_release(
         return manifest
 
 
-def get_current_release(course_id: str) -> CourseReleaseManifest | None:
+def get_current_release(course_id: str) -> CourseReleaseManifestAny | None:
     pointer_path = _active_pointer_path(course_id)
     if not pointer_path.exists():
         return None
@@ -820,7 +867,7 @@ def get_current_release(course_id: str) -> CourseReleaseManifest | None:
     if pointer.course_id != course_id:
         raise content_data.ContentIntegrityError("Active release pointer course_id mismatch.")
     manifest_path = _resolve_content_path(pointer.manifest_path)
-    manifest = _read_signed(manifest_path, CourseReleaseManifest)
+    manifest = _read_release_manifest(manifest_path)
     if (
         manifest.course_id != course_id
         or manifest.release_id != pointer.release_id
@@ -832,13 +879,13 @@ def get_current_release(course_id: str) -> CourseReleaseManifest | None:
     return manifest
 
 
-def get_release(course_id: str, release_id: str) -> CourseReleaseManifest:
+def get_release(course_id: str, release_id: str) -> CourseReleaseManifestAny:
     if not _RELEASE_ID_PATTERN.fullmatch(release_id):
         raise ContentNotFound("Release not found.")
     path = _release_path(course_id, release_id)
     if not path.exists():
         raise ContentNotFound(f"Release not found: {release_id}")
-    manifest = _read_signed(path, CourseReleaseManifest)
+    manifest = _read_release_manifest(path)
     if (
         manifest.course_id != course_id
         or manifest.release_id != release_id
@@ -850,16 +897,16 @@ def get_release(course_id: str, release_id: str) -> CourseReleaseManifest:
     return manifest
 
 
-def list_releases(course_id: str | None = None) -> list[CourseReleaseManifest]:
+def list_releases(course_id: str | None = None) -> list[CourseReleaseManifestAny]:
     root = _manifest_root()
     paths = (
         sorted((root / _validated_id(course_id)).glob("rel-*.json"))
         if course_id
         else sorted(root.glob("*/rel-*.json"))
     )
-    manifests: list[CourseReleaseManifest] = []
+    manifests: list[CourseReleaseManifestAny] = []
     for path in paths:
-        manifest = _read_signed(path, CourseReleaseManifest)
+        manifest = _read_release_manifest(path)
         expected_path = _canonical_release_path(manifest.course_id, manifest.release_id)
         if path.resolve() != expected_path or (
             course_id is not None and manifest.course_id != course_id
@@ -869,7 +916,7 @@ def list_releases(course_id: str | None = None) -> list[CourseReleaseManifest]:
             )
         manifests.append(manifest)
 
-    by_course: dict[str, dict[str, CourseReleaseManifest]] = {}
+    by_course: dict[str, dict[str, CourseReleaseManifestAny]] = {}
     for manifest in manifests:
         by_course.setdefault(manifest.course_id, {})[manifest.release_id] = manifest
 
@@ -1075,16 +1122,16 @@ def _write_release_manifest(
     *,
     course_id: str,
     operation: Literal["bootstrap", "publish", "rollback"],
-    items: Sequence[ReleaseItem],
+    items: Sequence[CourseReleaseItemV2],
     actor: str,
     note: str,
-    parent: CourseReleaseManifest | None,
+    parent: CourseReleaseManifestAny | None,
     restored_from_release_id: str | None = None,
-) -> tuple[CourseReleaseManifest, Path]:
+) -> tuple[CourseReleaseManifestV2, Path]:
     course_id = _validated_id(course_id)
     release_no = _next_release_no(course_id)
     release_id = _release_id(course_id, release_no)
-    manifest = CourseReleaseManifest(
+    manifest = CourseReleaseManifestV2(
         release_id=release_id,
         release_no=release_no,
         course_id=course_id,
@@ -1097,7 +1144,7 @@ def _write_release_manifest(
         items=sorted(items, key=lambda item: item.lesson_id),
         checksum="0" * 64,
     )
-    manifest = _sign(manifest, CourseReleaseManifest)
+    manifest = _sign(manifest, CourseReleaseManifestV2)
     manifest_path = _release_path(course_id, release_id)
     content_data._atomic_write_json(
         manifest_path,
@@ -1108,7 +1155,7 @@ def _write_release_manifest(
 
 
 def _commit_release(
-    manifest: CourseReleaseManifest,
+    manifest: CourseReleaseManifestAny,
     *,
     actor: str,
     note: str,
@@ -1193,7 +1240,7 @@ def _commit_release(
 
 def _build_release_transaction(
     *,
-    manifest: CourseReleaseManifest,
+    manifest: CourseReleaseManifestAny,
     pointer: ActiveReleasePointer,
     previous_pointer: ActiveReleasePointer | None,
     originals: dict[str, ContentWorkflowRecord],
@@ -1288,10 +1335,11 @@ def _validated_release_cleanup_path(relative_path: str, course_id: str) -> Path:
 
 
 def _assert_release_lesson_ids_are_globally_unique(
-    manifest: CourseReleaseManifest,
+    manifest: CourseReleaseManifestAny,
 ) -> None:
     candidate_ids = {item.lesson_id for item in manifest.items}
-    if not candidate_ids:
+    candidate_scenario_ids = _release_scenario_ids(manifest)
+    if not candidate_ids and not candidate_scenario_ids:
         return
     for pointer_path in sorted(_active_root().glob("*.json")):
         pointer = _read_signed(pointer_path, ActiveReleasePointer)
@@ -1314,10 +1362,32 @@ def _assert_release_lesson_ids_are_globally_unique(
                 "lesson_id must be globally unique across active courses: "
                 + ", ".join(duplicates)
             )
+        duplicate_scenarios = sorted(
+            candidate_scenario_ids.intersection(
+                _release_scenario_ids(other_manifest)
+            )
+        )
+        if duplicate_scenarios:
+            raise ContentConflict(
+                "scenario_id must be globally unique across active courses: "
+                + ", ".join(duplicate_scenarios)
+            )
+
+
+def _release_scenario_ids(
+    manifest: CourseReleaseManifestAny,
+) -> set[str]:
+    if not isinstance(manifest, CourseReleaseManifestV2):
+        return set()
+    return {
+        scenario.artifact_id
+        for item in manifest.items
+        for scenario in item.scenarios
+    }
 
 
 def _synchronize_workflows_without_pointer_change(
-    manifest: CourseReleaseManifest,
+    manifest: CourseReleaseManifestAny,
     *,
     actor: str,
     note: str,
@@ -1342,7 +1412,7 @@ def _synchronize_workflows_without_pointer_change(
 
 
 def _build_pointer(
-    manifest: CourseReleaseManifest,
+    manifest: CourseReleaseManifestAny,
     *,
     actor: str,
     previous_pointer: ActiveReleasePointer | None,
@@ -1364,7 +1434,7 @@ def _build_pointer(
 
 
 def _build_release_workflow_updates(
-    manifest: CourseReleaseManifest,
+    manifest: CourseReleaseManifestAny,
     *,
     actor: str,
     note: str,
@@ -1467,7 +1537,7 @@ def _pointer_identity(
     return pointer.release_id, pointer.generation, pointer.checksum
 
 
-def _active_pointer_targets(manifest: CourseReleaseManifest) -> bool:
+def _active_pointer_targets(manifest: CourseReleaseManifestAny) -> bool:
     try:
         pointer = _load_pointer(manifest.course_id, required=False)
     except (ContentWorkflowError, content_data.ContentIntegrityError):
@@ -1511,7 +1581,126 @@ def _materialize_release_item(
     )
 
 
-def _load_release_item(item: ReleaseItem) -> CoursePackageV1:
+def _resolve_release_scenarios(
+    sealed: content_data.LessonContentPackage,
+    *,
+    current_item: ReleaseItem | CourseReleaseItemV2 | None,
+    selections: Sequence[ScenarioReleaseSelection] | None,
+) -> tuple[tuple[ScenarioTemplateV1, bool], ...]:
+    if selections is None:
+        if not isinstance(current_item, CourseReleaseItemV2):
+            return ()
+        preserved = tuple(
+            (
+                runtime_artifacts.load_runtime_scenario(descriptor),
+                descriptor.artifact_id == current_item.primary_scenario_id,
+            )
+            for descriptor in current_item.scenarios
+        )
+        return preserved
+
+    scenario_ids = [selection.scenario_id for selection in selections]
+    identities = [
+        (
+            selection.scenario_id,
+            selection.scenario_version,
+            selection.scenario_checksum,
+        )
+        for selection in selections
+    ]
+    if len(scenario_ids) != len(set(scenario_ids)) or len(identities) != len(
+        set(identities)
+    ):
+        raise ContentValidationFailed(
+            "Scenario selections must use unique scenario identities."
+        )
+    if selections and sum(1 for selection in selections if selection.primary) != 1:
+        raise ContentValidationFailed(
+            "A lesson with scenarios requires exactly one primary scenario."
+        )
+
+    resolved: list[tuple[ScenarioTemplateV1, bool]] = []
+    for selection in selections:
+        scenario, _ = runtime_artifacts.load_staged_scenario(
+            course_id=sealed.course_id,
+            lesson_id=sealed.lesson_id,
+            scenario_id=selection.scenario_id,
+            scenario_version=selection.scenario_version,
+            scenario_checksum=selection.scenario_checksum,
+        )
+        if (scenario.course_id, scenario.lesson_id) != (
+            sealed.course_id,
+            sealed.lesson_id,
+        ):
+            raise ContentValidationFailed(
+                f"Scenario {scenario.scenario_id} belongs to another course or lesson."
+            )
+        resolved.append((scenario, selection.primary))
+    return tuple(sorted(resolved, key=lambda item: item[0].scenario_id))
+
+
+def _materialize_release_item_v2(
+    sealed: content_data.LessonContentPackage,
+    scenarios: Sequence[tuple[ScenarioTemplateV1, bool]],
+) -> CourseReleaseItemV2:
+    legacy_item = _materialize_release_item(sealed)
+    package = _load_release_item_v1(legacy_item)
+    bound_package = runtime_artifacts.bind_course_package(package, scenarios)
+    course_descriptor = runtime_artifacts.materialize_course_package(bound_package)
+    scenario_descriptors = tuple(
+        sorted(
+            (
+                runtime_artifacts.descriptor_for_scenario(scenario)
+                for scenario, _ in scenarios
+            ),
+            key=lambda descriptor: descriptor.artifact_id,
+        )
+    )
+    primary_scenario_id = next(
+        (scenario.scenario_id for scenario, primary in scenarios if primary),
+        None,
+    )
+    return CourseReleaseItemV2(
+        lesson_id=sealed.lesson_id,
+        course_id=sealed.course_id,
+        content_version=sealed.version,
+        source_path=legacy_item.source_path,
+        source_checksum=legacy_item.source_checksum,
+        course_package=course_descriptor,
+        scenarios=scenario_descriptors,
+        primary_scenario_id=primary_scenario_id,
+    )
+
+
+def _upgrade_release_item(
+    item: ReleaseItem | CourseReleaseItemV2,
+) -> CourseReleaseItemV2:
+    if isinstance(item, CourseReleaseItemV2):
+        _load_release_item_v2(item)
+        return item
+    package = _load_release_item_v1(item)
+    bound_package = runtime_artifacts.bind_course_package(package, ())
+    return CourseReleaseItemV2(
+        lesson_id=item.lesson_id,
+        course_id=item.course_id,
+        content_version=item.content_version,
+        source_path=item.source_path,
+        source_checksum=item.source_checksum,
+        course_package=runtime_artifacts.materialize_course_package(bound_package),
+        scenarios=(),
+        primary_scenario_id=None,
+    )
+
+
+def _load_release_item(
+    item: ReleaseItem | CourseReleaseItemV2,
+) -> CoursePackageV1:
+    if isinstance(item, CourseReleaseItemV2):
+        return _load_release_item_v2(item)
+    return _load_release_item_v1(item)
+
+
+def _load_release_item_v1(item: ReleaseItem) -> CoursePackageV1:
     expected_filename = f"{item.lesson_id}-v{item.content_version:03d}.json"
     source_path = _resolve_content_path(item.source_path)
     package_path = _resolve_content_path(item.package_path)
@@ -1536,6 +1725,50 @@ def _load_release_item(item: ReleaseItem) -> CoursePackageV1:
         or package.compatibility.source_checksum != item.source_checksum
     ):
         raise content_data.ContentIntegrityError("Release item does not match its source artifacts.")
+    return package
+
+
+def _load_release_item_v2(item: CourseReleaseItemV2) -> CoursePackageV1:
+    expected_filename = f"{item.lesson_id}-v{item.content_version:03d}.json"
+    source_path = _resolve_content_path(item.source_path)
+    if source_path != content_data.sealed_dir() / expected_filename:
+        raise content_data.ContentIntegrityError("Release source_path is not canonical.")
+    try:
+        source = content_data.get_sealed_package(item.lesson_id, item.content_version)
+    except FileNotFoundError as exc:
+        raise content_data.ContentIntegrityError(
+            f"Release source artifact is missing: {item.source_path}"
+        ) from exc
+    if source.course_id != item.course_id or source.checksum != item.source_checksum:
+        raise content_data.ContentIntegrityError(
+            "Release item does not match its sealed source artifact."
+        )
+
+    normalized = course_package_from_legacy(source)
+    if not verify_contract_checksum(normalized):
+        raise content_data.ContentIntegrityError(
+            "Normalized CoursePackageV1 checksum is invalid."
+        )
+
+    package = runtime_artifacts.load_course_package(item.course_package)
+    scenarios = tuple(
+        runtime_artifacts.load_runtime_scenario(descriptor)
+        for descriptor in item.scenarios
+    )
+    selected = tuple(
+        (
+            scenario,
+            scenario.scenario_id == item.primary_scenario_id,
+        )
+        for scenario in scenarios
+    )
+    expected_package = runtime_artifacts.bind_course_package(normalized, selected)
+    if package != expected_package:
+        raise content_data.ContentIntegrityError(
+            "Runtime course package does not match its source and scenario bindings."
+        )
+    for scenario in scenarios:
+        RuntimeBundleV1(course=package, scenario=scenario)
     return package
 
 
@@ -1590,7 +1823,10 @@ def _load_pointer(
 def _read_contract(path: Path) -> CoursePackageV1:
     try:
         package = CoursePackageV1.model_validate(
-            json.loads(path.read_text(encoding="utf-8"))
+            json.loads(
+                path.read_text(encoding="utf-8"),
+                object_pairs_hook=_reject_duplicate_json_keys,
+            )
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         raise content_data.ContentIntegrityError(f"Cannot read CoursePackageV1: {path}") from exc
@@ -1599,10 +1835,33 @@ def _read_contract(path: Path) -> CoursePackageV1:
     return package
 
 
+def _read_release_manifest(path: Path) -> CourseReleaseManifestAny:
+    try:
+        payload = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_reject_duplicate_json_keys,
+        )
+        manifest = _COURSE_RELEASE_MANIFEST_ADAPTER.validate_python(payload)
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
+        raise content_data.ContentIntegrityError(
+            f"Cannot read course release manifest: {path}"
+        ) from exc
+    if manifest.checksum != _model_checksum(manifest):
+        raise content_data.ContentIntegrityError(
+            f"Course release manifest checksum mismatch: {path}"
+        )
+    return manifest
+
+
 def _read_signed(path: Path, model_type):
     try:
-        model = model_type.model_validate(json.loads(path.read_text(encoding="utf-8")))
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        model = model_type.model_validate(
+            json.loads(
+                path.read_text(encoding="utf-8"),
+                object_pairs_hook=_reject_duplicate_json_keys,
+            )
+        )
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
         raise content_data.ContentIntegrityError(f"Cannot read signed content metadata: {path}") from exc
     if model.checksum != _model_checksum(model):
         raise content_data.ContentIntegrityError(f"Signed content metadata checksum mismatch: {path}")
@@ -1622,6 +1881,17 @@ def _model_checksum(model: BaseModel) -> str:
     data["checksum"] = None
     raw = json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _reject_duplicate_json_keys(
+    pairs: list[tuple[str, object]],
+) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
 
 
 def _workflow_path(lesson_id: str) -> Path:

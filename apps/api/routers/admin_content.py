@@ -10,7 +10,9 @@ from settings import settings
 from services import content
 from services import courses as courses_data
 from services.content import KeywordProfilePackage, LessonContentPackage, PersonProfilePackage
+from services.content import runtime_artifacts
 from services.content import workflow as content_workflow
+from services.contracts.v1 import ScenarioTemplateV1
 
 router = APIRouter()
 
@@ -48,18 +50,28 @@ class LegacyBootstrapRequest(ActorRequest):
     selections: list[content_workflow.LegacyReleaseSelection] = Field(min_length=1)
 
 
+class PublishRequest(ActorRequest):
+    scenarios: list[content_workflow.ScenarioReleaseSelection] | None = Field(
+        default=None,
+        description=(
+            "Omit or use null to preserve current bindings; use [] to remove all; "
+            "provide an explicit list to replace them."
+        ),
+    )
+
+
 class WorkflowResponse(ApiModel):
     workflow: content_workflow.ContentWorkflowRecord
     report: content_workflow.ContentValidationReport | None = None
 
 
 class ReleaseResponse(ApiModel):
-    release: content_workflow.CourseReleaseManifest
+    release: content_workflow.CourseReleaseManifestAny
     workflow: content_workflow.ContentWorkflowRecord | None = None
 
 
 class ReleaseListResponse(ApiModel):
-    items: list[content_workflow.CourseReleaseManifest]
+    items: list[content_workflow.CourseReleaseManifestAny]
 
 
 class LessonSourceRecord(ApiModel):
@@ -107,6 +119,8 @@ async def overview(_: str = Depends(require_admin)):
                 "POST /api/v1/admin/content/drafts/{lesson_id}/submit-review",
                 "POST /api/v1/admin/content/drafts/{lesson_id}/review",
                 "POST /api/v1/admin/content/drafts/{lesson_id}/seal",
+                "GET /api/v1/admin/content/runtime-scenarios",
+                "POST /api/v1/admin/content/runtime-scenarios",
                 "POST /api/v1/admin/content/sealed/{lesson_id}/versions/{version}/publish",
                 "POST /api/v1/admin/content/releases/{course_id}/bootstrap-legacy",
                 "POST /api/v1/admin/content/releases/{course_id}/rollback",
@@ -295,6 +309,32 @@ async def sealed(_: str = Depends(require_admin)):
         _raise_content_error(exc)
 
 
+@router.get("/runtime-scenarios")
+async def runtime_scenarios(_: str = Depends(require_admin)):
+    try:
+        return {
+            "items": [
+                item.model_dump(mode="json")
+                for item in runtime_artifacts.list_staged_scenarios()
+            ]
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/runtime-scenarios")
+async def stage_runtime_scenario(
+    payload: ScenarioTemplateV1,
+    _: str = Depends(require_admin),
+):
+    try:
+        with content_workflow.workflow_write_lock():
+            item = runtime_artifacts.stage_scenario(payload)
+        return {"item": item.model_dump(mode="json")}
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
 @router.post(
     "/sealed/{lesson_id}/versions/{version}/publish",
     response_model=ReleaseResponse,
@@ -302,7 +342,7 @@ async def sealed(_: str = Depends(require_admin)):
 async def publish_version(
     lesson_id: str,
     version: int,
-    req: ActorRequest | None = None,
+    req: PublishRequest | None = None,
     admin: str = Depends(require_admin),
 ):
     try:
@@ -311,6 +351,7 @@ async def publish_version(
             version,
             actor=admin,
             note=(req.note if req else ""),
+            scenario_selections=(req.scenarios if req else None),
         )
         return ReleaseResponse(release=release, workflow=workflow)
     except Exception as exc:
@@ -465,6 +506,15 @@ def _raise_content_error(exc: Exception) -> NoReturn:
         "code": getattr(exc, "code", "content_operation_failed"),
         "message": str(exc),
     }
+    if isinstance(exc, FileNotFoundError):
+        detail["code"] = "content_not_found"
+    elif isinstance(exc, FileExistsError):
+        detail["code"] = "content_conflict"
+    elif isinstance(exc, ValueError) and not isinstance(
+        exc,
+        content_workflow.ContentWorkflowError,
+    ):
+        detail["code"] = "content_validation_failed"
     if isinstance(exc, content_workflow.ContentValidationFailed) and exc.report is not None:
         detail["issues"] = [
             issue.model_dump(mode="json")
