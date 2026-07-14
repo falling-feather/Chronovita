@@ -61,7 +61,10 @@ class GamePersistenceApiTests(unittest.TestCase):
         with TestClient(app) as first_client:
             started = first_client.post(
                 "/api/v1/practice/game/sessions",
-                json={"scenario_id": "scenario-dayu-flood-control"},
+                json={
+                    "scenario_id": "scenario-dayu-flood-control",
+                    "client_request_id": "restart-start-001",
+                },
             )
             self.assertEqual(started.status_code, 200, started.text)
             session_id = started.json()["session"]["session_id"]
@@ -101,7 +104,10 @@ class GamePersistenceApiTests(unittest.TestCase):
         with TestClient(app) as client:
             started = client.post(
                 "/api/v1/practice/game/sessions",
-                json={"scenario_id": "scenario-dayu-flood-control"},
+                json={
+                    "scenario_id": "scenario-dayu-flood-control",
+                    "client_request_id": "tamper-start-001",
+                },
             )
             self.assertEqual(started.status_code, 200, started.text)
             session_id = started.json()["session"]["session_id"]
@@ -136,7 +142,10 @@ class GamePersistenceApiTests(unittest.TestCase):
         with TestClient(app) as client:
             started = client.post(
                 "/api/v1/practice/game/sessions",
-                json={"scenario_id": "scenario-dayu-flood-control"},
+                json={
+                    "scenario_id": "scenario-dayu-flood-control",
+                    "client_request_id": "replay-tamper-start-001",
+                },
             )
             self.assertEqual(started.status_code, 200, started.text)
             session_id = started.json()["session"]["session_id"]
@@ -190,7 +199,10 @@ class GamePersistenceApiTests(unittest.TestCase):
         with TestClient(app) as client:
             started = client.post(
                 "/api/v1/practice/game/sessions",
-                json={"scenario_id": "scenario-dayu-flood-control"},
+                json={
+                    "scenario_id": "scenario-dayu-flood-control",
+                    "client_request_id": "storage-failure-start-001",
+                },
             )
             self.assertEqual(started.status_code, 200, started.text)
             session_id = started.json()["session"]["session_id"]
@@ -348,9 +360,9 @@ class _BarrierStore(GameRuntimeStore):
         super().__init__(engine)
         self._barrier = barrier
 
-    def compare_and_swap(self, current, next_session) -> None:
+    def compare_and_swap(self, current, next_session, dossier=None) -> None:
         self._barrier.wait(timeout=5)
-        super().compare_and_swap(current, next_session)
+        super().compare_and_swap(current, next_session, dossier)
 
 
 if __name__ == "__main__":

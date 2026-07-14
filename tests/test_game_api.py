@@ -75,7 +75,10 @@ class GameApiTests(unittest.TestCase):
 
         started = self.client.post(
             "/api/v1/practice/game/sessions",
-            json={"scenario_id": "scenario-dayu-flood-control"},
+            json={
+                "scenario_id": "scenario-dayu-flood-control",
+                "client_request_id": "api-start-complete-001",
+            },
         )
         self.assertEqual(started.status_code, 200, started.text)
         session = started.json()["session"]
@@ -127,7 +130,10 @@ class GameApiTests(unittest.TestCase):
     def test_turn_retry_is_idempotent_and_conflicts_are_stable(self):
         started = self.client.post(
             "/api/v1/practice/game/sessions",
-            json={"scenario_id": "scenario-dayu-flood-control"},
+            json={
+                "scenario_id": "scenario-dayu-flood-control",
+                "client_request_id": "api-start-idempotent-001",
+            },
         ).json()["session"]
         session_id = started["session_id"]
         request = {
@@ -186,7 +192,10 @@ class GameApiTests(unittest.TestCase):
 
         missing_scenario = self.client.post(
             "/api/v1/practice/game/sessions",
-            json={"scenario_id": "scenario-does-not-exist"},
+            json={
+                "scenario_id": "scenario-does-not-exist",
+                "client_request_id": "api-start-missing-001",
+            },
         )
         self.assertEqual(missing_scenario.status_code, 404)
         self.assertEqual(
@@ -198,6 +207,36 @@ class GameApiTests(unittest.TestCase):
             "/api/v1/practice/game/sessions/session-does-not-exist"
         )
         self.assertEqual(missing.status_code, 404)
+
+    def test_start_request_id_is_idempotent_and_cannot_be_reused(self):
+        request = {
+            "scenario_id": "scenario-dayu-flood-control",
+            "client_request_id": "api-start-retry-001",
+        }
+        first = self.client.post(
+            "/api/v1/practice/game/sessions",
+            json=request,
+        )
+        retry = self.client.post(
+            "/api/v1/practice/game/sessions",
+            json=request,
+        )
+        self.assertEqual(first.status_code, 200, first.text)
+        self.assertEqual(retry.status_code, 200, retry.text)
+        self.assertEqual(first.json(), retry.json())
+
+        reused = self.client.post(
+            "/api/v1/practice/game/sessions",
+            json={
+                "scenario_id": "scenario-shangyang-institutional-reform",
+                "client_request_id": request["client_request_id"],
+            },
+        )
+        self.assertEqual(reused.status_code, 409, reused.text)
+        self.assertEqual(
+            reused.json()["detail"]["code"],
+            "duplicate_start_conflict",
+        )
 
     def test_legacy_sandbox_routes_remain_compatible(self):
         listed = self.client.get("/api/v1/practice/sandbox")

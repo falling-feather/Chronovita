@@ -7,7 +7,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from settings import settings
-from services.contracts.v1 import ContractId, GameSessionV1, PlayerInput
+from services.contracts.v1 import (
+    ContractId,
+    DossierV1,
+    GameSessionV1,
+    PlayerInput,
+)
 from services.game_runtime import (
     AdvanceResultV1,
     ActionUnavailable,
@@ -24,8 +29,12 @@ from services.game_runtime import (
 )
 from services.game_runtime.catalog import ScenarioCatalogNotFound
 from services.game_runtime.service import (
+    DossierNotReady,
+    DuplicateStartConflict,
     GameSessionNotFound,
     ScenarioSummaryV1,
+    SessionReplayV1,
+    TeacherSessionSummaryV1,
     get_game_runtime,
 )
 
@@ -37,6 +46,7 @@ class GameStartRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     scenario_id: ContractId
+    client_request_id: ContractId
 
 
 class GameTurnRequest(BaseModel):
@@ -80,6 +90,7 @@ async def start_game_session(request: GameStartRequest) -> GameStartResponse:
         scenario, session = get_game_runtime().start_session(
             request.scenario_id,
             user_id=settings.game_user_id,
+            client_request_id=request.client_request_id,
         )
     except Exception as exc:
         _raise_runtime_error(exc)
@@ -93,6 +104,56 @@ async def get_game_session(session_id: str) -> GameSessionV1:
     except Exception as exc:
         _raise_runtime_error(exc)
     return session
+
+
+@router.get(
+    "/sessions/{session_id}/replay",
+    response_model=SessionReplayV1,
+)
+async def replay_game_session(session_id: str) -> SessionReplayV1:
+    try:
+        replay = get_game_runtime().replay_session(session_id)
+    except Exception as exc:
+        _raise_runtime_error(exc)
+    return replay
+
+
+@router.get(
+    "/sessions/{session_id}/dossier",
+    response_model=DossierV1,
+)
+async def get_game_dossier(session_id: str) -> DossierV1:
+    try:
+        dossier = get_game_runtime().get_dossier(session_id)
+    except Exception as exc:
+        _raise_runtime_error(exc)
+    return dossier
+
+
+@router.post(
+    "/sessions/{session_id}/dossier",
+    response_model=DossierV1,
+)
+async def ensure_game_dossier(session_id: str) -> DossierV1:
+    try:
+        dossier = get_game_runtime().ensure_dossier(session_id)
+    except Exception as exc:
+        _raise_runtime_error(exc)
+    return dossier
+
+
+@router.get(
+    "/sessions/{session_id}/summary",
+    response_model=TeacherSessionSummaryV1,
+)
+async def get_teacher_session_summary(
+    session_id: str,
+) -> TeacherSessionSummaryV1:
+    try:
+        summary = get_game_runtime().teacher_summary(session_id)
+    except Exception as exc:
+        _raise_runtime_error(exc)
+    return summary
 
 
 @router.post("/sessions/{session_id}/turns", response_model=AdvanceResultV1)
@@ -123,6 +184,8 @@ def _raise_runtime_error(exc: Exception) -> NoReturn:
         exc,
         (
             ActionUnavailable,
+            DossierNotReady,
+            DuplicateStartConflict,
             DuplicateActionConflict,
             RevisionConflict,
             SessionTerminalError,
