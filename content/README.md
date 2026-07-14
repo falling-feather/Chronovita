@@ -43,4 +43,20 @@ Seed examples currently included:
 - `assets/people/li-hongzhang.json`
 - `assets/keywords/yangwu-yundong.json`
 
+Runtime contract artifacts:
+
+- `schemas/v1/`: JSON Schema 2020-12 documents for the four V1 artifacts plus the aggregate `RuntimeBundleV1` validator.
+- `examples/v1/`: a complete Dayu flood-control technical fixture plus one file for each top-level contract.
+- `services/contracts/`: the authoritative Pydantic models, cross-reference validation, checksum helpers, and the legacy lesson-package adapter.
+- `scripts/export_runtime_contracts.py`: deterministic exporter for the committed schema and example files.
+
+Regenerate and validate from the repository root:
+
+```powershell
+& ".\.venv\Scripts\python.exe" scripts\export_runtime_contracts.py
+& ".\.venv\Scripts\python.exe" -m unittest discover -s tests -v
+```
+
+The Dayu fixture is development data. Historical body text, facts, persona material, and explanations marked `教师待审` must be replaced or approved by the teaching team before a real release.
+
 Sealed files are the canonical exchange format for content review, Git submission and course-service import during this phase. Keep historical facts traceable through `source_refs`, and keep AI/RAG-facing material in `facts`, `people[].persona`, `qa_points`, `level_goals`, `saga_material` and `sandbox_material`.

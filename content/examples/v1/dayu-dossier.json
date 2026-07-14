@@ -1,0 +1,162 @@
+{
+  "schema_version": "dossier/v1",
+  "dossier_id": "dossier-dayu-demo-001",
+  "session_id": "session-dayu-demo-001",
+  "user_id": "student-demo",
+  "course_id": "C-early-civilization",
+  "lesson_id": "dayu-flood-control",
+  "scenario_id": "scenario-dayu-flood-control",
+  "course_content_version": 1,
+  "scenario_version": 1,
+  "course_checksum": "e128e00b4ad604763bd522be2eca639b3fa00aae878c6dc8a570865350eb6789",
+  "scenario_checksum": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
+  "status": "final",
+  "title": "《大禹治水：疏堵与协作》卷宗",
+  "ending_id": "ending-water-controlled",
+  "strategy_summary": "先勘察，再争取协作与资源保障，最后扩大疏导工程。",
+  "key_choices": [
+    {
+      "turn_id": "turn-dayu-001",
+      "turn_no": 1,
+      "action_id": "survey-terrain",
+      "choice": "先勘察地势和河道",
+      "consequence": "承受短期水患上升，换取工程认知。"
+    },
+    {
+      "turn_id": "turn-dayu-003",
+      "turn_no": 3,
+      "action_id": "open-channels",
+      "choice": "按勘察结果开挖疏导线",
+      "consequence": "降低水患并消耗劳力，同时遭遇暴雨事件。"
+    },
+    {
+      "turn_id": "turn-dayu-004",
+      "turn_no": 4,
+      "action_id": "allocate-food",
+      "choice": "分配粮食，保障参与工程的民众",
+      "consequence": "粮食下降，民心和协作提升并补充劳力。"
+    }
+  ],
+  "state_trajectory": [
+    {
+      "turn_no": 0,
+      "state": {
+        "flood_risk": 70.0,
+        "public_support": 55.0,
+        "food": 70.0,
+        "labor": 70.0,
+        "tribal_trust": 45.0,
+        "engineering_knowledge": 35.0
+      }
+    },
+    {
+      "turn_no": 1,
+      "state": {
+        "flood_risk": 75.0,
+        "public_support": 55.0,
+        "food": 70.0,
+        "labor": 70.0,
+        "tribal_trust": 45.0,
+        "engineering_knowledge": 50.0
+      }
+    },
+    {
+      "turn_no": 2,
+      "state": {
+        "flood_risk": 75.0,
+        "public_support": 65.0,
+        "food": 70.0,
+        "labor": 70.0,
+        "tribal_trust": 60.0,
+        "engineering_knowledge": 50.0
+      }
+    },
+    {
+      "turn_no": 3,
+      "state": {
+        "flood_risk": 60.0,
+        "public_support": 65.0,
+        "food": 70.0,
+        "labor": 58.0,
+        "tribal_trust": 60.0,
+        "engineering_knowledge": 60.0
+      }
+    },
+    {
+      "turn_no": 4,
+      "state": {
+        "flood_risk": 60.0,
+        "public_support": 75.0,
+        "food": 55.0,
+        "labor": 68.0,
+        "tribal_trust": 70.0,
+        "engineering_knowledge": 60.0
+      }
+    },
+    {
+      "turn_no": 5,
+      "state": {
+        "flood_risk": 35.0,
+        "public_support": 75.0,
+        "food": 55.0,
+        "labor": 56.0,
+        "tribal_trust": 70.0,
+        "engineering_knowledge": 70.0
+      }
+    }
+  ],
+  "major_costs": [
+    "粮食消耗 15",
+    "劳力净消耗 14",
+    "前期水患短暂上升"
+  ],
+  "historical_explanation": "【教师待审】本段只验证卷宗结构；正式历史解释必须由教师审校替换。",
+  "knowledge_nodes": [
+    {
+      "node_id": "node-method-choice",
+      "label": "工程方法选择",
+      "kind": "cause",
+      "summary": "勘察提高工程认知，使疏导行动可用。",
+      "source_ref_ids": [
+        "source-dayu-placeholder"
+      ]
+    },
+    {
+      "node_id": "node-social-cost",
+      "label": "公共动员代价",
+      "kind": "consequence",
+      "summary": "工程推进消耗粮食与劳力，需要维持民心和协作。",
+      "source_ref_ids": [
+        "source-dayu-placeholder"
+      ]
+    }
+  ],
+  "knowledge_edges": [
+    {
+      "edge_id": "edge-method-to-cost",
+      "source_node_id": "node-method-choice",
+      "target_node_id": "node-social-cost",
+      "relation": "伴随代价",
+      "explanation": "工程方法的落实需要持续的公共动员和资源投入。",
+      "source_ref_ids": [
+        "source-dayu-placeholder"
+      ]
+    }
+  ],
+  "follow_up_questions": [
+    "如果只追求快速降低水患，哪些变量可能先失控？"
+  ],
+  "reflection_notes": [
+    "技术样板反思占位，后续由学生或教师填写。"
+  ],
+  "fact_refs": [
+    "fact-flood-method",
+    "fact-public-mobilization",
+    "fact-cooperation"
+  ],
+  "source_ref_ids": [
+    "source-dayu-placeholder"
+  ],
+  "generated_at": "2026-07-14T02:25:00Z",
+  "checksum": "d6881b11ed60398c0310263f6f7bd6d4d58a6b5ba18ffbf76dac49d77258dfe2"
+}
