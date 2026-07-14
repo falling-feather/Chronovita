@@ -12,17 +12,35 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from settings import settings
-from routers import admin_content, common, courses, home, learning, practice, profile
+from routers import (
+    admin_content,
+    common,
+    courses,
+    game,
+    home,
+    learning,
+    practice,
+    profile,
+)
 from services import content, persistence
 from services.content import workflow as content_workflow
+from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     persistence.init_engine(settings.sqlite_path)
-    content.configure(settings.content_root)
-    content_workflow.recover_pending_release_transactions()
-    yield
+    try:
+        content.configure(settings.content_root)
+        content_workflow.recover_pending_release_transactions()
+        configure_game_runtime(
+            content_root=content.content_root(),
+            catalog_path=settings.game_catalog_path,
+        )
+        yield
+    finally:
+        shutdown_game_runtime()
+        persistence.close_engine()
 
 
 app = FastAPI(
@@ -48,6 +66,7 @@ app.include_router(home.router, prefix=f"{API_PREFIX}/home", tags=["home"])
 app.include_router(courses.router, prefix=f"{API_PREFIX}/courses", tags=["courses"])
 app.include_router(learning.router, prefix=f"{API_PREFIX}/learning", tags=["learning"])
 app.include_router(practice.router, prefix=f"{API_PREFIX}/practice", tags=["practice"])
+app.include_router(game.router, prefix=f"{API_PREFIX}/practice/game", tags=["game"])
 app.include_router(profile.router, prefix=f"{API_PREFIX}/profile", tags=["profile"])
 
 
@@ -56,7 +75,15 @@ async def root():
     return {
         "name": settings.app_name,
         "version": settings.app_version,
-        "modules": ["home", "courses", "learning", "practice", "profile", "admin-content"],
+        "modules": [
+            "home",
+            "courses",
+            "learning",
+            "practice",
+            "game-runtime",
+            "profile",
+            "admin-content",
+        ],
     }
 
 

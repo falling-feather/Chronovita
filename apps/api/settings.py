@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,6 +16,16 @@ class Settings(BaseSettings):
     content_root: str = "content"
     admin_token: str = ""
     admin_actor: str = "local-admin"
+    game_catalog_path: str = Field(
+        default="scenarios/catalog.v1.json",
+        min_length=1,
+    )
+    game_user_id: str = Field(
+        default="local-student",
+        min_length=2,
+        max_length=64,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]+$",
+    )
 
     # LLM 适配层
     llm_provider: str = "mock"  # mock | deepseek

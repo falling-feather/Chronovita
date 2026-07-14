@@ -1,0 +1,31 @@
+{
+  "schema_version": "scenario-catalog/v1",
+  "entries": [
+    {
+      "scenario_id": "scenario-dayu-flood-control",
+      "scenario_version": 1,
+      "scenario_checksum": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
+      "course_id": "C-early-civilization",
+      "lesson_id": "dayu-flood-control",
+      "course_content_version": 1,
+      "course_checksum": "e128e00b4ad604763bd522be2eca639b3fa00aae878c6dc8a570865350eb6789",
+      "course_path": "examples/v1/dayu-course-package.json",
+      "scenario_path": "examples/v1/dayu-scenario-template.json",
+      "active": true,
+      "audience": "development"
+    },
+    {
+      "scenario_id": "scenario-shangyang-institutional-reform",
+      "scenario_version": 1,
+      "scenario_checksum": "889a1bd7b788a2c51565631fb2b29b8b5712d82c3239da80304d9a449586fd81",
+      "course_id": "C-warring-states-reform",
+      "lesson_id": "shangyang-institutional-reform",
+      "course_content_version": 1,
+      "course_checksum": "7a4b754f5ed3da70d32fbbdb2d54055241e22c0eb5528061e0c18c95c84c0ddf",
+      "course_path": "examples/v1/shangyang-course-package.json",
+      "scenario_path": "examples/v1/shangyang-scenario-template.json",
+      "active": true,
+      "audience": "development"
+    }
+  ]
+}
