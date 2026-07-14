@@ -11,11 +11,27 @@ $WebDir = Join-Path $Root "apps\web"
 $Requirements = Join-Path $ApiDir "requirements.txt"
 $VenvDir = Join-Path $Root ".venv"
 $PythonExe = Join-Path $VenvDir "Scripts\python.exe"
+$ApiDepsStamp = Join-Path $VenvDir ".chronovita-api-requirements.sha256"
 $LogDir = Join-Path $Root ".teacher-editor-logs"
 $ApiOutLog = Join-Path $LogDir "api.out.log"
 $ApiErrLog = Join-Path $LogDir "api.err.log"
 $WebOutLog = Join-Path $LogDir "web.out.log"
 $WebErrLog = Join-Path $LogDir "web.err.log"
+
+if (-not $env:CHRONO_ADMIN_TOKEN) {
+  $tokenBytes = New-Object byte[] 32
+  $tokenGenerator = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  try {
+    $tokenGenerator.GetBytes($tokenBytes)
+  } finally {
+    $tokenGenerator.Dispose()
+  }
+  $env:CHRONO_ADMIN_TOKEN = [Convert]::ToBase64String($tokenBytes).TrimEnd("=").Replace("+", "-").Replace("/", "_")
+}
+$env:VITE_ADMIN_TOKEN = $env:CHRONO_ADMIN_TOKEN
+if (-not $env:CHRONO_ADMIN_ACTOR) {
+  $env:CHRONO_ADMIN_ACTOR = "local-admin"
+}
 
 function Write-Step {
   param([string] $Message)
@@ -26,6 +42,11 @@ function Write-Step {
 function Test-Command {
   param([string] $Name)
   return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
+}
+
+function Quote-ProcessArgument {
+  param([string] $Value)
+  return '"' + $Value + '"'
 }
 
 function Invoke-Checked {
@@ -106,9 +127,9 @@ function Ensure-PythonEnvironment {
   Write-Step "Preparing Python virtualenv"
 
   if (Test-Command "py") {
-    Invoke-Checked "Creating .venv with py -3" "py" @("-3", "-m", "venv", $VenvDir)
+    Invoke-Checked "Creating .venv with py -3" "py" @("-3", "-m", "venv", (Quote-ProcessArgument $VenvDir))
   } elseif (Test-Command "python") {
-    Invoke-Checked "Creating .venv with python" "python" @("-m", "venv", $VenvDir)
+    Invoke-Checked "Creating .venv with python" "python" @("-m", "venv", (Quote-ProcessArgument $VenvDir))
   } else {
     throw "Python was not found. Please install Python 3 and run this launcher again."
   }
@@ -123,9 +144,21 @@ function Ensure-ApiDependencies {
     throw "API requirements file was not found: $Requirements"
   }
 
+  $requirementsHash = (Get-FileHash -LiteralPath $Requirements -Algorithm SHA256).Hash
+  if (Test-Path $ApiDepsStamp) {
+    $installedHash = (Get-Content -LiteralPath $ApiDepsStamp -Raw).Trim()
+    if ($installedHash -eq $requirementsHash) {
+      & $PythonExe -c "import fastapi, uvicorn, pydantic_settings"
+      if ($LASTEXITCODE -eq 0) {
+        Write-Host "API dependencies found: $ApiDepsStamp"
+        return
+      }
+    }
+  }
+
   Write-Step "Installing API dependencies"
-  Invoke-Checked "Upgrading pip" $PythonExe @("-m", "pip", "install", "--upgrade", "pip")
-  Invoke-Checked "Installing apps\api requirements" $PythonExe @("-m", "pip", "install", "-r", $Requirements)
+  Invoke-Checked "Installing apps\api requirements" $PythonExe @("-m", "pip", "install", "-r", (Quote-ProcessArgument $Requirements))
+  Set-Content -LiteralPath $ApiDepsStamp -Value $requirementsHash -Encoding ASCII
 }
 
 function Ensure-WebDependencies {

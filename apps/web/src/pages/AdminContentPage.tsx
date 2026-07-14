@@ -6,6 +6,8 @@ import {
   BgColorsOutlined,
   BoldOutlined,
   BookOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
   DownloadOutlined,
   EyeOutlined,
   FileTextOutlined,
@@ -14,14 +16,20 @@ import {
   HighlightOutlined,
   LockOutlined,
   ReloadOutlined,
+  RocketOutlined,
+  RollbackOutlined,
+  SafetyCertificateOutlined,
   SaveOutlined,
+  SendOutlined,
   TagsOutlined,
 } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   api,
+  type ContentWorkflowRecord,
   type ContentAssetRecord,
   type ContentFileRecord,
+  type CourseReleaseManifest,
   type KeywordProfilePackage,
   type LessonContentPackage,
   type LessonSourceRecord,
@@ -40,6 +48,41 @@ const LOCAL_KEYWORD_KEY = 'chrono.admin.content.keyword.v1';
 type EditorMode = 'lesson' | 'person' | 'keyword';
 type BodyInlineFormat = 'bold' | 'highlight' | 'keyword' | 'red' | 'blue' | 'gold' | 'large' | 'small';
 type BodyBlockFormat = 'paragraph' | 'heading1' | 'heading2' | 'heading3' | 'focus' | 'question' | 'goal';
+
+const WORKFLOW_STATE_META: Record<ContentWorkflowRecord['state'], { label: string; color: string }> = {
+  draft: { label: '草稿', color: 'default' },
+  validated: { label: '校验通过', color: 'cyan' },
+  in_review: { label: '待审', color: 'gold' },
+  changes_requested: { label: '已退回', color: 'orange' },
+  approved: { label: '审校通过', color: 'green' },
+  sealed: { label: '已封存', color: 'blue' },
+  published: { label: '已发布', color: 'green' },
+};
+
+const VALIDATION_ISSUE_TEXT: Record<string, string> = {
+  required_text: '标题、单元和时代均需填写。',
+  body_required: '至少需要一段有效正文。',
+  body_depth: '建议主课文至少包含三段正文。',
+  keywords_required: '至少需要一个关键词。',
+  keyword_incomplete: '每个关键词都需要词语和面向学生的释义。',
+  keyword_depth: '建议主课文准备五个关键词。',
+  duplicate_keywords: '关键词中存在重复项。',
+  people_required: '至少需要一位相关历史人物。',
+  person_incomplete: '每位人物都需要姓名和面向学生的简介。',
+  person_ai_boundary: '建议补充人物 persona 与时代边界，供后续人物智能体使用。',
+  people_depth: '建议主课文准备两位相关人物。',
+  duplicate_people: '人物列表中存在重复项。',
+  facts_required: '至少需要一条可约束 AI 的史实边界。',
+  facts_depth: '建议主课文准备五条史实边界。',
+  sources_required: '至少需要一条可复核参考资料。',
+  source_incomplete: '每条资料都需要标题，以及来源或链接/路径。',
+  sources_depth: '建议主课文准备两条独立资料。',
+  qa_points_missing: '建议补充可问答知识点。',
+  level_goals_missing: '建议补充学习或关卡目标。',
+  map_points_missing: '涉及空间关系时，建议补充地图点。',
+  interactive_objective_missing: '建议预留 saga 或 sandbox 的互动目标。',
+  v1_contract: '内容无法转换为课程运行契约，请检查字段。',
+};
 
 interface TextSelectionRange {
   start: number;
@@ -296,10 +339,13 @@ function parseKeywordLine(line: string) {
   const parts = line.includes('|')
     ? line.split('|').map((item) => item.trim())
     : line.split(/[：:]/).map((item) => item.trim());
+  const hasPinyinColumn = line.includes('|') && parts.length >= 3;
   return {
     word: parts[0] || line.trim(),
-    pinyin: line.includes('|') ? parts[1] || '' : '',
-    gloss: line.includes('|') ? parts.slice(2).join(' | ') : parts.slice(1).join(': '),
+    pinyin: hasPinyinColumn ? parts[1] || '' : '',
+    gloss: line.includes('|')
+      ? parts.slice(hasPinyinColumn ? 2 : 1).join(' | ')
+      : parts.slice(1).join(': '),
   };
 }
 
@@ -683,15 +729,29 @@ function formatBodyLine(line: string, format: BodyBlockFormat): string {
   return `目标：${clean || '关卡目标'}`;
 }
 
+function isNotFoundError(error: unknown): boolean {
+  return error instanceof Error && error.message.startsWith('404 ');
+}
+
+function releaseOperationLabel(operation: CourseReleaseManifest['operation']): string {
+  if (operation === 'bootstrap') return '初始快照';
+  if (operation === 'rollback') return '回滚快照';
+  return '正式发布';
+}
+
 export default function AdminContentPage() {
   const navigate = useNavigate();
   const [editorMode, setEditorMode] = useState<EditorMode>('lesson');
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || 'dev-admin-token');
-  const [sealedBy, setSealedBy] = useState('admin');
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || import.meta.env.VITE_ADMIN_TOKEN || '');
   const [editor, setEditor] = useState<EditorState>(() => readLocalEditor());
   const [personEditor, setPersonEditor] = useState<PersonEditorState>(() => readLocalPersonEditor());
   const [keywordEditor, setKeywordEditor] = useState<KeywordEditorState>(() => readLocalKeywordEditor());
   const [preview, setPreview] = useState<LessonContentPackage | null>(null);
+  const [workflow, setWorkflow] = useState<ContentWorkflowRecord | null>(null);
+  const [releases, setReleases] = useState<CourseReleaseManifest[]>([]);
+  const [currentRelease, setCurrentRelease] = useState<CourseReleaseManifest | null>(null);
+  const [selectedRelease, setSelectedRelease] = useState<string>();
+  const [reviewNote, setReviewNote] = useState('');
   const [drafts, setDrafts] = useState<ContentFileRecord[]>([]);
   const [sourceLessons, setSourceLessons] = useState<LessonSourceRecord[]>([]);
   const [assets, setAssets] = useState<ContentAssetRecord[]>([]);
@@ -708,6 +768,11 @@ export default function AdminContentPage() {
   const bodyTextAreaRef = useRef<TextAreaRef | null>(null);
   const bodySelectionRef = useRef<TextSelectionRange>({ start: 0, end: 0 });
   const [bodyContextMenu, setBodyContextMenu] = useState<BodyContextMenuState | null>(null);
+  const activeWorkflow = workflow?.lesson_id === editor.lesson_id
+    && workflow.course_id === editor.course_id
+    ? workflow
+    : null;
+  const activeRelease = currentRelease?.course_id === editor.course_id ? currentRelease : null;
 
   const currentPayload = useMemo(() => {
     try {
@@ -912,6 +977,63 @@ export default function AdminContentPage() {
     }
   };
 
+  const clearReleaseState = () => {
+    setWorkflow(null);
+    setReleases([]);
+    setCurrentRelease(null);
+    setSelectedRelease(undefined);
+    setReviewNote('');
+  };
+
+  const refreshReleaseState = async (courseId: string) => {
+    if (!token || !courseId) {
+      setReleases([]);
+      setCurrentRelease(null);
+      return;
+    }
+    const currentPromise = api.adminContentCurrentRelease(token, courseId)
+      .then((response) => response.release)
+      .catch((error: unknown) => {
+        if (isNotFoundError(error)) return null;
+        throw error;
+      });
+    const [history, current] = await Promise.all([
+      api.adminContentReleases(token, courseId),
+      currentPromise,
+    ]);
+    setReleases(history.items);
+    setCurrentRelease(current);
+    setSelectedRelease((selected) => (
+      selected && history.items.some((item) => item.release_id === selected)
+        ? selected
+        : undefined
+    ));
+  };
+
+  const refreshWorkflowState = async (lessonId: string, courseId: string) => {
+    if (!token || !lessonId) {
+      clearReleaseState();
+      return;
+    }
+    const workflowPromise = api.adminContentWorkflow(token, lessonId)
+      .then((response) => response.workflow)
+      .catch((error: unknown) => {
+        if (isNotFoundError(error)) return null;
+        throw error;
+      });
+    const [nextWorkflow] = await Promise.all([
+      workflowPromise,
+      refreshReleaseState(courseId),
+    ]);
+    setWorkflow(nextWorkflow);
+  };
+
+  useEffect(() => {
+    void refreshWorkflowState(editor.lesson_id, editor.course_id);
+    // The initial local draft is reconciled once; later lesson switches load explicitly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const createNew = () => {
     const item = newEditor();
     setEditor(item);
@@ -919,6 +1041,7 @@ export default function AdminContentPage() {
     setSelectedDraft(undefined);
     setSealedPath('');
     setServerSavedAt('');
+    clearReleaseState();
     toast.success('新内容已创建');
   };
 
@@ -930,6 +1053,7 @@ export default function AdminContentPage() {
       setPreview(item);
       setSelectedDraft(undefined);
       setSealedPath('');
+      clearReleaseState();
       toast.success('模板已载入');
     } catch (err: any) {
       toast.error(err?.message || '模板载入失败');
@@ -948,6 +1072,7 @@ export default function AdminContentPage() {
       setSelectedDraft(undefined);
       setSealedPath('');
       setServerSavedAt('');
+      clearReleaseState();
       toast.success('已读取课程初稿');
     } catch (err: any) {
       toast.error(err?.message || '课程初稿读取失败');
@@ -1023,6 +1148,7 @@ export default function AdminContentPage() {
       setPreview(item);
       setSealedPath('');
       setServerSavedAt(item.updated_at ? new Date(item.updated_at).toLocaleString() : '');
+      await refreshWorkflowState(item.lesson_id, item.course_id || '');
       toast.success('草稿已打开');
     } catch (err: any) {
       toast.error(err?.message || '草稿打开失败');
@@ -1051,6 +1177,7 @@ export default function AdminContentPage() {
       section: blueprint.section,
       lesson_no: blueprint.lesson_no,
     });
+    clearReleaseState();
     toast.success('课程规划已填入');
   };
 
@@ -1071,18 +1198,87 @@ export default function AdminContentPage() {
     }
   };
 
+  const persistCurrentDraft = async () => {
+    const payload = buildPayload(editor);
+    const res = await api.adminContentSaveDraft(token, payload);
+    setPreview(res.item);
+    setWorkflow(res.workflow);
+    setServerSavedAt(
+      res.item.updated_at
+        ? new Date(res.item.updated_at).toLocaleString()
+        : new Date().toLocaleString(),
+    );
+    setSealedPath('');
+    const draftList = await api.adminContentDrafts(token);
+    setDrafts(draftList.items);
+    return { payload, response: res };
+  };
+
   const saveDraft = async () => {
     setBusy('save');
     try {
-      const payload = buildPayload(editor);
-      const res = await api.adminContentSaveDraft(token, payload);
-      setPreview(res.item);
-      setServerSavedAt(res.item.updated_at ? new Date(res.item.updated_at).toLocaleString() : new Date().toLocaleString());
-      setSealedPath('');
-      await refreshDrafts();
+      await persistCurrentDraft();
       toast.success('草稿已保存');
     } catch (err: any) {
       toast.error(err?.message || '草稿保存失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const validateDraft = async () => {
+    setBusy('validate');
+    try {
+      const { payload } = await persistCurrentDraft();
+      const res = await api.adminContentValidate(
+        token,
+        payload.lesson_id,
+      );
+      setWorkflow(res.workflow);
+      await refreshReleaseState(payload.course_id || '');
+      if (res.report?.valid) {
+        toast.success('最低发布校验已通过');
+      } else {
+        toast.warning('仍有阻断项，请按校验结果补充内容');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || '内容校验失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const submitReview = async () => {
+    setBusy('submit-review');
+    try {
+      const { payload } = await persistCurrentDraft();
+      const res = await api.adminContentSubmitReview(
+        token,
+        payload.lesson_id,
+        reviewNote,
+      );
+      setWorkflow(res.workflow);
+      toast.success('已提交审校');
+    } catch (err: any) {
+      toast.error(err?.message || '提交审校失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const reviewDraft = async (decision: 'approve' | 'changes_requested') => {
+    setBusy(decision === 'approve' ? 'approve' : 'request-changes');
+    try {
+      const res = await api.adminContentReview(
+        token,
+        editor.lesson_id,
+        decision,
+        reviewNote,
+      );
+      setWorkflow(res.workflow);
+      toast.success(decision === 'approve' ? '审校已通过' : '已退回修改');
+    } catch (err: any) {
+      toast.error(err?.message || '审校操作失败');
     } finally {
       setBusy('');
     }
@@ -1123,17 +1319,61 @@ export default function AdminContentPage() {
   const sealDraft = async () => {
     setBusy('seal');
     try {
-      const payload = buildPayload(editor);
-      await api.adminContentSaveDraft(token, payload);
-      const res = await api.adminContentSeal(token, payload.lesson_id, sealedBy || 'admin');
+      const { payload } = await persistCurrentDraft();
+      const res = await api.adminContentSeal(
+        token,
+        payload.lesson_id,
+      );
       setPreview(res.item);
+      setWorkflow(res.workflow);
       setSealedPath(res.record.path);
       setServerSavedAt(res.item.updated_at ? new Date(res.item.updated_at).toLocaleString() : new Date().toLocaleString());
-      await refreshDrafts();
-      exportContentBundle(res.item);
-      toast.success('内容已封存');
+      await refreshReleaseState(payload.course_id || '');
+      toast.success('内容已封存，发布后学生端才会更新');
     } catch (err: any) {
       toast.error(err?.message || '封存失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const publishSealed = async () => {
+    if (!activeWorkflow?.sealed_version) return;
+    setBusy('publish');
+    try {
+      const res = await api.adminContentPublish(
+        token,
+        activeWorkflow.lesson_id,
+        activeWorkflow.sealed_version,
+        reviewNote,
+      );
+      if (res.workflow) setWorkflow(res.workflow);
+      setCurrentRelease(res.release);
+      await refreshReleaseState(activeWorkflow.course_id);
+      toast.success(`已发布课程版本 ${res.release.release_no}`);
+    } catch (err: any) {
+      toast.error(err?.message || '发布失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const rollbackRelease = async () => {
+    if (!selectedRelease || !activeWorkflow) return;
+    setBusy('rollback');
+    try {
+      const res = await api.adminContentRollback(
+        token,
+        activeWorkflow.course_id,
+        selectedRelease,
+        reviewNote,
+      );
+      setCurrentRelease(res.release);
+      await refreshWorkflowState(activeWorkflow.lesson_id, activeWorkflow.course_id);
+      setSelectedRelease(undefined);
+      toast.success(`已回滚并生成发布版本 ${res.release.release_no}`);
+    } catch (err: any) {
+      toast.error(err?.message || '回滚失败');
     } finally {
       setBusy('');
     }
@@ -1182,12 +1422,6 @@ export default function AdminContentPage() {
             value={token}
             onChange={(event) => rememberToken(event.target.value)}
             style={{ width: 220 }}
-          />
-          <Input
-            aria-label="Sealed by"
-            value={sealedBy}
-            onChange={(event) => setSealedBy(event.target.value)}
-            style={{ width: 140 }}
           />
         </Space>
       </div>
@@ -1472,7 +1706,6 @@ export default function AdminContentPage() {
             <Button icon={<ReloadOutlined />} onClick={parseFocusBlocks}>解析重点</Button>
             <Button icon={<EyeOutlined />} loading={busy === 'preview'} onClick={previewContent}>预览</Button>
             <Button type="primary" icon={<SaveOutlined />} loading={busy === 'save'} onClick={saveDraft}>保存草稿</Button>
-            <Button danger icon={<LockOutlined />} loading={busy === 'seal'} onClick={sealDraft}>封存</Button>
             <Button icon={<DownloadOutlined />} onClick={exportCurrent}>导出文件包</Button>
           </Space>
 
@@ -1483,8 +1716,8 @@ export default function AdminContentPage() {
                 <p><strong>课程 ID</strong>：同一门课共用，例如 <code>C-qin-han</code>。选“课程规划”会自动填写。</p>
                 <p><strong>课时 ID</strong>：每节课唯一，只用英文、数字、短横线；封存文件会用它命名。</p>
                 <p><strong>正文语法</strong>：优先用正文上方工具条或右键快捷菜单；底层会写成 <code>【关键词】</code>、<code>**加粗**</code>、<code>==标红==</code>、<code>{'{{红色:文字}}'}</code>、<code>{'{{大字:文字}}'}</code>、<code>## 标题</code>，封存和导出会保留这些格式层标记。</p>
-                <p><strong>人物/地图点/资料</strong>：一行一条，用 <code>|</code> 分列。人物：姓名 | 身份 | 摘要 | persona。地图：地点 | 区域 | 说明 | 类型。资料：标题 | 来源 | 链接 | 引文说明。</p>
-                <p><strong>保存草稿</strong>：写入 <code>content/drafts</code>，可在草稿库重新打开。<strong>封存</strong>：生成版本文件并导出内容层、格式层和 HTML 预览。</p>
+                <p><strong>关键词</strong>：一行一条，可写“词语 | 释义”或“词语 | 拼音 | 释义”。<strong>人物/地图点/资料</strong>同样一行一条，用 <code>|</code> 分列。人物：姓名 | 身份 | 摘要 | persona。地图：地点 | 区域 | 说明 | 类型。资料：标题 | 来源 | 链接 | 引文说明。</p>
+                <p><strong>保存草稿</strong>：写入 <code>content/drafts</code>，可在草稿库重新打开。内容需依次完成校验、审校通过和封存；只有点击发布后，学生课程页才会更新。</p>
                 <div style={{ marginTop: 8 }}>
                   <strong>时代写作要求</strong>
                   <ul style={{ paddingLeft: 18, margin: '6px 0 0' }}>
@@ -1496,6 +1729,132 @@ export default function AdminContentPage() {
               </div>
             </div>
           )}
+
+          <div style={{ borderTop: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)', padding: '12px 0', marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
+              <div className="chrono-course-eyeline">审校与发布</div>
+              <Space size={[6, 6]} wrap>
+                {activeWorkflow ? (
+                  <Tag color={WORKFLOW_STATE_META[activeWorkflow.state].color}>
+                    {WORKFLOW_STATE_META[activeWorkflow.state].label}
+                  </Tag>
+                ) : (
+                  <Tag>尚未保存</Tag>
+                )}
+                {activeWorkflow && <Tag>修订 {activeWorkflow.revision}</Tag>}
+                {activeWorkflow?.sealed_version && <Tag color="blue">封存 v{activeWorkflow.sealed_version}</Tag>}
+                {activeWorkflow?.published_version && <Tag color="green">线上 v{activeWorkflow.published_version}</Tag>}
+              </Space>
+            </div>
+
+            <Space size={[6, 8]} wrap style={{ marginBottom: 10 }}>
+              <Button
+                icon={<SafetyCertificateOutlined />}
+                loading={busy === 'validate'}
+                onClick={validateDraft}
+              >
+                校验
+              </Button>
+              <Button
+                icon={<SendOutlined />}
+                loading={busy === 'submit-review'}
+                disabled={!activeWorkflow || !['validated', 'changes_requested'].includes(activeWorkflow.state)}
+                onClick={submitReview}
+              >
+                提交审校
+              </Button>
+              <Button
+                icon={<CheckCircleOutlined />}
+                loading={busy === 'approve'}
+                disabled={activeWorkflow?.state !== 'in_review'}
+                onClick={() => reviewDraft('approve')}
+              >
+                通过
+              </Button>
+              <Button
+                danger
+                icon={<CloseCircleOutlined />}
+                loading={busy === 'request-changes'}
+                disabled={activeWorkflow?.state !== 'in_review' || !reviewNote.trim()}
+                onClick={() => reviewDraft('changes_requested')}
+              >
+                退回
+              </Button>
+              <Button
+                icon={<LockOutlined />}
+                loading={busy === 'seal'}
+                disabled={activeWorkflow?.state !== 'approved'}
+                onClick={sealDraft}
+              >
+                封存
+              </Button>
+              <Button
+                type="primary"
+                icon={<RocketOutlined />}
+                loading={busy === 'publish'}
+                disabled={activeWorkflow?.state !== 'sealed' || !activeWorkflow.sealed_version}
+                onClick={publishSealed}
+              >
+                发布
+              </Button>
+            </Space>
+
+            <TextArea
+              aria-label="审校与发布备注"
+              placeholder="审校或发布备注；退回时必须填写"
+              autoSize={{ minRows: 2, maxRows: 4 }}
+              value={reviewNote}
+              onChange={(event) => setReviewNote(event.target.value)}
+              style={{ marginBottom: 10 }}
+            />
+
+            {activeWorkflow?.validation?.issues && activeWorkflow.validation.issues.length > 0 && (
+              <div style={{ display: 'grid', gap: 6, marginBottom: 10 }}>
+                {activeWorkflow.validation.issues.map((issue, index) => (
+                  <div key={`${issue.code}-${issue.field}-${index}`} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', fontSize: 12, lineHeight: 1.55 }}>
+                    <Tag color={issue.severity === 'error' ? 'red' : 'gold'} style={{ margin: 0 }}>
+                      {issue.severity === 'error' ? '阻断' : '建议'}
+                    </Tag>
+                    <span>
+                      <code>{issue.field}</code>：{VALIDATION_ISSUE_TEXT[issue.code] || issue.message}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              {activeRelease ? (
+                <Tag color="green">当前发布 #{activeRelease.release_no} · {releaseOperationLabel(activeRelease.operation)}</Tag>
+              ) : (
+                <Tag>暂无课程发布清单</Tag>
+              )}
+              <Select
+                aria-label="历史发布版本"
+                placeholder="选择历史发布版本"
+                value={selectedRelease}
+                onChange={setSelectedRelease}
+                style={{ flex: '1 1 220px', minWidth: 0 }}
+                options={releases
+                  .filter((item) => item.release_id !== activeRelease?.release_id)
+                  .slice()
+                  .reverse()
+                  .map((item) => ({
+                    value: item.release_id,
+                    label: `#${item.release_no} · ${releaseOperationLabel(item.operation)} · ${item.items.length} 节`,
+                  }))}
+              />
+              <Button
+                danger
+                icon={<RollbackOutlined />}
+                loading={busy === 'rollback'}
+                disabled={!selectedRelease || !activeWorkflow}
+                onClick={rollbackRelease}
+              >
+                回滚
+              </Button>
+            </div>
+          </div>
 
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             <Select
@@ -1525,13 +1884,14 @@ export default function AdminContentPage() {
           {sealedPath && (
             <div style={{ marginBottom: 12 }}>
               <Tag color="green">{sealedPath}</Tag>
-              {preview && (
-                <div style={{ marginTop: 8 }}>
-                  <Link to={`/courses/${preview.course_id || 'C-content-studio'}/lessons/${preview.lesson_id}?layer=watch`}>
-                    打开课程页
-                  </Link>
-                </div>
-              )}
+            </div>
+          )}
+
+          {activeWorkflow?.published_version && (
+            <div style={{ marginBottom: 12 }}>
+              <Link to={`/courses/${activeWorkflow.course_id}/lessons/${activeWorkflow.lesson_id}?layer=watch`}>
+                打开已发布课程页 v{activeWorkflow.published_version}
+              </Link>
             </div>
           )}
 

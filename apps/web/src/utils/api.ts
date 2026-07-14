@@ -9,7 +9,17 @@ async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
       ...(init?.headers || {}),
     },
   });
-  if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+  if (!r.ok) {
+    const raw = await r.text();
+    let message = raw;
+    try {
+      const parsed = JSON.parse(raw) as { detail?: string | { message?: string } };
+      message = typeof parsed.detail === 'string' ? parsed.detail : parsed.detail?.message || raw;
+    } catch {
+      // Keep the raw response when an upstream proxy does not return JSON.
+    }
+    throw new Error(`${r.status} ${message}`);
+  }
   return r.json() as Promise<T>;
 }
 
@@ -62,6 +72,46 @@ export interface ContentFileRecord {
   lesson_id: string; title: string; status: string; version: number; path: string;
   updated_at?: string | null; sealed_at?: string | null; sealed_by?: string | null; checksum?: string | null;
 }
+export type ContentWorkflowState =
+  | 'draft'
+  | 'validated'
+  | 'in_review'
+  | 'changes_requested'
+  | 'approved'
+  | 'sealed'
+  | 'published';
+export interface ContentValidationIssue {
+  code: string; severity: 'error' | 'warning'; field: string; message: string;
+}
+export interface ContentValidationReport {
+  schema_version: string; validator_version: string; lesson_id: string;
+  draft_fingerprint: string; valid: boolean; issues: ContentValidationIssue[];
+  validated_at: string; validated_by: string;
+}
+export interface ContentWorkflowRecord {
+  lesson_id: string; course_id: string; state: ContentWorkflowState; revision: number;
+  draft_fingerprint: string; validation?: ContentValidationReport | null;
+  sealed_version?: number | null; sealed_checksum?: string | null;
+  published_course_id?: string | null; published_version?: number | null;
+  published_release_id?: string | null; updated_at: string; checksum: string;
+}
+export interface CourseReleaseItem {
+  lesson_id: string; course_id: string; content_version: number;
+  source_path: string; source_checksum: string; package_path: string;
+  package_checksum: string; package_schema: string;
+}
+export interface CourseReleaseManifest {
+  schema_version: string; release_id: string; release_no: number; course_id: string;
+  operation: 'bootstrap' | 'publish' | 'rollback'; parent_release_id?: string | null;
+  restored_from_release_id?: string | null; created_at: string; created_by: string;
+  note: string; items: CourseReleaseItem[]; checksum: string;
+}
+export interface WorkflowResponse {
+  workflow: ContentWorkflowRecord; report?: ContentValidationReport | null;
+}
+export interface ReleaseResponse {
+  release: CourseReleaseManifest; workflow?: ContentWorkflowRecord | null;
+}
 export interface LessonSourceRecord {
   lesson_id: string; course_id: string; course_title: string; title: string;
   lesson_no: string; era_id: string; era: string; source: string;
@@ -91,6 +141,7 @@ export interface Lesson {
   saga_material?: MaterialPlaceholder | null; sandbox_material?: MaterialPlaceholder | null;
   content_status?: string; content_version?: number; sealed_at?: string | null; sealed_by?: string | null;
   content_checksum?: string | null;
+  release_id?: string | null; release_no?: number | null; release_checksum?: string | null;
 }
 
 export const api = {
@@ -132,13 +183,64 @@ export const api = {
   adminContentPreview: (token: string, body: LessonContentPackage) =>
     adminFetch<{ item: LessonContentPackage }>(token, '/admin/content/preview', { method: 'POST', body: JSON.stringify(body) }),
   adminContentSaveDraft: (token: string, body: LessonContentPackage) =>
-    adminFetch<{ item: LessonContentPackage }>(token, '/admin/content/drafts', { method: 'POST', body: JSON.stringify(body) }),
-  adminContentSeal: (token: string, lesson_id: string, sealed_by: string) =>
-    adminFetch<{ item: LessonContentPackage; record: { path: string } }>(
+    adminFetch<{ item: LessonContentPackage; workflow: ContentWorkflowRecord }>(
+      token,
+      '/admin/content/drafts',
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
+  adminContentWorkflow: (token: string, lesson_id: string) =>
+    adminFetch<WorkflowResponse>(token, `/admin/content/drafts/${lesson_id}/workflow`),
+  adminContentValidate: (token: string, lesson_id: string) =>
+    adminFetch<WorkflowResponse>(token, `/admin/content/drafts/${lesson_id}/validate`, {
+      method: 'POST', body: JSON.stringify({}),
+    }),
+  adminContentSubmitReview: (token: string, lesson_id: string, note: string) =>
+    adminFetch<WorkflowResponse>(token, `/admin/content/drafts/${lesson_id}/submit-review`, {
+      method: 'POST', body: JSON.stringify({ note }),
+    }),
+  adminContentReview: (
+    token: string,
+    lesson_id: string,
+    decision: 'approve' | 'changes_requested',
+    note: string,
+  ) => adminFetch<WorkflowResponse>(token, `/admin/content/drafts/${lesson_id}/review`, {
+    method: 'POST', body: JSON.stringify({ decision, note }),
+  }),
+  adminContentSeal: (token: string, lesson_id: string) =>
+    adminFetch<{
+      item: LessonContentPackage;
+      record: { path: string };
+      workflow: ContentWorkflowRecord;
+    }>(
       token,
       `/admin/content/drafts/${lesson_id}/seal`,
-      { method: 'POST', body: JSON.stringify({ sealed_by }) },
+      { method: 'POST', body: JSON.stringify({}) },
     ),
+  adminContentPublish: (
+    token: string,
+    lesson_id: string,
+    version: number,
+    note: string,
+  ) => adminFetch<ReleaseResponse>(
+    token,
+    `/admin/content/sealed/${lesson_id}/versions/${version}/publish`,
+    { method: 'POST', body: JSON.stringify({ note }) },
+  ),
+  adminContentReleases: (token: string, course_id: string) =>
+    adminFetch<{ items: CourseReleaseManifest[] }>(
+      token,
+      `/admin/content/releases?course_id=${encodeURIComponent(course_id)}`,
+    ),
+  adminContentCurrentRelease: (token: string, course_id: string) =>
+    adminFetch<ReleaseResponse>(token, `/admin/content/releases/${course_id}/current`),
+  adminContentRollback: (
+    token: string,
+    course_id: string,
+    target_release_id: string,
+    note: string,
+  ) => adminFetch<ReleaseResponse>(token, `/admin/content/releases/${course_id}/rollback`, {
+    method: 'POST', body: JSON.stringify({ note, target_release_id }),
+  }),
   adminContentAssets: (token: string, kind?: 'person' | 'keyword') =>
     adminFetch<{ items: ContentAssetRecord[] }>(token, `/admin/content/assets${kind ? `?kind=${kind}` : ''}`),
   adminPersonTemplate: (token: string) => adminFetch<PersonProfilePackage>(token, '/admin/content/assets/people/template'),

@@ -4,7 +4,12 @@ import { LinkOutlined, PlayCircleOutlined, SoundOutlined } from '@ant-design/ico
 import type { Lesson } from '../../utils/api';
 import { parseContentBlock, renderContentMarkup } from '../../utils/contentMarkup';
 import { toast } from '../../utils/toast';
-import { BILIBILI_PLACEHOLDER, uiAssets } from '../p0Route';
+
+const BILIBILI_PLACEHOLDER = {
+  title: '课程视频',
+  url: 'https://www.bilibili.com/video/BV1jCpwz3Eir/',
+  embedUrl: 'https://player.bilibili.com/player.html?bvid=BV1jCpwz3Eir&page=1&high_quality=1&autoplay=0',
+};
 
 function renderBodyBlock(paragraph: string, index: number) {
   const block = parseContentBlock(paragraph);
@@ -40,7 +45,7 @@ export default function LessonWatch({ lesson }: { lesson: Lesson }) {
         <div className="chrono-card-dark" style={{ padding: 0, overflow: 'hidden', marginBottom: 16 }}>
           <div
             className="chrono-video-shell"
-            style={{ backgroundImage: `linear-gradient(135deg, rgba(7,27,47,.58), rgba(46,111,113,.36)), url(${uiAssets.liangzhuCover})` }}
+            style={{ backgroundColor: '#102c36' }}
           >
             <iframe
               title={BILIBILI_PLACEHOLDER.title}

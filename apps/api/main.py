@@ -14,12 +14,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from settings import settings
 from routers import admin_content, common, courses, home, learning, practice, profile
 from services import content, persistence
+from services.content import workflow as content_workflow
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     persistence.init_engine(settings.sqlite_path)
     content.configure(settings.content_root)
+    content_workflow.recover_pending_release_transactions()
     yield
 
 

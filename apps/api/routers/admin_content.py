@@ -1,23 +1,68 @@
 from __future__ import annotations
 
-from typing import Annotated, Literal
+import secrets
+from typing import Annotated, Literal, NoReturn
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from settings import settings
 from services import content
 from services import courses as courses_data
 from services.content import KeywordProfilePackage, LessonContentPackage, PersonProfilePackage
+from services.content import workflow as content_workflow
 
 router = APIRouter()
 
 
-class SealRequest(BaseModel):
-    sealed_by: str = "admin"
+class ApiModel(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 
-class LessonSourceRecord(BaseModel):
+class ActorRequest(ApiModel):
+    actor: str | None = Field(
+        default=None,
+        max_length=80,
+        description="Optional display label; audit identity comes from authentication.",
+    )
+    note: str = Field(default="", max_length=2000)
+
+
+class SealRequest(ApiModel):
+    sealed_by: str | None = Field(
+        default=None,
+        max_length=80,
+        description="Legacy display label; audit identity comes from authentication.",
+    )
+
+
+class ReviewRequest(ActorRequest):
+    decision: Literal["approve", "changes_requested"]
+
+
+class RollbackRequest(ActorRequest):
+    target_release_id: str | None = None
+
+
+class LegacyBootstrapRequest(ActorRequest):
+    selections: list[content_workflow.LegacyReleaseSelection] = Field(min_length=1)
+
+
+class WorkflowResponse(ApiModel):
+    workflow: content_workflow.ContentWorkflowRecord
+    report: content_workflow.ContentValidationReport | None = None
+
+
+class ReleaseResponse(ApiModel):
+    release: content_workflow.CourseReleaseManifest
+    workflow: content_workflow.ContentWorkflowRecord | None = None
+
+
+class ReleaseListResponse(ApiModel):
+    items: list[content_workflow.CourseReleaseManifest]
+
+
+class LessonSourceRecord(ApiModel):
     lesson_id: str
     course_id: str
     course_title: str = ""
@@ -38,31 +83,40 @@ def require_admin(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Admin token is not configured.",
         )
-    if token != settings.admin_token:
+    if token is None or not secrets.compare_digest(token, settings.admin_token):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin token required.")
-    return "admin"
+    return settings.admin_actor
 
 
 @router.get("/")
 async def overview(_: str = Depends(require_admin)):
-    return {
-        "auth": "temporary-token",
-        "content_root": str(content.content_root()),
-        "drafts": len(content.list_drafts()),
-        "sealed": len(content.list_sealed()),
-        "endpoints": [
-            "GET /api/v1/admin/content/template",
-            "GET /api/v1/admin/content/source-lessons",
-            "GET /api/v1/admin/content/source-lessons/{lesson_id}",
-            "POST /api/v1/admin/content/drafts",
-            "PUT /api/v1/admin/content/drafts/{lesson_id}",
-            "POST /api/v1/admin/content/preview",
-            "POST /api/v1/admin/content/drafts/{lesson_id}/seal",
-            "GET /api/v1/admin/content/assets",
-            "POST /api/v1/admin/content/assets/people",
-            "POST /api/v1/admin/content/assets/keywords",
-        ],
-    }
+    try:
+        return {
+            "auth": "temporary-token",
+            "content_root": str(content.content_root()),
+            "drafts": len(content.list_drafts()),
+            "sealed": len(content.list_sealed()),
+            "endpoints": [
+                "GET /api/v1/admin/content/template",
+                "GET /api/v1/admin/content/source-lessons",
+                "GET /api/v1/admin/content/source-lessons/{lesson_id}",
+                "POST /api/v1/admin/content/drafts",
+                "PUT /api/v1/admin/content/drafts/{lesson_id}",
+                "POST /api/v1/admin/content/preview",
+                "POST /api/v1/admin/content/drafts/{lesson_id}/validate",
+                "POST /api/v1/admin/content/drafts/{lesson_id}/submit-review",
+                "POST /api/v1/admin/content/drafts/{lesson_id}/review",
+                "POST /api/v1/admin/content/drafts/{lesson_id}/seal",
+                "POST /api/v1/admin/content/sealed/{lesson_id}/versions/{version}/publish",
+                "POST /api/v1/admin/content/releases/{course_id}/bootstrap-legacy",
+                "POST /api/v1/admin/content/releases/{course_id}/rollback",
+                "GET /api/v1/admin/content/assets",
+                "POST /api/v1/admin/content/assets/people",
+                "POST /api/v1/admin/content/assets/keywords",
+            ],
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 @router.get("/template")
@@ -82,29 +136,53 @@ async def source_lessons(_: str = Depends(require_admin)):
 
 @router.get("/source-lessons/{lesson_id}")
 async def source_lesson_detail(lesson_id: str, _: str = Depends(require_admin)):
-    lesson = courses_data.get_lesson(lesson_id)
-    if lesson is None or lesson.content_status != "builtin":
+    lesson = courses_data.get_builtin_lesson(lesson_id)
+    if lesson is None:
         raise HTTPException(status_code=404, detail="Source lesson not found.")
     return _lesson_to_content_package(lesson).model_dump(mode="json")
 
 
 @router.get("/drafts")
 async def drafts(_: str = Depends(require_admin)):
-    return {"items": [item.model_dump(mode="json") for item in content.list_drafts()]}
+    try:
+        return {"items": [item.model_dump(mode="json") for item in content.list_drafts()]}
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 @router.get("/drafts/{lesson_id}")
 async def draft_detail(lesson_id: str, _: str = Depends(require_admin)):
-    draft = content.get_draft(lesson_id)
-    if draft is None:
-        raise HTTPException(status_code=404, detail="Draft not found.")
-    return draft.model_dump(mode="json")
+    try:
+        draft = content.get_draft(lesson_id)
+        if draft is None:
+            raise content_workflow.ContentNotFound(f"Draft not found: {lesson_id}")
+        return draft.model_dump(mode="json")
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/drafts/{lesson_id}/workflow", response_model=WorkflowResponse)
+async def draft_workflow(lesson_id: str, _: str = Depends(require_admin)):
+    try:
+        workflow = content_workflow.get_workflow(lesson_id)
+        if workflow is None:
+            raise content_workflow.ContentNotFound(f"Workflow not found: {lesson_id}")
+        return WorkflowResponse(workflow=workflow, report=workflow.validation)
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 @router.post("/drafts")
 async def create_or_update_draft(payload: LessonContentPackage, admin: str = Depends(require_admin)):
-    saved = content.save_draft(payload, saved_by=admin)
-    return {"item": saved.model_dump(mode="json")}
+    try:
+        saved = content.save_draft(payload, saved_by=admin)
+        workflow = content_workflow.get_workflow(saved.lesson_id)
+        return {
+            "item": saved.model_dump(mode="json"),
+            "workflow": workflow.model_dump(mode="json") if workflow else None,
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 @router.put("/drafts/{lesson_id}")
@@ -115,8 +193,15 @@ async def update_draft(
 ):
     if payload.lesson_id != lesson_id:
         raise HTTPException(status_code=400, detail="Path lesson_id must match payload.lesson_id.")
-    saved = content.save_draft(payload, saved_by=admin)
-    return {"item": saved.model_dump(mode="json")}
+    try:
+        saved = content.save_draft(payload, saved_by=admin)
+        workflow = content_workflow.get_workflow(saved.lesson_id)
+        return {
+            "item": saved.model_dump(mode="json"),
+            "workflow": workflow.model_dump(mode="json") if workflow else None,
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 @router.post("/preview")
@@ -125,25 +210,184 @@ async def preview(payload: LessonContentPackage, _: str = Depends(require_admin)
     return {"item": item.model_dump(mode="json")}
 
 
+@router.post("/drafts/{lesson_id}/validate", response_model=WorkflowResponse)
+async def validate_draft(
+    lesson_id: str,
+    req: ActorRequest | None = None,
+    admin: str = Depends(require_admin),
+):
+    try:
+        workflow = content_workflow.validate_draft(
+            lesson_id,
+            actor=admin,
+        )
+        return WorkflowResponse(workflow=workflow, report=workflow.validation)
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/drafts/{lesson_id}/submit-review", response_model=WorkflowResponse)
+async def submit_review(
+    lesson_id: str,
+    req: ActorRequest | None = None,
+    admin: str = Depends(require_admin),
+):
+    try:
+        workflow = content_workflow.submit_for_review(
+            lesson_id,
+            actor=admin,
+            note=(req.note if req else ""),
+        )
+        return WorkflowResponse(workflow=workflow, report=workflow.validation)
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/drafts/{lesson_id}/review", response_model=WorkflowResponse)
+async def review_draft(
+    lesson_id: str,
+    req: ReviewRequest,
+    admin: str = Depends(require_admin),
+):
+    try:
+        if req.decision == "approve":
+            workflow = content_workflow.approve_draft(
+                lesson_id,
+                actor=admin,
+                note=req.note,
+            )
+        else:
+            workflow = content_workflow.request_changes(
+                lesson_id,
+                actor=admin,
+                note=req.note,
+            )
+        return WorkflowResponse(workflow=workflow, report=workflow.validation)
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
 @router.post("/drafts/{lesson_id}/seal")
 async def seal_draft(
     lesson_id: str,
     req: SealRequest | None = None,
-    _: str = Depends(require_admin),
+    admin: str = Depends(require_admin),
 ):
     try:
-        item, path = content.seal_draft(lesson_id, sealed_by=(req.sealed_by if req else "admin"))
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Draft not found.") from None
+        item, path, workflow = content_workflow.seal_approved_draft(
+            lesson_id,
+            actor=admin,
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
     return {
         "item": item.model_dump(mode="json"),
         "record": content.record_for_package(item, path).model_dump(mode="json"),
+        "workflow": workflow.model_dump(mode="json"),
     }
 
 
 @router.get("/sealed")
 async def sealed(_: str = Depends(require_admin)):
-    return {"items": [item.model_dump(mode="json") for item in content.list_sealed()]}
+    try:
+        return {"items": [item.model_dump(mode="json") for item in content.list_sealed()]}
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/sealed/{lesson_id}/versions/{version}/publish",
+    response_model=ReleaseResponse,
+)
+async def publish_version(
+    lesson_id: str,
+    version: int,
+    req: ActorRequest | None = None,
+    admin: str = Depends(require_admin),
+):
+    try:
+        release, workflow = content_workflow.publish_version(
+            lesson_id,
+            version,
+            actor=admin,
+            note=(req.note if req else ""),
+        )
+        return ReleaseResponse(release=release, workflow=workflow)
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/releases/{course_id}/bootstrap-legacy",
+    response_model=ReleaseResponse,
+)
+async def bootstrap_legacy_release(
+    course_id: str,
+    req: LegacyBootstrapRequest,
+    admin: str = Depends(require_admin),
+):
+    try:
+        release = content_workflow.bootstrap_legacy_release(
+            course_id,
+            req.selections,
+            actor=admin,
+            note=req.note,
+        )
+        return ReleaseResponse(release=release)
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/releases", response_model=ReleaseListResponse)
+async def releases(
+    course_id: str | None = None,
+    _: str = Depends(require_admin),
+):
+    try:
+        return ReleaseListResponse(items=content_workflow.list_releases(course_id))
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/releases/{course_id}/current", response_model=ReleaseResponse)
+async def current_release(course_id: str, _: str = Depends(require_admin)):
+    try:
+        release = content_workflow.get_current_release(course_id)
+        if release is None:
+            raise content_workflow.ContentNotFound(f"No active release for course {course_id}.")
+        return ReleaseResponse(release=release)
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/releases/{course_id}/{release_id}", response_model=ReleaseResponse)
+async def release_detail(
+    course_id: str,
+    release_id: str,
+    _: str = Depends(require_admin),
+):
+    try:
+        return ReleaseResponse(release=content_workflow.get_release(course_id, release_id))
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/releases/{course_id}/rollback", response_model=ReleaseResponse)
+async def rollback_release(
+    course_id: str,
+    req: RollbackRequest | None = None,
+    admin: str = Depends(require_admin),
+):
+    try:
+        release = content_workflow.rollback_release(
+            course_id,
+            actor=admin,
+            target_release_id=(req.target_release_id if req else None),
+            note=(req.note if req else ""),
+        )
+        return ReleaseResponse(release=release)
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 @router.get("/assets")
@@ -151,7 +395,10 @@ async def assets(
     kind: Literal["person", "keyword"] | None = None,
     _: str = Depends(require_admin),
 ):
-    return {"items": [item.model_dump(mode="json") for item in content.list_assets(kind)]}
+    try:
+        return {"items": [item.model_dump(mode="json") for item in content.list_assets(kind)]}
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 @router.get("/assets/people/template")
@@ -161,16 +408,22 @@ async def person_template(_: str = Depends(require_admin)):
 
 @router.get("/assets/people/{asset_id}")
 async def person_detail(asset_id: str, _: str = Depends(require_admin)):
-    item = content.get_person_profile(asset_id)
-    if item is None:
-        raise HTTPException(status_code=404, detail="Person profile not found.")
-    return item.model_dump(mode="json")
+    try:
+        item = content.get_person_profile(asset_id)
+        if item is None:
+            raise content_workflow.ContentNotFound("Person profile not found.")
+        return item.model_dump(mode="json")
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 @router.post("/assets/people")
 async def save_person(payload: PersonProfilePackage, _: str = Depends(require_admin)):
-    saved = content.save_person_profile(payload)
-    return {"item": saved.model_dump(mode="json")}
+    try:
+        saved = content.save_person_profile(payload)
+        return {"item": saved.model_dump(mode="json")}
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 @router.get("/assets/keywords/template")
@@ -180,16 +433,22 @@ async def keyword_template(_: str = Depends(require_admin)):
 
 @router.get("/assets/keywords/{asset_id}")
 async def keyword_detail(asset_id: str, _: str = Depends(require_admin)):
-    item = content.get_keyword_profile(asset_id)
-    if item is None:
-        raise HTTPException(status_code=404, detail="Keyword profile not found.")
-    return item.model_dump(mode="json")
+    try:
+        item = content.get_keyword_profile(asset_id)
+        if item is None:
+            raise content_workflow.ContentNotFound("Keyword profile not found.")
+        return item.model_dump(mode="json")
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 @router.post("/assets/keywords")
 async def save_keyword(payload: KeywordProfilePackage, _: str = Depends(require_admin)):
-    saved = content.save_keyword_profile(payload)
-    return {"item": saved.model_dump(mode="json")}
+    try:
+        saved = content.save_keyword_profile(payload)
+        return {"item": saved.model_dump(mode="json")}
+    except Exception as exc:
+        _raise_content_error(exc)
 
 
 def _bearer_token(authorization: str | None) -> str | None:
@@ -199,6 +458,35 @@ def _bearer_token(authorization: str | None) -> str | None:
     if scheme.lower() != "bearer" or not token:
         return None
     return token.strip()
+
+
+def _raise_content_error(exc: Exception) -> NoReturn:
+    detail: dict[str, object] = {
+        "code": getattr(exc, "code", "content_operation_failed"),
+        "message": str(exc),
+    }
+    if isinstance(exc, content_workflow.ContentValidationFailed) and exc.report is not None:
+        detail["issues"] = [
+            issue.model_dump(mode="json")
+            for issue in exc.report.issues
+        ]
+    if isinstance(exc, (content_workflow.ContentNotFound, FileNotFoundError)):
+        raise HTTPException(status_code=404, detail=detail) from exc
+    if isinstance(
+        exc,
+        (
+            content_workflow.ContentConflict,
+            content_workflow.InvalidTransition,
+            FileExistsError,
+        ),
+    ):
+        raise HTTPException(status_code=409, detail=detail) from exc
+    if isinstance(exc, (content_workflow.ContentValidationFailed, ValueError)):
+        raise HTTPException(status_code=422, detail=detail) from exc
+    if isinstance(exc, (content.ContentIntegrityError, OSError)):
+        detail["code"] = "content_integrity_error"
+        raise HTTPException(status_code=503, detail=detail) from exc
+    raise exc
 
 
 def _source_record(lesson: courses_data.Lesson) -> LessonSourceRecord:

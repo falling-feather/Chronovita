@@ -5,11 +5,29 @@
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from services import content as content_data
+from services.contracts.v1 import CoursePackageV1
+from services.content.workflow import PublishedCourseSnapshot
+
+
+ModelT = TypeVar("ModelT", bound=BaseModel)
+
+
+def _project_content_model(
+    model_type: type[ModelT],
+    identity: str,
+    **data,
+) -> ModelT:
+    try:
+        return model_type(**data)
+    except ValidationError as exc:
+        raise content_data.ContentIntegrityError(
+            f"Published content {identity} is incompatible with the student model."
+        ) from exc
 
 
 class Era(BaseModel):
@@ -70,6 +88,9 @@ class Lesson(BaseModel):
     sealed_at: str | None = None
     sealed_by: str | None = None
     content_checksum: str | None = None
+    release_id: str | None = None
+    release_no: int | None = None
+    release_checksum: str | None = None
 
 
 class Course(BaseModel):
@@ -2868,7 +2889,8 @@ CONTENT_COVER_COLOR = "#2F6F71"
 def list_eras() -> list[Era]:
     items = list(ERAS)
     seen = {era.id for era in items}
-    for pkg in content_data.load_sealed_packages():
+    for snapshot in content_data.load_published_snapshots():
+        pkg = snapshot.package
         era_id = pkg.era_id or "content"
         if era_id in seen:
             continue
@@ -2901,6 +2923,10 @@ def list_builtin_lessons() -> list[Lesson]:
     return sorted(LESSON_INDEX.values(), key=lambda item: (item.course_id, item.num, item.id))
 
 
+def get_builtin_lesson(lesson_id: str) -> Optional[Lesson]:
+    return LESSON_INDEX.get(lesson_id)
+
+
 def course_summary_for_lesson(lesson: Lesson) -> CourseSummary | None:
     course = COURSE_INDEX.get(lesson.course_id)
     return course.summary if course else None
@@ -2917,9 +2943,9 @@ def get_course(course_id: str) -> Optional[Course]:
 
 
 def get_lesson(lesson_id: str) -> Optional[Lesson]:
-    for pkg in content_data.load_sealed_packages():
-        if pkg.lesson_id == lesson_id:
-            return _lesson_from_content(pkg)
+    for snapshot in content_data.load_published_snapshots():
+        if snapshot.package.lesson_id == lesson_id:
+            return _lesson_from_content(snapshot)
     return LESSON_INDEX.get(lesson_id)
 
 
@@ -2933,16 +2959,20 @@ def _all_courses() -> list[Course]:
     return items
 
 
-def _content_packages_by_course() -> dict[str, list[content_data.LessonContentPackage]]:
-    groups: dict[str, list[content_data.LessonContentPackage]] = {}
-    for pkg in content_data.load_sealed_packages():
-        groups.setdefault(pkg.course_id, []).append(pkg)
+def _content_packages_by_course() -> dict[str, list[PublishedCourseSnapshot]]:
+    groups: dict[str, list[PublishedCourseSnapshot]] = {}
+    for snapshot in content_data.load_published_snapshots():
+        groups.setdefault(snapshot.package.course_id, []).append(snapshot)
     for course_id in groups:
-        groups[course_id] = sorted(groups[course_id], key=lambda item: (item.lesson_no, item.lesson_id))
+        groups[course_id] = sorted(
+            groups[course_id],
+            key=lambda item: (item.package.lesson_no, item.package.lesson_id),
+        )
     return groups
 
 
-def _merge_course(base: Course, packages: list[content_data.LessonContentPackage]) -> Course:
+def _merge_course(base: Course, snapshots: list[PublishedCourseSnapshot]) -> Course:
+    packages = [snapshot.package for snapshot in snapshots]
     if not packages:
         return base
     package_by_lesson = {pkg.lesson_id: pkg for pkg in packages}
@@ -2955,18 +2985,23 @@ def _merge_course(base: Course, packages: list[content_data.LessonContentPackage
     for pkg in packages:
         if pkg.lesson_id not in seen:
             merged.append(_lesson_summary_from_content(pkg))
-    return Course(
+    return _project_content_model(
+        Course,
+        f"course:{base.summary.id}",
         summary=base.summary.model_copy(update={"lesson_count": len(merged)}),
         intro=base.intro,
         lessons=merged,
     )
 
 
-def _content_course(course_id: str, packages: list[content_data.LessonContentPackage]) -> Course:
+def _content_course(course_id: str, snapshots: list[PublishedCourseSnapshot]) -> Course:
+    packages = [snapshot.package for snapshot in snapshots]
     first = packages[0]
     title = first.course_title or first.unit
-    subtitle = f"{first.era} · 封存内容"
-    return Course(
+    subtitle = f"{first.era} · 已发布内容"
+    return _project_content_model(
+        Course,
+        f"course:{course_id}",
         summary=CourseSummary(
             id=course_id,
             era_id=first.era_id or "content",
@@ -2976,13 +3011,15 @@ def _content_course(course_id: str, packages: list[content_data.LessonContentPac
             section=first.section or "内容包",
             lesson_count=len(packages),
         ),
-        intro=f"管理员封存的课程内容包，共 {len(packages)} 节。教师团队可继续补充正文、人物、资料与互动素材。",
+        intro=f"管理员审校并发布的课程内容包，共 {len(packages)} 节。教师团队可继续在新草稿中迭代。",
         lessons=[_lesson_summary_from_content(pkg) for pkg in packages],
     )
 
 
-def _lesson_summary_from_content(pkg: content_data.LessonContentPackage) -> LessonSummary:
-    return LessonSummary(
+def _lesson_summary_from_content(pkg: CoursePackageV1) -> LessonSummary:
+    return _project_content_model(
+        LessonSummary,
+        f"lesson-summary:{pkg.lesson_id}",
         id=pkg.lesson_id,
         num=pkg.lesson_no,
         title=pkg.title,
@@ -2991,8 +3028,14 @@ def _lesson_summary_from_content(pkg: content_data.LessonContentPackage) -> Less
     )
 
 
-def _lesson_from_content(pkg: content_data.LessonContentPackage) -> Lesson:
-    return Lesson(
+def _lesson_from_content(snapshot: PublishedCourseSnapshot) -> Lesson:
+    pkg = snapshot.package
+    legacy_materials = {item.kind: item for item in pkg.compatibility.legacy_materials}
+    saga_material = legacy_materials.get("saga")
+    sandbox_material = legacy_materials.get("sandbox")
+    return _project_content_model(
+        Lesson,
+        f"lesson:{pkg.lesson_id}",
         id=pkg.lesson_id,
         course_id=pkg.course_id,
         num=pkg.lesson_no,
@@ -3002,24 +3045,37 @@ def _lesson_from_content(pkg: content_data.LessonContentPackage) -> Lesson:
         body=pkg.body,
         keywords=[Keyword(word=k.word, pinyin=k.pinyin, gloss=k.gloss) for k in pkg.keywords],
         figures=[person.name for person in pkg.people],
-        sandbox_id=pkg.sandbox_material.title or None,
+        sandbox_id=(sandbox_material.title if sandbox_material else None),
         seed_canvas=[
-            {**node.model_dump(mode="json"), "id": node.id or f"c{i + 1}"}
-            for i, node in enumerate(pkg.seed_canvas)
+            {"id": node.node_id, "label": node.label, "note": node.note}
+            for node in pkg.seed_canvas
         ],
         unit=pkg.unit,
         era=pkg.era,
         people=[person.model_dump(mode="json") for person in pkg.people],
         map_points=[point.model_dump(mode="json") for point in pkg.map_points],
-        source_refs=[ref.model_dump(mode="json") for ref in pkg.source_refs],
-        facts=pkg.facts,
+        source_refs=[
+            {
+                "title": ref.title,
+                "source": ref.publisher,
+                "url_or_path": ref.url_or_path,
+                "citation_note": ref.citation_note,
+                "reliability": ref.reliability,
+                "kind": ref.kind,
+            }
+            for ref in pkg.source_refs
+        ],
+        facts=[fact.statement for fact in pkg.facts],
         qa_points=pkg.qa_points,
         level_goals=pkg.level_goals,
-        saga_material=pkg.saga_material.model_dump(mode="json"),
-        sandbox_material=pkg.sandbox_material.model_dump(mode="json"),
-        content_status=pkg.status,
-        content_version=pkg.version,
+        saga_material=(saga_material.model_dump(mode="json") if saga_material else {}),
+        sandbox_material=(sandbox_material.model_dump(mode="json") if sandbox_material else {}),
+        content_status="published",
+        content_version=pkg.content_version,
         sealed_at=pkg.sealed_at.isoformat() if pkg.sealed_at else None,
         sealed_by=pkg.sealed_by,
         content_checksum=pkg.checksum,
+        release_id=snapshot.release_id,
+        release_no=snapshot.release_no,
+        release_checksum=snapshot.release_checksum,
     )
