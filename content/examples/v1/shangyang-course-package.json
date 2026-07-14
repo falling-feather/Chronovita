@@ -1,0 +1,198 @@
+{
+  "schema_version": "course-package/v1",
+  "package_id": "pkg-shangyang-institutional-reform",
+  "course_id": "C-warring-states-reform",
+  "lesson_id": "shangyang-institutional-reform",
+  "content_version": 1,
+  "status": "sealed",
+  "title": "【教师待审/技术占位】商鞅变法制度改革样例",
+  "unit": "【教师待审/技术占位】战国时期的制度变革",
+  "era": "【教师待审/技术占位】战国时期",
+  "body": [
+    "【教师待审/技术占位】本段只验证制度改革关卡的数据结构与规则链路；史实选取、表述与教学结论均须由教师审定。",
+    "【教师待审/技术占位】状态变量、数值和分支均为技术联调设定，不代表对商鞅变法历史影响的教学评价。"
+  ],
+  "abstract": "【教师待审/技术占位】用于验证节点式制度改革场景的课程内容占位，不提供正式历史结论。",
+  "course_title": "【教师待审/技术占位】制度变革课程技术样例",
+  "era_id": "content",
+  "section": "【教师待审/技术占位】课程内容包",
+  "lesson_no": "",
+  "duration": "",
+  "teaching_objectives": [
+    "【教师待审/技术占位】验证学习者可比较制度方案在规则模型中的不同状态后果。",
+    "【教师待审/技术占位】验证学习者可依据占位事实引用说明选择与代价的关联。"
+  ],
+  "keywords": [
+    {
+      "keyword_id": "keyword-reform-rules",
+      "word": "【教师待审/技术占位】法令规则",
+      "pinyin": "",
+      "gloss": "【教师待审/技术占位】仅指本技术场景中用于驱动 law_clarity 状态的规则占位。",
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ]
+    },
+    {
+      "keyword_id": "keyword-local-administration",
+      "word": "【教师待审/技术占位】地方行政",
+      "pinyin": "",
+      "gloss": "【教师待审/技术占位】仅指本技术场景中用于驱动 administrative_capacity 状态的规则占位。",
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ]
+    }
+  ],
+  "people": [
+    {
+      "person_id": "person-shangyang",
+      "name": "【教师待审/技术占位】商鞅",
+      "role": "【教师待审/技术占位】制度改革提议者角色占位",
+      "summary": "【教师待审/技术占位】人物定位与史实表述须由教师审定。",
+      "persona": "【教师待审/技术占位】仅用于测试制度方案说明与规则反馈。",
+      "boundaries": [
+        "【教师待审/技术占位】不得将技术场景台词当作史料原话或正式教学结论。"
+      ],
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-merit-incentives",
+        "fact-local-administration"
+      ],
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ]
+    },
+    {
+      "person_id": "person-qin-ruler",
+      "name": "【教师待审/技术占位】秦国君主角色",
+      "role": "【教师待审/技术占位】改革授权与政策取舍角色占位",
+      "summary": "【教师待审/技术占位】具体人物、称谓与年代关系须由教师审定。",
+      "persona": "【教师待审/技术占位】仅用于测试授权信任条件。",
+      "boundaries": [
+        "【教师待审/技术占位】不得补写未经教师审定的人物动机或对话。"
+      ],
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-local-administration"
+      ],
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ]
+    },
+    {
+      "person_id": "person-old-nobility",
+      "name": "【教师待审/技术占位】旧贵族代表角色",
+      "role": "【教师待审/技术占位】制度阻力反馈角色占位",
+      "summary": "【教师待审/技术占位】群体构成与立场均为规则测试抽象。",
+      "persona": "【教师待审/技术占位】仅用于测试态度、信任与阻力变量。",
+      "boundaries": [
+        "【教师待审/技术占位】不得将抽象角色表述为单一历史群体的完整立场。"
+      ],
+      "fact_refs": [
+        "fact-merit-incentives"
+      ],
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ]
+    },
+    {
+      "person_id": "person-local-official",
+      "name": "【教师待审/技术占位】地方执行者角色",
+      "role": "【教师待审/技术占位】制度执行能力反馈角色占位",
+      "summary": "【教师待审/技术占位】职位名称和行政职责须由教师审定。",
+      "persona": "【教师待审/技术占位】仅用于测试执行条件和 NPC 效果。",
+      "boundaries": [
+        "【教师待审/技术占位】不得据此推导真实制度运行细节。"
+      ],
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-local-administration"
+      ],
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ]
+    }
+  ],
+  "map_points": [
+    {
+      "point_id": "map-qin-reform-placeholder",
+      "label": "【教师待审/技术占位】秦国制度改革地图点",
+      "region": "【教师待审/技术占位】空间范围待教师审定",
+      "lat": null,
+      "lng": null,
+      "note": "【教师待审/技术占位】仅用于地图与关卡引用联调，不表示精确历史边界或坐标。",
+      "kind": "teaching-placeholder"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "fact-rule-publication",
+      "statement": "【教师待审/技术占位】法令公开与执行一致性的具体史实、范围及评价等待教师审校。",
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ],
+      "certainty": "interpretation",
+      "teacher_note": "【教师待审/技术占位】正式版本须补充教材依据并校正表述。"
+    },
+    {
+      "fact_id": "fact-merit-incentives",
+      "statement": "【教师待审/技术占位】军功与激励制度的具体内容、影响及争议等待教师审校。",
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ],
+      "certainty": "interpretation",
+      "teacher_note": "【教师待审/技术占位】本事实仅承担规则引用占位。"
+    },
+    {
+      "fact_id": "fact-local-administration",
+      "statement": "【教师待审/技术占位】地方行政制度变化的时间、范围及历史意义等待教师审校。",
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ],
+      "certainty": "interpretation",
+      "teacher_note": "【教师待审/技术占位】本事实仅承担节点与状态规则引用占位。"
+    }
+  ],
+  "source_refs": [
+    {
+      "source_id": "source-shangyang-placeholder",
+      "title": "【教师待审/技术占位】商鞅变法资料来源占位",
+      "kind": "other",
+      "publisher": "",
+      "url_or_path": "",
+      "citation_note": "【教师待审/技术占位】正式发布前须由教师替换为教材、课程标准及经审校资料。",
+      "reliability": "pending"
+    }
+  ],
+  "qa_points": [
+    "【教师待审/技术占位】哪些规则状态变化来自玩家选择，哪些来自事件触发？",
+    "【教师待审/技术占位】不同优先级结局在技术模型中如何避免同时生效？"
+  ],
+  "level_goals": [
+    "【教师待审/技术占位】在六回合技术上限内完成节点流转，并观察制度清晰度、执行能力、支持度与阻力的规则变化。"
+  ],
+  "scenario_refs": [
+    {
+      "scenario_id": "scenario-shangyang-institutional-reform",
+      "scenario_version": 1,
+      "checksum": "37dfde6060a9acc152900fddb6a76c2e663f017a384df2560bad080c87b40469",
+      "primary": true
+    }
+  ],
+  "seed_canvas": [],
+  "teacher_notes": "【教师待审/技术占位】本包不承担教师职责；所有史实、人物、问题和结论必须经教师审核后方可教学使用。",
+  "created_at": "2026-07-13T02:00:00Z",
+  "updated_at": "2026-07-14T02:00:00Z",
+  "sealed_at": "2026-07-14T02:00:00Z",
+  "sealed_by": "fixture-builder",
+  "checksum": "0018c2848b8e30b2bec64e7d08e3847d2997959f61f50dcac8045002a18f80d5",
+  "compatibility": {
+    "kind": "native-v1",
+    "source_id": "",
+    "source_version": "",
+    "source_checksum": null,
+    "notes": "",
+    "unresolved_refs": [],
+    "legacy_materials": [],
+    "legacy_id_map": {}
+  }
+}

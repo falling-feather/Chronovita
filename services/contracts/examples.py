@@ -17,6 +17,7 @@ from services.contracts.v1 import (
     KnowledgeNodeV1,
     MapPointV1,
     NpcChangeV1,
+    NpcConditionV1,
     NpcEffectV1,
     NpcSpecV1,
     NpcStateV1,
@@ -24,6 +25,7 @@ from services.contracts.v1 import (
     ObservedEntityV1,
     PersonV1,
     RuntimeBundleV1,
+    ScenarioNodeV1,
     ScenarioTemplateV1,
     ScenarioRefV1,
     SourceRefV1,
@@ -39,6 +41,7 @@ from services.contracts.v1 import (
 
 
 _BASE_TIME = datetime(2026, 7, 14, 2, 0, tzinfo=timezone.utc)
+_SHANGYANG_NOTICE = "【教师待审/技术占位】"
 
 
 def build_dayu_bundle() -> RuntimeBundleV1:
@@ -127,14 +130,23 @@ def build_dayu_bundle() -> RuntimeBundleV1:
     return RuntimeBundleV1(course=course, scenario=scenario, session=session, dossier=dossier)
 
 
+def build_shangyang_bundle() -> RuntimeBundleV1:
+    scenario = _build_shangyang_scenario()
+    course = _build_shangyang_course(str(scenario.checksum))
+    return RuntimeBundleV1(course=course, scenario=scenario, session=None, dossier=None)
+
+
 def example_documents() -> dict[str, object]:
-    bundle = build_dayu_bundle()
+    dayu_bundle = build_dayu_bundle()
+    shangyang_bundle = build_shangyang_bundle()
     return {
-        "dayu-course-package.json": bundle.course,
-        "dayu-scenario-template.json": bundle.scenario,
-        "dayu-game-session.json": bundle.session,
-        "dayu-dossier.json": bundle.dossier,
-        "dayu-runtime-bundle.json": bundle,
+        "dayu-course-package.json": dayu_bundle.course,
+        "dayu-scenario-template.json": dayu_bundle.scenario,
+        "dayu-game-session.json": dayu_bundle.session,
+        "dayu-dossier.json": dayu_bundle.dossier,
+        "dayu-runtime-bundle.json": dayu_bundle,
+        "shangyang-course-package.json": shangyang_bundle.course,
+        "shangyang-scenario-template.json": shangyang_bundle.scenario,
     }
 
 
@@ -676,6 +688,647 @@ def _build_dossier(
         checksum="0" * 64,
     )
     return _with_checksum(dossier, DossierV1)
+
+
+def _build_shangyang_course(scenario_checksum: str) -> CoursePackageV1:
+    marked = _shangyang_text
+    package = CoursePackageV1(
+        package_id="pkg-shangyang-institutional-reform",
+        course_id="C-warring-states-reform",
+        lesson_id="shangyang-institutional-reform",
+        content_version=1,
+        status="sealed",
+        title=marked("商鞅变法制度改革样例"),
+        unit=marked("战国时期的制度变革"),
+        era=marked("战国时期"),
+        body=[
+            marked(
+                "本段只验证制度改革关卡的数据结构与规则链路；"
+                "史实选取、表述与教学结论均须由教师审定。"
+            ),
+            marked(
+                "状态变量、数值和分支均为技术联调设定，"
+                "不代表对商鞅变法历史影响的教学评价。"
+            ),
+        ],
+        abstract=marked(
+            "用于验证节点式制度改革场景的课程内容占位，不提供正式历史结论。"
+        ),
+        course_title=marked("制度变革课程技术样例"),
+        section=marked("课程内容包"),
+        teaching_objectives=[
+            marked("验证学习者可比较制度方案在规则模型中的不同状态后果。"),
+            marked("验证学习者可依据占位事实引用说明选择与代价的关联。"),
+        ],
+        keywords=[
+            KeywordV1(
+                keyword_id="keyword-reform-rules",
+                word=marked("法令规则"),
+                gloss=marked(
+                    "仅指本技术场景中用于驱动 law_clarity 状态的规则占位。"
+                ),
+                source_ref_ids=["source-shangyang-placeholder"],
+            ),
+            KeywordV1(
+                keyword_id="keyword-local-administration",
+                word=marked("地方行政"),
+                gloss=marked(
+                    "仅指本技术场景中用于驱动 administrative_capacity 状态的规则占位。"
+                ),
+                source_ref_ids=["source-shangyang-placeholder"],
+            ),
+        ],
+        people=[
+            PersonV1(
+                person_id="person-shangyang",
+                name=marked("商鞅"),
+                role=marked("制度改革提议者角色占位"),
+                summary=marked("人物定位与史实表述须由教师审定。"),
+                persona=marked("仅用于测试制度方案说明与规则反馈。"),
+                boundaries=[
+                    marked("不得将技术场景台词当作史料原话或正式教学结论。")
+                ],
+                fact_refs=[
+                    "fact-rule-publication",
+                    "fact-merit-incentives",
+                    "fact-local-administration",
+                ],
+                source_ref_ids=["source-shangyang-placeholder"],
+            ),
+            PersonV1(
+                person_id="person-qin-ruler",
+                name=marked("秦国君主角色"),
+                role=marked("改革授权与政策取舍角色占位"),
+                summary=marked("具体人物、称谓与年代关系须由教师审定。"),
+                persona=marked("仅用于测试授权信任条件。"),
+                boundaries=[
+                    marked("不得补写未经教师审定的人物动机或对话。")
+                ],
+                fact_refs=["fact-rule-publication", "fact-local-administration"],
+                source_ref_ids=["source-shangyang-placeholder"],
+            ),
+            PersonV1(
+                person_id="person-old-nobility",
+                name=marked("旧贵族代表角色"),
+                role=marked("制度阻力反馈角色占位"),
+                summary=marked("群体构成与立场均为规则测试抽象。"),
+                persona=marked("仅用于测试态度、信任与阻力变量。"),
+                boundaries=[
+                    marked("不得将抽象角色表述为单一历史群体的完整立场。")
+                ],
+                fact_refs=["fact-merit-incentives"],
+                source_ref_ids=["source-shangyang-placeholder"],
+            ),
+            PersonV1(
+                person_id="person-local-official",
+                name=marked("地方执行者角色"),
+                role=marked("制度执行能力反馈角色占位"),
+                summary=marked("职位名称和行政职责须由教师审定。"),
+                persona=marked("仅用于测试执行条件和 NPC 效果。"),
+                boundaries=[
+                    marked("不得据此推导真实制度运行细节。")
+                ],
+                fact_refs=["fact-rule-publication", "fact-local-administration"],
+                source_ref_ids=["source-shangyang-placeholder"],
+            ),
+        ],
+        map_points=[
+            MapPointV1(
+                point_id="map-qin-reform-placeholder",
+                label=marked("秦国制度改革地图点"),
+                region=marked("空间范围待教师审定"),
+                note=marked(
+                    "仅用于地图与关卡引用联调，不表示精确历史边界或坐标。"
+                ),
+                kind="teaching-placeholder",
+            )
+        ],
+        facts=[
+            FactV1(
+                fact_id="fact-rule-publication",
+                statement=marked(
+                    "法令公开与执行一致性的具体史实、范围及评价等待教师审校。"
+                ),
+                source_ref_ids=["source-shangyang-placeholder"],
+                certainty="interpretation",
+                teacher_note=marked("正式版本须补充教材依据并校正表述。"),
+            ),
+            FactV1(
+                fact_id="fact-merit-incentives",
+                statement=marked(
+                    "军功与激励制度的具体内容、影响及争议等待教师审校。"
+                ),
+                source_ref_ids=["source-shangyang-placeholder"],
+                certainty="interpretation",
+                teacher_note=marked("本事实仅承担规则引用占位。"),
+            ),
+            FactV1(
+                fact_id="fact-local-administration",
+                statement=marked(
+                    "地方行政制度变化的时间、范围及历史意义等待教师审校。"
+                ),
+                source_ref_ids=["source-shangyang-placeholder"],
+                certainty="interpretation",
+                teacher_note=marked("本事实仅承担节点与状态规则引用占位。"),
+            ),
+        ],
+        source_refs=[
+            SourceRefV1(
+                source_id="source-shangyang-placeholder",
+                title=marked("商鞅变法资料来源占位"),
+                kind="other",
+                citation_note=marked(
+                    "正式发布前须由教师替换为教材、课程标准及经审校资料。"
+                ),
+                reliability="pending",
+            )
+        ],
+        qa_points=[
+            marked("哪些规则状态变化来自玩家选择，哪些来自事件触发？"),
+            marked("不同优先级结局在技术模型中如何避免同时生效？"),
+        ],
+        level_goals=[
+            marked(
+                "在六回合技术上限内完成节点流转，并观察制度清晰度、"
+                "执行能力、支持度与阻力的规则变化。"
+            )
+        ],
+        scenario_refs=[
+            ScenarioRefV1(
+                scenario_id="scenario-shangyang-institutional-reform",
+                scenario_version=1,
+                checksum=scenario_checksum,
+                primary=True,
+            )
+        ],
+        teacher_notes=marked(
+            "本包不承担教师职责；所有史实、人物、问题和结论必须经教师审核后方可教学使用。"
+        ),
+        created_at=_BASE_TIME - timedelta(days=1),
+        updated_at=_BASE_TIME,
+        sealed_at=_BASE_TIME,
+        sealed_by="fixture-builder",
+        checksum="0" * 64,
+    )
+    return _with_checksum(package, CoursePackageV1)
+
+
+def _build_shangyang_scenario() -> ScenarioTemplateV1:
+    marked = _shangyang_text
+    fact_refs = [
+        "fact-rule-publication",
+        "fact-merit-incentives",
+        "fact-local-administration",
+    ]
+    scenario = ScenarioTemplateV1(
+        scenario_id="scenario-shangyang-institutional-reform",
+        scenario_version=1,
+        status="sealed",
+        course_id="C-warring-states-reform",
+        lesson_id="shangyang-institutional-reform",
+        title=marked("商鞅变法节点式制度改革关卡"),
+        scenario_type="institutional_reform",
+        student_role=marked("制度方案记录与规则验证者，不承担历史裁判或教师职责"),
+        objective=marked(
+            "沿节点比较制度方案的规则后果，并在六回合上限内验证多结局判定。"
+        ),
+        opening=marked(
+            "制度方案等待讨论；人物立场、史实叙述和数值均为待教师审定的技术占位。"
+        ),
+        max_turns=6,
+        variables=[
+            StateVariableV1(
+                variable_id="law_clarity",
+                label=marked("制度清晰度"),
+                description=marked("仅供规则引擎测试的数值。"),
+                initial=30,
+            ),
+            StateVariableV1(
+                variable_id="reform_support",
+                label=marked("改革支持度"),
+                description=marked("仅供规则引擎测试的数值。"),
+                initial=50,
+            ),
+            StateVariableV1(
+                variable_id="noble_resistance",
+                label=marked("旧贵族阻力"),
+                description=marked("仅供规则引擎测试的抽象数值。"),
+                initial=45,
+            ),
+            StateVariableV1(
+                variable_id="administrative_capacity",
+                label=marked("行政执行能力"),
+                description=marked("仅供规则引擎测试的数值。"),
+                initial=35,
+            ),
+            StateVariableV1(
+                variable_id="public_order",
+                label=marked("社会秩序"),
+                description=marked("仅供规则引擎测试的抽象数值。"),
+                initial=60,
+            ),
+        ],
+        npcs=[
+            NpcSpecV1(
+                person_id="person-shangyang",
+                display_name=marked("商鞅"),
+                role=marked("制度改革提议者角色占位"),
+                persona=marked("仅用于规则反馈，不作为历史人物还原。"),
+                boundaries=[
+                    marked("台词和立场不得作为史料或正式教学结论。")
+                ],
+                initial_attitude=20,
+                initial_trust=25,
+                fact_refs=fact_refs,
+            ),
+            NpcSpecV1(
+                person_id="person-qin-ruler",
+                display_name=marked("秦国君主角色"),
+                role=marked("改革授权角色占位"),
+                persona=marked("仅用于测试授权信任条件。"),
+                boundaries=[
+                    marked("具体身份、动机和对话等待教师审定。")
+                ],
+                initial_attitude=15,
+                initial_trust=20,
+                fact_refs=["fact-rule-publication", "fact-local-administration"],
+            ),
+            NpcSpecV1(
+                person_id="person-old-nobility",
+                display_name=marked("旧贵族代表角色"),
+                role=marked("制度阻力角色占位"),
+                persona=marked("仅用于测试态度与信任变化。"),
+                boundaries=[
+                    marked("抽象角色不代表真实群体的完整立场。")
+                ],
+                initial_attitude=-10,
+                initial_trust=-15,
+                fact_refs=["fact-merit-incentives"],
+            ),
+            NpcSpecV1(
+                person_id="person-local-official",
+                display_name=marked("地方执行者角色"),
+                role=marked("制度执行角色占位"),
+                persona=marked("仅用于测试行政执行条件。"),
+                boundaries=[
+                    marked("行政职责与制度细节等待教师审定。")
+                ],
+                initial_attitude=0,
+                initial_trust=10,
+                fact_refs=["fact-rule-publication", "fact-local-administration"],
+            ),
+        ],
+        action_rules=[
+            ActionRuleV1(
+                action_id="consult-court",
+                label=marked("征询改革意见"),
+                description=marked("验证 NPC 信任变化及事实揭示效果。"),
+                effects=[
+                    StateEffectV1(variable_id="reform_support", value=5),
+                    NpcEffectV1(
+                        person_id="person-qin-ruler",
+                        attitude_delta=10,
+                        trust_delta=10,
+                        reveal_fact_refs=["fact-rule-publication"],
+                    ),
+                ],
+                feedback=marked("规则模型提高支持度和授权角色信任。"),
+                fact_refs=["fact-rule-publication"],
+                next_node_id="node-policy-design",
+            ),
+            ActionRuleV1(
+                action_id="announce-principles",
+                label=marked("公布制度原则"),
+                description=marked("验证 state set 效果及阻力反馈。"),
+                effects=[
+                    StateEffectV1(
+                        variable_id="law_clarity",
+                        operation="set",
+                        value=55,
+                    ),
+                    StateEffectV1(variable_id="noble_resistance", value=10),
+                    NpcEffectV1(
+                        person_id="person-old-nobility",
+                        attitude_delta=-10,
+                        trust_delta=-5,
+                        reveal_fact_refs=["fact-merit-incentives"],
+                    ),
+                ],
+                feedback=marked("规则模型将制度清晰度设为固定值，并提高阻力。"),
+                fact_refs=["fact-rule-publication", "fact-merit-incentives"],
+                next_node_id="node-policy-design",
+            ),
+            ActionRuleV1(
+                action_id="standardize-rules",
+                label=marked("统一规则文本"),
+                description=marked("验证 NPC trust 条件与 state set 效果。"),
+                available_when=[
+                    NpcConditionV1(
+                        person_id="person-local-official",
+                        field="trust",
+                        operator="gte",
+                        value=10,
+                    )
+                ],
+                effects=[
+                    StateEffectV1(
+                        variable_id="law_clarity",
+                        operation="set",
+                        value=75,
+                    ),
+                    StateEffectV1(variable_id="administrative_capacity", value=10),
+                    NpcEffectV1(
+                        person_id="person-local-official",
+                        trust_delta=10,
+                        reveal_fact_refs=["fact-local-administration"],
+                    ),
+                ],
+                feedback=marked("规则模型提高制度清晰度、执行能力与执行者信任。"),
+                fact_refs=["fact-rule-publication", "fact-local-administration"],
+                next_node_id="node-local-implementation",
+            ),
+            ActionRuleV1(
+                action_id="prepare-local-offices",
+                label=marked("准备地方执行节点"),
+                description=marked("验证行政能力与 NPC 效果。"),
+                effects=[
+                    StateEffectV1(variable_id="administrative_capacity", value=20),
+                    StateEffectV1(variable_id="reform_support", value=-5),
+                    NpcEffectV1(
+                        person_id="person-local-official",
+                        attitude_delta=10,
+                        trust_delta=15,
+                        reveal_fact_refs=["fact-local-administration"],
+                    ),
+                ],
+                feedback=marked("规则模型以短期支持度代价换取执行能力。"),
+                fact_refs=["fact-local-administration"],
+                next_node_id="node-local-implementation",
+            ),
+            ActionRuleV1(
+                action_id="apply-merit-system",
+                label=marked("应用激励规则"),
+                description=marked("验证制度清晰度条件、支持度与阻力变化。"),
+                available_when=[
+                    StateConditionV1(
+                        variable_id="law_clarity",
+                        operator="gte",
+                        value=50,
+                    )
+                ],
+                effects=[
+                    StateEffectV1(variable_id="reform_support", value=10),
+                    StateEffectV1(variable_id="noble_resistance", value=15),
+                    NpcEffectV1(
+                        person_id="person-old-nobility",
+                        attitude_delta=-20,
+                        trust_delta=-10,
+                        reveal_fact_refs=["fact-merit-incentives"],
+                    ),
+                ],
+                feedback=marked("规则模型同时提高支持度与旧贵族阻力。"),
+                fact_refs=["fact-merit-incentives"],
+                next_node_id="node-policy-evaluation",
+            ),
+            ActionRuleV1(
+                action_id="phase-rollout",
+                label=marked("分阶段执行"),
+                description=marked("验证较缓和的执行路径。"),
+                effects=[
+                    StateEffectV1(variable_id="administrative_capacity", value=10),
+                    StateEffectV1(variable_id="public_order", value=10),
+                    StateEffectV1(variable_id="noble_resistance", value=-5),
+                ],
+                feedback=marked("规则模型提高执行能力和秩序，并降低部分阻力。"),
+                fact_refs=["fact-local-administration"],
+                next_node_id="node-policy-evaluation",
+            ),
+            ActionRuleV1(
+                action_id="consolidate-rules",
+                label=marked("确认制度方案"),
+                description=marked("验证 NPC 条件与成功终点节点。"),
+                available_when=[
+                    NpcConditionV1(
+                        person_id="person-local-official",
+                        field="trust",
+                        operator="gte",
+                        value=10,
+                    )
+                ],
+                effects=[
+                    StateEffectV1(
+                        variable_id="law_clarity",
+                        operation="set",
+                        value=85,
+                    ),
+                    StateEffectV1(variable_id="administrative_capacity", value=10),
+                ],
+                feedback=marked("规则模型进入制度确认终点，历史评价仍待教师审定。"),
+                fact_refs=["fact-rule-publication", "fact-local-administration"],
+                next_node_id="node-reform-recorded",
+            ),
+            ActionRuleV1(
+                action_id="pause-and-review",
+                label=marked("暂缓并复核"),
+                description=marked("验证复核终点节点与固定状态值。"),
+                effects=[
+                    StateEffectV1(
+                        variable_id="law_clarity",
+                        operation="set",
+                        value=45,
+                    ),
+                    StateEffectV1(variable_id="reform_support", value=5),
+                    StateEffectV1(variable_id="noble_resistance", value=-10),
+                ],
+                feedback=marked("规则模型进入待复核终点，不生成教学结论。"),
+                fact_refs=["fact-rule-publication"],
+                next_node_id="node-review-pending",
+            ),
+        ],
+        event_rules=[
+            EventRuleV1(
+                event_id="event-implementation-friction",
+                title=marked("执行阻力事件"),
+                match="any",
+                trigger=[
+                    StateConditionV1(
+                        variable_id="noble_resistance",
+                        operator="gte",
+                        value=65,
+                    ),
+                    NpcConditionV1(
+                        person_id="person-old-nobility",
+                        field="attitude",
+                        operator="lte",
+                        value=-30,
+                    ),
+                ],
+                effects=[
+                    StateEffectV1(variable_id="public_order", value=-15),
+                    NpcEffectV1(
+                        person_id="person-local-official",
+                        trust_delta=-5,
+                    ),
+                ],
+                narrative=marked(
+                    "任一阻力条件满足即触发技术事件；叙述与历史解释等待教师审定。"
+                ),
+                fact_refs=["fact-merit-incentives", "fact-local-administration"],
+                priority=10,
+            )
+        ],
+        ending_rules=[
+            EndingRuleV1(
+                ending_id="ending-reform-recorded",
+                title=marked("制度方案形成"),
+                conditions=[
+                    TurnConditionV1(operator="gte", value=3),
+                    StateConditionV1(
+                        variable_id="law_clarity",
+                        operator="gte",
+                        value=75,
+                    ),
+                    StateConditionV1(
+                        variable_id="administrative_capacity",
+                        operator="gte",
+                        value=55,
+                    ),
+                ],
+                summary=marked("规则层记录制度方案形成，不代表历史评价或教学结论。"),
+                historical_explanation=marked(
+                    "正式历史解释须由教师依据教材与审校资料撰写。"
+                ),
+                major_costs=[
+                    marked("数值代价仅用于规则验证。"),
+                    marked("人物态度变化不代表真实历史群体立场。"),
+                ],
+                source_ref_ids=["source-shangyang-placeholder"],
+                fact_refs=fact_refs,
+                priority=10,
+            ),
+            EndingRuleV1(
+                ending_id="ending-reform-backlash",
+                title=marked("改革阻力超限"),
+                match="any",
+                conditions=[
+                    StateConditionV1(
+                        variable_id="noble_resistance",
+                        operator="gte",
+                        value=85,
+                    ),
+                    StateConditionV1(
+                        variable_id="public_order",
+                        operator="lte",
+                        value=30,
+                    ),
+                    NpcConditionV1(
+                        person_id="person-old-nobility",
+                        field="attitude",
+                        operator="lte",
+                        value=-60,
+                    ),
+                ],
+                summary=marked("任一失败阈值满足时结束规则流程，不承担历史归因。"),
+                historical_explanation=marked(
+                    "失败阈值和解释均为技术占位，须由教师审核。"
+                ),
+                major_costs=[marked("仅记录规则状态越界，不作教学评价。")],
+                source_ref_ids=["source-shangyang-placeholder"],
+                fact_refs=fact_refs,
+                priority=20,
+            ),
+            EndingRuleV1(
+                ending_id="ending-review-pending",
+                title=marked("方案待复核"),
+                conditions=[
+                    TurnConditionV1(operator="gte", value=3),
+                    StateConditionV1(
+                        variable_id="law_clarity",
+                        operator="lte",
+                        value=50,
+                    ),
+                ],
+                summary=marked("规则流程停在待复核节点，不输出正式结论。"),
+                historical_explanation=marked(
+                    "后续教学处理与历史解释由教师决定。"
+                ),
+                source_ref_ids=["source-shangyang-placeholder"],
+                fact_refs=["fact-rule-publication"],
+                priority=30,
+            ),
+            EndingRuleV1(
+                ending_id="ending-max-turns-fallback",
+                title=marked("回合上限兜底"),
+                conditions=[TurnConditionV1(operator="gte", value=6)],
+                summary=marked("达到 max_turns 后结束技术流程，不输出教学结论。"),
+                historical_explanation=marked(
+                    "该结局仅为规则引擎兜底，与历史判断无关。"
+                ),
+                source_ref_ids=["source-shangyang-placeholder"],
+                fact_refs=[],
+                priority=1000,
+            ),
+        ],
+        start_node_id="node-court-deliberation",
+        nodes=[
+            ScenarioNodeV1(
+                node_id="node-court-deliberation",
+                title=marked("方案讨论节点"),
+                narration=marked("仅验证起始节点和分支动作。"),
+                action_ids=["consult-court", "announce-principles"],
+            ),
+            ScenarioNodeV1(
+                node_id="node-policy-design",
+                title=marked("制度设计节点"),
+                narration=marked("仅验证 NPC 条件和 state set 效果。"),
+                action_ids=["standardize-rules", "prepare-local-offices"],
+            ),
+            ScenarioNodeV1(
+                node_id="node-local-implementation",
+                title=marked("地方执行节点"),
+                narration=marked("仅验证不同执行路径的状态变化。"),
+                action_ids=["apply-merit-system", "phase-rollout"],
+            ),
+            ScenarioNodeV1(
+                node_id="node-policy-evaluation",
+                title=marked("方案评估节点"),
+                narration=marked("仅验证多个终点节点的流转。"),
+                action_ids=["consolidate-rules", "pause-and-review"],
+            ),
+            ScenarioNodeV1(
+                node_id="node-reform-recorded",
+                title=marked("制度方案形成终点"),
+                narration=marked("终点文本不构成历史结论。"),
+                ending_id="ending-reform-recorded",
+            ),
+            ScenarioNodeV1(
+                node_id="node-review-pending",
+                title=marked("方案待复核终点"),
+                narration=marked("终点文本等待教师审核。"),
+                ending_id="ending-review-pending",
+            ),
+        ],
+        fact_refs=fact_refs,
+        source_ref_ids=["source-shangyang-placeholder"],
+        dossier_template=DossierTemplateV1(
+            title_template=marked("《{scenario_title}技术卷宗》"),
+            reflection_questions=[
+                marked("哪条规则使用了固定值设置，产生了什么模型后果？"),
+                marked("NPC 条件与事件条件如何改变可用动作和状态？"),
+            ],
+            knowledge_node_kinds=["cause", "consequence", "concept"],
+        ),
+        created_at=_BASE_TIME - timedelta(days=1),
+        updated_at=_BASE_TIME,
+        sealed_at=_BASE_TIME,
+        sealed_by="fixture-builder",
+        checksum="0" * 64,
+    )
+    return _with_checksum(scenario, ScenarioTemplateV1)
+
+
+def _shangyang_text(text: str) -> str:
+    return f"{_SHANGYANG_NOTICE}{text}"
 
 
 def _with_checksum(document, model):

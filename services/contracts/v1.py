@@ -6,6 +6,16 @@ from typing import Annotated, Literal, TYPE_CHECKING
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
+from services.contracts.rules_v1 import (
+    RuleActionUnavailable,
+    RuleEvaluationError,
+    UnknownRuleAction,
+    available_rule_action_ids,
+    evaluate_rule_action,
+    initial_rule_snapshot,
+    select_rule_ending_id,
+)
+
 if TYPE_CHECKING:
     from services.content import LessonContentPackage
 
@@ -31,6 +41,7 @@ ComparisonOperator = Literal["lt", "lte", "eq", "gte", "gt"]
 
 class ContractModel(BaseModel):
     model_config = ConfigDict(
+        allow_inf_nan=False,
         extra="forbid",
         frozen=True,
         str_strip_whitespace=True,
@@ -740,8 +751,6 @@ class RuntimeBundleV1(ContractModel):
         scenario_person_ids = {item.person_id for item in scenario.npcs}
         action_ids = {item.action_id for item in scenario.action_rules}
         event_ids = {item.event_id for item in scenario.event_rules}
-        events_by_id = {item.event_id: item for item in scenario.event_rules}
-        actions_by_id = {item.action_id: item for item in scenario.action_rules}
         ending_ids = {item.ending_id for item in scenario.ending_rules}
         node_ids = {item.node_id for item in scenario.nodes}
 
@@ -826,9 +835,6 @@ class RuntimeBundleV1(ContractModel):
             _validate_turn_replay(
                 scenario,
                 session,
-                actions_by_id,
-                events_by_id,
-                variable_ranges,
             )
 
         if self.dossier is not None:
@@ -1301,165 +1307,74 @@ def _validate_effect_fact_refs(effects: list[RuleEffectV1], fact_ids: set[str], 
 def _validate_turn_replay(
     scenario: ScenarioTemplateV1,
     session: GameSessionV1,
-    actions_by_id: dict[str, ActionRuleV1],
-    events_by_id: dict[str, EventRuleV1],
-    variable_ranges: dict[str, tuple[float, float]],
 ) -> None:
-    state = {item.variable_id: item.initial for item in scenario.variables}
-    npcs: dict[str, dict[str, object]] = {
-        npc.person_id: {
-            "attitude": npc.initial_attitude,
-            "trust": npc.initial_trust,
-            "known": set(),
-            "updated_turn": 0,
-        }
-        for npc in scenario.npcs
-    }
-    nodes_by_id = {item.node_id: item for item in scenario.nodes}
-    current_node_id = scenario.start_node_id
-    triggered_once: set[str] = set()
-    triggered_history: list[str] = []
+    snapshot = initial_rule_snapshot(scenario)
 
     for turn in session.turns:
-        if not _states_match(state, turn.state_before):
+        if not _states_match(snapshot.state_dict(), turn.state_before):
             raise ValueError(f"turn {turn.turn_no} state_before does not match replay")
 
         if turn.status != "applied":
             if (
-                not _states_match(state, turn.state_after)
+                not _states_match(snapshot.state_dict(), turn.state_after)
                 or turn.npc_changes
                 or turn.triggered_event_ids
             ):
                 raise ValueError(
                     f"turn {turn.turn_no} rejected/failed results cannot contain rule effects"
                 )
-            ending_id = _select_ending_id(
-                scenario,
-                state,
-                npcs,
-                turn.turn_no,
-                current_node_id,
-                nodes_by_id,
-            )
+            ending_id = select_rule_ending_id(scenario, snapshot, turn.turn_no)
             if ending_id is not None and turn.turn_no < session.current_turn:
                 raise ValueError(f"session continues after ending {ending_id}")
             continue
 
-        action = actions_by_id[turn.classified_action_id]
-        if current_node_id is not None and action.action_id not in nodes_by_id[current_node_id].action_ids:
-            raise ValueError(
-                f"turn {turn.turn_no} action is not available from node {current_node_id}"
-            )
-        if not _conditions_match(
-            action.available_when,
-            "all",
-            state,
-            npcs,
-            turn.turn_no,
-        ):
-            raise ValueError(f"turn {turn.turn_no} action conditions are not satisfied")
-
-        npc_before = {
-            person_id: {
-                "attitude": values["attitude"],
-                "trust": values["trust"],
-            }
-            for person_id, values in npcs.items()
-        }
-        touched_npcs: set[str] = set()
-        revealed_by_person: dict[str, list[str]] = {}
-        _apply_rule_effects(
-            action.effects,
-            state,
-            npcs,
-            variable_ranges,
-            touched_npcs,
-            revealed_by_person,
-        )
-
-        expected_event_ids = [
-            event.event_id
-            for event in sorted(
-                scenario.event_rules,
-                key=lambda item: (item.priority, item.event_id),
-            )
-            if not (event.once and event.event_id in triggered_once)
-            and _conditions_match(
-                event.trigger,
-                event.match,
-                state,
-                npcs,
+        try:
+            result = evaluate_rule_action(
+                scenario,
+                snapshot,
+                turn.classified_action_id,
                 turn.turn_no,
             )
-        ]
+        except (RuleActionUnavailable, UnknownRuleAction, RuleEvaluationError) as exc:
+            raise ValueError(f"turn {turn.turn_no} {exc}") from exc
+
+        expected_event_ids = list(result.triggered_event_ids)
         if turn.triggered_event_ids != expected_event_ids:
             raise ValueError(f"turn {turn.turn_no} triggered events do not match rule conditions")
-        for event_id in expected_event_ids:
-            event = events_by_id[event_id]
-            _apply_rule_effects(
-                event.effects,
-                state,
-                npcs,
-                variable_ranges,
-                touched_npcs,
-                revealed_by_person,
-            )
-            if event.once:
-                triggered_once.add(event_id)
-        triggered_history.extend(expected_event_ids)
-
-        if not _states_match(state, turn.state_after):
+        if not _states_match(result.snapshot.state_dict(), turn.state_after):
             raise ValueError(f"turn {turn.turn_no} state_after does not match rule effects")
-        _validate_turn_npc_changes(
-            turn,
-            npcs,
-            npc_before,
-            touched_npcs,
-            revealed_by_person,
-        )
-        for person_id in touched_npcs:
-            npcs[person_id]["updated_turn"] = turn.turn_no
 
-        if current_node_id is not None and action.next_node_id is not None:
-            current_node_id = action.next_node_id
-        ending_id = _select_ending_id(
-            scenario,
-            state,
-            npcs,
-            turn.turn_no,
-            current_node_id,
-            nodes_by_id,
-        )
-        if ending_id is not None and turn.turn_no < session.current_turn:
-            raise ValueError(f"session continues after ending {ending_id}")
+        recorded_npcs = {item.person_id: item for item in turn.npc_changes}
+        expected_npcs = {item.person_id: item for item in result.npc_changes}
+        if set(recorded_npcs) != set(expected_npcs):
+            raise ValueError(f"turn {turn.turn_no} npc_changes must match rule effects")
+        for person_id, expected in expected_npcs.items():
+            recorded = recorded_npcs[person_id]
+            if (
+                not _numbers_match(recorded.attitude_before, expected.attitude_before)
+                or not _numbers_match(recorded.attitude_after, expected.attitude_after)
+                or not _numbers_match(recorded.trust_before, expected.trust_before)
+                or not _numbers_match(recorded.trust_after, expected.trust_after)
+                or recorded.revealed_fact_refs != list(expected.revealed_fact_refs)
+            ):
+                raise ValueError(f"turn {turn.turn_no} npc change does not match rule effects")
 
-    if not _states_match(state, session.current_state):
+        snapshot = result.snapshot
+        if result.ending_id is not None and turn.turn_no < session.current_turn:
+            raise ValueError(f"session continues after ending {result.ending_id}")
+
+    if not _states_match(snapshot.state_dict(), session.current_state):
         raise ValueError("session current_state does not match the completed replay")
-    if session.current_node_id != current_node_id:
+    if session.current_node_id != snapshot.current_node_id:
         raise ValueError("session current_node_id does not match node replay")
-    if session.triggered_event_ids != list(dict.fromkeys(triggered_history)):
+    if session.triggered_event_ids != list(snapshot.triggered_event_ids):
         raise ValueError("session triggered_event_ids do not match turn replay")
     if session.status == "active" and session.current_turn >= scenario.max_turns:
         raise ValueError("active session cannot remain open at scenario max_turns")
 
     next_turn_no = session.current_turn + 1
-    candidate_action_ids = (
-        nodes_by_id[current_node_id].action_ids
-        if current_node_id is not None
-        else [item.action_id for item in scenario.action_rules]
-    )
     expected_available_action_ids = (
-        [
-            action_id
-            for action_id in candidate_action_ids
-            if _conditions_match(
-                actions_by_id[action_id].available_when,
-                "all",
-                state,
-                npcs,
-                next_turn_no,
-            )
-        ]
+        list(available_rule_action_ids(scenario, snapshot, next_turn_no))
         if session.status == "active" and session.current_turn < scenario.max_turns
         else []
     )
@@ -1467,162 +1382,33 @@ def _validate_turn_replay(
         raise ValueError("session available_action_ids do not match the replay state")
 
     snapshots = {item.person_id: item for item in session.npc_states}
-    if set(snapshots) != set(npcs):
+    expected_npcs = snapshot.npc_dict()
+    if set(snapshots) != set(expected_npcs):
         raise ValueError("session npc_states must include every scenario NPC exactly once")
-    for person_id, expected in npcs.items():
-        snapshot = snapshots[person_id]
+    for person_id, expected in expected_npcs.items():
+        npc_snapshot = snapshots[person_id]
         if (
-            not _numbers_match(snapshot.attitude, float(expected["attitude"]))
-            or not _numbers_match(snapshot.trust, float(expected["trust"]))
-            or set(snapshot.known_fact_refs) != expected["known"]
-            or snapshot.updated_turn != expected["updated_turn"]
+            not _numbers_match(npc_snapshot.attitude, expected.attitude)
+            or not _numbers_match(npc_snapshot.trust, expected.trust)
+            or set(npc_snapshot.known_fact_refs) != set(expected.known_fact_refs)
+            or npc_snapshot.updated_turn != expected.updated_turn
         ):
             raise ValueError(f"session NPC snapshot does not match replay: {person_id}")
 
-    expected_ending_id = _select_ending_id(
+    expected_ending_id = select_rule_ending_id(
         scenario,
-        state,
-        npcs,
+        snapshot,
         session.current_turn,
-        current_node_id,
-        nodes_by_id,
     )
     if session.status == "completed":
         if session.ending_id != expected_ending_id:
             raise ValueError("completed session ending_id does not match ending rules")
     elif session.status == "active" and expected_ending_id is not None:
         raise ValueError("active session cannot remain open after an ending is reached")
-    elif session.ending_id is not None and session.ending_id != expected_ending_id:
-        raise ValueError("terminal session ending_id does not match ending rules")
-
-
-def _select_ending_id(
-    scenario: ScenarioTemplateV1,
-    state: dict[str, float],
-    npcs: dict[str, dict[str, object]],
-    turn_no: int,
-    current_node_id: str | None,
-    nodes_by_id: dict[str, ScenarioNodeV1],
-) -> str | None:
-    if current_node_id is not None:
-        node_ending_id = nodes_by_id[current_node_id].ending_id
-        if node_ending_id is not None:
-            return node_ending_id
-    matching_endings = sorted(
-        (
-            ending
-            for ending in scenario.ending_rules
-            if _conditions_match(
-                ending.conditions,
-                ending.match,
-                state,
-                npcs,
-                turn_no,
-            )
-        ),
-        key=lambda item: (item.priority, item.ending_id),
-    )
-    return matching_endings[0].ending_id if matching_endings else None
-
-
-def _apply_rule_effects(
-    effects: list[RuleEffectV1],
-    state: dict[str, float],
-    npcs: dict[str, dict[str, object]],
-    variable_ranges: dict[str, tuple[float, float]],
-    touched_npcs: set[str],
-    revealed_by_person: dict[str, list[str]],
-) -> None:
-    for effect in effects:
-        if isinstance(effect, StateEffectV1):
-            current = state[effect.variable_id]
-            value = effect.value if effect.operation == "set" else current + effect.value
-            minimum, maximum = variable_ranges[effect.variable_id]
-            state[effect.variable_id] = max(minimum, min(maximum, value))
-            continue
-
-        npc = npcs[effect.person_id]
-        npc["attitude"] = max(
-            -100,
-            min(100, float(npc["attitude"]) + effect.attitude_delta),
+    elif session.status in {"abandoned", "failed"} and expected_ending_id is not None:
+        raise ValueError(
+            f"{session.status} session cannot discard reached ending {expected_ending_id}"
         )
-        npc["trust"] = max(
-            -100,
-            min(100, float(npc["trust"]) + effect.trust_delta),
-        )
-        touched_npcs.add(effect.person_id)
-        revealed = revealed_by_person.setdefault(effect.person_id, [])
-        for fact_ref in effect.reveal_fact_refs:
-            if fact_ref not in revealed:
-                revealed.append(fact_ref)
-        known = npc["known"]
-        if isinstance(known, set):
-            known.update(effect.reveal_fact_refs)
-
-
-def _validate_turn_npc_changes(
-    turn: TurnV1,
-    npcs: dict[str, dict[str, object]],
-    npc_before: dict[str, dict[str, object]],
-    touched_npcs: set[str],
-    revealed_by_person: dict[str, list[str]],
-) -> None:
-    recorded = {change.person_id: change for change in turn.npc_changes}
-    if set(recorded) != touched_npcs:
-        raise ValueError(f"turn {turn.turn_no} npc_changes must match rule effects")
-    for person_id in touched_npcs:
-        before = npc_before[person_id]
-        after = npcs[person_id]
-        change = recorded[person_id]
-        if (
-            not _numbers_match(change.attitude_before, float(before["attitude"]))
-            or not _numbers_match(change.trust_before, float(before["trust"]))
-            or not _numbers_match(change.attitude_after, float(after["attitude"]))
-            or not _numbers_match(change.trust_after, float(after["trust"]))
-            or change.revealed_fact_refs != revealed_by_person.get(person_id, [])
-        ):
-            raise ValueError(f"turn {turn.turn_no} npc change does not match rule effects")
-
-
-def _conditions_match(
-    conditions: list[RuleConditionV1],
-    match: Literal["all", "any"],
-    state: dict[str, float],
-    npcs: dict[str, dict[str, object]],
-    turn_no: int,
-) -> bool:
-    results = [
-        _condition_matches(condition, state, npcs, turn_no)
-        for condition in conditions
-    ]
-    return any(results) if match == "any" else all(results)
-
-
-def _condition_matches(
-    condition: RuleConditionV1,
-    state: dict[str, float],
-    npcs: dict[str, dict[str, object]],
-    turn_no: int,
-) -> bool:
-    if isinstance(condition, StateConditionV1):
-        actual = state[condition.variable_id]
-    elif isinstance(condition, NpcConditionV1):
-        actual = float(npcs[condition.person_id][condition.field])
-    else:
-        actual = turn_no
-    return _compare_values(actual, condition.operator, condition.value)
-
-
-def _compare_values(actual: float, operator: ComparisonOperator, expected: float) -> bool:
-    if operator == "lt":
-        return actual < expected
-    if operator == "lte":
-        return actual <= expected
-    if operator == "eq":
-        return _numbers_match(actual, expected)
-    if operator == "gte":
-        return actual >= expected
-    return actual > expected
 
 
 def _states_match(left: dict[str, float], right: dict[str, float]) -> bool:

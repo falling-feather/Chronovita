@@ -170,6 +170,29 @@ class RuntimeContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "available_action_ids"):
             RuntimeBundleV1.model_validate(active)
 
+    def test_terminal_failure_cannot_hide_a_reached_ending(self):
+        for status in ("failed", "abandoned"):
+            with self.subTest(status=status):
+                raw = build_dayu_bundle().model_dump(mode="json")
+                raw["dossier"] = None
+                raw["session"].update(
+                    status=status,
+                    ending_id=None,
+                    dossier_id=None,
+                    available_action_ids=[],
+                )
+                with self.assertRaisesRegex(
+                    ValidationError,
+                    "cannot discard reached ending",
+                ):
+                    RuntimeBundleV1.model_validate(raw)
+
+    def test_contracts_reject_non_finite_rule_numbers(self):
+        raw = build_dayu_bundle().scenario.model_dump(mode="python")
+        raw["variables"][0]["initial"] = float("nan")
+        with self.assertRaisesRegex(ValidationError, "finite number"):
+            ScenarioTemplateV1.model_validate(raw)
+
     def test_bundle_replays_npc_effects(self):
         raw = build_dayu_bundle().model_dump(mode="json")
         raw["session"]["turns"][1]["npc_changes"][0]["trust_after"] = 14
