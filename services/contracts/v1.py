@@ -9,10 +9,12 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstrai
 from services.contracts.rules_v1 import (
     RuleActionUnavailable,
     RuleEvaluationError,
+    RuleStateChangeV1,
     UnknownRuleAction,
     available_rule_action_ids,
     evaluate_rule_action,
     initial_rule_snapshot,
+    render_rule_narrative,
     select_rule_ending_id,
 )
 
@@ -44,6 +46,7 @@ class ContractModel(BaseModel):
         allow_inf_nan=False,
         extra="forbid",
         frozen=True,
+        revalidate_instances="always",
         str_strip_whitespace=True,
     )
 
@@ -591,6 +594,8 @@ class GameSessionV1(ContractModel):
             raise ValueError("turns must be ordered and numbered from 1")
         if self.current_turn != len(self.turns):
             raise ValueError("current_turn must equal the number of stored turns")
+        if self.revision != self.current_turn + 1:
+            raise ValueError("revision must equal current_turn + 1")
         if any(turn.session_id != self.session_id for turn in self.turns):
             raise ValueError("all turns must reference this session_id")
         for previous, current in zip(self.turns, self.turns[1:]):
@@ -1343,6 +1348,17 @@ def _validate_turn_replay(
             raise ValueError(f"turn {turn.turn_no} triggered events do not match rule conditions")
         if not _states_match(result.snapshot.state_dict(), turn.state_after):
             raise ValueError(f"turn {turn.turn_no} state_after does not match rule effects")
+        if not _state_changes_match(turn.state_changes, result.state_changes):
+            raise ValueError(f"turn {turn.turn_no} state_changes do not match rule effects")
+        if turn.fact_refs != list(result.fact_refs):
+            raise ValueError(f"turn {turn.turn_no} fact_refs do not match rule provenance")
+        if turn.ruleset_hash != str(scenario.checksum):
+            raise ValueError(f"turn {turn.turn_no} ruleset_hash does not match scenario checksum")
+        if (
+            turn.narrative_source == "rules"
+            and turn.narrative != render_rule_narrative(scenario, result)
+        ):
+            raise ValueError(f"turn {turn.turn_no} rules narrative does not match replay")
 
         recorded_npcs = {item.person_id: item for item in turn.npc_changes}
         expected_npcs = {item.person_id: item for item in result.npc_changes}
@@ -1415,6 +1431,19 @@ def _states_match(left: dict[str, float], right: dict[str, float]) -> bool:
     return set(left) == set(right) and all(
         _numbers_match(left[key], right[key])
         for key in left
+    )
+
+
+def _state_changes_match(
+    recorded: list[StateChangeV1],
+    expected: tuple[RuleStateChangeV1, ...],
+) -> bool:
+    return len(recorded) == len(expected) and all(
+        actual.variable_id == replayed.variable_id
+        and _numbers_match(actual.before, replayed.before)
+        and _numbers_match(actual.after, replayed.after)
+        and _numbers_match(actual.delta, replayed.delta)
+        for actual, replayed in zip(recorded, expected)
     )
 
 

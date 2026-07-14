@@ -113,11 +113,11 @@
       "fact_refs": [
         "fact-flood-method"
       ],
-      "narrative": "【技术样板】规则结果已生成；正式叙事由受约束的叙事层提供。",
+      "narrative": "工程认知提升，但勘察期间水患仍在发展。",
       "narrative_source": "rules",
       "narrative_model": "",
       "narrative_metadata": {},
-      "ruleset_hash": "dayu-rules-v1-demo",
+      "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
       "created_at": "2026-07-14T02:05:00Z"
     },
     {
@@ -176,11 +176,11 @@
       "fact_refs": [
         "fact-cooperation"
       ],
-      "narrative": "【技术样板】规则结果已生成；正式叙事由受约束的叙事层提供。",
+      "narrative": "解释延缓工程，但提高了协作意愿。",
       "narrative_source": "rules",
       "narrative_model": "",
       "narrative_metadata": {},
-      "ruleset_hash": "dayu-rules-v1-demo",
+      "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
       "created_at": "2026-07-14T02:10:00Z"
     },
     {
@@ -237,11 +237,11 @@
         "fact-flood-method",
         "fact-public-mobilization"
       ],
-      "narrative": "【技术样板】规则结果已生成；正式叙事由受约束的叙事层提供。",
+      "narrative": "疏导降低水患，但消耗劳力。\n\n【教师待审】暴雨使水患再次上升。",
       "narrative_source": "rules",
       "narrative_model": "",
       "narrative_metadata": {},
-      "ruleset_hash": "dayu-rules-v1-demo",
+      "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
       "created_at": "2026-07-14T02:15:00Z"
     },
     {
@@ -304,11 +304,11 @@
         "fact-public-mobilization",
         "fact-cooperation"
       ],
-      "narrative": "【技术样板】规则结果已生成；正式叙事由受约束的叙事层提供。",
+      "narrative": "粮食储备下降，但民心与协作基础得到恢复。\n\n协作关系转化为可用劳力。",
       "narrative_source": "rules",
       "narrative_model": "",
       "narrative_metadata": {},
-      "ruleset_hash": "dayu-rules-v1-demo",
+      "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
       "created_at": "2026-07-14T02:20:00Z"
     },
     {
@@ -361,13 +361,14 @@
       "triggered_event_ids": [],
       "fact_refs": [
         "fact-flood-method",
-        "fact-public-mobilization"
+        "fact-public-mobilization",
+        "fact-cooperation"
       ],
-      "narrative": "【技术样板】规则结果已生成；正式叙事由受约束的叙事层提供。",
+      "narrative": "疏导降低水患，但消耗劳力。\n\n你以勘察、疏导和协作逐步控制水患。",
       "narrative_source": "rules",
       "narrative_model": "",
       "narrative_metadata": {},
-      "ruleset_hash": "dayu-rules-v1-demo",
+      "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
       "created_at": "2026-07-14T02:25:00Z"
     }
   ],

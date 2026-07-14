@@ -8,6 +8,11 @@ from pydantic import ValidationError
 
 from services import content
 from services.contracts.examples import build_dayu_bundle, example_documents
+from services.contracts.rules_v1 import (
+    evaluate_rule_action,
+    initial_rule_snapshot,
+    render_rule_narrative,
+)
 from services.contracts.v1 import (
     CoursePackageV1,
     DossierV1,
@@ -198,6 +203,32 @@ class RuntimeContractTests(unittest.TestCase):
         raw["session"]["turns"][1]["npc_changes"][0]["trust_after"] = 14
         with self.assertRaisesRegex(ValidationError, "npc change does not match rule effects"):
             RuntimeBundleV1.model_validate(raw)
+
+    def test_bundle_replays_all_rule_products_and_revision(self):
+        wrong_state_changes = build_dayu_bundle().model_dump(mode="json")
+        wrong_state_changes["session"]["turns"][0]["state_changes"].reverse()
+        with self.assertRaisesRegex(ValidationError, "state_changes do not match"):
+            RuntimeBundleV1.model_validate(wrong_state_changes)
+
+        wrong_facts = build_dayu_bundle().model_dump(mode="json")
+        wrong_facts["session"]["turns"][0]["fact_refs"] = ["fact-cooperation"]
+        with self.assertRaisesRegex(ValidationError, "fact_refs do not match"):
+            RuntimeBundleV1.model_validate(wrong_facts)
+
+        wrong_hash = build_dayu_bundle().model_dump(mode="json")
+        wrong_hash["session"]["turns"][0]["ruleset_hash"] = "0" * 64
+        with self.assertRaisesRegex(ValidationError, "ruleset_hash does not match"):
+            RuntimeBundleV1.model_validate(wrong_hash)
+
+        wrong_narrative = build_dayu_bundle().model_dump(mode="json")
+        wrong_narrative["session"]["turns"][0]["narrative"] = "tampered"
+        with self.assertRaisesRegex(ValidationError, "rules narrative does not match"):
+            RuntimeBundleV1.model_validate(wrong_narrative)
+
+        wrong_revision = build_dayu_bundle().model_dump(mode="json")
+        wrong_revision["session"]["revision"] = 999
+        with self.assertRaisesRegex(ValidationError, "revision must equal"):
+            RuntimeBundleV1.model_validate(wrong_revision)
 
     def test_dossier_must_match_session_ending_and_full_trajectory(self):
         forged_quote = build_dayu_bundle().model_dump(mode="json")
@@ -465,6 +496,7 @@ def _refresh_bundle_artifact_checksums(raw: dict) -> None:
     scenario["checksum"] = calculate_contract_checksum(
         ScenarioTemplateV1.model_validate(scenario)
     )
+    scenario_model = ScenarioTemplateV1.model_validate(scenario)
 
     course = raw["course"]
     for scenario_ref in course["scenario_refs"]:
@@ -478,6 +510,19 @@ def _refresh_bundle_artifact_checksums(raw: dict) -> None:
     if session is not None:
         session["course_checksum"] = course["checksum"]
         session["scenario_checksum"] = scenario["checksum"]
+        snapshot = initial_rule_snapshot(scenario_model)
+        for turn in session["turns"]:
+            result = evaluate_rule_action(
+                scenario_model,
+                snapshot,
+                turn["classified_action_id"],
+                turn["turn_no"],
+            )
+            turn["fact_refs"] = list(result.fact_refs)
+            turn["ruleset_hash"] = scenario["checksum"]
+            if turn["narrative_source"] == "rules":
+                turn["narrative"] = render_rule_narrative(scenario_model, result)
+            snapshot = result.snapshot
 
     dossier = raw.get("dossier")
     if dossier is not None:
@@ -495,6 +540,7 @@ def _zero_turn_bundle_raw() -> dict:
     scenario = raw["scenario"]
     session.update(
         status="active",
+        revision=1,
         current_turn=0,
         current_state={item["variable_id"]: item["initial"] for item in scenario["variables"]},
         current_node_id=scenario["start_node_id"],

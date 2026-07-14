@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
+import stat as stat_module
 from typing import Literal, TypeVar
 
 from pydantic import (
@@ -21,6 +23,7 @@ from services.contracts.rules_v1 import (
     available_rule_action_ids,
     evaluate_rule_action,
     initial_rule_snapshot,
+    render_rule_narrative,
     rule_snapshot_from_session,
     select_rule_ending_id,
 )
@@ -131,15 +134,32 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 def load_contract_file(path: str | Path, model: type[ModelT]) -> ModelT:
     source = Path(path)
     try:
-        if source.is_symlink():
-            raise ScenarioFileError(f"contract file cannot be a symbolic link: {source}")
-        size = source.stat().st_size
-        if size > MAX_CONTRACT_FILE_BYTES:
+        with source.open("rb") as handle:
+            opened_stat = os.fstat(handle.fileno())
+            if not stat_module.S_ISREG(opened_stat.st_mode):
+                raise ScenarioFileError(
+                    f"contract path is not a regular file: {source}"
+                )
+            if opened_stat.st_size > MAX_CONTRACT_FILE_BYTES:
+                raise ScenarioFileError(
+                    f"contract file exceeds {MAX_CONTRACT_FILE_BYTES} bytes: {source}"
+                )
+            raw = handle.read(MAX_CONTRACT_FILE_BYTES + 1)
+            path_stat = os.lstat(source)
+            if stat_module.S_ISLNK(path_stat.st_mode):
+                raise ScenarioFileError(
+                    f"contract file cannot be a symbolic link: {source}"
+                )
+            if not os.path.samestat(opened_stat, path_stat):
+                raise ScenarioFileError(
+                    f"contract file changed while being read: {source}"
+                )
+        if len(raw) > MAX_CONTRACT_FILE_BYTES:
             raise ScenarioFileError(
                 f"contract file exceeds {MAX_CONTRACT_FILE_BYTES} bytes: {source}"
             )
         payload = json.loads(
-            source.read_text(encoding="utf-8"),
+            raw.decode("utf-8"),
             object_pairs_hook=_reject_duplicate_json_keys,
         )
     except ScenarioFileError:
@@ -175,7 +195,12 @@ class SituationEngineV1:
         scenario: ScenarioTemplateV1,
     ) -> None:
         try:
-            bundle = RuntimeBundleV1(course=course, scenario=scenario)
+            bundle = RuntimeBundleV1.model_validate(
+                {
+                    "course": course.model_dump(mode="json"),
+                    "scenario": scenario.model_dump(mode="json"),
+                }
+            )
         except ValidationError as exc:
             raise ScenarioIntegrityError(
                 f"course and scenario cannot form a runtime bundle: {exc}"
@@ -363,9 +388,7 @@ class SituationEngineV1:
         except RuleEvaluationError as exc:
             raise SessionIntegrityError(str(exc)) from exc
 
-        narrative = "\n\n".join(evaluated.narrative_parts)
-        if not narrative:
-            narrative = f"已执行：{self._actions[action_id].label}"
+        narrative = render_rule_narrative(self.scenario, evaluated)
         turn = TurnV1(
             turn_id=_derived_id("turn", checked.session_id, command.client_action_id),
             session_id=checked.session_id,
@@ -497,10 +520,12 @@ class SituationEngineV1:
 
     def _validated_session(self, session: GameSessionV1) -> GameSessionV1:
         try:
-            bundle = RuntimeBundleV1(
-                course=self.course,
-                scenario=self.scenario,
-                session=session,
+            bundle = RuntimeBundleV1.model_validate(
+                {
+                    "course": self.course.model_dump(mode="json"),
+                    "scenario": self.scenario.model_dump(mode="json"),
+                    "session": session.model_dump(mode="json"),
+                }
             )
         except ValidationError as exc:
             raise SessionIntegrityError(f"session does not match its pinned ruleset: {exc}") from exc
@@ -580,7 +605,8 @@ class SituationEngineV1:
             else (1.0 if command.action_source == "fixed" else None)
         )
         return (
-            turn.raw_input == command.raw_input
+            command.expected_revision == turn.turn_no
+            and turn.raw_input == command.raw_input
             and turn.action_source == command.action_source
             and turn.classified_action_id == action_id
             and turn.classification_confidence == confidence

@@ -174,7 +174,7 @@
     {
       "scenario_id": "scenario-shangyang-institutional-reform",
       "scenario_version": 1,
-      "checksum": "37dfde6060a9acc152900fddb6a76c2e663f017a384df2560bad080c87b40469",
+      "checksum": "889a1bd7b788a2c51565631fb2b29b8b5712d82c3239da80304d9a449586fd81",
       "primary": true
     }
   ],
@@ -184,7 +184,7 @@
   "updated_at": "2026-07-14T02:00:00Z",
   "sealed_at": "2026-07-14T02:00:00Z",
   "sealed_by": "fixture-builder",
-  "checksum": "0018c2848b8e30b2bec64e7d08e3847d2997959f61f50dcac8045002a18f80d5",
+  "checksum": "7a4b754f5ed3da70d32fbbdb2d54055241e22c0eb5528061e0c18c95c84c0ddf",
   "compatibility": {
     "kind": "native-v1",
     "source_id": "",

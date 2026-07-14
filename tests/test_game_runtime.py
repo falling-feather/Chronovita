@@ -11,6 +11,7 @@ from services.contracts.v1 import (
     calculate_contract_checksum,
 )
 from services.game_runtime import (
+    MAX_CONTRACT_FILE_BYTES,
     ActionUnavailable,
     DuplicateActionConflict,
     RevisionConflict,
@@ -162,6 +163,49 @@ class SituationEngineTests(unittest.TestCase):
         self.assertEqual(session.ending_id, "ending-review-pending")
         self.assertEqual(session.current_state["law_clarity"], 45)
 
+    def test_shangyang_failure_and_turn_limit_endings_are_reachable(self):
+        engine = SituationEngineV1.from_files(
+            EXAMPLE_DIR / "shangyang-course-package.json",
+            EXAMPLE_DIR / "shangyang-scenario-template.json",
+        )
+        backlash = engine.replay(
+            session_id="session-runtime-shangyang-backlash",
+            user_id="student-runtime",
+            started_at=BASE_TIME,
+            commands=_commands(
+                "client-backlash",
+                [
+                    "announce-principles",
+                    "prepare-local-offices",
+                    "phase-rollout",
+                    "force-rapid-rollout",
+                ],
+            ),
+        )
+        self.assertEqual(backlash.status, "completed")
+        self.assertEqual(backlash.ending_id, "ending-reform-backlash")
+        self.assertGreaterEqual(backlash.current_state["noble_resistance"], 85)
+
+        turn_limit = engine.replay(
+            session_id="session-runtime-shangyang-turn-limit",
+            user_id="student-runtime",
+            started_at=BASE_TIME,
+            commands=_commands(
+                "client-turn-limit",
+                [
+                    "announce-principles",
+                    "prepare-local-offices",
+                    "phase-rollout",
+                    "continue-deliberation",
+                    "continue-deliberation",
+                    "continue-deliberation",
+                ],
+            ),
+        )
+        self.assertEqual(turn_limit.status, "completed")
+        self.assertEqual(turn_limit.ending_id, "ending-max-turns-fallback")
+        self.assertEqual(turn_limit.current_turn, 6)
+
     def test_apply_is_immutable_idempotent_and_revision_guarded(self):
         course_before = self.engine.course.model_dump(mode="json")
         scenario_before = self.engine.scenario.model_dump(mode="json")
@@ -189,6 +233,12 @@ class SituationEngineTests(unittest.TestCase):
         )
         with self.assertRaises(DuplicateActionConflict):
             self.engine.apply_action(first.session, conflict)
+
+        late_retry = command.model_copy(
+            update={"expected_revision": first.session.revision}
+        )
+        with self.assertRaises(DuplicateActionConflict):
+            self.engine.apply_action(first.session, late_retry)
 
         stale = RuntimeCommandV1(
             client_action_id="client-stale-001",
@@ -230,6 +280,11 @@ class SituationEngineTests(unittest.TestCase):
         tampered.current_state["flood_risk"] = 1
         with self.assertRaises(SessionIntegrityError):
             self.engine.apply_action(tampered, alias_command)
+
+        nested_tamper = result.session.model_copy(deep=True)
+        nested_tamper.turns[0].state_changes.clear()
+        with self.assertRaises(SessionIntegrityError):
+            self.engine.available_actions(nested_tamper)
 
     def test_new_action_is_rejected_after_terminal_ending(self):
         completed = self.engine.replay(
@@ -324,6 +379,20 @@ class SituationEngineTests(unittest.TestCase):
             with self.assertRaisesRegex(ScenarioFileError, "duplicate JSON key"):
                 load_scenario_template(duplicate)
 
+            oversized = root / "oversized.json"
+            oversized.write_bytes(b" " * (MAX_CONTRACT_FILE_BYTES + 1))
+            with self.assertRaisesRegex(ScenarioFileError, "exceeds"):
+                load_scenario_template(oversized)
+
+            symlink = root / "linked.json"
+            try:
+                symlink.symlink_to(tampered)
+            except OSError:
+                pass
+            else:
+                with self.assertRaisesRegex(ScenarioFileError, "symbolic link"):
+                    load_scenario_template(symlink)
+
 
 def _dayu_commands() -> list[RuntimeCommandV1]:
     specs = [
@@ -361,6 +430,19 @@ def _shangyang_commands() -> list[RuntimeCommandV1]:
             occurred_at=BASE_TIME + timedelta(minutes=index),
         )
         for index, (action_id, raw_input) in enumerate(specs, start=1)
+    ]
+
+
+def _commands(prefix: str, action_ids: list[str]) -> list[RuntimeCommandV1]:
+    return [
+        RuntimeCommandV1(
+            client_action_id=f"{prefix}-{index:03d}",
+            raw_input=action_id,
+            action_id=action_id,
+            expected_revision=index,
+            occurred_at=BASE_TIME + timedelta(minutes=index),
+        )
+        for index, action_id in enumerate(action_ids, start=1)
     ]
 
 

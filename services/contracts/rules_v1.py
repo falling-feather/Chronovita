@@ -385,6 +385,21 @@ def evaluate_rule_action(
     )
 
 
+def render_rule_narrative(
+    scenario: ScenarioTemplateV1,
+    result: RuleTurnResultV1,
+) -> str:
+    narrative = "\n\n".join(result.narrative_parts)
+    if narrative:
+        return narrative
+    action = next(
+        item
+        for item in scenario.action_rules
+        if item.action_id == result.action_id
+    )
+    return f"已执行：{action.label}"
+
+
 def _mutable_npcs(snapshot: RuleSnapshotV1) -> dict[str, dict[str, object]]:
     return {
         item.person_id: {

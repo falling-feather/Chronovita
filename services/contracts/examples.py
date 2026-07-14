@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+from services.contracts.rules_v1 import (
+    evaluate_rule_action,
+    initial_rule_snapshot,
+    render_rule_narrative,
+)
 from services.contracts.v1 import (
     ActionRuleV1,
     CoursePackageV1,
@@ -48,7 +53,7 @@ def build_dayu_bundle() -> RuntimeBundleV1:
     scenario = _build_scenario()
     course = _build_course(str(scenario.checksum))
     states = _state_history()
-    turns = _build_turns(states)
+    turns = _build_turns(states, scenario)
     dossier = _build_dossier(states, str(course.checksum), str(scenario.checksum))
     session = GameSessionV1(
         session_id="session-dayu-demo-001",
@@ -530,55 +535,23 @@ def _state_history() -> list[dict[str, float]]:
     ]
 
 
-def _build_turns(states: list[dict[str, float]]) -> list[TurnV1]:
+def _build_turns(
+    states: list[dict[str, float]],
+    scenario: ScenarioTemplateV1,
+) -> list[TurnV1]:
     specs = [
-        ("survey-terrain", "先勘察地势和河道", [], ["fact-flood-method"]),
-        ("explain-plan", "向各部族解释疏导计划", [], ["fact-cooperation"]),
-        (
-            "open-channels",
-            "按勘察结果开挖疏导线",
-            ["event-heavy-rain"],
-            ["fact-flood-method", "fact-public-mobilization"],
-        ),
-        (
-            "allocate-food",
-            "分配粮食，保障参与工程的民众",
-            ["event-cooperation"],
-            ["fact-public-mobilization", "fact-cooperation"],
-        ),
-        (
-            "open-channels",
-            "扩大已经见效的疏导工程",
-            [],
-            ["fact-flood-method", "fact-public-mobilization"],
-        ),
+        ("survey-terrain", "先勘察地势和河道"),
+        ("explain-plan", "向各部族解释疏导计划"),
+        ("open-channels", "按勘察结果开挖疏导线"),
+        ("allocate-food", "分配粮食，保障参与工程的民众"),
+        ("open-channels", "扩大已经见效的疏导工程"),
     ]
     turns: list[TurnV1] = []
-    for index, (action_id, raw_input, event_ids, fact_refs) in enumerate(specs, start=1):
-        before = states[index - 1]
-        after = states[index]
-        state_changes = [
-            StateChangeV1(
-                variable_id=variable_id,
-                before=value,
-                after=after[variable_id],
-                delta=after[variable_id] - value,
-            )
-            for variable_id, value in before.items()
-            if after[variable_id] != value
-        ]
-        npc_changes = []
-        if index == 2:
-            npc_changes.append(
-                NpcChangeV1(
-                    person_id="person-tribe-leader",
-                    attitude_before=0,
-                    attitude_after=20,
-                    trust_before=0,
-                    trust_after=15,
-                    revealed_fact_refs=["fact-cooperation"],
-                )
-            )
+    snapshot = initial_rule_snapshot(scenario)
+    for index, (action_id, raw_input) in enumerate(specs, start=1):
+        result = evaluate_rule_action(scenario, snapshot, action_id, index)
+        if result.snapshot.state_dict() != states[index]:
+            raise RuntimeError(f"dayu state fixture drifted at turn {index}")
         turns.append(
             TurnV1(
                 turn_id=f"turn-dayu-{index:03d}",
@@ -590,18 +563,37 @@ def _build_turns(states: list[dict[str, float]]) -> list[TurnV1]:
                 action_source="fixed",
                 classified_action_id=action_id,
                 classification_confidence=1,
-                state_before=before,
-                state_after=after,
-                state_changes=state_changes,
-                npc_changes=npc_changes,
-                triggered_event_ids=event_ids,
-                fact_refs=fact_refs,
-                narrative="【技术样板】规则结果已生成；正式叙事由受约束的叙事层提供。",
+                state_before=snapshot.state_dict(),
+                state_after=result.snapshot.state_dict(),
+                state_changes=[
+                    StateChangeV1(
+                        variable_id=item.variable_id,
+                        before=item.before,
+                        after=item.after,
+                        delta=item.delta,
+                    )
+                    for item in result.state_changes
+                ],
+                npc_changes=[
+                    NpcChangeV1(
+                        person_id=item.person_id,
+                        attitude_before=item.attitude_before,
+                        attitude_after=item.attitude_after,
+                        trust_before=item.trust_before,
+                        trust_after=item.trust_after,
+                        revealed_fact_refs=list(item.revealed_fact_refs),
+                    )
+                    for item in result.npc_changes
+                ],
+                triggered_event_ids=list(result.triggered_event_ids),
+                fact_refs=list(result.fact_refs),
+                narrative=render_rule_narrative(scenario, result),
                 narrative_source="rules",
-                ruleset_hash="dayu-rules-v1-demo",
+                ruleset_hash=str(scenario.checksum),
                 created_at=_BASE_TIME + timedelta(minutes=index * 5),
             )
         )
+        snapshot = result.snapshot
     return turns
 
 
@@ -1144,6 +1136,33 @@ def _build_shangyang_scenario() -> ScenarioTemplateV1:
                 fact_refs=["fact-rule-publication"],
                 next_node_id="node-review-pending",
             ),
+            ActionRuleV1(
+                action_id="force-rapid-rollout",
+                label=marked("强行快速推行"),
+                description=marked("验证阻力超限结局与规则事件叠加。"),
+                effects=[
+                    StateEffectV1(variable_id="noble_resistance", value=40),
+                    StateEffectV1(variable_id="public_order", value=-20),
+                    NpcEffectV1(
+                        person_id="person-old-nobility",
+                        attitude_delta=-30,
+                        trust_delta=-15,
+                        reveal_fact_refs=["fact-merit-incentives"],
+                    ),
+                ],
+                feedback=marked("规则模型将阻力推至失败阈值，不输出历史归因。"),
+                fact_refs=["fact-merit-incentives"],
+                next_node_id="node-policy-evaluation",
+            ),
+            ActionRuleV1(
+                action_id="continue-deliberation",
+                label=marked("继续评估"),
+                description=marked("验证评估节点自循环与回合上限兜底。"),
+                effects=[],
+                feedback=marked("规则模型保留当前状态并进入下一回合评估。"),
+                fact_refs=["fact-rule-publication"],
+                next_node_id="node-policy-evaluation",
+            ),
         ],
         event_rules=[
             EventRuleV1(
@@ -1293,7 +1312,12 @@ def _build_shangyang_scenario() -> ScenarioTemplateV1:
                 node_id="node-policy-evaluation",
                 title=marked("方案评估节点"),
                 narration=marked("仅验证多个终点节点的流转。"),
-                action_ids=["consolidate-rules", "pause-and-review"],
+                action_ids=[
+                    "consolidate-rules",
+                    "pause-and-review",
+                    "force-rapid-rollout",
+                    "continue-deliberation",
+                ],
             ),
             ScenarioNodeV1(
                 node_id="node-reform-recorded",
