@@ -40,6 +40,21 @@ from services.contracts.v1 import (
     schema_document,
     verify_contract_checksum,
 )
+from services.contracts.release_v2 import (
+    ActiveReleasePointerV1,
+    CourseReleaseItemV1,
+    CourseReleaseItemV2,
+    CourseReleaseManifestAny,
+    CourseReleaseManifestV1,
+    CourseReleaseManifestV2,
+    RuntimeArtifactDescriptorV1,
+    calculate_release_metadata_checksum,
+    parse_course_release_manifest,
+    parse_signed_course_release_manifest,
+    runtime_artifact_path,
+    sign_release_metadata,
+    verify_release_metadata_checksum,
+)
 
 __all__ = [
     "ActionRuleV1",
@@ -82,4 +97,17 @@ __all__ = [
     "course_package_from_legacy",
     "schema_document",
     "verify_contract_checksum",
+    "ActiveReleasePointerV1",
+    "CourseReleaseItemV1",
+    "CourseReleaseItemV2",
+    "CourseReleaseManifestAny",
+    "CourseReleaseManifestV1",
+    "CourseReleaseManifestV2",
+    "RuntimeArtifactDescriptorV1",
+    "calculate_release_metadata_checksum",
+    "parse_course_release_manifest",
+    "parse_signed_course_release_manifest",
+    "runtime_artifact_path",
+    "sign_release_metadata",
+    "verify_release_metadata_checksum",
 ]

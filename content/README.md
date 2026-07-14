@@ -6,6 +6,9 @@ This directory is the file-based content handoff area for the current admin cont
 - `sealed/`: versioned JSON files created by `/api/v1/admin/content/drafts/{lesson_id}/seal`.
 - `workflows/`: signed per-lesson review state, validation report and audit events.
 - `packages/v1/`: immutable canonical `CoursePackageV1` artifacts materialized at publish time.
+- `schemas/releases/v2/`: generated JSON Schema for the joint course/runtime release manifest.
+- `examples/releases/v2/`: development-only V2 release fixture; it is never scanned as published content.
+- `runtime/v1/`: reserved content-addressed course-package and scenario artifacts used by V2 releases.
 - `releases/manifests/{course_id}/`: immutable full-course release snapshots.
 - `releases/active/{course_id}.json`: atomically replaced pointer to the student-visible release.
 - `releases/transactions/{course_id}.json`: short-lived crash-recovery journal removed after a completed release.
@@ -59,6 +62,7 @@ Runtime contract artifacts:
 - `examples/v1/`: a complete Dayu flood-control technical fixture plus one file for each top-level contract.
 - `services/contracts/`: the authoritative Pydantic models, cross-reference validation, checksum helpers, and the legacy lesson-package adapter.
 - `scripts/export_runtime_contracts.py`: deterministic exporter for the committed schema and example files.
+- `services/contracts/release_v2.py`: strict V1/V2 manifest reader, content-addressed descriptors and release metadata checksum helpers.
 
 Regenerate and validate from the repository root:
 
@@ -67,7 +71,7 @@ Regenerate and validate from the repository root:
 & ".\.venv\Scripts\python.exe" -m unittest discover -s tests -v
 ```
 
-The Dayu fixture is development data. Historical body text, facts, persona material, and explanations marked `教师待审` must be replaced or approved by the teaching team before a real release.
+The Dayu fixtures are development data. Historical body text, facts, persona material, and explanations marked `教师待审` must be replaced or approved by the teaching team before a real release. A V2 example manifest is only a contract fixture; publication remains controlled exclusively by an active release pointer.
 
 Sealed files are immutable source artifacts for review and Git submission. The active release manifest, not the highest sealed filename, is authoritative for the course service. Public reads never scan `sealed/` for a presumed latest version. A pre-workflow sealed package must be explicitly whitelisted through `POST /api/v1/admin/content/releases/{course_id}/bootstrap-legacy` with exact `lesson_id` and `content_version` selections.
 

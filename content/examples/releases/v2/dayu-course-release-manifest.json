@@ -1,0 +1,46 @@
+{
+  "schema_version": "course-release/v2",
+  "release_id": "rel-01a2b3c4d5-0001",
+  "release_no": 1,
+  "course_id": "C-early-civilization",
+  "operation": "bootstrap",
+  "parent_release_id": null,
+  "restored_from_release_id": null,
+  "created_at": "2026-07-14T00:00:00Z",
+  "created_by": "architecture-fixture",
+  "note": "Development-only contract fixture; not an active published release.",
+  "items": [
+    {
+      "lesson_id": "dayu-flood-control",
+      "course_id": "C-early-civilization",
+      "content_version": 1,
+      "source_path": "sealed/dayu-flood-control-v001.json",
+      "source_checksum": "e128e00b4ad604763bd522be2eca639b3fa00aae878c6dc8a570865350eb6789",
+      "course_package": {
+        "kind": "course-package",
+        "schema_version": "course-package/v1",
+        "artifact_id": "pkg-dayu-flood-control",
+        "course_id": "C-early-civilization",
+        "lesson_id": "dayu-flood-control",
+        "version": 1,
+        "checksum": "e128e00b4ad604763bd522be2eca639b3fa00aae878c6dc8a570865350eb6789",
+        "path": "runtime/v1/course-packages/C-early-civilization/dayu-flood-control/v001-e128e00b4ad604763bd522be2eca639b3fa00aae878c6dc8a570865350eb6789.json"
+      },
+      "scenarios": [
+        {
+          "kind": "scenario-template",
+          "schema_version": "scenario-template/v1",
+          "artifact_id": "scenario-dayu-flood-control",
+          "course_id": "C-early-civilization",
+          "lesson_id": "dayu-flood-control",
+          "version": 1,
+          "checksum": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
+          "path": "runtime/v1/scenarios/C-early-civilization/dayu-flood-control/scenario-dayu-flood-control/v001-c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911.json"
+        }
+      ],
+      "primary_scenario_id": "scenario-dayu-flood-control",
+      "audience": "published"
+    }
+  ],
+  "checksum": "44c5ceaafb7e069496352a36810341b1cd8ac420e6d1b3ade912c276692d8cda"
+}
