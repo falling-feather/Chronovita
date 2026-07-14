@@ -6,15 +6,28 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
+from sqlalchemy.engine import Engine
 
-from services.contracts.v1 import GameSessionV1
+from services.contracts.v1 import GameSessionV1, RuntimeBundleV1
 from services.game_runtime import (
     AdvanceResultV1,
     RuntimeCommandV1,
+    SessionIntegrityError,
     SituationEngineV1,
 )
-from services.game_runtime.catalog import ScenarioCatalogRepository
+from services.game_runtime.catalog import (
+    ScenarioCatalogNotFound,
+    ScenarioCatalogRepository,
+)
+from services.game_runtime.store import (
+    GameRuntimeStore,
+    StoredSessionAlreadyExists,
+    StoredSessionIntegrityError,
+    StoredSessionNotFound,
+    StoredSessionRecord,
+    StoredSessionWriteConflict,
+)
 
 
 class GameSessionNotFound(ValueError):
@@ -38,12 +51,16 @@ class ScenarioSummaryV1(BaseModel):
 
 
 class GameRuntimeService:
-    """Thread-safe ephemeral session coordinator; persistence belongs to BE-002."""
+    """Durable session coordinator backed by optimistic whole-record CAS."""
 
-    def __init__(self, repository: ScenarioCatalogRepository) -> None:
+    def __init__(
+        self,
+        repository: ScenarioCatalogRepository,
+        store: GameRuntimeStore,
+    ) -> None:
         self.repository = repository
+        self.store = store
         self._lock = threading.RLock()
-        self._sessions: dict[str, tuple[SituationEngineV1, GameSessionV1]] = {}
 
     def list_scenarios(self) -> tuple[ScenarioSummaryV1, ...]:
         return tuple(
@@ -66,16 +83,19 @@ class GameRuntimeService:
             user_id=user_id,
             started_at=started_at,
         )
-        with self._lock:
-            self._sessions[session.session_id] = (engine, _copy_session(session))
+        try:
+            self.store.create_session(session)
+        except (
+            StoredSessionAlreadyExists,
+            StoredSessionIntegrityError,
+        ) as exc:
+            raise SessionIntegrityError(str(exc)) from exc
         return _summary(engine, audience=loaded.entry.audience), session
 
     def get_session(self, session_id: str) -> GameSessionV1:
-        with self._lock:
-            record = self._sessions.get(session_id)
-            if record is None:
-                raise GameSessionNotFound(f"game session not found: {session_id}")
-            return _copy_session(record[1])
+        record = self._load_record(session_id)
+        engine = self._engine_for(record.session)
+        return self._validated_session(engine, record.session)
 
     def apply_action(
         self,
@@ -83,17 +103,66 @@ class GameRuntimeService:
         command: RuntimeCommandV1,
     ) -> AdvanceResultV1:
         with self._lock:
-            record = self._sessions.get(session_id)
-            if record is None:
-                raise GameSessionNotFound(f"game session not found: {session_id}")
-            engine, session = record
+            record = self._load_record(session_id)
+            engine = self._engine_for(record.session)
+            session = self._validated_session(engine, record.session)
             result = engine.apply_action(session, command)
-            self._sessions[session_id] = (engine, _copy_session(result.session))
+            if result.session.revision == session.revision:
+                return result
+            try:
+                self.store.compare_and_swap(record, result.session)
+            except StoredSessionIntegrityError as exc:
+                raise SessionIntegrityError(str(exc)) from exc
+            except StoredSessionWriteConflict:
+                latest = self._load_record(session_id)
+                latest_engine = self._engine_for(latest.session)
+                latest_session = self._validated_session(
+                    latest_engine,
+                    latest.session,
+                )
+                return latest_engine.apply_action(latest_session, command)
             return result
 
-    def clear(self) -> None:
-        with self._lock:
-            self._sessions.clear()
+    def _load_record(self, session_id: str) -> StoredSessionRecord:
+        try:
+            return self.store.load_session(session_id)
+        except StoredSessionNotFound as exc:
+            raise GameSessionNotFound(str(exc)) from exc
+        except StoredSessionIntegrityError as exc:
+            raise SessionIntegrityError(str(exc)) from exc
+
+    def _engine_for(self, session: GameSessionV1) -> SituationEngineV1:
+        try:
+            return self.repository.get_exact(
+                session.scenario_id,
+                session.scenario_version,
+                session.scenario_checksum,
+            )
+        except ScenarioCatalogNotFound as exc:
+            raise SessionIntegrityError(
+                "the pinned scenario artifact is no longer available"
+            ) from exc
+
+    @staticmethod
+    def _validated_session(
+        engine: SituationEngineV1,
+        session: GameSessionV1,
+    ) -> GameSessionV1:
+        try:
+            bundle = RuntimeBundleV1.model_validate(
+                {
+                    "course": engine.course.model_dump(mode="json"),
+                    "scenario": engine.scenario.model_dump(mode="json"),
+                    "session": session.model_dump(mode="json"),
+                }
+            )
+        except ValidationError as exc:
+            raise SessionIntegrityError(
+                f"persisted session failed deterministic replay: {exc}"
+            ) from exc
+        if bundle.session is None:
+            raise SessionIntegrityError("persisted runtime bundle lost its session")
+        return bundle.session
 
 
 _SERVICE_LOCK = threading.RLock()
@@ -104,12 +173,21 @@ def configure_game_runtime(
     *,
     content_root: str | Path,
     catalog_path: str | Path,
+    engine: Engine | None = None,
+    store: GameRuntimeStore | None = None,
 ) -> GameRuntimeService:
+    if store is None:
+        if engine is None:
+            raise ValueError("configure_game_runtime requires an engine or store")
+        store = GameRuntimeStore(engine)
+    elif engine is not None:
+        raise ValueError("configure_game_runtime accepts either engine or store")
     service = GameRuntimeService(
         ScenarioCatalogRepository(
             content_root=content_root,
             catalog_path=catalog_path,
-        )
+        ),
+        store,
     )
     global _SERVICE
     with _SERVICE_LOCK:
@@ -127,9 +205,7 @@ def get_game_runtime() -> GameRuntimeService:
 def shutdown_game_runtime() -> None:
     global _SERVICE
     with _SERVICE_LOCK:
-        if _SERVICE is not None:
-            _SERVICE.clear()
-            _SERVICE = None
+        _SERVICE = None
 
 
 def _summary(
@@ -151,10 +227,6 @@ def _summary(
         max_turns=scenario.max_turns,
         audience=audience,
     )
-
-
-def _copy_session(session: GameSessionV1) -> GameSessionV1:
-    return GameSessionV1.model_validate(session.model_dump(mode="json"))
 
 
 def _utcnow() -> datetime:

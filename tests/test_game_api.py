@@ -10,6 +10,8 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
+from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -30,7 +32,12 @@ from services.game_runtime.catalog import (
     ScenarioCatalogRepository,
     ScenarioCatalogV1,
 )
-from services.game_runtime.service import GameRuntimeService, configure_game_runtime
+from services.game_runtime.service import (
+    GameRuntimeService,
+    configure_game_runtime,
+    get_game_runtime,
+)
+from services.game_runtime.store import GameRuntimeStore
 
 
 class GameApiTests(unittest.TestCase):
@@ -60,7 +67,7 @@ class GameApiTests(unittest.TestCase):
         listed = self.client.get("/api/v1/practice/game/scenarios")
         self.assertEqual(listed.status_code, 200, listed.text)
         self.assertEqual(len(listed.json()["items"]), 2)
-        self.assertEqual(listed.json()["session_storage"], "ephemeral")
+        self.assertEqual(listed.json()["session_storage"], "sqlite-json")
         self.assertEqual(
             {item["audience"] for item in listed.json()["items"]},
             {"development"},
@@ -211,9 +218,11 @@ class GameApiTests(unittest.TestCase):
         self.assertIn("state", stepped.json())
 
     def test_broken_catalog_returns_stable_service_unavailable(self):
+        store = get_game_runtime().store
         configure_game_runtime(
             content_root=REPO_ROOT / "content",
             catalog_path="scenarios/catalog-does-not-exist.json",
+            store=store,
         )
         response = self.client.get("/api/v1/practice/game/scenarios")
         self.assertEqual(response.status_code, 503, response.text)
@@ -323,12 +332,7 @@ class ScenarioCatalogTests(unittest.TestCase):
 
 class GameRuntimeServiceTests(unittest.TestCase):
     def test_returned_session_mutation_cannot_change_stored_authoritative_state(self):
-        service = GameRuntimeService(
-            ScenarioCatalogRepository(
-                content_root=REPO_ROOT / "content",
-                catalog_path=REPO_ROOT / "content" / "scenarios" / "catalog.v1.json",
-            )
-        )
+        service = self._service()
         started_at = datetime(2026, 7, 14, 8, 0, tzinfo=timezone.utc)
         _, started = service.start_session(
             "scenario-dayu-flood-control",
@@ -363,12 +367,7 @@ class GameRuntimeServiceTests(unittest.TestCase):
         )
 
     def test_concurrent_same_revision_allows_exactly_one_turn(self):
-        service = GameRuntimeService(
-            ScenarioCatalogRepository(
-                content_root=REPO_ROOT / "content",
-                catalog_path="scenarios/catalog.v1.json",
-            )
-        )
+        service = self._service()
         started_at = datetime(2026, 7, 14, 9, 0, tzinfo=timezone.utc)
         _, session = service.start_session(
             "scenario-dayu-flood-control",
@@ -406,6 +405,22 @@ class GameRuntimeServiceTests(unittest.TestCase):
         stored = service.get_session(session.session_id)
         self.assertEqual(stored.current_turn, 1)
         self.assertEqual(stored.revision, 2)
+
+    def _service(self) -> GameRuntimeService:
+        engine = create_engine(
+            "sqlite://",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+            future=True,
+        )
+        self.addCleanup(engine.dispose)
+        return GameRuntimeService(
+            ScenarioCatalogRepository(
+                content_root=REPO_ROOT / "content",
+                catalog_path=REPO_ROOT / "content" / "scenarios" / "catalog.v1.json",
+            ),
+            GameRuntimeStore(engine),
+        )
 
 
 if __name__ == "__main__":

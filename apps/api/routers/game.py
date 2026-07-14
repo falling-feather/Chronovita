@@ -54,7 +54,7 @@ class GameScenarioListResponse(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     items: list[ScenarioSummaryV1]
-    session_storage: Literal["ephemeral"] = "ephemeral"
+    session_storage: Literal["sqlite-json"] = "sqlite-json"
 
 
 class GameStartResponse(BaseModel):
@@ -62,7 +62,7 @@ class GameStartResponse(BaseModel):
 
     scenario: ScenarioSummaryV1
     session: GameSessionV1
-    session_storage: Literal["ephemeral"] = "ephemeral"
+    session_storage: Literal["sqlite-json"] = "sqlite-json"
 
 
 @router.get("/scenarios", response_model=GameScenarioListResponse)

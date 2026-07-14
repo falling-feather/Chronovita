@@ -29,13 +29,14 @@ from services.game_runtime.service import configure_game_runtime, shutdown_game_
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    persistence.init_engine(settings.sqlite_path)
+    engine = persistence.init_engine(settings.sqlite_path)
     try:
         content.configure(settings.content_root)
         content_workflow.recover_pending_release_transactions()
         configure_game_runtime(
             content_root=content.content_root(),
             catalog_path=settings.game_catalog_path,
+            engine=engine,
         )
         yield
     finally:
