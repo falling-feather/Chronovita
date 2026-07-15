@@ -28,9 +28,11 @@ from services.contracts.rules_v1 import (
     select_rule_ending_id,
 )
 from services.contracts.v1 import (
+    ActionClassificationEvidenceV1,
     ContractId,
     CoursePackageV1,
     GameSessionV1,
+    NarrativeEvidenceV1,
     NarrativeMessageV1,
     NpcChangeV1,
     NpcStateV1,
@@ -40,6 +42,10 @@ from services.contracts.v1 import (
     ScenarioTemplateV1,
     StateChangeV1,
     TurnV1,
+    calculate_action_classification_basis_checksum,
+    calculate_narrative_basis_checksum,
+    calculate_text_checksum,
+    reviewed_narrative_refs,
     verify_contract_checksum,
 )
 
@@ -88,6 +94,47 @@ class ScenarioDefinitionError(GameRuntimeError):
     code = "scenario_definition_error"
 
 
+class RuntimeClassificationContextV1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        str_strip_whitespace=True,
+    )
+
+    source: Literal["fixed", "exact", "llm"]
+    reason_code: Literal["fixed_action", "exact_match", "semantic_match"]
+    policy_version: Literal["action-classifier/v1"] = "action-classifier/v1"
+    reviewed_fact_refs: list[ContractId] = Field(default_factory=list)
+    provider: str = Field(default="", max_length=32)
+    model: str = Field(default="", max_length=128)
+    output_checksum: str = Field(default="", pattern=r"^$|^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def validate_context(self) -> "RuntimeClassificationContextV1":
+        if len(set(self.reviewed_fact_refs)) != len(self.reviewed_fact_refs):
+            raise ValueError("reviewed_fact_refs must be unique")
+        expected_reason = {
+            "fixed": "fixed_action",
+            "exact": "exact_match",
+            "llm": "semantic_match",
+        }[self.source]
+        if self.reason_code != expected_reason:
+            raise ValueError("classification context source and reason_code are inconsistent")
+        if self.source == "llm":
+            if not self.reviewed_fact_refs:
+                raise ValueError("llm classification context requires reviewed facts")
+            if not self.provider or not self.model or not self.output_checksum:
+                raise ValueError("llm classification context requires model metadata")
+        elif (
+            self.reviewed_fact_refs
+            or self.provider
+            or self.model
+            or self.output_checksum
+        ):
+            raise ValueError("non-llm classification context cannot claim model evidence")
+        return self
+
+
 class RuntimeCommandV1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -100,6 +147,7 @@ class RuntimeCommandV1(BaseModel):
     action_id: ContractId | None = None
     action_source: Literal["fixed", "free_input", "fallback"] = "fixed"
     classification_confidence: float | None = Field(default=None, ge=0, le=1)
+    classification_context: RuntimeClassificationContextV1 | None = None
     expected_revision: int = Field(ge=1)
     occurred_at: AwareDatetime
 
@@ -107,6 +155,13 @@ class RuntimeCommandV1(BaseModel):
     def validate_classification(self) -> "RuntimeCommandV1":
         if self.action_source != "fixed" and self.action_id is None:
             raise ValueError("free_input and fallback commands require a classified action_id")
+        if self.classification_context is not None:
+            if self.action_source == "fixed" and self.classification_context.source != "fixed":
+                raise ValueError("fixed commands require fixed classification context")
+            if self.action_source == "free_input" and self.classification_context.source == "fixed":
+                raise ValueError("free input cannot claim fixed classification context")
+            if self.action_source == "fallback":
+                raise ValueError("fallback commands cannot carry typed classification context")
         return self
 
 
@@ -243,6 +298,7 @@ class SituationEngineV1:
         user_id: str,
         started_at: AwareDatetime,
         random_seed: str = "",
+        ai_evidence_version: Literal[0, 1] = 0,
     ) -> GameSessionV1:
         snapshot = initial_rule_snapshot(self.scenario)
         ending_id = select_rule_ending_id(self.scenario, snapshot, 0)
@@ -276,6 +332,7 @@ class SituationEngineV1:
             course_checksum=str(self.course.checksum),
             scenario_checksum=str(self.scenario.checksum),
             engine_version=ENGINE_VERSION,
+            ai_evidence_version=ai_evidence_version,
             random_seed=random_seed,
             status=status,
             revision=1,
@@ -389,6 +446,79 @@ class SituationEngineV1:
             raise SessionIntegrityError(str(exc)) from exc
 
         narrative = render_rule_narrative(self.scenario, evaluated)
+        confidence = (
+            command.classification_confidence
+            if command.classification_confidence is not None
+            else (1.0 if command.action_source == "fixed" else None)
+        )
+        classification_evidence = None
+        narrative_evidence = None
+        if checked.ai_evidence_version == 1:
+            classification_context = self._classification_context_for(
+                command,
+                action_id,
+            )
+            if confidence is None:
+                raise SessionIntegrityError(
+                    "evidence-version-1 commands require classification confidence"
+                )
+            available_before = available_rule_action_ids(
+                self.scenario,
+                snapshot,
+                turn_no,
+            )
+            classification_evidence = ActionClassificationEvidenceV1(
+                source=classification_context.source,
+                reason_code=classification_context.reason_code,
+                policy_version=classification_context.policy_version,
+                available_action_ids=list(available_before),
+                reviewed_fact_refs=list(classification_context.reviewed_fact_refs),
+                basis_checksum=calculate_action_classification_basis_checksum(
+                    course_checksum=str(self.course.checksum),
+                    scenario_checksum=str(self.scenario.checksum),
+                    session_id=checked.session_id,
+                    revision=turn_no,
+                    snapshot=snapshot,
+                    raw_input=command.raw_input,
+                    available_action_ids=available_before,
+                    reviewed_fact_refs=classification_context.reviewed_fact_refs,
+                    action_id=action_id,
+                    confidence=confidence,
+                    source=classification_context.source,
+                    reason_code=classification_context.reason_code,
+                    policy_version=classification_context.policy_version,
+                ),
+                provider=classification_context.provider,
+                model=classification_context.model,
+                output_checksum=classification_context.output_checksum,
+            )
+            allowed_fact_refs, allowed_source_ref_ids = reviewed_narrative_refs(
+                self.course,
+                self.scenario,
+                action_id=action_id,
+                triggered_event_ids=evaluated.triggered_event_ids,
+                ending_id=evaluated.ending_id,
+            )
+            narrative_evidence = NarrativeEvidenceV1(
+                source="rules",
+                policy_version="rule-narrative/v1",
+                basis_checksum=calculate_narrative_basis_checksum(
+                    course_checksum=str(self.course.checksum),
+                    scenario_checksum=str(self.scenario.checksum),
+                    session_id=checked.session_id,
+                    turn_no=turn_no,
+                    classification_evidence=classification_evidence,
+                    action_feedback=self._actions[action_id].feedback,
+                    snapshot_before=snapshot,
+                    result=evaluated,
+                    rule_narrative=narrative,
+                    allowed_fact_refs=allowed_fact_refs,
+                    allowed_source_ref_ids=allowed_source_ref_ids,
+                ),
+                output_checksum=calculate_text_checksum(narrative),
+                allowed_fact_refs=allowed_fact_refs,
+                allowed_source_ref_ids=allowed_source_ref_ids,
+            )
         turn = TurnV1(
             turn_id=_derived_id("turn", checked.session_id, command.client_action_id),
             session_id=checked.session_id,
@@ -398,11 +528,7 @@ class SituationEngineV1:
             raw_input=command.raw_input,
             action_source=command.action_source,
             classified_action_id=action_id,
-            classification_confidence=(
-                command.classification_confidence
-                if command.classification_confidence is not None
-                else (1.0 if command.action_source == "fixed" else None)
-            ),
+            classification_confidence=confidence,
             state_before=snapshot.state_dict(),
             state_after=evaluated.snapshot.state_dict(),
             state_changes=[
@@ -429,6 +555,8 @@ class SituationEngineV1:
             fact_refs=list(evaluated.fact_refs),
             narrative=narrative,
             narrative_source="rules",
+            classification_evidence=classification_evidence,
+            narrative_evidence=narrative_evidence,
             ruleset_hash=self.ruleset_hash,
             created_at=command.occurred_at,
         )
@@ -593,6 +721,54 @@ class SituationEngineV1:
             existing.add(entity_id)
         return observed
 
+    def _classification_context_for(
+        self,
+        command: RuntimeCommandV1,
+        action_id: str,
+    ) -> RuntimeClassificationContextV1:
+        context = command.classification_context
+        if context is None:
+            if command.action_source == "fixed":
+                context = RuntimeClassificationContextV1(
+                    source="fixed",
+                    reason_code="fixed_action",
+                )
+            elif command.action_source == "free_input":
+                try:
+                    exact_action_id = self.resolve_action_id(command.raw_input)
+                except UnknownAction:
+                    exact_action_id = None
+                if exact_action_id != action_id:
+                    raise SessionIntegrityError(
+                        "semantic free input requires server classification evidence"
+                    )
+                context = RuntimeClassificationContextV1(
+                    source="exact",
+                    reason_code="exact_match",
+                )
+            else:
+                raise SessionIntegrityError(
+                    "evidence-version-1 sessions do not accept fallback commands"
+                )
+        if context.source == "fixed":
+            if command.action_source != "fixed" or command.classification_confidence not in {
+                None,
+                1.0,
+            }:
+                raise SessionIntegrityError("fixed classification evidence requires confidence 1")
+        elif context.source == "exact":
+            if (
+                command.action_source != "free_input"
+                or command.classification_confidence != 1.0
+            ):
+                raise SessionIntegrityError("exact classification evidence requires confidence 1")
+        elif (
+            command.action_source != "free_input"
+            or command.classification_confidence is None
+        ):
+            raise SessionIntegrityError("llm classification evidence requires confidence")
+        return context
+
     @staticmethod
     def _command_matches_turn(
         command: RuntimeCommandV1,
@@ -639,6 +815,7 @@ __all__ = [
     "ENGINE_VERSION",
     "GameRuntimeError",
     "RevisionConflict",
+    "RuntimeClassificationContextV1",
     "RuntimeCommandV1",
     "ScenarioDefinitionError",
     "ScenarioFileError",

@@ -1,4 +1,5 @@
 import asyncio
+import json
 import sys
 import tempfile
 import threading
@@ -19,9 +20,15 @@ for import_root in (REPO_ROOT, API_ROOT):
         sys.path.insert(0, str(import_root))
 
 from services.ai import ActionClassificationV1
+from services.contracts.v1 import (
+    CoursePackageV1,
+    calculate_contract_checksum,
+    reviewed_classification_fact_refs,
+)
 from services.game_runtime import (
     DuplicateActionConflict,
     RevisionConflict,
+    RuntimeClassificationContextV1,
     RuntimeCommandV1,
     SessionIntegrityError,
 )
@@ -70,7 +77,7 @@ class ThreadBarrierClassifier(FakeClassifier):
 
 
 def matched(action_id="survey-terrain", confidence=0.91):
-    def factory(_engine, session):
+    def factory(engine, session):
         return ActionClassificationV1(
             kind="matched",
             source="llm",
@@ -78,12 +85,31 @@ def matched(action_id="survey-terrain", confidence=0.91):
             action_id=action_id,
             confidence=confidence,
             available_action_ids=list(session.available_action_ids),
+            fact_refs=reviewed_classification_fact_refs(
+                engine.course,
+                engine.scenario,
+                session.available_action_ids,
+            ),
             provider="deepseek",
             model="classifier-test-model",
             output_checksum="a" * 64,
         )
 
     return factory
+
+
+def classification_context(
+    result: ActionClassificationV1,
+) -> RuntimeClassificationContextV1:
+    return RuntimeClassificationContextV1(
+        source=result.source,
+        reason_code=result.reason_code,
+        reviewed_fact_refs=list(result.fact_refs),
+        policy_version=result.prompt_policy_version,
+        provider=result.provider,
+        model=result.model,
+        output_checksum=result.output_checksum,
+    )
 
 
 class GameFreeInputServiceTests(unittest.IsolatedAsyncioTestCase):
@@ -299,6 +325,7 @@ class GameFreeInputServiceTests(unittest.IsolatedAsyncioTestCase):
         holder = {}
 
         def persist_other_classification(_engine, session, raw_input):
+            winner = matched("reinforce-dam", 0.88)(_engine, session)
             holder["service"].apply_action(
                 session.session_id,
                 RuntimeCommandV1(
@@ -307,6 +334,7 @@ class GameFreeInputServiceTests(unittest.IsolatedAsyncioTestCase):
                     action_id="reinforce-dam",
                     action_source="free_input",
                     classification_confidence=0.88,
+                    classification_context=classification_context(winner),
                     expected_revision=1,
                     occurred_at=BASE_TIME + timedelta(minutes=1),
                 ),
@@ -456,13 +484,7 @@ class GameFreeInputServiceTests(unittest.IsolatedAsyncioTestCase):
         )
         self.addCleanup(engine.dispose)
         return GameRuntimeService(
-            ScenarioCatalogRepository(
-                content_root=REPO_ROOT / "content",
-                catalog_path=REPO_ROOT
-                / "content"
-                / "scenarios"
-                / "catalog.v1.json",
-            ),
+            self._reviewed_repository(),
             GameRuntimeStore(engine),
             classifier,
         )
@@ -482,24 +504,79 @@ class GameFreeInputServiceTests(unittest.IsolatedAsyncioTestCase):
         for engine in engines:
             self.addCleanup(engine.dispose)
         services = []
+        repository = self._reviewed_repository()
         for engine, classifier in zip(
             engines,
             (first_classifier, second_classifier),
         ):
             services.append(
                 GameRuntimeService(
-                    ScenarioCatalogRepository(
-                        content_root=REPO_ROOT / "content",
-                        catalog_path=REPO_ROOT
-                        / "content"
-                        / "scenarios"
-                        / "catalog.v1.json",
-                    ),
+                    repository,
                     GameRuntimeStore(engine),
                     classifier,
                 )
             )
         return tuple(services)
+
+    def _reviewed_repository(self):
+        source_repository = ScenarioCatalogRepository(
+            content_root=REPO_ROOT / "content",
+            catalog_path=REPO_ROOT
+            / "content"
+            / "scenarios"
+            / "catalog.v1.json",
+        )
+        loaded = source_repository.get_active_record(
+            "scenario-dayu-flood-control"
+        )
+        course_payload = loaded.engine.course.model_dump(mode="json")
+        for source in course_payload["source_refs"]:
+            source["reliability"] = "reviewed"
+        for fact in course_payload["facts"]:
+            fact["statement"] = fact["statement"].replace(
+                "【教师待审】",
+                "【测试已审】",
+            )
+        course_payload["checksum"] = "0" * 64
+        course = CoursePackageV1.model_validate(course_payload)
+        course_payload["checksum"] = calculate_contract_checksum(course)
+        course = CoursePackageV1.model_validate(course_payload)
+
+        temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(temp_dir.cleanup)
+        content_root = Path(temp_dir.name)
+        (content_root / "course.json").write_text(
+            json.dumps(course.model_dump(mode="json"), ensure_ascii=False),
+            encoding="utf-8",
+        )
+        (content_root / "scenario.json").write_text(
+            json.dumps(
+                loaded.engine.scenario.model_dump(mode="json"),
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        entry = loaded.entry.model_dump(mode="json")
+        entry.update(
+            course_checksum=str(course.checksum),
+            course_path="course.json",
+            scenario_path="scenario.json",
+        )
+        catalog_path = content_root / "catalog.json"
+        catalog_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "scenario-catalog/v1",
+                    "entries": [entry],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        return ScenarioCatalogRepository(
+            content_root=content_root,
+            catalog_path=catalog_path,
+        )
 
     @staticmethod
     def _start(service):

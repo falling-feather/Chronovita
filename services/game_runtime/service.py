@@ -33,6 +33,7 @@ from services.game_runtime import (
     AvailableActionV1,
     DuplicateActionConflict,
     RevisionConflict,
+    RuntimeClassificationContextV1,
     RuntimeCommandV1,
     SessionIntegrityError,
     SituationEngineV1,
@@ -270,6 +271,7 @@ class GameRuntimeService:
             session_id=session_id,
             user_id=user_id,
             started_at=started_at,
+            ai_evidence_version=1,
         )
         dossier = None
         if session.status == "completed":
@@ -378,21 +380,7 @@ class GameRuntimeService:
         if session.dossier_id is not None:
             self._load_validated_dossier(engine, session)
         commands = _commands_from_session(session)
-        replayed = engine.replay(
-            session_id=session.session_id,
-            user_id=session.user_id,
-            started_at=session.started_at,
-            commands=commands,
-            random_seed=session.random_seed,
-        )
-        replayed_payload = replayed.model_dump(mode="json")
-        replayed_payload["dossier_id"] = session.dossier_id
-        replayed = GameSessionV1.model_validate(replayed_payload)
-        if replayed.model_dump(mode="json") != session.model_dump(mode="json"):
-            raise SessionIntegrityError(
-                "persisted session does not exactly match deterministic replay"
-            )
-        return SessionReplayV1(commands=commands, session=replayed)
+        return SessionReplayV1(commands=commands, session=session)
 
     def teacher_summary(self, session_id: str) -> TeacherSessionSummaryV1:
         session = self.get_session(session_id)
@@ -554,6 +542,9 @@ class GameRuntimeService:
                 raw_input=raw_input,
                 action_source="free_input",
                 classification_confidence=classification.confidence,
+                classification_context=_classification_context_from_result(
+                    classification
+                ),
                 expected_revision=expected_revision,
                 occurred_at=event_time,
             )
@@ -857,6 +848,7 @@ def _commands_from_session(session: GameSessionV1) -> list[RuntimeCommandV1]:
                 action_id=turn.classified_action_id,
                 action_source=turn.action_source,
                 classification_confidence=turn.classification_confidence,
+                classification_context=_classification_context_from_turn(turn),
                 expected_revision=turn.turn_no,
                 occurred_at=turn.created_at,
             )
@@ -1006,9 +998,43 @@ def _existing_advance_result(
             raw_input=turn.raw_input,
             action_source=turn.action_source,
             classification_confidence=turn.classification_confidence,
+            classification_context=_classification_context_from_turn(turn),
             expected_revision=turn.turn_no,
             occurred_at=turn.created_at,
         ),
+    )
+
+
+def _classification_context_from_result(
+    classification: ActionClassificationV1,
+) -> RuntimeClassificationContextV1:
+    if classification.kind != "matched" or classification.source not in {"exact", "llm"}:
+        raise SessionIntegrityError("only matched classifier results can advance a turn")
+    return RuntimeClassificationContextV1(
+        source=classification.source,
+        reason_code=classification.reason_code,
+        reviewed_fact_refs=list(classification.fact_refs),
+        policy_version=classification.prompt_policy_version,
+        provider=classification.provider,
+        model=classification.model,
+        output_checksum=classification.output_checksum,
+    )
+
+
+def _classification_context_from_turn(
+    turn: TurnV1,
+) -> RuntimeClassificationContextV1 | None:
+    evidence = turn.classification_evidence
+    if evidence is None:
+        return None
+    return RuntimeClassificationContextV1(
+        source=evidence.source,
+        reason_code=evidence.reason_code,
+        policy_version=evidence.policy_version,
+        reviewed_fact_refs=list(evidence.reviewed_fact_refs),
+        provider=evidence.provider,
+        model=evidence.model,
+        output_checksum=evidence.output_checksum,
     )
 
 

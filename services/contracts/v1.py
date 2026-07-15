@@ -9,7 +9,9 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstrai
 from services.contracts.rules_v1 import (
     RuleActionUnavailable,
     RuleEvaluationError,
+    RuleSnapshotV1,
     RuleStateChangeV1,
+    RuleTurnResultV1,
     UnknownRuleAction,
     available_rule_action_ids,
     evaluate_rule_action,
@@ -488,6 +490,110 @@ class NpcChangeV1(ContractModel):
     revealed_fact_refs: list[ContractId] = Field(default_factory=list)
 
 
+class ActionClassificationEvidenceV1(ContractModel):
+    schema_version: Literal["action-classification-evidence/v1"] = (
+        "action-classification-evidence/v1"
+    )
+    source: Literal["fixed", "exact", "llm"]
+    reason_code: Literal["fixed_action", "exact_match", "semantic_match"]
+    policy_version: Literal["action-classifier/v1"] = "action-classifier/v1"
+    available_action_ids: list[ContractId]
+    reviewed_fact_refs: list[ContractId] = Field(default_factory=list)
+    basis_checksum: Checksum
+    provider: str = Field(default="", max_length=32)
+    model: str = Field(default="", max_length=128)
+    output_checksum: str = Field(default="", pattern=r"^$|^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def validate_evidence_shape(self) -> "ActionClassificationEvidenceV1":
+        _ensure_unique_values(self.available_action_ids, "classification available_action_ids")
+        _ensure_unique_values(self.reviewed_fact_refs, "classification reviewed_fact_refs")
+        expected_reason = {
+            "fixed": "fixed_action",
+            "exact": "exact_match",
+            "llm": "semantic_match",
+        }[self.source]
+        if self.reason_code != expected_reason:
+            raise ValueError("classification evidence source and reason_code are inconsistent")
+        if self.source == "llm":
+            if not self.provider or not self.model or not self.output_checksum:
+                raise ValueError(
+                    "llm classification evidence requires provider, model and output checksum"
+                )
+            if not self.reviewed_fact_refs:
+                raise ValueError("llm classification evidence requires reviewed facts")
+        elif self.provider or self.model or self.output_checksum:
+            raise ValueError("non-llm classification evidence cannot claim model metadata")
+        return self
+
+
+NarrativeFallbackReason = Literal[
+    "",
+    "fact_context_unavailable",
+    "provider_unconfigured",
+    "provider_timeout",
+    "provider_rate_limited",
+    "provider_rejected",
+    "provider_unavailable",
+    "response_too_large",
+    "response_truncated",
+    "invalid_response",
+    "output_validation_failed",
+    "reference_out_of_bounds",
+]
+
+
+class NarrativeEvidenceV1(ContractModel):
+    schema_version: Literal["narrative-evidence/v1"] = "narrative-evidence/v1"
+    source: Literal["rules", "llm", "fallback"]
+    policy_version: Literal["rule-narrative/v1", "historical-narrator/v1"]
+    basis_checksum: Checksum
+    output_checksum: Checksum
+    allowed_fact_refs: list[ContractId] = Field(default_factory=list)
+    used_fact_refs: list[ContractId] = Field(default_factory=list)
+    allowed_source_ref_ids: list[ContractId] = Field(default_factory=list)
+    used_source_ref_ids: list[ContractId] = Field(default_factory=list)
+    provider: str = Field(default="", max_length=32)
+    model: str = Field(default="", max_length=128)
+    fallback_reason_code: NarrativeFallbackReason = ""
+
+    @model_validator(mode="after")
+    def validate_evidence_shape(self) -> "NarrativeEvidenceV1":
+        for values, label in (
+            (self.allowed_fact_refs, "narrative allowed_fact_refs"),
+            (self.used_fact_refs, "narrative used_fact_refs"),
+            (self.allowed_source_ref_ids, "narrative allowed_source_ref_ids"),
+            (self.used_source_ref_ids, "narrative used_source_ref_ids"),
+        ):
+            _ensure_unique_values(values, label)
+        _require_known(
+            self.used_fact_refs,
+            set(self.allowed_fact_refs),
+            "narrative used_fact_refs",
+        )
+        _require_known(
+            self.used_source_ref_ids,
+            set(self.allowed_source_ref_ids),
+            "narrative used_source_ref_ids",
+        )
+        if self.source == "rules":
+            if self.policy_version != "rule-narrative/v1":
+                raise ValueError("rules narrative evidence requires rule-narrative/v1")
+            if self.provider or self.model or self.fallback_reason_code:
+                raise ValueError("rules narrative evidence cannot claim model or fallback metadata")
+        elif self.source == "llm":
+            if self.policy_version != "historical-narrator/v1":
+                raise ValueError("llm narrative evidence requires historical-narrator/v1")
+            if not self.provider or not self.model or self.fallback_reason_code:
+                raise ValueError("llm narrative evidence requires provider/model only")
+        else:
+            if self.policy_version != "historical-narrator/v1":
+                raise ValueError("fallback narrative evidence requires historical-narrator/v1")
+            if self.provider or self.model or not self.fallback_reason_code:
+                raise ValueError("fallback narrative evidence requires only a stable reason code")
+        return self
+
+
 class TurnV1(ContractModel):
     turn_id: ContractId
     session_id: ContractId
@@ -508,6 +614,8 @@ class TurnV1(ContractModel):
     narrative_source: Literal["rules", "llm", "mock", "fallback"] = "rules"
     narrative_model: str = ""
     narrative_metadata: dict[str, str | int | float | bool] = Field(default_factory=dict)
+    classification_evidence: ActionClassificationEvidenceV1 | None = None
+    narrative_evidence: NarrativeEvidenceV1 | None = None
     ruleset_hash: str = ""
     created_at: AwareDatetime
 
@@ -560,6 +668,7 @@ class GameSessionV1(ContractModel):
     course_checksum: Checksum
     scenario_checksum: Checksum
     engine_version: NonEmptyText
+    ai_evidence_version: Literal[0, 1] = 0
     random_seed: str = ""
     status: Literal["active", "completed", "abandoned", "failed"] = "active"
     revision: int = Field(default=1, ge=1)
@@ -598,6 +707,26 @@ class GameSessionV1(ContractModel):
             raise ValueError("revision must equal current_turn + 1")
         if any(turn.session_id != self.session_id for turn in self.turns):
             raise ValueError("all turns must reference this session_id")
+        for turn in self.turns:
+            if self.ai_evidence_version == 0:
+                if (
+                    turn.narrative_source != "rules"
+                    or turn.narrative_model
+                    or turn.narrative_metadata
+                    or turn.classification_evidence is not None
+                    or turn.narrative_evidence is not None
+                ):
+                    raise ValueError(
+                        "evidence-version-0 turns only allow deterministic rules narration"
+                    )
+            elif turn.status == "applied" and (
+                turn.classification_evidence is None
+                or turn.narrative_evidence is None
+                or turn.narrative_metadata
+            ):
+                raise ValueError(
+                    "evidence-version-1 applied turns require typed evidence and empty legacy metadata"
+                )
         for previous, current in zip(self.turns, self.turns[1:]):
             if current.state_before != previous.state_after:
                 raise ValueError("turn snapshots must form a continuous replay chain")
@@ -838,6 +967,7 @@ class RuntimeBundleV1(ContractModel):
             if session.ending_id is not None:
                 _require_known([session.ending_id], ending_ids, "session ending_id")
             _validate_turn_replay(
+                course,
                 scenario,
                 session,
             )
@@ -882,6 +1012,8 @@ class RuntimeBundleV1(ContractModel):
                     raise ValueError("dossier key choices must match their recorded turns")
                 if turn.status != "applied" or choice.choice != turn.raw_input:
                     raise ValueError("dossier key choices must quote applied player input exactly")
+                if choice.consequence != turn.narrative:
+                    raise ValueError("dossier choice consequence must quote turn narrative exactly")
             for snapshot in dossier.state_trajectory:
                 _require_known(snapshot.state.keys(), variable_ids, f"dossier snapshot {snapshot.turn_no}")
                 _validate_state_ranges(snapshot.state, variable_ranges, f"dossier snapshot {snapshot.turn_no}")
@@ -1077,6 +1209,216 @@ def calculate_contract_checksum(payload: BaseModel) -> str:
 def verify_contract_checksum(payload: BaseModel) -> bool:
     checksum = getattr(payload, "checksum", None)
     return bool(checksum) and checksum == calculate_contract_checksum(payload)
+
+
+def calculate_text_checksum(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def calculate_action_classification_basis_checksum(
+    *,
+    course_checksum: str,
+    scenario_checksum: str,
+    session_id: str,
+    revision: int,
+    snapshot: RuleSnapshotV1,
+    raw_input: str,
+    available_action_ids: list[str] | tuple[str, ...],
+    reviewed_fact_refs: list[str] | tuple[str, ...],
+    action_id: str,
+    confidence: float,
+    source: Literal["fixed", "exact", "llm"],
+    reason_code: Literal["fixed_action", "exact_match", "semantic_match"],
+    policy_version: str = "action-classifier/v1",
+) -> str:
+    return _canonical_sha256(
+        {
+            "schema_version": "action-classification-basis/v1",
+            "course_checksum": course_checksum,
+            "scenario_checksum": scenario_checksum,
+            "session_id": session_id,
+            "revision": revision,
+            "rule_snapshot": _rule_snapshot_payload(snapshot),
+            "raw_input": raw_input,
+            "available_action_ids": list(available_action_ids),
+            "reviewed_fact_refs": list(reviewed_fact_refs),
+            "decision": {
+                "action_id": action_id,
+                "confidence": confidence,
+                "source": source,
+                "reason_code": reason_code,
+                "policy_version": policy_version,
+            },
+        }
+    )
+
+
+def calculate_narrative_basis_checksum(
+    *,
+    course_checksum: str,
+    scenario_checksum: str,
+    session_id: str,
+    turn_no: int,
+    classification_evidence: ActionClassificationEvidenceV1,
+    action_feedback: str,
+    snapshot_before: RuleSnapshotV1,
+    result: RuleTurnResultV1,
+    rule_narrative: str,
+    allowed_fact_refs: list[str] | tuple[str, ...],
+    allowed_source_ref_ids: list[str] | tuple[str, ...],
+) -> str:
+    return _canonical_sha256(
+        {
+            "schema_version": "narrative-basis/v1",
+            "course_checksum": course_checksum,
+            "scenario_checksum": scenario_checksum,
+            "session_id": session_id,
+            "turn_no": turn_no,
+            "classification_evidence": classification_evidence.model_dump(mode="json"),
+            "action_feedback": action_feedback,
+            "snapshot_before": _rule_snapshot_payload(snapshot_before),
+            "rule_result": {
+                "action_id": result.action_id,
+                "snapshot_after": _rule_snapshot_payload(result.snapshot),
+                "state_changes": [
+                    {
+                        "variable_id": item.variable_id,
+                        "before": item.before,
+                        "after": item.after,
+                        "delta": item.delta,
+                    }
+                    for item in result.state_changes
+                ],
+                "npc_changes": [
+                    {
+                        "person_id": item.person_id,
+                        "attitude_before": item.attitude_before,
+                        "attitude_after": item.attitude_after,
+                        "trust_before": item.trust_before,
+                        "trust_after": item.trust_after,
+                        "revealed_fact_refs": list(item.revealed_fact_refs),
+                    }
+                    for item in result.npc_changes
+                ],
+                "triggered_event_ids": list(result.triggered_event_ids),
+                "fact_refs": list(result.fact_refs),
+                "ending_id": result.ending_id,
+            },
+            "rule_narrative": rule_narrative,
+            "allowed_fact_refs": list(allowed_fact_refs),
+            "allowed_source_ref_ids": list(allowed_source_ref_ids),
+        }
+    )
+
+
+def reviewed_narrative_refs(
+    course: CoursePackageV1,
+    scenario: ScenarioTemplateV1,
+    *,
+    action_id: str,
+    triggered_event_ids: list[str] | tuple[str, ...],
+    ending_id: str | None,
+) -> tuple[list[str], list[str]]:
+    action = next(item for item in scenario.action_rules if item.action_id == action_id)
+    events = {
+        item.event_id: item
+        for item in scenario.event_rules
+    }
+    endings = {
+        item.ending_id: item
+        for item in scenario.ending_rules
+    }
+    people = {
+        item.person_id: item
+        for item in course.people
+    }
+    relevant_fact_ids = set(scenario.fact_refs) | set(action.fact_refs)
+    direct_source_ids = set(scenario.source_ref_ids)
+    for event_id in triggered_event_ids:
+        relevant_fact_ids.update(events[event_id].fact_refs)
+    if ending_id is not None:
+        relevant_fact_ids.update(endings[ending_id].fact_refs)
+        direct_source_ids.update(endings[ending_id].source_ref_ids)
+    for npc in scenario.npcs:
+        relevant_fact_ids.update(npc.fact_refs)
+        person = people[npc.person_id]
+        relevant_fact_ids.update(person.fact_refs)
+        direct_source_ids.update(person.source_ref_ids)
+
+    sources = {item.source_id: item for item in course.source_refs}
+    allowed_fact_refs = [
+        item.fact_id
+        for item in course.facts
+        if item.fact_id in relevant_fact_ids
+        and item.source_ref_ids
+        and all(sources[source_id].reliability == "reviewed" for source_id in item.source_ref_ids)
+    ]
+    for fact in course.facts:
+        if fact.fact_id in allowed_fact_refs:
+            direct_source_ids.update(fact.source_ref_ids)
+    allowed_source_ref_ids = [
+        item.source_id
+        for item in course.source_refs
+        if item.source_id in direct_source_ids and item.reliability == "reviewed"
+    ]
+    return allowed_fact_refs, allowed_source_ref_ids
+
+
+def reviewed_classification_fact_refs(
+    course: CoursePackageV1,
+    scenario: ScenarioTemplateV1,
+    available_action_ids: list[str] | tuple[str, ...],
+) -> list[str]:
+    sources = {item.source_id: item for item in course.source_refs}
+    action_by_id = {item.action_id: item for item in scenario.action_rules}
+    relevant_fact_ids = set(scenario.fact_refs)
+    for action_id in available_action_ids:
+        relevant_fact_ids.update(action_by_id[action_id].fact_refs)
+    facts = {item.fact_id: item for item in course.facts}
+    return [
+        fact_id
+        for fact_id in sorted(relevant_fact_ids)
+        if (fact := facts.get(fact_id)) is not None
+        and fact.source_ref_ids
+        and "教师待审" not in fact.statement
+        and all(
+            source_id in sources and sources[source_id].reliability == "reviewed"
+            for source_id in fact.source_ref_ids
+        )
+    ]
+
+
+def _rule_snapshot_payload(snapshot: RuleSnapshotV1) -> dict[str, object]:
+    return {
+        "state": [
+            {"variable_id": variable_id, "value": value}
+            for variable_id, value in snapshot.state
+        ],
+        "npcs": [
+            {
+                "person_id": item.person_id,
+                "attitude": item.attitude,
+                "trust": item.trust,
+                "known_fact_refs": list(item.known_fact_refs),
+                "updated_turn": item.updated_turn,
+            }
+            for item in snapshot.npcs
+        ],
+        "current_node_id": snapshot.current_node_id,
+        "triggered_once_event_ids": list(snapshot.triggered_once_event_ids),
+        "triggered_event_ids": list(snapshot.triggered_event_ids),
+    }
+
+
+def _canonical_sha256(payload: object) -> str:
+    raw = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
 def schema_document(model: type[BaseModel], schema_id: str) -> dict:
@@ -1310,10 +1652,18 @@ def _validate_effect_fact_refs(effects: list[RuleEffectV1], fact_ids: set[str], 
 
 
 def _validate_turn_replay(
+    course: CoursePackageV1,
     scenario: ScenarioTemplateV1,
     session: GameSessionV1,
 ) -> None:
     snapshot = initial_rule_snapshot(scenario)
+    expected_history = [
+        NarrativeMessageV1(
+            role="system",
+            text=scenario.opening,
+            turn_no=0,
+        )
+    ]
 
     for turn in session.turns:
         if not _states_match(snapshot.state_dict(), turn.state_before):
@@ -1334,6 +1684,11 @@ def _validate_turn_replay(
             continue
 
         try:
+            available_before = available_rule_action_ids(
+                scenario,
+                snapshot,
+                turn.turn_no,
+            )
             result = evaluate_rule_action(
                 scenario,
                 snapshot,
@@ -1354,11 +1709,21 @@ def _validate_turn_replay(
             raise ValueError(f"turn {turn.turn_no} fact_refs do not match rule provenance")
         if turn.ruleset_hash != str(scenario.checksum):
             raise ValueError(f"turn {turn.turn_no} ruleset_hash does not match scenario checksum")
-        if (
-            turn.narrative_source == "rules"
-            and turn.narrative != render_rule_narrative(scenario, result)
-        ):
-            raise ValueError(f"turn {turn.turn_no} rules narrative does not match replay")
+        rule_narrative = render_rule_narrative(scenario, result)
+        if session.ai_evidence_version == 0:
+            if turn.narrative != rule_narrative:
+                raise ValueError(f"turn {turn.turn_no} rules narrative does not match replay")
+        else:
+            _validate_turn_evidence(
+                course=course,
+                scenario=scenario,
+                session=session,
+                turn=turn,
+                snapshot_before=snapshot,
+                result=result,
+                available_action_ids=available_before,
+                rule_narrative=rule_narrative,
+            )
 
         recorded_npcs = {item.person_id: item for item in turn.npc_changes}
         expected_npcs = {item.person_id: item for item in result.npc_changes}
@@ -1376,6 +1741,20 @@ def _validate_turn_replay(
                 raise ValueError(f"turn {turn.turn_no} npc change does not match rule effects")
 
         snapshot = result.snapshot
+        expected_history.extend(
+            [
+                NarrativeMessageV1(
+                    role="player",
+                    text=turn.raw_input,
+                    turn_no=turn.turn_no,
+                ),
+                NarrativeMessageV1(
+                    role="narrator",
+                    text=turn.narrative,
+                    turn_no=turn.turn_no,
+                ),
+            ]
+        )
         if result.ending_id is not None and turn.turn_no < session.current_turn:
             raise ValueError(f"session continues after ending {result.ending_id}")
 
@@ -1425,6 +1804,139 @@ def _validate_turn_replay(
         raise ValueError(
             f"{session.status} session cannot discard reached ending {expected_ending_id}"
         )
+    ending = next(
+        (
+            item
+            for item in scenario.ending_rules
+            if item.ending_id == expected_ending_id
+        ),
+        None,
+    )
+    expected_summary = (
+        ending.summary
+        if session.status == "completed" and ending is not None
+        else (session.turns[-1].narrative if session.turns else "")
+    )
+    if session.summary != expected_summary:
+        raise ValueError("session summary does not match the replayed ending or latest narrative")
+    if session.history != expected_history:
+        raise ValueError("session history must equal opening plus the exact turn projection")
+
+
+def _validate_turn_evidence(
+    *,
+    course: CoursePackageV1,
+    scenario: ScenarioTemplateV1,
+    session: GameSessionV1,
+    turn: TurnV1,
+    snapshot_before: RuleSnapshotV1,
+    result: RuleTurnResultV1,
+    available_action_ids: tuple[str, ...],
+    rule_narrative: str,
+) -> None:
+    classification = turn.classification_evidence
+    narrative = turn.narrative_evidence
+    if classification is None or narrative is None:
+        raise ValueError(f"turn {turn.turn_no} is missing typed AI evidence")
+    if classification.available_action_ids != list(available_action_ids):
+        raise ValueError(
+            f"turn {turn.turn_no} classification actions do not match the pre-turn rules"
+        )
+    if turn.action_source == "fixed":
+        expected_classification = ("fixed", "fixed_action", 1.0)
+    elif turn.action_source == "free_input" and classification.source == "exact":
+        expected_classification = ("exact", "exact_match", 1.0)
+    elif turn.action_source == "free_input" and classification.source == "llm":
+        expected_classification = (
+            "llm",
+            "semantic_match",
+            turn.classification_confidence,
+        )
+    else:
+        raise ValueError(f"turn {turn.turn_no} action source cannot produce typed evidence")
+    expected_source, expected_reason, expected_confidence = expected_classification
+    if (
+        classification.source != expected_source
+        or classification.reason_code != expected_reason
+        or expected_confidence is None
+        or turn.classification_confidence != expected_confidence
+    ):
+        raise ValueError(f"turn {turn.turn_no} classification evidence is inconsistent")
+
+    expected_reviewed_facts = (
+        reviewed_classification_fact_refs(
+            course,
+            scenario,
+            available_action_ids,
+        )
+        if classification.source == "llm"
+        else []
+    )
+    if classification.reviewed_fact_refs != expected_reviewed_facts:
+        raise ValueError(
+            f"turn {turn.turn_no} classification facts do not match the reviewed context"
+        )
+    expected_classification_basis = calculate_action_classification_basis_checksum(
+        course_checksum=str(course.checksum),
+        scenario_checksum=str(scenario.checksum),
+        session_id=session.session_id,
+        revision=turn.turn_no,
+        snapshot=snapshot_before,
+        raw_input=turn.raw_input,
+        available_action_ids=available_action_ids,
+        reviewed_fact_refs=classification.reviewed_fact_refs,
+        action_id=turn.classified_action_id,
+        confidence=turn.classification_confidence,
+        source=classification.source,
+        reason_code=classification.reason_code,
+        policy_version=classification.policy_version,
+    )
+    if classification.basis_checksum != expected_classification_basis:
+        raise ValueError(f"turn {turn.turn_no} classification basis checksum does not match")
+
+    if narrative.source != turn.narrative_source:
+        raise ValueError(f"turn {turn.turn_no} narrative source does not match its evidence")
+    if turn.narrative_model != narrative.model:
+        raise ValueError(f"turn {turn.turn_no} narrative model does not match its evidence")
+    allowed_fact_refs, allowed_source_ref_ids = reviewed_narrative_refs(
+        course,
+        scenario,
+        action_id=turn.classified_action_id,
+        triggered_event_ids=result.triggered_event_ids,
+        ending_id=result.ending_id,
+    )
+    if (
+        narrative.allowed_fact_refs != allowed_fact_refs
+        or narrative.allowed_source_ref_ids != allowed_source_ref_ids
+    ):
+        raise ValueError(f"turn {turn.turn_no} narrative whitelist does not match its release")
+    if narrative.source in {"rules", "fallback"}:
+        if turn.narrative != rule_narrative:
+            raise ValueError(f"turn {turn.turn_no} fallback narrative does not match replay")
+        if narrative.used_fact_refs or narrative.used_source_ref_ids:
+            raise ValueError(f"turn {turn.turn_no} deterministic narrative cannot claim citations")
+    if narrative.output_checksum != calculate_text_checksum(turn.narrative):
+        raise ValueError(f"turn {turn.turn_no} narrative output checksum does not match")
+    action_feedback = next(
+        item.feedback
+        for item in scenario.action_rules
+        if item.action_id == turn.classified_action_id
+    )
+    expected_narrative_basis = calculate_narrative_basis_checksum(
+        course_checksum=str(course.checksum),
+        scenario_checksum=str(scenario.checksum),
+        session_id=session.session_id,
+        turn_no=turn.turn_no,
+        classification_evidence=classification,
+        action_feedback=action_feedback,
+        snapshot_before=snapshot_before,
+        result=result,
+        rule_narrative=rule_narrative,
+        allowed_fact_refs=allowed_fact_refs,
+        allowed_source_ref_ids=allowed_source_ref_ids,
+    )
+    if narrative.basis_checksum != expected_narrative_basis:
+        raise ValueError(f"turn {turn.turn_no} narrative basis checksum does not match")
 
 
 def _states_match(left: dict[str, float], right: dict[str, float]) -> bool:

@@ -3,6 +3,218 @@
   "$id": "https://chronovita.local/schemas/v1/game-session.schema.json",
   "$comment": "Lifecycle conditions are represented here when JSON Schema can express them. Cross-object references, checksums and replay invariants require the services.contracts RuntimeBundleV1 semantic validator.",
   "$defs": {
+    "ActionClassificationEvidenceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "action-classification-evidence/v1",
+          "default": "action-classification-evidence/v1",
+          "enum": [
+            "action-classification-evidence/v1"
+          ],
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "fixed",
+            "exact",
+            "llm"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "reason_code": {
+          "enum": [
+            "fixed_action",
+            "exact_match",
+            "semantic_match"
+          ],
+          "title": "Reason Code",
+          "type": "string"
+        },
+        "policy_version": {
+          "const": "action-classifier/v1",
+          "default": "action-classifier/v1",
+          "enum": [
+            "action-classifier/v1"
+          ],
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "available_action_ids": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Available Action Ids",
+          "type": "array"
+        },
+        "reviewed_fact_refs": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Reviewed Fact Refs",
+          "type": "array"
+        },
+        "basis_checksum": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Basis Checksum",
+          "type": "string"
+        },
+        "provider": {
+          "default": "",
+          "maxLength": 32,
+          "title": "Provider",
+          "type": "string"
+        },
+        "model": {
+          "default": "",
+          "maxLength": 128,
+          "title": "Model",
+          "type": "string"
+        },
+        "output_checksum": {
+          "default": "",
+          "pattern": "^$|^[0-9a-f]{64}$",
+          "title": "Output Checksum",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "reason_code",
+        "available_action_ids",
+        "basis_checksum"
+      ],
+      "title": "ActionClassificationEvidenceV1",
+      "type": "object"
+    },
+    "NarrativeEvidenceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "narrative-evidence/v1",
+          "default": "narrative-evidence/v1",
+          "enum": [
+            "narrative-evidence/v1"
+          ],
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "rules",
+            "llm",
+            "fallback"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "policy_version": {
+          "enum": [
+            "rule-narrative/v1",
+            "historical-narrator/v1"
+          ],
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "basis_checksum": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Basis Checksum",
+          "type": "string"
+        },
+        "output_checksum": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Output Checksum",
+          "type": "string"
+        },
+        "allowed_fact_refs": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Allowed Fact Refs",
+          "type": "array"
+        },
+        "used_fact_refs": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Used Fact Refs",
+          "type": "array"
+        },
+        "allowed_source_ref_ids": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Allowed Source Ref Ids",
+          "type": "array"
+        },
+        "used_source_ref_ids": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Used Source Ref Ids",
+          "type": "array"
+        },
+        "provider": {
+          "default": "",
+          "maxLength": 32,
+          "title": "Provider",
+          "type": "string"
+        },
+        "model": {
+          "default": "",
+          "maxLength": 128,
+          "title": "Model",
+          "type": "string"
+        },
+        "fallback_reason_code": {
+          "default": "",
+          "enum": [
+            "",
+            "fact_context_unavailable",
+            "provider_unconfigured",
+            "provider_timeout",
+            "provider_rate_limited",
+            "provider_rejected",
+            "provider_unavailable",
+            "response_too_large",
+            "response_truncated",
+            "invalid_response",
+            "output_validation_failed",
+            "reference_out_of_bounds"
+          ],
+          "title": "Fallback Reason Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "policy_version",
+        "basis_checksum",
+        "output_checksum"
+      ],
+      "title": "NarrativeEvidenceV1",
+      "type": "object"
+    },
     "NarrativeMessageV1": {
       "additionalProperties": false,
       "properties": {
@@ -412,6 +624,28 @@
           "title": "Narrative Metadata",
           "type": "object"
         },
+        "classification_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActionClassificationEvidenceV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "narrative_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NarrativeEvidenceV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "ruleset_hash": {
           "default": "",
           "title": "Ruleset Hash",
@@ -509,6 +743,15 @@
       "minLength": 1,
       "title": "Engine Version",
       "type": "string"
+    },
+    "ai_evidence_version": {
+      "default": 0,
+      "enum": [
+        0,
+        1
+      ],
+      "title": "Ai Evidence Version",
+      "type": "integer"
     },
     "random_seed": {
       "default": "",

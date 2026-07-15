@@ -1,4 +1,5 @@
 from services.contracts.v1 import (
+    ActionClassificationEvidenceV1,
     ActionRuleV1,
     CompatibilitySourceV1,
     CoursePackageV1,
@@ -14,6 +15,7 @@ from services.contracts.v1 import (
     KnowledgeEdgeV1,
     LegacyMaterialSnapshotV1,
     MapPointV1,
+    NarrativeEvidenceV1,
     NarrativeMessageV1,
     NpcChangeV1,
     NpcEffectV1,
@@ -35,8 +37,13 @@ from services.contracts.v1 import (
     StateVariableV1,
     TurnConditionV1,
     TurnV1,
+    calculate_action_classification_basis_checksum,
     calculate_contract_checksum,
+    calculate_narrative_basis_checksum,
+    calculate_text_checksum,
     course_package_from_legacy,
+    reviewed_classification_fact_refs,
+    reviewed_narrative_refs,
     schema_document,
     verify_contract_checksum,
 )
@@ -57,6 +64,7 @@ from services.contracts.release_v2 import (
 )
 
 __all__ = [
+    "ActionClassificationEvidenceV1",
     "ActionRuleV1",
     "CompatibilitySourceV1",
     "CoursePackageV1",
@@ -72,6 +80,7 @@ __all__ = [
     "KnowledgeEdgeV1",
     "LegacyMaterialSnapshotV1",
     "MapPointV1",
+    "NarrativeEvidenceV1",
     "NarrativeMessageV1",
     "NpcChangeV1",
     "NpcEffectV1",
@@ -93,8 +102,13 @@ __all__ = [
     "StateVariableV1",
     "TurnConditionV1",
     "TurnV1",
+    "calculate_action_classification_basis_checksum",
     "calculate_contract_checksum",
+    "calculate_narrative_basis_checksum",
+    "calculate_text_checksum",
     "course_package_from_legacy",
+    "reviewed_classification_fact_refs",
+    "reviewed_narrative_refs",
     "schema_document",
     "verify_contract_checksum",
     "ActiveReleasePointerV1",

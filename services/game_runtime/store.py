@@ -79,8 +79,37 @@ class PersistedGameSessionV1(BaseModel):
     release_identity: GameSessionReleaseIdentityV1 | None = None
     checksum: Checksum
 
+    @model_validator(mode="before")
+    @classmethod
+    def validate_raw_checksum(cls, value: object) -> object:
+        if isinstance(value, cls):
+            return value
+        # V1 is checked before GameSessionV1 can fill fields added later.
+        payload = (
+            value.model_dump(mode="json")
+            if isinstance(value, BaseModel)
+            else value
+        )
+        _validate_v1_raw_checksum(payload)
+        return value
+
+
+class PersistedGameSessionV2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        revalidate_instances="always",
+    )
+
+    schema_version: Literal["persisted-game-session/v2"] = (
+        "persisted-game-session/v2"
+    )
+    session: GameSessionV1
+    release_identity: GameSessionReleaseIdentityV1 | None = None
+    checksum: Checksum
+
     @model_validator(mode="after")
-    def validate_checksum(self) -> "PersistedGameSessionV1":
+    def validate_checksum(self) -> "PersistedGameSessionV2":
         if self.checksum != _session_checksum(
             self.session,
             self.release_identity,
@@ -89,9 +118,12 @@ class PersistedGameSessionV1(BaseModel):
         return self
 
 
+PersistedGameSessionEnvelope = PersistedGameSessionV1 | PersistedGameSessionV2
+
+
 @dataclass(frozen=True)
 class StoredSessionRecord:
-    envelope: PersistedGameSessionV1
+    envelope: PersistedGameSessionEnvelope
     raw_data: str
 
     @property
@@ -308,6 +340,55 @@ def _session_checksum(
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
+def _validate_v1_raw_checksum(payload: object) -> None:
+    if not isinstance(payload, dict):
+        raise ValueError("persisted game session envelope must be an object")
+    if "session" not in payload:
+        raise ValueError("persisted game session is missing session")
+    provided_checksum = payload.get("checksum")
+    if not isinstance(provided_checksum, str):
+        raise ValueError("persisted game session checksum is invalid")
+
+    session_payload = _raw_json_payload(payload["session"])
+    if not isinstance(session_payload, dict):
+        raise ValueError("persisted game session session must be an object")
+    if "ai_evidence_version" in session_payload:
+        raise ValueError("persisted-game-session/v1 cannot contain AI evidence version")
+    turns_payload = session_payload.get("turns", [])
+    if not isinstance(turns_payload, list):
+        raise ValueError("persisted game session turns must be an array")
+    for turn_payload in turns_payload:
+        if not isinstance(turn_payload, dict):
+            raise ValueError("persisted game session turn must be an object")
+        if "classification_evidence" in turn_payload or "narrative_evidence" in turn_payload:
+            raise ValueError("persisted-game-session/v1 cannot contain typed AI evidence")
+    release_identity_payload = _raw_json_payload(
+        payload.get("release_identity")
+    )
+    checksum_payload: object = session_payload
+    if release_identity_payload is not None:
+        checksum_payload = {
+            "session": session_payload,
+            "release_identity": release_identity_payload,
+        }
+    try:
+        expected_checksum = hashlib.sha256(
+            _canonical_json(checksum_payload).encode("utf-8")
+        ).hexdigest()
+    except (TypeError, UnicodeError, ValueError) as exc:
+        raise ValueError(
+            "persisted game session checksum payload is invalid"
+        ) from exc
+    if provided_checksum != expected_checksum:
+        raise ValueError("persisted game session checksum is invalid")
+
+
+def _raw_json_payload(value: object) -> object:
+    if isinstance(value, BaseModel):
+        return value.model_dump(mode="json")
+    return value
+
+
 def _encode_session(
     session: GameSessionV1,
     release_identity: GameSessionReleaseIdentityV1 | None = None,
@@ -319,10 +400,13 @@ def _encode_session(
         if release_identity is not None
         else None
     )
-    envelope = PersistedGameSessionV1(
-        session=GameSessionV1.model_validate(session.model_dump(mode="json")),
+    checked_session = GameSessionV1.model_validate(
+        session.model_dump(mode="json")
+    )
+    envelope = PersistedGameSessionV2(
+        session=checked_session,
         release_identity=checked_release_identity,
-        checksum=_session_checksum(session, checked_release_identity),
+        checksum=_session_checksum(checked_session, checked_release_identity),
     )
     raw = _canonical_json(envelope.model_dump(mode="json"))
     try:
@@ -338,7 +422,10 @@ def _encode_session(
     return raw
 
 
-def _decode_session(raw_data: str, session_id: str) -> PersistedGameSessionV1:
+def _decode_session(
+    raw_data: str,
+    session_id: str,
+) -> PersistedGameSessionEnvelope:
     try:
         encoded_size = len(raw_data.encode("utf-8"))
     except UnicodeError as exc:
@@ -351,7 +438,18 @@ def _decode_session(raw_data: str, session_id: str) -> PersistedGameSessionV1:
         )
     try:
         payload = json.loads(raw_data, object_pairs_hook=_reject_duplicate_json_keys)
-        envelope = PersistedGameSessionV1.model_validate(payload)
+        if not isinstance(payload, dict):
+            raise ValueError("persisted game session envelope must be an object")
+        schema_version = payload.get("schema_version")
+        if schema_version == "persisted-game-session/v1":
+            envelope = PersistedGameSessionV1.model_validate(payload)
+        elif schema_version == "persisted-game-session/v2":
+            envelope = PersistedGameSessionV2.model_validate(payload)
+        else:
+            raise ValueError(
+                "unsupported persisted game session schema_version: "
+                f"{schema_version!r}"
+            )
     except (UnicodeError, json.JSONDecodeError, ValidationError, ValueError) as exc:
         raise StoredSessionIntegrityError(
             f"invalid persisted game session {session_id}: {exc}"
@@ -489,7 +587,9 @@ __all__ = [
     "GameRuntimeStore",
     "GameStoreError",
     "MAX_DOSSIER_RECORD_BYTES",
+    "PersistedGameSessionEnvelope",
     "PersistedGameSessionV1",
+    "PersistedGameSessionV2",
     "StoredDossierIntegrityError",
     "StoredDossierNotFound",
     "StoredDossierRecord",

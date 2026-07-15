@@ -54,7 +54,17 @@ def build_dayu_bundle() -> RuntimeBundleV1:
     course = _build_course(str(scenario.checksum))
     states = _state_history()
     turns = _build_turns(states, scenario)
-    dossier = _build_dossier(states, str(course.checksum), str(scenario.checksum))
+    dossier = _build_dossier(
+        states,
+        turns,
+        str(course.checksum),
+        str(scenario.checksum),
+    )
+    ending = next(
+        item
+        for item in scenario.ending_rules
+        if item.ending_id == "ending-water-controlled"
+    )
     session = GameSessionV1(
         session_id="session-dayu-demo-001",
         user_id="student-demo",
@@ -105,7 +115,7 @@ def build_dayu_bundle() -> RuntimeBundleV1:
         ],
         turns=turns,
         triggered_event_ids=["event-heavy-rain", "event-cooperation"],
-        summary="勘察地势后争取部族协作，以疏导工程逐步降低水患。",
+        summary=ending.summary,
         flags={"success_candidate": True},
         narrative_flags={"legacy_demo_flag": "untrusted-narrative-metadata"},
         observed_entities=[
@@ -118,13 +128,23 @@ def build_dayu_bundle() -> RuntimeBundleV1:
             )
         ],
         history=[
-            NarrativeMessageV1(role="system", text="大禹治水技术样板开始。", turn_no=0),
-            NarrativeMessageV1(role="player", text="先勘察地势和河道", turn_no=1),
-            NarrativeMessageV1(
-                role="narrator",
-                text="【技术样板】规则层记录了第一回合状态变化。",
-                turn_no=1,
-            ),
+            NarrativeMessageV1(role="system", text=scenario.opening, turn_no=0),
+            *[
+                message
+                for turn in turns
+                for message in (
+                    NarrativeMessageV1(
+                        role="player",
+                        text=turn.raw_input,
+                        turn_no=turn.turn_no,
+                    ),
+                    NarrativeMessageV1(
+                        role="narrator",
+                        text=turn.narrative,
+                        turn_no=turn.turn_no,
+                    ),
+                )
+            ],
         ],
         ending_id="ending-water-controlled",
         dossier_id=dossier.dossier_id,
@@ -599,9 +619,11 @@ def _build_turns(
 
 def _build_dossier(
     states: list[dict[str, float]],
+    turns: list[TurnV1],
     course_checksum: str,
     scenario_checksum: str,
 ) -> DossierV1:
+    turns_by_no = {turn.turn_no: turn for turn in turns}
     dossier = DossierV1(
         dossier_id="dossier-dayu-demo-001",
         session_id="session-dayu-demo-001",
@@ -623,21 +645,21 @@ def _build_dossier(
                 turn_no=1,
                 action_id="survey-terrain",
                 choice="先勘察地势和河道",
-                consequence="承受短期水患上升，换取工程认知。",
+                consequence=turns_by_no[1].narrative,
             ),
             DossierChoiceV1(
                 turn_id="turn-dayu-003",
                 turn_no=3,
                 action_id="open-channels",
                 choice="按勘察结果开挖疏导线",
-                consequence="降低水患并消耗劳力，同时遭遇暴雨事件。",
+                consequence=turns_by_no[3].narrative,
             ),
             DossierChoiceV1(
                 turn_id="turn-dayu-004",
                 turn_no=4,
                 action_id="allocate-food",
                 choice="分配粮食，保障参与工程的民众",
-                consequence="粮食下降，民心和协作提升并补充劳力。",
+                consequence=turns_by_no[4].narrative,
             ),
         ],
         state_trajectory=[

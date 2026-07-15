@@ -694,6 +694,7 @@
     "course_checksum": "e128e00b4ad604763bd522be2eca639b3fa00aae878c6dc8a570865350eb6789",
     "scenario_checksum": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
     "engine_version": "rules-v1.0.0",
+    "ai_evidence_version": 0,
     "random_seed": "dayu-demo-seed",
     "status": "completed",
     "revision": 6,
@@ -801,6 +802,8 @@
         "narrative_source": "rules",
         "narrative_model": "",
         "narrative_metadata": {},
+        "classification_evidence": null,
+        "narrative_evidence": null,
         "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
         "created_at": "2026-07-14T02:05:00Z"
       },
@@ -864,6 +867,8 @@
         "narrative_source": "rules",
         "narrative_model": "",
         "narrative_metadata": {},
+        "classification_evidence": null,
+        "narrative_evidence": null,
         "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
         "created_at": "2026-07-14T02:10:00Z"
       },
@@ -925,6 +930,8 @@
         "narrative_source": "rules",
         "narrative_model": "",
         "narrative_metadata": {},
+        "classification_evidence": null,
+        "narrative_evidence": null,
         "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
         "created_at": "2026-07-14T02:15:00Z"
       },
@@ -992,6 +999,8 @@
         "narrative_source": "rules",
         "narrative_model": "",
         "narrative_metadata": {},
+        "classification_evidence": null,
+        "narrative_evidence": null,
         "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
         "created_at": "2026-07-14T02:20:00Z"
       },
@@ -1052,6 +1061,8 @@
         "narrative_source": "rules",
         "narrative_model": "",
         "narrative_metadata": {},
+        "classification_evidence": null,
+        "narrative_evidence": null,
         "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
         "created_at": "2026-07-14T02:25:00Z"
       }
@@ -1062,7 +1073,7 @@
     ],
     "available_action_ids": [],
     "available_choices": [],
-    "summary": "勘察地势后争取部族协作，以疏导工程逐步降低水患。",
+    "summary": "你以勘察、疏导和协作逐步控制水患。",
     "flags": {
       "success_candidate": true
     },
@@ -1081,7 +1092,7 @@
     "history": [
       {
         "role": "system",
-        "text": "大禹治水技术样板开始。",
+        "text": "【教师待审】暴雨季将至，各部族正在等待你的第一项治水安排。",
         "turn_no": 0
       },
       {
@@ -1091,8 +1102,48 @@
       },
       {
         "role": "narrator",
-        "text": "【技术样板】规则层记录了第一回合状态变化。",
+        "text": "工程认知提升，但勘察期间水患仍在发展。",
         "turn_no": 1
+      },
+      {
+        "role": "player",
+        "text": "向各部族解释疏导计划",
+        "turn_no": 2
+      },
+      {
+        "role": "narrator",
+        "text": "解释延缓工程，但提高了协作意愿。",
+        "turn_no": 2
+      },
+      {
+        "role": "player",
+        "text": "按勘察结果开挖疏导线",
+        "turn_no": 3
+      },
+      {
+        "role": "narrator",
+        "text": "疏导降低水患，但消耗劳力。\n\n【教师待审】暴雨使水患再次上升。",
+        "turn_no": 3
+      },
+      {
+        "role": "player",
+        "text": "分配粮食，保障参与工程的民众",
+        "turn_no": 4
+      },
+      {
+        "role": "narrator",
+        "text": "粮食储备下降，但民心与协作基础得到恢复。\n\n协作关系转化为可用劳力。",
+        "turn_no": 4
+      },
+      {
+        "role": "player",
+        "text": "扩大已经见效的疏导工程",
+        "turn_no": 5
+      },
+      {
+        "role": "narrator",
+        "text": "疏导降低水患，但消耗劳力。\n\n你以勘察、疏导和协作逐步控制水患。",
+        "turn_no": 5
       }
     ],
     "ending_id": "ending-water-controlled",
@@ -1123,21 +1174,21 @@
         "turn_no": 1,
         "action_id": "survey-terrain",
         "choice": "先勘察地势和河道",
-        "consequence": "承受短期水患上升，换取工程认知。"
+        "consequence": "工程认知提升，但勘察期间水患仍在发展。"
       },
       {
         "turn_id": "turn-dayu-003",
         "turn_no": 3,
         "action_id": "open-channels",
         "choice": "按勘察结果开挖疏导线",
-        "consequence": "降低水患并消耗劳力，同时遭遇暴雨事件。"
+        "consequence": "疏导降低水患，但消耗劳力。\n\n【教师待审】暴雨使水患再次上升。"
       },
       {
         "turn_id": "turn-dayu-004",
         "turn_no": 4,
         "action_id": "allocate-food",
         "choice": "分配粮食，保障参与工程的民众",
-        "consequence": "粮食下降，民心和协作提升并补充劳力。"
+        "consequence": "粮食储备下降，但民心与协作基础得到恢复。\n\n协作关系转化为可用劳力。"
       }
     ],
     "state_trajectory": [
@@ -1261,6 +1312,6 @@
       "source-dayu-placeholder"
     ],
     "generated_at": "2026-07-14T02:25:00Z",
-    "checksum": "d6881b11ed60398c0310263f6f7bd6d4d58a6b5ba18ffbf76dac49d77258dfe2"
+    "checksum": "71542023c13923992a3b7e855f9c1f12a5de1392ff8b8baf75a05a517e69d2dd"
   }
 }

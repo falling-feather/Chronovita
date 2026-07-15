@@ -564,8 +564,15 @@ def _zero_turn_bundle_raw() -> dict:
             "explain-plan",
             "allocate-food",
         ],
+        summary="",
         observed_entities=[],
-        history=[],
+        history=[
+            {
+                "role": "system",
+                "text": scenario["opening"],
+                "turn_no": 0,
+            }
+        ],
         ending_id=None,
         dossier_id=None,
         ended_at=None,

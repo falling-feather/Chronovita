@@ -26,7 +26,9 @@ from services.game_runtime import RuntimeCommandV1, SessionIntegrityError
 from services.game_runtime.catalog import ScenarioCatalogRepository
 from services.game_runtime.service import GameRuntimeService, get_game_runtime
 from services.game_runtime.store import (
+    GameSessionReleaseIdentityV1,
     GameRuntimeStore,
+    StoredSessionIntegrityError,
     StoredSessionWriteConflict,
     game_sessions_table,
 )
@@ -309,6 +311,155 @@ class GameRuntimeStoreTests(unittest.TestCase):
         self.assertEqual(stored.current_turn, 1)
         self.assertEqual(stored.turns[0].client_action_id, "cas-action-001")
 
+    def test_v1_raw_checksum_survives_later_ai_evidence_default(self):
+        store = GameRuntimeStore(self._engine())
+        repository = self._repository(REPO_ROOT / "content")
+        service = GameRuntimeService(repository, store)
+        _, session = service.start_session(
+            "scenario-dayu-flood-control",
+            user_id="legacy-default-student",
+            now=STARTED_AT,
+        )
+        current = store.load_session(session.session_id)
+        current_payload = json.loads(current.raw_data)
+        self.assertEqual(
+            current_payload["schema_version"],
+            "persisted-game-session/v2",
+        )
+
+        legacy_session = current_payload["session"]
+        legacy_session.pop("ai_evidence_version")
+        legacy_payload = _v1_envelope(legacy_session)
+        self._replace_session_raw(store, session.session_id, legacy_payload)
+
+        recovered = store.load_session(session.session_id)
+        self.assertEqual(
+            recovered.envelope.schema_version,
+            "persisted-game-session/v1",
+        )
+        self.assertEqual(recovered.session.ai_evidence_version, 0)
+        self.assertNotIn(
+            "ai_evidence_version",
+            json.loads(recovered.raw_data)["session"],
+        )
+
+    def test_successful_cas_migrates_v1_to_v2_and_preserves_identity(self):
+        store = GameRuntimeStore(self._engine())
+        repository = self._repository(REPO_ROOT / "content")
+        service = GameRuntimeService(repository, store)
+        _, session = service.start_session(
+            "scenario-dayu-flood-control",
+            user_id="legacy-migration-student",
+            now=STARTED_AT,
+        )
+        current_payload = json.loads(
+            store.load_session(session.session_id).raw_data
+        )
+        legacy_session = current_payload["session"]
+        legacy_session.pop("ai_evidence_version")
+        release_identity = GameSessionReleaseIdentityV1(
+            release_id="release-dayu-legacy",
+            release_no=7,
+            release_checksum="a" * 64,
+        )
+        release_payload = release_identity.model_dump(mode="json")
+        legacy_payload = _v1_envelope(legacy_session, release_payload)
+        legacy_checksum = legacy_payload["checksum"]
+        self._replace_session_raw(store, session.session_id, legacy_payload)
+
+        legacy_record = store.load_session(session.session_id)
+        rules = repository.get_active("scenario-dayu-flood-control")
+        result = rules.apply_action(
+            legacy_record.session,
+            self._command("legacy-migration-action", "survey-terrain"),
+        )
+        store.compare_and_swap(legacy_record, result.session)
+
+        migrated = store.load_session(session.session_id)
+        migrated_payload = json.loads(migrated.raw_data)
+        self.assertEqual(
+            migrated_payload["schema_version"],
+            "persisted-game-session/v2",
+        )
+        self.assertEqual(
+            migrated.envelope.release_identity,
+            release_identity,
+        )
+        self.assertEqual(
+            migrated_payload["release_identity"],
+            release_payload,
+        )
+        self.assertNotEqual(migrated_payload["checksum"], legacy_checksum)
+        self.assertEqual(migrated.session.revision, 2)
+
+    def test_v1_unknown_shapes_and_tampering_fail_closed(self):
+        store = GameRuntimeStore(self._engine())
+        repository = self._repository(REPO_ROOT / "content")
+        service = GameRuntimeService(repository, store)
+        _, session = service.start_session(
+            "scenario-dayu-flood-control",
+            user_id="legacy-tamper-student",
+            now=STARTED_AT,
+        )
+        session_payload = json.loads(
+            store.load_session(session.session_id).raw_data
+        )["session"]
+        session_payload.pop("ai_evidence_version")
+        release_payload = {
+            "release_id": "release-dayu-legacy",
+            "release_no": 3,
+            "release_checksum": "b" * 64,
+        }
+        valid = _v1_envelope(session_payload, release_payload)
+
+        bad_checksum = _json_clone(valid)
+        bad_checksum["checksum"] = "0" * 64
+
+        tampered_release = _json_clone(valid)
+        tampered_release["release_identity"]["release_no"] = 4
+
+        wrong_identity = _json_clone(valid)
+        wrong_identity["session"]["session_id"] = "different-session-id"
+        wrong_identity["checksum"] = _v1_session_checksum(
+            wrong_identity["session"],
+            wrong_identity["release_identity"],
+        )
+
+        unknown_version = _json_clone(valid)
+        unknown_version["schema_version"] = "persisted-game-session/v999"
+
+        unknown_envelope_field = _json_clone(valid)
+        unknown_envelope_field["unexpected"] = True
+
+        unknown_session_field = _json_clone(valid)
+        unknown_session_field["session"]["unexpected"] = True
+        unknown_session_field["checksum"] = _v1_session_checksum(
+            unknown_session_field["session"],
+            unknown_session_field["release_identity"],
+        )
+
+        disguised_v2_session = _json_clone(valid)
+        disguised_v2_session["session"]["ai_evidence_version"] = 1
+        disguised_v2_session["checksum"] = _v1_session_checksum(
+            disguised_v2_session["session"],
+            disguised_v2_session["release_identity"],
+        )
+
+        cases = {
+            "checksum": bad_checksum,
+            "release identity": tampered_release,
+            "session identity": wrong_identity,
+            "schema version": unknown_version,
+            "envelope field": unknown_envelope_field,
+            "session field": unknown_session_field,
+            "v2 evidence disguised as v1": disguised_v2_session,
+        }
+        for label, payload in cases.items():
+            with self.subTest(label=label):
+                self._replace_session_raw(store, session.session_id, payload)
+                with self.assertRaises(StoredSessionIntegrityError):
+                    store.load_session(session.session_id)
+
     def test_same_action_is_idempotent_across_two_service_instances(self):
         barrier = threading.Barrier(2)
         first_store = _BarrierStore(self._engine(), barrier)
@@ -400,6 +551,19 @@ class GameRuntimeStoreTests(unittest.TestCase):
             occurred_at=STARTED_AT + timedelta(seconds=1),
         )
 
+    @staticmethod
+    def _replace_session_raw(
+        store: GameRuntimeStore,
+        session_id: str,
+        payload: dict,
+    ) -> None:
+        with store.engine.begin() as connection:
+            connection.execute(
+                update(game_sessions_table)
+                .where(game_sessions_table.c.session_id == session_id)
+                .values(data=_canonical_json(payload))
+            )
+
 
 class _BarrierStore(GameRuntimeStore):
     def __init__(self, engine, barrier: threading.Barrier) -> None:
@@ -409,6 +573,46 @@ class _BarrierStore(GameRuntimeStore):
     def compare_and_swap(self, current, next_session, dossier=None) -> None:
         self._barrier.wait(timeout=5)
         super().compare_and_swap(current, next_session, dossier)
+
+
+def _canonical_json(payload: object) -> str:
+    return json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _json_clone(payload: dict) -> dict:
+    return json.loads(_canonical_json(payload))
+
+
+def _v1_session_checksum(
+    session_payload: dict,
+    release_identity: dict | None = None,
+) -> str:
+    checksum_payload: object = session_payload
+    if release_identity is not None:
+        checksum_payload = {
+            "session": session_payload,
+            "release_identity": release_identity,
+        }
+    return hashlib.sha256(
+        _canonical_json(checksum_payload).encode("utf-8")
+    ).hexdigest()
+
+
+def _v1_envelope(
+    session_payload: dict,
+    release_identity: dict | None = None,
+) -> dict:
+    return {
+        "schema_version": "persisted-game-session/v1",
+        "session": session_payload,
+        "release_identity": release_identity,
+        "checksum": _v1_session_checksum(session_payload, release_identity),
+    }
 
 
 if __name__ == "__main__":

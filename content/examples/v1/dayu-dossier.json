@@ -20,21 +20,21 @@
       "turn_no": 1,
       "action_id": "survey-terrain",
       "choice": "先勘察地势和河道",
-      "consequence": "承受短期水患上升，换取工程认知。"
+      "consequence": "工程认知提升，但勘察期间水患仍在发展。"
     },
     {
       "turn_id": "turn-dayu-003",
       "turn_no": 3,
       "action_id": "open-channels",
       "choice": "按勘察结果开挖疏导线",
-      "consequence": "降低水患并消耗劳力，同时遭遇暴雨事件。"
+      "consequence": "疏导降低水患，但消耗劳力。\n\n【教师待审】暴雨使水患再次上升。"
     },
     {
       "turn_id": "turn-dayu-004",
       "turn_no": 4,
       "action_id": "allocate-food",
       "choice": "分配粮食，保障参与工程的民众",
-      "consequence": "粮食下降，民心和协作提升并补充劳力。"
+      "consequence": "粮食储备下降，但民心与协作基础得到恢复。\n\n协作关系转化为可用劳力。"
     }
   ],
   "state_trajectory": [
@@ -158,5 +158,5 @@
     "source-dayu-placeholder"
   ],
   "generated_at": "2026-07-14T02:25:00Z",
-  "checksum": "d6881b11ed60398c0310263f6f7bd6d4d58a6b5ba18ffbf76dac49d77258dfe2"
+  "checksum": "71542023c13923992a3b7e855f9c1f12a5de1392ff8b8baf75a05a517e69d2dd"
 }
