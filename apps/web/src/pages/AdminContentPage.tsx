@@ -29,17 +29,20 @@ import {
   type ContentWorkflowRecord,
   type ContentAssetRecord,
   type ContentFileRecord,
+  type CourseReleaseItemV2,
   type CourseReleaseManifest,
   type KeywordProfilePackage,
   type LessonContentPackage,
   type LessonSourceRecord,
   type PersonProfilePackage,
   type RuntimeScenarioRecord,
+  type ScenarioReleaseSelection,
 } from '../utils/api';
 import { ADMIN_CONTENT_PREVIEW_KEY } from '../utils/adminContentStorage';
 import { parseContentBlock, parseContentMarkup, renderMarkupHtml, stripInlineMarkup } from '../utils/contentMarkup';
 import { toast } from '../utils/toast';
 import ScenarioRuleEditor from './admin/ScenarioRuleEditor';
+import { runtimeScenarioKey } from './admin/scenarioRuleModel';
 
 const { TextArea } = Input;
 const TOKEN_KEY = 'chrono.admin.token';
@@ -49,6 +52,7 @@ const LOCAL_KEYWORD_KEY = 'chrono.admin.content.keyword.v1';
 const EDITOR_MODE_KEY = 'chrono.admin.content.mode.v1';
 
 type EditorMode = 'lesson' | 'person' | 'keyword' | 'scenario';
+type ScenarioBindingMode = 'preserve' | 'replace' | 'clear';
 type BodyInlineFormat = 'bold' | 'highlight' | 'keyword' | 'red' | 'blue' | 'gold' | 'large' | 'small';
 type BodyBlockFormat = 'paragraph' | 'heading1' | 'heading2' | 'heading3' | 'focus' | 'question' | 'goal';
 
@@ -749,6 +753,14 @@ function releaseOperationLabel(operation: CourseReleaseManifest['operation']): s
   return '正式发布';
 }
 
+function releaseItemV2(
+  release: CourseReleaseManifest | null,
+  lessonId: string,
+): CourseReleaseItemV2 | null {
+  const item = release?.items.find((candidate) => candidate.lesson_id === lessonId);
+  return item && 'scenarios' in item ? item : null;
+}
+
 export default function AdminContentPage() {
   const navigate = useNavigate();
   const [editorMode, setEditorMode] = useState<EditorMode>(() => readEditorMode());
@@ -766,6 +778,9 @@ export default function AdminContentPage() {
   const [sourceLessons, setSourceLessons] = useState<LessonSourceRecord[]>([]);
   const [assets, setAssets] = useState<ContentAssetRecord[]>([]);
   const [runtimeScenarios, setRuntimeScenarios] = useState<RuntimeScenarioRecord[]>([]);
+  const [scenarioBindingMode, setScenarioBindingMode] = useState<ScenarioBindingMode>('preserve');
+  const [selectedScenarioKeys, setSelectedScenarioKeys] = useState<string[]>([]);
+  const [primaryScenarioKey, setPrimaryScenarioKey] = useState<string>();
   const [selectedDraft, setSelectedDraft] = useState<string>();
   const [selectedSourceLesson, setSelectedSourceLesson] = useState<string>();
   const [selectedPersonAsset, setSelectedPersonAsset] = useState<string>();
@@ -779,16 +794,84 @@ export default function AdminContentPage() {
   const bodyTextAreaRef = useRef<TextAreaRef | null>(null);
   const bodySelectionRef = useRef<TextSelectionRange>({ start: 0, end: 0 });
   const tokenRefreshSequenceRef = useRef(0);
+  const workflowRefreshSequenceRef = useRef(0);
+  const editorLoadSequenceRef = useRef(0);
   const [bodyContextMenu, setBodyContextMenu] = useState<BodyContextMenuState | null>(null);
   const activeWorkflow = workflow?.lesson_id === editor.lesson_id
     && workflow.course_id === editor.course_id
     ? workflow
     : null;
   const activeRelease = currentRelease?.course_id === editor.course_id ? currentRelease : null;
+  const lessonRuntimeScenarios = useMemo(
+    () => runtimeScenarios.filter((item) => (
+      item.descriptor.course_id === editor.course_id
+      && item.descriptor.lesson_id === editor.lesson_id
+    )),
+    [editor.course_id, editor.lesson_id, runtimeScenarios],
+  );
+  const activeReleaseItem = useMemo(
+    () => releaseItemV2(activeRelease, editor.lesson_id),
+    [activeRelease, editor.lesson_id],
+  );
+  const selectedRuntimeScenarios = useMemo(() => {
+    const selected = new Set(selectedScenarioKeys);
+    return lessonRuntimeScenarios.filter((item) => selected.has(runtimeScenarioKey(item)));
+  }, [lessonRuntimeScenarios, selectedScenarioKeys]);
+  const scenarioVersionOptions = useMemo(() => lessonRuntimeScenarios.map((item) => {
+    const key = runtimeScenarioKey(item);
+    const sameIdSelected = selectedRuntimeScenarios.some((selected) => (
+      selected.descriptor.artifact_id === item.descriptor.artifact_id
+      && runtimeScenarioKey(selected) !== key
+    ));
+    return {
+      value: key,
+      disabled: sameIdSelected,
+      label: `${item.title} · ${item.descriptor.artifact_id} · v${item.descriptor.version} · ${item.descriptor.checksum.slice(0, 8)}`,
+    };
+  }), [lessonRuntimeScenarios, selectedRuntimeScenarios]);
+  const primaryScenarioOptions = useMemo(() => selectedRuntimeScenarios.map((item) => ({
+    value: runtimeScenarioKey(item),
+    label: `${item.title} · v${item.descriptor.version}`,
+  })), [selectedRuntimeScenarios]);
 
   const rememberEditorMode = (value: EditorMode) => {
     setEditorMode(value);
     localStorage.setItem(EDITOR_MODE_KEY, value);
+  };
+
+  const changeScenarioBindingMode = (value: ScenarioBindingMode) => {
+    setScenarioBindingMode(value);
+    if (value !== 'replace' || selectedScenarioKeys.length > 0) return;
+    const activeIds = new Set(
+      (activeReleaseItem?.scenarios || []).map((item) => (
+        `${item.artifact_id}@${item.version}:${item.checksum}`
+      )),
+    );
+    const matching = lessonRuntimeScenarios.filter((item) => (
+      activeIds.has(runtimeScenarioKey(item))
+    ));
+    const initial = matching.length > 0
+      ? matching
+      : lessonRuntimeScenarios.length === 1
+        ? lessonRuntimeScenarios
+        : [];
+    const keys = initial.map(runtimeScenarioKey);
+    setSelectedScenarioKeys(keys);
+    const primary = initial.find((item) => (
+      item.descriptor.artifact_id === activeReleaseItem?.primary_scenario_id
+    ));
+    setPrimaryScenarioKey(primary ? runtimeScenarioKey(primary) : keys.length === 1 ? keys[0] : undefined);
+  };
+
+  const changeSelectedScenarios = (keys: string[]) => {
+    setSelectedScenarioKeys(keys);
+    setPrimaryScenarioKey((current) => (
+      current && keys.includes(current)
+        ? current
+        : keys.length === 1
+          ? keys[0]
+          : undefined
+    ));
   };
 
   const currentPayload = useMemo(() => {
@@ -816,6 +899,18 @@ export default function AdminContentPage() {
   }, [keywordEditor]);
 
   useEffect(() => {
+    setScenarioBindingMode('preserve');
+    setSelectedScenarioKeys([]);
+    setPrimaryScenarioKey(undefined);
+  }, [editor.course_id, editor.lesson_id]);
+
+  useEffect(() => {
+    const available = new Set(lessonRuntimeScenarios.map(runtimeScenarioKey));
+    setSelectedScenarioKeys((current) => current.filter((key) => available.has(key)));
+    setPrimaryScenarioKey((current) => current && available.has(current) ? current : undefined);
+  }, [lessonRuntimeScenarios]);
+
+  useEffect(() => {
     localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(editor));
     setLocalSavedAt(new Date().toLocaleTimeString());
   }, [editor]);
@@ -829,11 +924,15 @@ export default function AdminContentPage() {
   }, [keywordEditor]);
 
   useEffect(() => {
+    editorLoadSequenceRef.current += 1;
     const sequence = ++tokenRefreshSequenceRef.current;
     setDrafts([]);
     setSourceLessons([]);
     setAssets([]);
     setRuntimeScenarios([]);
+    setScenarioBindingMode('preserve');
+    setSelectedScenarioKeys([]);
+    setPrimaryScenarioKey(undefined);
     if (!token) {
       return;
     }
@@ -873,6 +972,9 @@ export default function AdminContentPage() {
   }, [bodyContextMenu]);
 
   const rememberToken = (value: string) => {
+    editorLoadSequenceRef.current += 1;
+    tokenRefreshSequenceRef.current += 1;
+    workflowRefreshSequenceRef.current += 1;
     setToken(value);
     localStorage.setItem(TOKEN_KEY, value);
   };
@@ -989,23 +1091,31 @@ export default function AdminContentPage() {
   );
 
   const refreshDrafts = async () => {
+    const sequence = tokenRefreshSequenceRef.current;
     setBusy('drafts');
     try {
       const res = await api.adminContentDrafts(token);
+      if (tokenRefreshSequenceRef.current !== sequence) return;
       setDrafts(res.items);
     } catch (err: any) {
-      toast.error(err?.message || '草稿库读取失败');
+      if (tokenRefreshSequenceRef.current === sequence) {
+        toast.error(err?.message || '草稿库读取失败');
+      }
     } finally {
       setBusy('');
     }
   };
 
   const refreshAssets = async () => {
+    const sequence = tokenRefreshSequenceRef.current;
     try {
       const res = await api.adminContentAssets(token);
+      if (tokenRefreshSequenceRef.current !== sequence) return;
       setAssets(res.items);
     } catch (err: any) {
-      toast.error(err?.message || '资料档案读取失败');
+      if (tokenRefreshSequenceRef.current === sequence) {
+        toast.error(err?.message || '资料档案读取失败');
+      }
     }
   };
 
@@ -1014,11 +1124,15 @@ export default function AdminContentPage() {
       setRuntimeScenarios([]);
       return;
     }
+    const sequence = tokenRefreshSequenceRef.current;
     try {
       const res = await api.adminRuntimeScenarios(token);
+      if (tokenRefreshSequenceRef.current !== sequence) return;
       setRuntimeScenarios(res.items);
     } catch (err: any) {
-      toast.error(err?.message || '封存关卡读取失败');
+      if (tokenRefreshSequenceRef.current === sequence) {
+        toast.error(err?.message || '封存关卡读取失败');
+      }
     }
   };
 
@@ -1030,11 +1144,15 @@ export default function AdminContentPage() {
     setReviewNote('');
   };
 
-  const refreshReleaseState = async (courseId: string) => {
+  const invalidateReleaseState = () => {
+    const sequence = ++workflowRefreshSequenceRef.current;
+    clearReleaseState();
+    return sequence;
+  };
+
+  const loadReleaseState = async (courseId: string) => {
     if (!token || !courseId) {
-      setReleases([]);
-      setCurrentRelease(null);
-      return;
+      return { history: [] as CourseReleaseManifest[], current: null };
     }
     const currentPromise = api.adminContentCurrentRelease(token, courseId)
       .then((response) => response.release)
@@ -1042,22 +1160,40 @@ export default function AdminContentPage() {
         if (isNotFoundError(error)) return null;
         throw error;
       });
-    const [history, current] = await Promise.all([
+    const [historyResponse, current] = await Promise.all([
       api.adminContentReleases(token, courseId),
       currentPromise,
     ]);
-    setReleases(history.items);
+    return { history: historyResponse.items, current };
+  };
+
+  const applyReleaseState = (
+    history: CourseReleaseManifest[],
+    current: CourseReleaseManifest | null,
+  ) => {
+    setReleases(history);
     setCurrentRelease(current);
     setSelectedRelease((selected) => (
-      selected && history.items.some((item) => item.release_id === selected)
+      selected && history.some((item) => item.release_id === selected)
         ? selected
         : undefined
     ));
   };
 
-  const refreshWorkflowState = async (lessonId: string, courseId: string) => {
+  const refreshReleaseState = async (courseId: string) => {
+    const sequence = ++workflowRefreshSequenceRef.current;
+    const { history, current } = await loadReleaseState(courseId);
+    if (workflowRefreshSequenceRef.current !== sequence) return;
+    applyReleaseState(history, current);
+  };
+
+  const refreshWorkflowState = async (
+    lessonId: string,
+    courseId: string,
+    sequence = ++workflowRefreshSequenceRef.current,
+  ) => {
     if (!token || !lessonId) {
-      clearReleaseState();
+      if (workflowRefreshSequenceRef.current === sequence) clearReleaseState();
       return;
     }
     const workflowPromise = api.adminContentWorkflow(token, lessonId)
@@ -1066,20 +1202,27 @@ export default function AdminContentPage() {
         if (isNotFoundError(error)) return null;
         throw error;
       });
-    const [nextWorkflow] = await Promise.all([
+    const [nextWorkflow, releaseState] = await Promise.all([
       workflowPromise,
-      refreshReleaseState(courseId),
+      loadReleaseState(courseId),
     ]);
+    if (workflowRefreshSequenceRef.current !== sequence) return;
     setWorkflow(nextWorkflow);
+    applyReleaseState(releaseState.history, releaseState.current);
   };
 
   useEffect(() => {
+    const sequence = invalidateReleaseState();
     if (!token) {
-      clearReleaseState();
       return;
     }
     const timer = window.setTimeout(() => {
-      void refreshWorkflowState(editor.lesson_id, editor.course_id);
+      void refreshWorkflowState(editor.lesson_id, editor.course_id, sequence)
+        .catch((error: any) => {
+          if (workflowRefreshSequenceRef.current === sequence) {
+            toast.error(error?.message || '课程发布状态读取失败');
+          }
+        });
     }, 350);
     return () => window.clearTimeout(timer);
     // Reconcile the initial local draft after authentication; later lesson switches load explicitly.
@@ -1087,25 +1230,28 @@ export default function AdminContentPage() {
   }, [token]);
 
   const createNew = () => {
+    editorLoadSequenceRef.current += 1;
     const item = newEditor();
     setEditor(item);
     setPreview(null);
     setSelectedDraft(undefined);
     setSealedPath('');
     setServerSavedAt('');
-    clearReleaseState();
+    invalidateReleaseState();
     toast.success('新内容已创建');
   };
 
   const loadTemplate = async () => {
+    const editorSequence = ++editorLoadSequenceRef.current;
     setBusy('template');
     try {
       const item = await api.adminContentTemplate(token);
+      if (editorLoadSequenceRef.current !== editorSequence) return;
       setEditor(packageToEditor(item));
       setPreview(item);
       setSelectedDraft(undefined);
       setSealedPath('');
-      clearReleaseState();
+      invalidateReleaseState();
       toast.success('模板已载入');
     } catch (err: any) {
       toast.error(err?.message || '模板载入失败');
@@ -1116,15 +1262,17 @@ export default function AdminContentPage() {
 
   const loadSourceLesson = async () => {
     if (!selectedSourceLesson) return;
+    const editorSequence = ++editorLoadSequenceRef.current;
     setBusy('source');
     try {
       const item = await api.adminContentSourceLesson(token, selectedSourceLesson);
+      if (editorLoadSequenceRef.current !== editorSequence) return;
       setEditor(packageToEditor(item));
       setPreview(item);
       setSelectedDraft(undefined);
       setSealedPath('');
       setServerSavedAt('');
-      clearReleaseState();
+      invalidateReleaseState();
       toast.success('已读取课程初稿');
     } catch (err: any) {
       toast.error(err?.message || '课程初稿读取失败');
@@ -1193,14 +1341,20 @@ export default function AdminContentPage() {
 
   const loadSelectedDraft = async () => {
     if (!selectedDraft) return;
+    const editorSequence = ++editorLoadSequenceRef.current;
+    const workflowSequence = invalidateReleaseState();
     setBusy('load');
     try {
       const item = await api.adminContentDraft(token, selectedDraft);
+      if (
+        editorLoadSequenceRef.current !== editorSequence
+        || workflowRefreshSequenceRef.current !== workflowSequence
+      ) return;
       setEditor(packageToEditor(item));
       setPreview(item);
       setSealedPath('');
       setServerSavedAt(item.updated_at ? new Date(item.updated_at).toLocaleString() : '');
-      await refreshWorkflowState(item.lesson_id, item.course_id || '');
+      await refreshWorkflowState(item.lesson_id, item.course_id || '', workflowSequence);
       toast.success('草稿已打开');
     } catch (err: any) {
       toast.error(err?.message || '草稿打开失败');
@@ -1217,6 +1371,7 @@ export default function AdminContentPage() {
   const applyBlueprint = (blueprintId: string) => {
     const blueprint = LESSON_BLUEPRINTS.find((item) => item.id === blueprintId);
     if (!blueprint) return;
+    editorLoadSequenceRef.current += 1;
     const lessonId = `${blueprint.id.toLowerCase()}-${Date.now().toString().slice(-6)}`;
     updateEditor({
       lesson_id: lessonId,
@@ -1229,7 +1384,7 @@ export default function AdminContentPage() {
       section: blueprint.section,
       lesson_no: blueprint.lesson_no,
     });
-    clearReleaseState();
+    invalidateReleaseState();
     toast.success('课程规划已填入');
   };
 
@@ -1391,6 +1546,33 @@ export default function AdminContentPage() {
 
   const publishSealed = async () => {
     if (!activeWorkflow?.sealed_version) return;
+    let scenarioSelections: ScenarioReleaseSelection[] | undefined;
+    if (scenarioBindingMode === 'clear') {
+      scenarioSelections = [];
+    } else if (scenarioBindingMode === 'replace') {
+      if (selectedRuntimeScenarios.length === 0) {
+        toast.warning('请选择至少一个封存关卡，或改用“保留现状/清空绑定”');
+        return;
+      }
+      if (!primaryScenarioKey || !selectedScenarioKeys.includes(primaryScenarioKey)) {
+        toast.warning('请选择一个主关卡');
+        return;
+      }
+      const scenarioIds = selectedRuntimeScenarios.map((item) => item.descriptor.artifact_id);
+      if (new Set(scenarioIds).size !== scenarioIds.length) {
+        toast.warning('同一关卡 ID 只能选择一个封存版本');
+        return;
+      }
+      scenarioSelections = selectedRuntimeScenarios
+        .slice()
+        .sort((left, right) => left.descriptor.artifact_id.localeCompare(right.descriptor.artifact_id))
+        .map((item) => ({
+          scenario_id: item.descriptor.artifact_id,
+          scenario_version: item.descriptor.version,
+          scenario_checksum: item.descriptor.checksum,
+          primary: runtimeScenarioKey(item) === primaryScenarioKey,
+        }));
+    }
     setBusy('publish');
     try {
       const res = await api.adminContentPublish(
@@ -1398,11 +1580,24 @@ export default function AdminContentPage() {
         activeWorkflow.lesson_id,
         activeWorkflow.sealed_version,
         reviewNote,
+        scenarioSelections,
       );
       if (res.workflow) setWorkflow(res.workflow);
       setCurrentRelease(res.release);
-      await refreshReleaseState(activeWorkflow.course_id);
-      toast.success(`已发布课程版本 ${res.release.release_no}`);
+      let releaseHistoryRefreshed = true;
+      try {
+        await refreshReleaseState(activeWorkflow.course_id);
+      } catch {
+        releaseHistoryRefreshed = false;
+      }
+      setScenarioBindingMode('preserve');
+      setSelectedScenarioKeys([]);
+      setPrimaryScenarioKey(undefined);
+      if (releaseHistoryRefreshed) {
+        toast.success(`已发布课程版本 ${res.release.release_no}`);
+      } else {
+        toast.warning(`课程版本 ${res.release.release_no} 已发布，但发布历史刷新失败；请刷新页面核对，不要重复发布`);
+      }
     } catch (err: any) {
       toast.error(err?.message || '发布失败');
     } finally {
@@ -1421,9 +1616,18 @@ export default function AdminContentPage() {
         reviewNote,
       );
       setCurrentRelease(res.release);
-      await refreshWorkflowState(activeWorkflow.lesson_id, activeWorkflow.course_id);
+      let rollbackStateRefreshed = true;
+      try {
+        await refreshWorkflowState(activeWorkflow.lesson_id, activeWorkflow.course_id);
+      } catch {
+        rollbackStateRefreshed = false;
+      }
       setSelectedRelease(undefined);
-      toast.success(`已回滚并生成发布版本 ${res.release.release_no}`);
+      if (rollbackStateRefreshed) {
+        toast.success(`已回滚并生成发布版本 ${res.release.release_no}`);
+      } else {
+        toast.warning(`已回滚并生成发布版本 ${res.release.release_no}，但状态刷新失败；请刷新页面核对，不要重复回滚`);
+      }
     } catch (err: any) {
       toast.error(err?.message || '回滚失败');
     } finally {
@@ -1472,6 +1676,7 @@ export default function AdminContentPage() {
           <Input.Password
             aria-label="Admin token"
             value={token}
+            disabled={Boolean(busy)}
             onChange={(event) => rememberToken(event.target.value)}
             style={{ width: 220 }}
           />
@@ -1498,11 +1703,27 @@ export default function AdminContentPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 12 }}>
             <label>
               <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>课时 ID</div>
-              <Input aria-label="课时 ID" value={editor.lesson_id} onChange={(event) => updateEditor({ lesson_id: event.target.value })} />
+              <Input
+                aria-label="课时 ID"
+                value={editor.lesson_id}
+                onChange={(event) => {
+                  editorLoadSequenceRef.current += 1;
+                  invalidateReleaseState();
+                  updateEditor({ lesson_id: event.target.value });
+                }}
+              />
             </label>
             <label>
               <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>课程 ID</div>
-              <Input aria-label="课程 ID" value={editor.course_id} onChange={(event) => updateEditor({ course_id: event.target.value })} />
+              <Input
+                aria-label="课程 ID"
+                value={editor.course_id}
+                onChange={(event) => {
+                  editorLoadSequenceRef.current += 1;
+                  invalidateReleaseState();
+                  updateEditor({ course_id: event.target.value });
+                }}
+              />
             </label>
             <label>
               <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>课程名</div>
@@ -1798,6 +2019,87 @@ export default function AdminContentPage() {
                 {activeWorkflow?.sealed_version && <Tag color="blue">封存 v{activeWorkflow.sealed_version}</Tag>}
                 {activeWorkflow?.published_version && <Tag color="green">线上 v{activeWorkflow.published_version}</Tag>}
               </Space>
+            </div>
+
+            <div style={{ padding: '10px 0 12px', marginBottom: 12, borderBottom: '1px solid var(--border-soft)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+                <div className="chrono-course-eyeline">本次发布的关卡绑定</div>
+                <Tooltip title="刷新封存关卡">
+                  <Button
+                    aria-label="刷新发布关卡列表"
+                    type="text"
+                    icon={<ReloadOutlined />}
+                    onClick={refreshRuntimeScenarios}
+                  />
+                </Tooltip>
+              </div>
+
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
+                <span style={{ color: 'var(--text-mute)', fontSize: 12 }}>当前线上</span>
+                {activeReleaseItem?.scenarios.length ? activeReleaseItem.scenarios.map((item) => (
+                  <Tag
+                    key={`${item.artifact_id}-${item.version}-${item.checksum}`}
+                    color={item.artifact_id === activeReleaseItem.primary_scenario_id ? 'gold' : 'blue'}
+                  >
+                    {item.artifact_id} · v{item.version}
+                    {item.artifact_id === activeReleaseItem.primary_scenario_id ? ' · 主关卡' : ''}
+                  </Tag>
+                )) : <Tag>无关卡绑定</Tag>}
+              </div>
+
+              <Segmented
+                aria-label="关卡绑定方式"
+                block
+                value={scenarioBindingMode}
+                options={[
+                  { label: '保留现状', value: 'preserve' },
+                  { label: '更新绑定', value: 'replace' },
+                  { label: '清空绑定', value: 'clear' },
+                ]}
+                onChange={(value) => changeScenarioBindingMode(value as ScenarioBindingMode)}
+              />
+
+              {scenarioBindingMode === 'preserve' && (
+                <div style={{ color: 'var(--text-mute)', fontSize: 12, marginTop: 8 }}>
+                  本次只发布课程内容，不改变当前线上关卡。
+                </div>
+              )}
+              {scenarioBindingMode === 'clear' && (
+                <div style={{ color: '#cf1322', fontSize: 12, marginTop: 8 }}>
+                  本次发布会移除该课时的全部线上关卡绑定。
+                </div>
+              )}
+              {scenarioBindingMode === 'replace' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: 10, marginTop: 10 }}>
+                  <label>
+                    <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>封存关卡版本</div>
+                    <Select
+                      aria-label="选择发布关卡版本"
+                      mode="multiple"
+                      showSearch
+                      optionFilterProp="label"
+                      maxTagCount="responsive"
+                      placeholder={lessonRuntimeScenarios.length ? '选择一个或多个精确版本' : '当前课时暂无封存关卡'}
+                      value={selectedScenarioKeys}
+                      options={scenarioVersionOptions}
+                      onChange={changeSelectedScenarios}
+                      style={{ width: '100%' }}
+                    />
+                  </label>
+                  <label>
+                    <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>主关卡</div>
+                    <Select
+                      aria-label="选择主关卡"
+                      placeholder="选择学生默认进入的关卡"
+                      disabled={!selectedScenarioKeys.length}
+                      value={primaryScenarioKey}
+                      options={primaryScenarioOptions}
+                      onChange={setPrimaryScenarioKey}
+                      style={{ width: '100%' }}
+                    />
+                  </label>
+                </div>
+              )}
             </div>
 
             <Space size={[6, 8]} wrap style={{ marginBottom: 10 }}>

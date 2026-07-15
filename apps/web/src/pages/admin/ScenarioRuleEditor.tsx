@@ -116,6 +116,9 @@ export default function ScenarioRuleEditor({
   const [localSavedAt, setLocalSavedAt] = useState('');
   const previewRef = useRef<HTMLDivElement | null>(null);
   const editGenerationRef = useRef(0);
+  const draftRefreshSequenceRef = useRef(0);
+  const currentTokenRef = useRef(token);
+  currentTokenRef.current = token;
 
   const lessonScenarios = useMemo(
     () => runtimeScenarios.filter((item) => (
@@ -142,9 +145,18 @@ export default function ScenarioRuleEditor({
   }, [draft]);
 
   useEffect(() => {
+    const sequence = ++draftRefreshSequenceRef.current;
+    setDrafts([]);
+    setSelectedDraft(undefined);
     if (!token) return;
     const timer = window.setTimeout(() => {
-      void refreshDrafts(true);
+      void api.adminScenarioDrafts(token)
+        .then((result) => {
+          if (draftRefreshSequenceRef.current === sequence) setDrafts(result.items);
+        })
+        .catch(() => {
+          // The parent editor reports authentication failures for the shared content refresh.
+        });
     }, 350);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,14 +181,28 @@ export default function ScenarioRuleEditor({
     }
   };
 
+  const assertTokenUnchanged = (requestToken: string) => {
+    if (currentTokenRef.current !== requestToken) {
+      throw new Error('Admin token 已变化，旧请求结果已忽略，请在当前身份下重新操作');
+    }
+  };
+
   const refreshDrafts = async (silent = false) => {
     if (!token) return;
+    const requestToken = token;
+    const sequence = draftRefreshSequenceRef.current;
     if (!silent) setBusy('refresh');
     try {
-      const result = await api.adminScenarioDrafts(token);
+      const result = await api.adminScenarioDrafts(requestToken);
+      if (
+        currentTokenRef.current !== requestToken
+        || draftRefreshSequenceRef.current !== sequence
+      ) return;
       setDrafts(result.items);
     } catch (error: any) {
-      if (!silent) toast.error(error?.message || '关卡草稿库读取失败');
+      if (!silent && draftRefreshSequenceRef.current === sequence) {
+        toast.error(error?.message || '关卡草稿库读取失败');
+      }
     } finally {
       if (!silent) setBusy('');
     }
@@ -184,11 +210,13 @@ export default function ScenarioRuleEditor({
 
   const createNew = async () => {
     if (!confirmReplaceDraft()) return;
+    const requestToken = token;
     setBusy('template');
     try {
-      const template = token
-        ? await api.adminScenarioTemplate(token)
+      const template = requestToken
+        ? await api.adminScenarioTemplate(requestToken)
         : createScenarioDraft();
+      assertTokenUnchanged(requestToken);
       setDraft({
         ...template,
         scenario_id: `scenario-${Date.now().toString(36)}`,
@@ -215,9 +243,11 @@ export default function ScenarioRuleEditor({
   const loadSelectedDraft = async () => {
     if (!selectedDraft || !ensureToken(token)) return;
     if (!confirmReplaceDraft()) return;
+    const requestToken = token;
     setBusy('load');
     try {
-      const item = await api.adminScenarioDraft(token, selectedDraft);
+      const item = await api.adminScenarioDraft(requestToken, selectedDraft);
+      assertTokenUnchanged(requestToken);
       setDraft(item);
       setReport(null);
       setSealed(null);
@@ -234,10 +264,12 @@ export default function ScenarioRuleEditor({
 
   const persistDraft = async () => {
     if (!ensureToken(token)) throw new Error('请先填写 Admin token');
+    const requestToken = token;
     const idError = contractIdError(draft.scenario_id);
     if (idError) throw new Error(`关卡 ID：${idError}`);
     const generation = editGenerationRef.current;
-    const result = await api.adminSaveScenarioDraft(token, draft);
+    const result = await api.adminSaveScenarioDraft(requestToken, draft);
+    assertTokenUnchanged(requestToken);
     if (editGenerationRef.current !== generation) {
       setDraft((current) => current.scenario_id === result.item.scenario_id ? ({
         ...current,
@@ -249,14 +281,16 @@ export default function ScenarioRuleEditor({
       }) : current);
       setSelectedDraft(result.item.scenario_id);
       setDirty(true);
-      const library = await api.adminScenarioDrafts(token);
+      const library = await api.adminScenarioDrafts(requestToken);
+      assertTokenUnchanged(requestToken);
       setDrafts(library.items);
       throw new Error('请求期间内容发生了修改，服务器已保留旧快照；请再次保存当前内容');
     }
     setDraft(result.item);
     setDirty(false);
     setSelectedDraft(result.item.scenario_id);
-    const library = await api.adminScenarioDrafts(token);
+    const library = await api.adminScenarioDrafts(requestToken);
+    assertTokenUnchanged(requestToken);
     setDrafts(library.items);
     return result.item;
   };
@@ -277,8 +311,10 @@ export default function ScenarioRuleEditor({
     setBusy('validate');
     try {
       const saved = await persistDraft();
+      const requestToken = token;
       const generation = editGenerationRef.current;
-      const result = await api.adminValidateScenarioDraft(token, saved.scenario_id);
+      const result = await api.adminValidateScenarioDraft(requestToken, saved.scenario_id);
+      assertTokenUnchanged(requestToken);
       assertDraftUnchanged(generation);
       setReport(result.report);
       if (result.report.valid) toast.success('关卡规则校验通过');
@@ -294,19 +330,23 @@ export default function ScenarioRuleEditor({
     setBusy('seal');
     try {
       const saved = await persistDraft();
+      const requestToken = token;
       const generation = editGenerationRef.current;
-      const validation = await api.adminValidateScenarioDraft(token, saved.scenario_id);
+      const validation = await api.adminValidateScenarioDraft(requestToken, saved.scenario_id);
+      assertTokenUnchanged(requestToken);
       assertDraftUnchanged(generation);
       setReport(validation.report);
       if (!validation.report.valid) {
         toast.warning('请先处理阻断项，再封存关卡');
         return;
       }
-      const result = await api.adminSealScenarioDraft(token, saved.scenario_id);
+      const result = await api.adminSealScenarioDraft(requestToken, saved.scenario_id);
+      assertTokenUnchanged(requestToken);
       assertDraftUnchanged(generation);
       setSealed(result.item);
       setSealedRecord(result.record);
       await onRefreshRuntimeScenarios();
+      assertTokenUnchanged(requestToken);
       toast.success(
         result.idempotent
           ? `内容未变化，继续使用封存版本 v${result.item.scenario_version}`
@@ -340,9 +380,11 @@ export default function ScenarioRuleEditor({
   const exportSealed = async () => {
     const record = sealedRecord || latestScenarioRecord;
     if (!ensureToken(token) || !record) return;
+    const requestToken = token;
     setBusy('export-sealed');
     try {
-      const blob = await api.adminRuntimeScenarioFile(token, record.descriptor);
+      const blob = await api.adminRuntimeScenarioFile(requestToken, record.descriptor);
+      assertTokenUnchanged(requestToken);
       downloadBlob(
         `${safeFileBase(record.title, record.descriptor.artifact_id)}-关卡封存-v${String(record.descriptor.version).padStart(3, '0')}.json`,
         blob,
