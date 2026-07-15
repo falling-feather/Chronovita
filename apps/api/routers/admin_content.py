@@ -3,7 +3,7 @@ from __future__ import annotations
 import secrets
 from typing import Annotated, Literal, NoReturn
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 
 from settings import settings
@@ -122,6 +122,7 @@ async def overview(_: str = Depends(require_admin)):
                 "POST /api/v1/admin/content/drafts/{lesson_id}/seal",
                 "GET /api/v1/admin/content/runtime-scenarios",
                 "GET /api/v1/admin/content/runtime-scenarios/{scenario_id}/versions/{scenario_version}",
+                "GET /api/v1/admin/content/runtime-scenarios/{scenario_id}/versions/{scenario_version}/file",
                 "POST /api/v1/admin/content/runtime-scenarios",
                 "GET /api/v1/admin/content/scenario-drafts/template",
                 "GET /api/v1/admin/content/scenario-drafts",
@@ -352,6 +353,37 @@ async def runtime_scenario_detail(
             "item": item.model_dump(mode="json"),
             "descriptor": descriptor.model_dump(mode="json"),
         }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/runtime-scenarios/{scenario_id}/versions/{scenario_version}/file")
+async def runtime_scenario_file(
+    scenario_id: str,
+    scenario_version: int,
+    course_id: str,
+    lesson_id: str,
+    scenario_checksum: str,
+    _: str = Depends(require_admin),
+):
+    try:
+        raw, descriptor = runtime_artifacts.load_staged_scenario_bytes(
+            course_id=course_id,
+            lesson_id=lesson_id,
+            scenario_id=scenario_id,
+            scenario_version=scenario_version,
+            scenario_checksum=scenario_checksum,
+        )
+        return Response(
+            content=raw,
+            media_type="application/json",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="{scenario_id}-v{scenario_version:03d}.json"'
+                ),
+                "X-Content-Checksum": descriptor.checksum,
+            },
+        )
     except Exception as exc:
         _raise_content_error(exc)
 

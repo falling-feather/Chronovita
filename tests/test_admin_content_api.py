@@ -383,6 +383,35 @@ class AdminContentApiTests(unittest.TestCase):
         self.assertEqual(loaded_detail.json()["item"], sealed.json()["item"])
         self.assertEqual(loaded_detail.json()["descriptor"], descriptor)
 
+        file_url = f"{detail_url}/file"
+        unauthorized_file = self.client.get(
+            file_url,
+            params={
+                "course_id": payload["course_id"],
+                "lesson_id": payload["lesson_id"],
+                "scenario_checksum": descriptor["checksum"],
+            },
+        )
+        self.assertEqual(unauthorized_file.status_code, 403)
+        downloaded_file = self.client.get(
+            file_url,
+            headers=self.headers,
+            params={
+                "course_id": payload["course_id"],
+                "lesson_id": payload["lesson_id"],
+                "scenario_checksum": descriptor["checksum"],
+            },
+        )
+        self.assertEqual(downloaded_file.status_code, 200, downloaded_file.text)
+        self.assertEqual(
+            downloaded_file.content,
+            (content.content_root() / descriptor["path"]).read_bytes(),
+        )
+        self.assertEqual(
+            downloaded_file.headers["x-content-checksum"],
+            descriptor["checksum"],
+        )
+
         missing_identity = self.client.get(
             detail_url,
             headers=self.headers,

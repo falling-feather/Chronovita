@@ -175,6 +175,37 @@ def load_staged_scenario(
     return scenario, descriptor
 
 
+def load_staged_scenario_bytes(
+    *,
+    course_id: str,
+    lesson_id: str,
+    scenario_id: str,
+    scenario_version: int,
+    scenario_checksum: str,
+) -> tuple[bytes, RuntimeArtifactDescriptorV1]:
+    """Return the verified immutable file bytes for an exact sealed scenario identity."""
+
+    _, descriptor = load_staged_scenario(
+        course_id=course_id,
+        lesson_id=lesson_id,
+        scenario_id=scenario_id,
+        scenario_version=scenario_version,
+        scenario_checksum=scenario_checksum,
+    )
+    target = content_data.content_root() / Path(descriptor.path)
+    raw = _read_immutable_bytes(target)
+    try:
+        scenario = ScenarioTemplateV1.model_validate_json(raw)
+    except ValueError as exc:
+        raise RuntimeArtifactError(
+            f"cannot read runtime artifact: {target}"
+        ) from exc
+    _validate_sealed_scenario(scenario)
+    if descriptor_for_scenario(scenario) != descriptor:
+        raise RuntimeArtifactError("staged scenario descriptor changed while downloading")
+    return raw, descriptor
+
+
 def load_staged_scenario_path(
     path: Path,
 ) -> tuple[ScenarioTemplateV1, RuntimeArtifactDescriptorV1]:
@@ -442,6 +473,7 @@ __all__ = [
     "load_course_package",
     "load_runtime_scenario",
     "load_staged_scenario",
+    "load_staged_scenario_bytes",
     "materialize_course_package",
     "stage_scenario",
 ]

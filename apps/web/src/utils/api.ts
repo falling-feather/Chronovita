@@ -1,6 +1,43 @@
 // 统一的 API 客户端 · v0.2.0
 const BASE = '/api/v1';
 
+interface ApiValidationIssue {
+  loc?: Array<string | number>;
+  msg?: string;
+}
+
+function localizeValidationMessage(message: string): string {
+  if (message.includes('String should match pattern')) return '只能使用英文字母、数字、点、下划线和短横线';
+  if (message.includes('at least 2 characters')) return '至少需要 2 个字符';
+  if (message.includes('at most 64 characters')) return '最多允许 64 个字符';
+  if (message.includes('Field required')) return '该字段为必填项';
+  return message.replace(/^Value error,\s*/i, '');
+}
+
+async function responseError(response: Response): Promise<Error> {
+  const raw = await response.text();
+  let message = raw || response.statusText;
+  try {
+    const parsed = JSON.parse(raw) as {
+      detail?: string | { message?: string } | ApiValidationIssue[];
+    };
+    if (typeof parsed.detail === 'string') {
+      message = parsed.detail;
+    } else if (Array.isArray(parsed.detail)) {
+      message = parsed.detail.map((issue) => {
+        const field = (issue.loc || []).filter((part) => part !== 'body').join('.');
+        const detail = localizeValidationMessage(issue.msg || '字段校验失败');
+        return field ? `${field}：${detail}` : detail;
+      }).join('；');
+    } else if (parsed.detail?.message) {
+      message = parsed.detail.message;
+    }
+  } catch {
+    // Keep the raw response when an upstream proxy does not return JSON.
+  }
+  return new Error(`${response.status} ${message}`);
+}
+
 async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(BASE + path, {
     ...init,
@@ -10,15 +47,7 @@ async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   if (!r.ok) {
-    const raw = await r.text();
-    let message = raw;
-    try {
-      const parsed = JSON.parse(raw) as { detail?: string | { message?: string } };
-      message = typeof parsed.detail === 'string' ? parsed.detail : parsed.detail?.message || raw;
-    } catch {
-      // Keep the raw response when an upstream proxy does not return JSON.
-    }
-    throw new Error(`${r.status} ${message}`);
+    throw await responseError(r);
   }
   return r.json() as Promise<T>;
 }
@@ -31,6 +60,14 @@ async function adminFetch<T>(token: string, path: string, init?: RequestInit): P
       ...(init?.headers || {}),
     },
   });
+}
+
+async function adminFile(token: string, path: string): Promise<Blob> {
+  const response = await fetch(BASE + path, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw await responseError(response);
+  return response.blob();
 }
 
 export interface Era { id: string; name: string; period: string; summary: string }
@@ -95,11 +132,26 @@ export interface ContentWorkflowRecord {
   published_course_id?: string | null; published_version?: number | null;
   published_release_id?: string | null; updated_at: string; checksum: string;
 }
-export interface CourseReleaseItem {
+export interface RuntimeArtifactDescriptor {
+  kind: 'course-package' | 'scenario-template';
+  schema_version: 'course-package/v1' | 'scenario-template/v1';
+  artifact_id: string; course_id: string; lesson_id: string;
+  version: number; checksum: string; path: string;
+}
+export interface CourseReleaseItemV1 {
   lesson_id: string; course_id: string; content_version: number;
   source_path: string; source_checksum: string; package_path: string;
   package_checksum: string; package_schema: string;
 }
+export interface CourseReleaseItemV2 {
+  lesson_id: string; course_id: string; content_version: number;
+  source_path: string; source_checksum: string;
+  course_package: RuntimeArtifactDescriptor;
+  scenarios: RuntimeArtifactDescriptor[];
+  primary_scenario_id?: string | null;
+  audience: 'published';
+}
+export type CourseReleaseItem = CourseReleaseItemV1 | CourseReleaseItemV2;
 export interface CourseReleaseManifest {
   schema_version: string; release_id: string; release_no: number; course_id: string;
   operation: 'bootstrap' | 'publish' | 'rollback'; parent_release_id?: string | null;
@@ -128,6 +180,88 @@ export interface KeywordProfilePackage {
   asset_id: string; word: string; pinyin?: string; gloss?: string; era?: string; category?: string;
   examples?: string[]; related_people?: string[]; related_lessons?: string[]; source_refs?: SourceRef[];
   teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number; updated_at?: string | null;
+}
+export type ScenarioType = 'crisis_governance' | 'institutional_reform' | 'council';
+export type ScenarioConditionKind = 'state' | 'turn' | 'npc';
+export type ScenarioEffectKind = 'state' | 'npc';
+export type ScenarioComparisonOperator = 'lt' | 'lte' | 'eq' | 'gte' | 'gt';
+export interface ScenarioDraftVariable {
+  variable_id: string; label: string; description: string;
+  initial: number; minimum: number; maximum: number;
+}
+export interface ScenarioDraftNpc {
+  person_id: string; display_name: string; role: string; persona: string;
+  boundaries: string[]; initial_attitude: number; initial_trust: number; fact_refs: string[];
+}
+export interface ScenarioDraftCondition {
+  kind: ScenarioConditionKind; variable_id: string; person_id: string;
+  field: 'attitude' | 'trust'; operator: ScenarioComparisonOperator; value: number;
+}
+export interface ScenarioDraftEffect {
+  kind: ScenarioEffectKind; variable_id: string; person_id: string;
+  operation: 'add' | 'set'; value: number; attitude_delta: number; trust_delta: number;
+  reveal_fact_refs: string[];
+}
+export interface ScenarioDraftAction {
+  action_id: string; label: string; description: string; aliases: string[];
+  available_when: ScenarioDraftCondition[]; effects: ScenarioDraftEffect[];
+  feedback: string; fact_refs: string[]; next_node_id?: string | null;
+}
+export interface ScenarioDraftEvent {
+  event_id: string; title: string; match: 'all' | 'any';
+  trigger: ScenarioDraftCondition[]; effects: ScenarioDraftEffect[];
+  narrative: string; once: boolean; priority: number; fact_refs: string[];
+}
+export interface ScenarioDraftEnding {
+  ending_id: string; title: string; match: 'all' | 'any';
+  conditions: ScenarioDraftCondition[]; summary: string; historical_explanation: string;
+  major_costs: string[]; source_ref_ids: string[]; fact_refs: string[]; priority: number;
+}
+export interface ScenarioDraftNode {
+  node_id: string; title: string; narration: string;
+  action_ids: string[]; ending_id?: string | null;
+}
+export interface ScenarioDraftDossier {
+  title_template: string; reflection_questions: string[]; knowledge_node_kinds: string[];
+}
+export interface ScenarioCompatibility {
+  kind: string; source_id: string; source_version: string; source_checksum?: string | null;
+  notes: string; unresolved_refs: string[]; legacy_materials: unknown[];
+  legacy_id_map: Record<string, string>;
+}
+export interface ScenarioAuthorDraft {
+  schema_version: 'scenario-author-draft/v1'; scenario_id: string;
+  course_id: string; lesson_id: string; title: string; scenario_type: ScenarioType;
+  student_role: string; objective: string; opening: string; max_turns: number;
+  variables: ScenarioDraftVariable[]; npcs: ScenarioDraftNpc[];
+  action_rules: ScenarioDraftAction[]; event_rules: ScenarioDraftEvent[];
+  ending_rules: ScenarioDraftEnding[]; start_node_id?: string | null;
+  nodes: ScenarioDraftNode[]; fact_refs: string[]; source_ref_ids: string[];
+  dossier_template: ScenarioDraftDossier; compatibility: ScenarioCompatibility;
+  revision: number; created_at?: string | null; updated_at?: string | null;
+  created_by?: string | null; updated_by?: string | null;
+}
+export interface ScenarioDraftRecord {
+  scenario_id: string; course_id: string; lesson_id: string; title: string;
+  scenario_type: ScenarioType; revision: number; updated_at?: string | null; updated_by?: string | null;
+}
+export interface ScenarioDraftValidationIssue { path: string; code: string; message: string }
+export interface ScenarioDraftValidationReport {
+  valid: boolean; issues: ScenarioDraftValidationIssue[];
+  variable_count: number; npc_count: number; action_count: number;
+  event_count: number; ending_count: number;
+}
+export interface RuntimeScenarioRecord {
+  descriptor: RuntimeArtifactDescriptor; title: string; scenario_type: ScenarioType;
+  student_role: string; objective: string;
+}
+export type SealedScenarioTemplate = Record<string, unknown> & {
+  scenario_id: string; scenario_version: number; status: 'sealed';
+  course_id: string; lesson_id: string; title: string; scenario_type: ScenarioType;
+  sealed_at: string; sealed_by: string; checksum: string;
+};
+export interface ScenarioReleaseSelection {
+  scenario_id: string; scenario_version: number; scenario_checksum: string; primary: boolean;
 }
 export interface Lesson {
   id: string; course_id: string; num: string; title: string;
@@ -221,10 +355,17 @@ export const api = {
     lesson_id: string,
     version: number,
     note: string,
+    scenarios?: ScenarioReleaseSelection[] | null,
   ) => adminFetch<ReleaseResponse>(
     token,
     `/admin/content/sealed/${lesson_id}/versions/${version}/publish`,
-    { method: 'POST', body: JSON.stringify({ note }) },
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        note,
+        ...(scenarios === undefined ? {} : { scenarios }),
+      }),
+    },
   ),
   adminContentReleases: (token: string, course_id: string) =>
     adminFetch<{ items: CourseReleaseManifest[] }>(
@@ -253,6 +394,56 @@ export const api = {
     adminFetch<KeywordProfilePackage>(token, `/admin/content/assets/keywords/${asset_id}`),
   adminSaveKeywordAsset: (token: string, body: KeywordProfilePackage) =>
     adminFetch<{ item: KeywordProfilePackage }>(token, '/admin/content/assets/keywords', { method: 'POST', body: JSON.stringify(body) }),
+  adminScenarioTemplate: (token: string) =>
+    adminFetch<ScenarioAuthorDraft>(token, '/admin/content/scenario-drafts/template'),
+  adminScenarioDrafts: (token: string) =>
+    adminFetch<{ items: ScenarioDraftRecord[] }>(token, '/admin/content/scenario-drafts'),
+  adminScenarioDraft: (token: string, scenario_id: string) =>
+    adminFetch<ScenarioAuthorDraft>(token, `/admin/content/scenario-drafts/${encodeURIComponent(scenario_id)}`),
+  adminSaveScenarioDraft: (token: string, body: ScenarioAuthorDraft) =>
+    adminFetch<{ item: ScenarioAuthorDraft }>(token, '/admin/content/scenario-drafts', {
+      method: 'POST', body: JSON.stringify(body),
+    }),
+  adminValidateScenarioDraft: (token: string, scenario_id: string) =>
+    adminFetch<{ report: ScenarioDraftValidationReport }>(
+      token,
+      `/admin/content/scenario-drafts/${encodeURIComponent(scenario_id)}/validate`,
+      { method: 'POST' },
+    ),
+  adminSealScenarioDraft: (token: string, scenario_id: string) =>
+    adminFetch<{
+      item: SealedScenarioTemplate; record: RuntimeScenarioRecord; idempotent: boolean;
+    }>(
+      token,
+      `/admin/content/scenario-drafts/${encodeURIComponent(scenario_id)}/seal`,
+      { method: 'POST' },
+    ),
+  adminRuntimeScenarios: (token: string) =>
+    adminFetch<{ items: RuntimeScenarioRecord[] }>(token, '/admin/content/runtime-scenarios'),
+  adminRuntimeScenario: (token: string, descriptor: RuntimeArtifactDescriptor) => {
+    const query = new URLSearchParams({
+      course_id: descriptor.course_id,
+      lesson_id: descriptor.lesson_id,
+      scenario_checksum: descriptor.checksum,
+    });
+    return adminFetch<{ item: SealedScenarioTemplate; descriptor: RuntimeArtifactDescriptor }>(
+      token,
+      `/admin/content/runtime-scenarios/${encodeURIComponent(descriptor.artifact_id)}`
+        + `/versions/${descriptor.version}?${query.toString()}`,
+    );
+  },
+  adminRuntimeScenarioFile: (token: string, descriptor: RuntimeArtifactDescriptor) => {
+    const query = new URLSearchParams({
+      course_id: descriptor.course_id,
+      lesson_id: descriptor.lesson_id,
+      scenario_checksum: descriptor.checksum,
+    });
+    return adminFile(
+      token,
+      `/admin/content/runtime-scenarios/${encodeURIComponent(descriptor.artifact_id)}`
+        + `/versions/${descriptor.version}/file?${query.toString()}`,
+    );
+  },
 };
 
 export interface ProgressItem {

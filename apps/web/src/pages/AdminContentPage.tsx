@@ -34,18 +34,21 @@ import {
   type LessonContentPackage,
   type LessonSourceRecord,
   type PersonProfilePackage,
+  type RuntimeScenarioRecord,
 } from '../utils/api';
 import { ADMIN_CONTENT_PREVIEW_KEY } from '../utils/adminContentStorage';
 import { parseContentBlock, parseContentMarkup, renderMarkupHtml, stripInlineMarkup } from '../utils/contentMarkup';
 import { toast } from '../utils/toast';
+import ScenarioRuleEditor from './admin/ScenarioRuleEditor';
 
 const { TextArea } = Input;
 const TOKEN_KEY = 'chrono.admin.token';
 const LOCAL_DRAFT_KEY = 'chrono.admin.content.editor.v1';
 const LOCAL_PERSON_KEY = 'chrono.admin.content.person.v1';
 const LOCAL_KEYWORD_KEY = 'chrono.admin.content.keyword.v1';
+const EDITOR_MODE_KEY = 'chrono.admin.content.mode.v1';
 
-type EditorMode = 'lesson' | 'person' | 'keyword';
+type EditorMode = 'lesson' | 'person' | 'keyword' | 'scenario';
 type BodyInlineFormat = 'bold' | 'highlight' | 'keyword' | 'red' | 'blue' | 'gold' | 'large' | 'small';
 type BodyBlockFormat = 'paragraph' | 'heading1' | 'heading2' | 'heading3' | 'focus' | 'question' | 'goal';
 
@@ -268,6 +271,13 @@ function newKeywordEditor(): KeywordEditorState {
     sourcesText: '',
     teacher_notes: '',
   };
+}
+
+function readEditorMode(): EditorMode {
+  const saved = localStorage.getItem(EDITOR_MODE_KEY);
+  return saved === 'lesson' || saved === 'person' || saved === 'keyword' || saved === 'scenario'
+    ? saved
+    : 'lesson';
 }
 
 function readLocalEditor(): EditorState {
@@ -741,7 +751,7 @@ function releaseOperationLabel(operation: CourseReleaseManifest['operation']): s
 
 export default function AdminContentPage() {
   const navigate = useNavigate();
-  const [editorMode, setEditorMode] = useState<EditorMode>('lesson');
+  const [editorMode, setEditorMode] = useState<EditorMode>(() => readEditorMode());
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || import.meta.env.VITE_ADMIN_TOKEN || '');
   const [editor, setEditor] = useState<EditorState>(() => readLocalEditor());
   const [personEditor, setPersonEditor] = useState<PersonEditorState>(() => readLocalPersonEditor());
@@ -755,6 +765,7 @@ export default function AdminContentPage() {
   const [drafts, setDrafts] = useState<ContentFileRecord[]>([]);
   const [sourceLessons, setSourceLessons] = useState<LessonSourceRecord[]>([]);
   const [assets, setAssets] = useState<ContentAssetRecord[]>([]);
+  const [runtimeScenarios, setRuntimeScenarios] = useState<RuntimeScenarioRecord[]>([]);
   const [selectedDraft, setSelectedDraft] = useState<string>();
   const [selectedSourceLesson, setSelectedSourceLesson] = useState<string>();
   const [selectedPersonAsset, setSelectedPersonAsset] = useState<string>();
@@ -767,12 +778,18 @@ export default function AdminContentPage() {
   const [busy, setBusy] = useState('');
   const bodyTextAreaRef = useRef<TextAreaRef | null>(null);
   const bodySelectionRef = useRef<TextSelectionRange>({ start: 0, end: 0 });
+  const tokenRefreshSequenceRef = useRef(0);
   const [bodyContextMenu, setBodyContextMenu] = useState<BodyContextMenuState | null>(null);
   const activeWorkflow = workflow?.lesson_id === editor.lesson_id
     && workflow.course_id === editor.course_id
     ? workflow
     : null;
   const activeRelease = currentRelease?.course_id === editor.course_id ? currentRelease : null;
+
+  const rememberEditorMode = (value: EditorMode) => {
+    setEditorMode(value);
+    localStorage.setItem(EDITOR_MODE_KEY, value);
+  };
 
   const currentPayload = useMemo(() => {
     try {
@@ -812,11 +829,35 @@ export default function AdminContentPage() {
   }, [keywordEditor]);
 
   useEffect(() => {
-    void refreshDrafts();
-    void refreshSourceLessons();
-    void refreshAssets();
+    const sequence = ++tokenRefreshSequenceRef.current;
+    setDrafts([]);
+    setSourceLessons([]);
+    setAssets([]);
+    setRuntimeScenarios([]);
+    if (!token) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void Promise.all([
+        api.adminContentDrafts(token),
+        api.adminContentSourceLessons(token),
+        api.adminContentAssets(token),
+        api.adminRuntimeScenarios(token),
+      ]).then(([draftResult, sourceResult, assetResult, scenarioResult]) => {
+        if (tokenRefreshSequenceRef.current !== sequence) return;
+        setDrafts(draftResult.items);
+        setSourceLessons(sourceResult.items);
+        setAssets(assetResult.items);
+        setRuntimeScenarios(scenarioResult.items);
+      }).catch((error: any) => {
+        if (tokenRefreshSequenceRef.current === sequence) {
+          toast.error(error?.message || '管理员内容库读取失败');
+        }
+      });
+    }, 350);
+    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     if (!bodyContextMenu) return;
@@ -959,21 +1000,25 @@ export default function AdminContentPage() {
     }
   };
 
-  const refreshSourceLessons = async () => {
-    try {
-      const res = await api.adminContentSourceLessons(token);
-      setSourceLessons(res.items);
-    } catch (err: any) {
-      toast.error(err?.message || '已有课程读取失败');
-    }
-  };
-
   const refreshAssets = async () => {
     try {
       const res = await api.adminContentAssets(token);
       setAssets(res.items);
     } catch (err: any) {
       toast.error(err?.message || '资料档案读取失败');
+    }
+  };
+
+  const refreshRuntimeScenarios = async () => {
+    if (!token) {
+      setRuntimeScenarios([]);
+      return;
+    }
+    try {
+      const res = await api.adminRuntimeScenarios(token);
+      setRuntimeScenarios(res.items);
+    } catch (err: any) {
+      toast.error(err?.message || '封存关卡读取失败');
     }
   };
 
@@ -1029,10 +1074,17 @@ export default function AdminContentPage() {
   };
 
   useEffect(() => {
-    void refreshWorkflowState(editor.lesson_id, editor.course_id);
-    // The initial local draft is reconciled once; later lesson switches load explicitly.
+    if (!token) {
+      clearReleaseState();
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void refreshWorkflowState(editor.lesson_id, editor.course_id);
+    }, 350);
+    return () => window.clearTimeout(timer);
+    // Reconcile the initial local draft after authentication; later lesson switches load explicitly.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
   const createNew = () => {
     const item = newEditor();
@@ -1430,11 +1482,12 @@ export default function AdminContentPage() {
         <div className="chrono-course-eyeline" style={{ marginBottom: 8 }}>编辑对象</div>
         <Segmented
           value={editorMode}
-          onChange={(value) => setEditorMode(value as EditorMode)}
+          onChange={(value) => rememberEditorMode(value as EditorMode)}
           options={[
             { label: '课程内容', value: 'lesson' },
             { label: '人物档案', value: 'person' },
             { label: '关键词档案', value: 'keyword' },
+            { label: '关卡规则', value: 'scenario' },
           ]}
         />
       </div>
@@ -1921,6 +1974,15 @@ export default function AdminContentPage() {
           )}
         </aside>
       </div>
+      )}
+
+      {editorMode === 'scenario' && (
+        <ScenarioRuleEditor
+          token={token}
+          sourceLessons={sourceLessons}
+          runtimeScenarios={runtimeScenarios}
+          onRefreshRuntimeScenarios={refreshRuntimeScenarios}
+        />
       )}
 
       {editorMode === 'person' && (
