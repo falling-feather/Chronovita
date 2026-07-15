@@ -1,6 +1,6 @@
-# ADR-0011 LLM 适配层设计（占位 · 阶段 4 落地）
+# ADR-0011 LLM 适配层设计（兼容流式入口）
 
-- 状态：占位
+- 状态：部分落地；AI-001 结构化编排由 ADR-0012 接续
 - 日期：2026-05-03（v1 草稿）
 - 计划版本：v0.5.x
 
@@ -10,20 +10,20 @@
 
 ## 计划契约
 
-新增 `services/agent/llm.py`，提供单一异步入口：
+现有兼容实现位于 `services/llm/`，提供流式入口：
 
 ```python
 async def stream_chat(provider, model, messages, *, api_key=None, base_url=None) -> AsyncIterator[str]
 ```
 
-- `provider ∈ {mock, openai, deepseek, ollama}`
+- 当前 `provider ∈ {mock, deepseek}`；其他 OpenAI 兼容供应商须另行显式登记
 - 返回逐 chunk 文本（不含引证），由调用方拼装
 - 任何异常 → 内部捕获 → 回落到 mock 流，对外不抛
 - mock 默认可用，离线/无 key 仍能跑课
 - 引证仍由后端控制，不交给 LLM 编造
 
-## 后续任务
+## AI-001 接续边界
 
-- [ ] 在阶段 4 启动时新建 `services/agent/`
-- [ ] 在 `apps/api/.env.example` 中追加 `CHRONO_LLM_*` 配置项
-- [ ] UI 顶栏暴露当前 provider（mock / 真实）的小标识
+- 流式 `stream_chat()` 继续服务 legacy saga/ask，不因 AI-001 破坏兼容调用方。
+- 非流式严格 JSON、类型化供应商故障、行动分类、规则后叙事和离线回放遵循 [ADR-0012](ADR-0012-看练问创闭环与史实护栏.md)。
+- `CHRONO_LLM_*` 只从环境变量读取；真实 API key 不写入仓库、测试夹具、日志或学生响应。
