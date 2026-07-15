@@ -96,6 +96,10 @@ class CanvasApiTests(unittest.TestCase):
             },
         )
         self.assertEqual(stale.status_code, 409, stale.text)
+        self.assertEqual(
+            stale.json()["detail"]["code"],
+            "canvas_revision_conflict",
+        )
 
         fetched = self.client.get("/api/v1/practice/canvas/lesson-cas")
         self.assertEqual(fetched.json()["revision"], 2)
@@ -120,17 +124,31 @@ class CanvasApiTests(unittest.TestCase):
         self.assertEqual(stored["revision"], 2)
 
     def test_corrupt_canvas_fails_closed(self):
-        corrupt = {"nodes": "not-a-list", "edges": []}
-        persistence.kv_set("canvas", "lesson-corrupt", corrupt)
+        for lesson_id, corrupt in (
+            ("lesson-corrupt", {"nodes": "not-a-list", "edges": []}),
+            ("lesson-null", None),
+        ):
+            with self.subTest(lesson_id=lesson_id):
+                persistence.kv_set("canvas", lesson_id, corrupt)
 
-        fetched = self.client.get("/api/v1/practice/canvas/lesson-corrupt")
-        self.assertEqual(fetched.status_code, 500, fetched.text)
-        saved = self.client.put(
-            "/api/v1/practice/canvas/lesson-corrupt",
-            json={"expected_revision": 0, "nodes": [], "edges": []},
-        )
-        self.assertEqual(saved.status_code, 500, saved.text)
-        self.assertEqual(persistence.kv_get("canvas", "lesson-corrupt"), corrupt)
+                fetched = self.client.get(f"/api/v1/practice/canvas/{lesson_id}")
+                self.assertEqual(fetched.status_code, 500, fetched.text)
+                self.assertEqual(
+                    fetched.json()["detail"]["code"],
+                    "canvas_integrity_error",
+                )
+                saved = self.client.put(
+                    f"/api/v1/practice/canvas/{lesson_id}",
+                    json={"expected_revision": 0, "nodes": [], "edges": []},
+                )
+                self.assertEqual(saved.status_code, 500, saved.text)
+                self.assertEqual(
+                    saved.json()["detail"]["code"],
+                    "canvas_integrity_error",
+                )
+                found, stored = persistence.kv_get_with_presence("canvas", lesson_id)
+                self.assertTrue(found)
+                self.assertEqual(stored, corrupt)
 
 
 if __name__ == "__main__":

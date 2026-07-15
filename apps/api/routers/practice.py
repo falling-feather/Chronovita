@@ -247,8 +247,8 @@ _CANVAS_NS = "canvas"
 
 @router.get("/canvas/{lesson_id}")
 async def canvas_get(lesson_id: str) -> CanvasResponse:
-    raw = persistence.kv_get(_CANVAS_NS, lesson_id)
-    if raw is None:
+    found, raw = persistence.kv_get_with_presence(_CANVAS_NS, lesson_id)
+    if not found:
         return CanvasResponse(found=False, revision=0, nodes=[], edges=[])
     stored = _parse_canvas_document(raw)
     return CanvasResponse(
@@ -261,8 +261,8 @@ async def canvas_get(lesson_id: str) -> CanvasResponse:
 
 @router.put("/canvas/{lesson_id}")
 async def canvas_save(lesson_id: str, payload: CanvasSaveRequest) -> CanvasResponse:
-    raw = persistence.kv_get(_CANVAS_NS, lesson_id)
-    current_revision = 0 if raw is None else _parse_canvas_document(raw).revision
+    found, raw = persistence.kv_get_with_presence(_CANVAS_NS, lesson_id)
+    current_revision = 0 if not found else _parse_canvas_document(raw).revision
     if payload.expected_revision != current_revision:
         raise _canvas_revision_conflict()
 
@@ -299,12 +299,18 @@ def _parse_canvas_document(raw: Any) -> CanvasStoredDocument:
     except ValidationError as exc:
         raise HTTPException(
             status_code=500,
-            detail="画板存档损坏，已停止读取和写入。",
+            detail={
+                "code": "canvas_integrity_error",
+                "message": "画板存档损坏，已停止读取和写入。",
+            },
         ) from exc
 
 
 def _canvas_revision_conflict() -> HTTPException:
     return HTTPException(
         status_code=409,
-        detail="画板已在其他页面更新，请重新载入后再合并。",
+        detail={
+            "code": "canvas_revision_conflict",
+            "message": "画板已在其他页面更新，请重新载入后再合并。",
+        },
     )

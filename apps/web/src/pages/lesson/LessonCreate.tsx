@@ -49,11 +49,17 @@ interface CanvasNodeData {
   dossier_kind?: GameDossierKnowledgeNode['kind'];
   dossier_summary?: string;
   source_ref_ids?: string[];
+  dossier_id?: string;
+  session_id?: string;
+  dossier_checksum?: string;
 }
 
 interface CanvasEdgeData {
   dossier_explanation?: string;
   source_ref_ids?: string[];
+  dossier_id?: string;
+  session_id?: string;
+  dossier_checksum?: string;
 }
 
 type CanvasNode = Node<CanvasNodeData>;
@@ -246,6 +252,9 @@ function mergeDossierGraph(
         dossier_kind: item.kind,
         dossier_summary: item.summary,
         source_ref_ids: item.source_ref_ids,
+        dossier_id: dossier.dossier_id,
+        session_id: dossier.session_id,
+        dossier_checksum: dossier.checksum || undefined,
       },
       style: {
         background: palette.background,
@@ -274,6 +283,9 @@ function mergeDossierGraph(
       data: {
         dossier_explanation: item.explanation,
         source_ref_ids: item.source_ref_ids,
+        dossier_id: dossier.dossier_id,
+        session_id: dossier.session_id,
+        dossier_checksum: dossier.checksum || undefined,
       },
       animated: false,
       style: { stroke: '#7B6F61' },

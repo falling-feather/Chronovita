@@ -103,13 +103,19 @@ def kv_set(namespace: str, key: str, data: Any) -> None:
 
 
 def kv_get(namespace: str, key: str) -> Any | None:
+    found, data = kv_get_with_presence(namespace, key)
+    return data if found else None
+
+
+def kv_get_with_presence(namespace: str, key: str) -> tuple[bool, Any | None]:
+    """Return row presence separately from a JSON value that may itself be null."""
     with _engine().begin() as conn:
         row = conn.execute(
             select(kv_table.c.data).where(
                 (kv_table.c.namespace == namespace) & (kv_table.c.key == key)
             )
         ).first()
-    return json.loads(row[0]) if row else None
+    return (True, json.loads(row[0])) if row else (False, None)
 
 
 def kv_compare_and_set(
