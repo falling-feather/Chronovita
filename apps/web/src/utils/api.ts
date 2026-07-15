@@ -306,6 +306,7 @@ export interface GameSession {
   revision: number; current_turn: number; current_state: Record<string, number>;
   available_action_ids: string[]; available_choices: string[];
   summary: string; history: GameNarrativeMessage[]; ending_id: string | null;
+  dossier_id: string | null;
   started_at: string; updated_at: string; ended_at: string | null;
 }
 export interface GameStartRequest {
@@ -329,6 +330,33 @@ export interface GameFreeInputResponse {
   message: string;
   available_actions: GameAvailableAction[];
   result: GameTurnResponse | null;
+}
+export interface GameDossierChoice {
+  turn_id: string; turn_no: number; action_id: string; choice: string; consequence: string;
+}
+export interface GameDossierStateSnapshot {
+  turn_no: number; state: Record<string, number>;
+}
+export interface GameDossierKnowledgeNode {
+  node_id: string; label: string;
+  kind: 'person' | 'event' | 'place' | 'concept' | 'cause' | 'consequence';
+  summary: string; source_ref_ids: string[];
+}
+export interface GameDossierKnowledgeEdge {
+  edge_id: string; source_node_id: string; target_node_id: string;
+  relation: string; explanation: string; source_ref_ids: string[];
+}
+export interface GameDossier {
+  schema_version: 'dossier/v1'; dossier_id: string; session_id: string; user_id: string;
+  course_id: string; lesson_id: string; scenario_id: string;
+  course_content_version: number; scenario_version: number;
+  course_checksum: string; scenario_checksum: string; status: 'draft' | 'final';
+  title: string; ending_id: string; strategy_summary: string;
+  key_choices: GameDossierChoice[]; state_trajectory: GameDossierStateSnapshot[];
+  major_costs: string[]; historical_explanation: string;
+  knowledge_nodes: GameDossierKnowledgeNode[]; knowledge_edges: GameDossierKnowledgeEdge[];
+  follow_up_questions: string[]; reflection_notes: string[];
+  fact_refs: string[]; source_ref_ids: string[]; generated_at: string; checksum: string | null;
 }
 
 export const api = {
@@ -365,6 +393,10 @@ export const api = {
     `/practice/game/sessions/${encodeURIComponent(sessionId)}/free-input`,
     { method: 'POST', body: JSON.stringify(body) },
   ),
+  gameDossier: (sessionId: string) =>
+    jsonFetch<GameDossier>(
+      `/practice/game/sessions/${encodeURIComponent(sessionId)}/dossier`,
+    ),
   llmInfo: () => jsonFetch<{ provider: string; ask_provider?: string }>('/practice/llm/info'),
   sandboxGet: (sid: string) => jsonFetch<any>(`/practice/sandbox/${sid}`),
   sandboxStep: (sid: string, body: { node_id: string; choice: string; state: Record<string, number> }) =>

@@ -12,25 +12,17 @@ import type {
   GameSession,
   Lesson,
   LessonScenarioRef,
-  ScenarioReleasePin,
 } from '../../utils/api';
 import { api } from '../../utils/api';
-import { loadJSON, removeKey, saveJSON } from '../../utils/storage';
-
-interface GameBinding {
-  scenario: LessonScenarioRef;
-  pin: ScenarioReleasePin;
-  identity: string;
-  storageKey: string;
-}
-
-interface StoredGameReference {
-  schema_version: 'game-session-ref/v1';
-  identity: string;
-  client_request_id: string;
-  session_id?: string;
-  scenario?: GameScenarioSummary;
-}
+import {
+  assertScenarioIdentity,
+  assertSessionIdentity,
+  buildGameBinding,
+  persistPendingGameReference,
+  readStoredGameReference,
+  type GameBinding,
+  type StoredGameReference,
+} from './gameSessionReference';
 
 interface FreeInputNotice {
   kind: 'clarification_required' | 'rejected' | 'provider_unavailable';
@@ -45,7 +37,7 @@ export function PublishedGamePractice({
   scenario: LessonScenarioRef;
 }) {
   const binding = useMemo(
-    () => buildBinding(lesson, scenario),
+    () => buildGameBinding(lesson, scenario),
     [lesson, scenario],
   );
 
@@ -84,13 +76,7 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
       setFreeInputNotice(null);
     }
 
-    let stored = fresh
-      ? null
-      : loadJSON<StoredGameReference | null>(binding.storageKey, null);
-    if (!isStoredReference(stored, binding.identity)) {
-      removeKey(binding.storageKey);
-      stored = null;
-    }
+    const stored = fresh ? null : readStoredGameReference(binding);
 
     try {
       const clientRequestId = stored?.client_request_id || createRequestId('start');
@@ -99,7 +85,7 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
         identity: binding.identity,
         client_request_id: clientRequestId,
       };
-      if (!stored) persistPendingReference(binding.storageKey, pending);
+      if (!stored) persistPendingGameReference(binding, pending);
       const started = await api.gameStart({
         scenario_id: binding.scenario.scenario_id,
         client_request_id: clientRequestId,
@@ -111,7 +97,7 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
         throw new Error('服务器恢复的学习记录与浏览器保存的会话不一致。');
       }
       if (requestGeneration.current !== generation) return;
-      saveJSON<StoredGameReference>(binding.storageKey, {
+      persistPendingGameReference(binding, {
         ...pending,
         session_id: started.session.session_id,
         scenario: started.scenario,
@@ -372,123 +358,6 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
       </aside>
     </div>
   );
-}
-
-function buildBinding(lesson: Lesson, scenario: LessonScenarioRef): GameBinding | null {
-  if (
-    !lesson.release_id
-    || typeof lesson.release_no !== 'number'
-    || !lesson.release_checksum
-    || typeof lesson.content_version !== 'number'
-    || lesson.content_version < 1
-    || !lesson.content_checksum
-    || scenario.scenario_version < 1
-    || !scenario.checksum
-    || lesson.primary_scenario_id !== scenario.scenario_id
-  ) {
-    return null;
-  }
-  const pin: ScenarioReleasePin = {
-    release_id: lesson.release_id,
-    release_no: lesson.release_no,
-    release_checksum: lesson.release_checksum,
-    course_id: lesson.course_id,
-    lesson_id: lesson.id,
-    course_content_version: lesson.content_version,
-    course_checksum: lesson.content_checksum,
-    scenario_version: scenario.scenario_version,
-    scenario_checksum: scenario.checksum,
-  };
-  const identity = [
-    pin.release_id,
-    pin.release_no,
-    pin.release_checksum,
-    pin.course_id,
-    pin.lesson_id,
-    pin.course_content_version,
-    pin.course_checksum,
-    scenario.scenario_id,
-    pin.scenario_version,
-    pin.scenario_checksum,
-  ].join('|');
-  const storageKey = `game-session.v1.${[
-    pin.course_id,
-    pin.lesson_id,
-    pin.release_id,
-    scenario.scenario_id,
-    String(pin.scenario_version),
-    pin.course_checksum.slice(0, 12),
-    pin.scenario_checksum.slice(0, 12),
-  ].map(encodeURIComponent).join('.')}`;
-  return { scenario, pin, identity, storageKey };
-}
-
-function assertSessionIdentity(session: GameSession, binding: GameBinding): void {
-  const actual = [
-    session.course_id,
-    session.lesson_id,
-    session.course_content_version,
-    session.course_checksum,
-    session.scenario_id,
-    session.scenario_version,
-    session.scenario_checksum,
-  ];
-  const expected = [
-    binding.pin.course_id,
-    binding.pin.lesson_id,
-    binding.pin.course_content_version,
-    binding.pin.course_checksum,
-    binding.scenario.scenario_id,
-    binding.pin.scenario_version,
-    binding.pin.scenario_checksum,
-  ];
-  if (actual.some((value, index) => value !== expected[index])) {
-    throw new Error('服务器返回的学习会话与当前课时版本不一致。');
-  }
-}
-
-function assertScenarioIdentity(scenario: GameScenarioSummary, binding: GameBinding): void {
-  if (
-    scenario.audience !== 'published'
-    || scenario.release_id !== binding.pin.release_id
-    || scenario.release_no !== binding.pin.release_no
-    || scenario.release_checksum !== binding.pin.release_checksum
-    || scenario.course_id !== binding.pin.course_id
-    || scenario.lesson_id !== binding.pin.lesson_id
-    || scenario.scenario_id !== binding.scenario.scenario_id
-    || scenario.scenario_version !== binding.pin.scenario_version
-    || scenario.scenario_checksum !== binding.pin.scenario_checksum
-  ) {
-    throw new Error('服务器返回的互动关卡与当前课时发布版本不一致。');
-  }
-}
-
-function isStoredReference(
-  value: StoredGameReference | null,
-  identity: string,
-): value is StoredGameReference {
-  return Boolean(
-    value
-    && value.schema_version === 'game-session-ref/v1'
-    && value.identity === identity
-    && typeof value.client_request_id === 'string'
-    && value.client_request_id.length > 0,
-  );
-}
-
-function persistPendingReference(
-  storageKey: string,
-  reference: StoredGameReference,
-): void {
-  saveJSON(storageKey, reference);
-  const persisted = loadJSON<StoredGameReference | null>(storageKey, null);
-  if (
-    !isStoredReference(persisted, reference.identity)
-    || persisted.client_request_id !== reference.client_request_id
-    || persisted.session_id !== reference.session_id
-  ) {
-    throw new Error('浏览器无法保存学习记录，请允许本站使用本地存储后重试。');
-  }
 }
 
 function createRequestId(kind: 'start' | 'turn'): string {
