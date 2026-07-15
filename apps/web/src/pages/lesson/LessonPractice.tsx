@@ -45,12 +45,24 @@ interface Paragraph {
   visible?: number;
 }
 
-export default function LessonPractice({ lesson }: { lesson: Lesson }) {
+export default function LessonPractice({
+  lesson,
+  onOpenDossier,
+}: {
+  lesson: Lesson;
+  onOpenDossier?: () => void;
+}) {
   const primaryScenario = lesson.scenario_refs?.find(
     (scenario) => scenario.primary && scenario.scenario_id === lesson.primary_scenario_id,
   );
   if (primaryScenario) {
-    return <PublishedGamePractice lesson={lesson} scenario={primaryScenario} />;
+    return (
+      <PublishedGamePractice
+        lesson={lesson}
+        scenario={primaryScenario}
+        onOpenDossier={onOpenDossier}
+      />
+    );
   }
   if (lesson.release_id) {
     return (

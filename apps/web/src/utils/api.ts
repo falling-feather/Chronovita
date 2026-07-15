@@ -358,6 +358,24 @@ export interface GameDossier {
   follow_up_questions: string[]; reflection_notes: string[];
   fact_refs: string[]; source_ref_ids: string[]; generated_at: string; checksum: string | null;
 }
+export interface CanvasPayload {
+  nodes: unknown[]; edges: unknown[];
+}
+export interface CanvasDocument extends CanvasPayload {
+  schema_version: 'canvas/v1'; found: boolean; revision: number;
+}
+export interface CanvasSaveRequest extends CanvasPayload {
+  expected_revision: number;
+}
+export interface CanvasGeneratedNode {
+  id: string; label: string; category?: string;
+}
+export interface CanvasGeneratedEdge {
+  from: string; to: string; label?: string;
+}
+export interface CanvasGeneratedGraph {
+  nodes: CanvasGeneratedNode[]; edges: CanvasGeneratedEdge[];
+}
 
 export const api = {
   eras: () => jsonFetch<{ items: Era[] }>('/courses/eras'),
@@ -401,11 +419,11 @@ export const api = {
   sandboxGet: (sid: string) => jsonFetch<any>(`/practice/sandbox/${sid}`),
   sandboxStep: (sid: string, body: { node_id: string; choice: string; state: Record<string, number> }) =>
     jsonFetch<any>(`/practice/sandbox/${sid}/step`, { method: 'POST', body: JSON.stringify(body) }),
-  canvasGet: (lid: string) => jsonFetch<{ nodes: any[]; edges: any[] }>(`/practice/canvas/${lid}`),
-  canvasSave: (lid: string, payload: { nodes: any[]; edges: any[] }) =>
-    jsonFetch<{ ok: boolean }>(`/practice/canvas/${lid}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  canvasGet: (lid: string) => jsonFetch<CanvasDocument>(`/practice/canvas/${lid}`),
+  canvasSave: (lid: string, payload: CanvasSaveRequest) =>
+    jsonFetch<CanvasDocument>(`/practice/canvas/${lid}`, { method: 'PUT', body: JSON.stringify(payload) }),
   canvasGenerate: (body: { lesson_id: string; lesson_title: string; abstract: string; keywords: string[]; seed: string[] }) =>
-    jsonFetch<{ nodes: any[]; edges: any[] }>(`/practice/canvas/generate`, { method: 'POST', body: JSON.stringify(body) }),
+    jsonFetch<CanvasGeneratedGraph>(`/practice/canvas/generate`, { method: 'POST', body: JSON.stringify(body) }),
   sagaTemplates: () => jsonFetch<{ items: SagaTemplate[] }>(`/practice/saga/templates`),
   sagaStart: (lesson_id: string) => jsonFetch<SagaState>(`/practice/saga/start`, { method: 'POST', body: JSON.stringify({ lesson_id }) }),
   sagaGet: (saga_id: string) => jsonFetch<SagaState>(`/practice/saga/${saga_id}`),

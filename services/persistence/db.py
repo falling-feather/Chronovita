@@ -20,6 +20,7 @@ from sqlalchemy import (
     update,
 )
 from sqlalchemy.engine import Engine, URL
+from sqlalchemy.exc import IntegrityError
 
 _LOCK = threading.RLock()
 _ENGINE: Engine | None = None
@@ -109,6 +110,42 @@ def kv_get(namespace: str, key: str) -> Any | None:
             )
         ).first()
     return json.loads(row[0]) if row else None
+
+
+def kv_compare_and_set(
+    namespace: str,
+    key: str,
+    expected: Any | None,
+    data: Any,
+) -> bool:
+    """Atomically insert an absent key or replace the exact value previously read."""
+    payload = _dumps(data)
+    expected_payload = _dumps(expected) if expected is not None else None
+    now = datetime.now(timezone.utc)
+    try:
+        with _engine().begin() as conn:
+            if expected_payload is None:
+                conn.execute(
+                    insert(kv_table).values(
+                        namespace=namespace,
+                        key=key,
+                        data=payload,
+                        updated_at=now,
+                    )
+                )
+                return True
+            result = conn.execute(
+                update(kv_table)
+                .where(
+                    (kv_table.c.namespace == namespace)
+                    & (kv_table.c.key == key)
+                    & (kv_table.c.data == expected_payload)
+                )
+                .values(data=payload, updated_at=now)
+            )
+            return result.rowcount == 1
+    except IntegrityError:
+        return False
 
 
 def kv_delete(namespace: str, key: str) -> None:

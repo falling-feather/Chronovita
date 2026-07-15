@@ -23,6 +23,10 @@ export interface StoredGameReference {
   scenario?: GameScenarioSummary;
 }
 
+export interface StoredStartedGameReference extends StoredGameReference {
+  session_id: string;
+}
+
 export function buildGameBinding(
   lesson: Lesson,
   scenario: LessonScenarioRef,
@@ -82,6 +86,16 @@ export function readStoredGameReference(
   if (isStoredGameReference(stored, binding.identity)) return stored;
   removeKey(binding.storageKey);
   return null;
+}
+
+export function readStoredStartedGameReference(
+  binding: GameBinding,
+): StoredStartedGameReference | null {
+  const stored = readStoredGameReference(binding);
+  if (!stored || typeof stored.session_id !== 'string' || !stored.session_id.trim()) {
+    return null;
+  }
+  return stored as StoredStartedGameReference;
 }
 
 export function persistPendingGameReference(
@@ -151,7 +165,10 @@ export function assertDossierIdentity(
   binding: GameBinding,
 ): void {
   if (
-    dossier.status !== 'final'
+    session.status !== 'completed'
+    || !session.ended_at
+    || dossier.status !== 'final'
+    || dossier.schema_version !== 'dossier/v1'
     || !dossier.checksum
     || !session.dossier_id
     || dossier.dossier_id !== session.dossier_id
@@ -164,6 +181,12 @@ export function assertDossierIdentity(
     || dossier.scenario_version !== binding.pin.scenario_version
     || dossier.course_checksum !== binding.pin.course_checksum
     || dossier.scenario_checksum !== binding.pin.scenario_checksum
+    || dossier.ending_id !== session.ending_id
+    || !Array.isArray(dossier.key_choices)
+    || !Array.isArray(dossier.major_costs)
+    || !Array.isArray(dossier.knowledge_nodes)
+    || !Array.isArray(dossier.knowledge_edges)
+    || !Array.isArray(dossier.follow_up_questions)
   ) {
     throw new Error('服务器返回的史官卷宗与当前课时版本不一致。');
   }

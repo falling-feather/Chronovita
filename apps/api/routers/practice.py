@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from services import llm, persistence, sandbox, saga
 
@@ -220,21 +220,91 @@ async def sandbox_step(sid: str, req: StepRequest):
 
 # ============= 「创」 知识画板（持久化） =============
 
-class CanvasPayload(BaseModel):
-    nodes: list[dict]
-    edges: list[dict]
+class CanvasGraph(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    nodes: list[dict[str, Any]]
+    edges: list[dict[str, Any]]
+
+
+class CanvasStoredDocument(CanvasGraph):
+    schema_version: Literal["canvas/v1"] = "canvas/v1"
+    revision: int = Field(ge=1)
+
+
+class CanvasResponse(CanvasGraph):
+    schema_version: Literal["canvas/v1"] = "canvas/v1"
+    found: bool
+    revision: int = Field(ge=0)
+
+
+class CanvasSaveRequest(CanvasGraph):
+    expected_revision: int = Field(ge=0)
 
 
 _CANVAS_NS = "canvas"
 
 
 @router.get("/canvas/{lesson_id}")
-async def canvas_get(lesson_id: str) -> Any:
-    data = persistence.kv_get(_CANVAS_NS, lesson_id)
-    return data or {"nodes": [], "edges": []}
+async def canvas_get(lesson_id: str) -> CanvasResponse:
+    raw = persistence.kv_get(_CANVAS_NS, lesson_id)
+    if raw is None:
+        return CanvasResponse(found=False, revision=0, nodes=[], edges=[])
+    stored = _parse_canvas_document(raw)
+    return CanvasResponse(
+        found=True,
+        revision=stored.revision,
+        nodes=stored.nodes,
+        edges=stored.edges,
+    )
 
 
 @router.put("/canvas/{lesson_id}")
-async def canvas_save(lesson_id: str, payload: CanvasPayload):
-    persistence.kv_set(_CANVAS_NS, lesson_id, payload.model_dump())
-    return {"ok": True}
+async def canvas_save(lesson_id: str, payload: CanvasSaveRequest) -> CanvasResponse:
+    raw = persistence.kv_get(_CANVAS_NS, lesson_id)
+    current_revision = 0 if raw is None else _parse_canvas_document(raw).revision
+    if payload.expected_revision != current_revision:
+        raise _canvas_revision_conflict()
+
+    stored = CanvasStoredDocument(
+        revision=current_revision + 1,
+        nodes=payload.nodes,
+        edges=payload.edges,
+    )
+    if not persistence.kv_compare_and_set(
+        _CANVAS_NS,
+        lesson_id,
+        raw,
+        stored.model_dump(mode="json"),
+    ):
+        raise _canvas_revision_conflict()
+    return CanvasResponse(
+        found=True,
+        revision=stored.revision,
+        nodes=stored.nodes,
+        edges=stored.edges,
+    )
+
+
+def _parse_canvas_document(raw: Any) -> CanvasStoredDocument:
+    try:
+        if isinstance(raw, dict) and raw.get("schema_version") == "canvas/v1":
+            return CanvasStoredDocument.model_validate(raw)
+        legacy = CanvasGraph.model_validate(raw)
+        return CanvasStoredDocument(
+            revision=1,
+            nodes=legacy.nodes,
+            edges=legacy.edges,
+        )
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="画板存档损坏，已停止读取和写入。",
+        ) from exc
+
+
+def _canvas_revision_conflict() -> HTTPException:
+    return HTTPException(
+        status_code=409,
+        detail="画板已在其他页面更新，请重新载入后再合并。",
+    )

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Input, Progress, Spin, Tag, Tooltip } from 'antd';
 import {
   EditOutlined,
+  FileDoneOutlined,
   HistoryOutlined,
   ReloadOutlined,
   SafetyCertificateOutlined,
@@ -32,9 +33,11 @@ interface FreeInputNotice {
 export function PublishedGamePractice({
   lesson,
   scenario,
+  onOpenDossier,
 }: {
   lesson: Lesson;
   scenario: LessonScenarioRef;
+  onOpenDossier?: () => void;
 }) {
   const binding = useMemo(
     () => buildGameBinding(lesson, scenario),
@@ -51,10 +54,25 @@ export function PublishedGamePractice({
       />
     );
   }
-  return <PinnedGamePlayer key={binding.identity} lesson={lesson} binding={binding} />;
+  return (
+    <PinnedGamePlayer
+      key={binding.identity}
+      lesson={lesson}
+      binding={binding}
+      onOpenDossier={onOpenDossier}
+    />
+  );
 }
 
-function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBinding }) {
+function PinnedGamePlayer({
+  lesson,
+  binding,
+  onOpenDossier,
+}: {
+  lesson: Lesson;
+  binding: GameBinding;
+  onOpenDossier?: () => void;
+}) {
   const [scenario, setScenario] = useState<GameScenarioSummary | null>(null);
   const [session, setSession] = useState<GameSession | null>(null);
   const [booting, setBooting] = useState(true);
@@ -265,6 +283,11 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
             showIcon
             message={session.status === 'completed' ? '本次推演已完成' : '本次推演已结束'}
             description={session.summary}
+            action={session.status === 'completed' && session.dossier_id && onOpenDossier ? (
+              <Button type="primary" icon={<FileDoneOutlined />} onClick={onOpenDossier}>
+                整理卷宗
+              </Button>
+            ) : undefined}
           />
         ) : (
           <div className="chrono-game-action-panel">
