@@ -899,6 +899,45 @@ body,
   color: white;
   font-size: 11px;
 }
+.chrono-game-action-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chrono-game-free-input {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+.chrono-game-free-input > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 7px;
+  color: var(--text-mute);
+  font-size: 12px;
+  font-weight: 600;
+}
+.chrono-game-free-input > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+  min-width: 0;
+}
+.chrono-game-free-input .ant-input-data-count {
+  color: var(--text-mute);
+  font-size: 10px;
+}
+.chrono-game-free-input .ant-btn {
+  min-width: 84px;
+}
+.chrono-game-free-notice {
+  margin-top: 0;
+}
 .chrono-game-aside {
   display: flex;
   min-width: 0;
@@ -988,6 +1027,26 @@ body,
   .chrono-game-actions,
   .chrono-game-aside {
     grid-template-columns: 1fr;
+  }
+  .chrono-game-free-input {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .chrono-game-free-input > label {
+    padding-top: 0;
+  }
+  .chrono-game-free-input > div {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+  .chrono-game-free-input .ant-btn {
+    width: 44px;
+    min-width: 44px;
+    padding-inline: 0;
+    font-size: 0;
+  }
+  .chrono-game-free-input .ant-btn .anticon {
+    margin-inline-end: 0;
+    font-size: 14px;
   }
   .chrono-game-status {
     border-top: 1px solid var(--border-soft);

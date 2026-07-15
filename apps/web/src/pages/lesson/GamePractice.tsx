@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Button, Progress, Spin, Tag, Tooltip } from 'antd';
+import { Alert, Button, Input, Progress, Spin, Tag, Tooltip } from 'antd';
 import {
+  EditOutlined,
   HistoryOutlined,
   ReloadOutlined,
   SafetyCertificateOutlined,
+  SendOutlined,
 } from '@ant-design/icons';
 import type {
   GameScenarioSummary,
@@ -28,6 +30,11 @@ interface StoredGameReference {
   client_request_id: string;
   session_id?: string;
   scenario?: GameScenarioSummary;
+}
+
+interface FreeInputNotice {
+  kind: 'clarification_required' | 'rejected' | 'provider_unavailable';
+  message: string;
 }
 
 export function PublishedGamePractice({
@@ -59,7 +66,9 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
   const [scenario, setScenario] = useState<GameScenarioSummary | null>(null);
   const [session, setSession] = useState<GameSession | null>(null);
   const [booting, setBooting] = useState(true);
-  const [acting, setActing] = useState(false);
+  const [actingMode, setActingMode] = useState<'fixed' | 'free' | null>(null);
+  const [freeInput, setFreeInput] = useState('');
+  const [freeInputNotice, setFreeInputNotice] = useState<FreeInputNotice | null>(null);
   const [error, setError] = useState('');
   const [resumed, setResumed] = useState(false);
   const requestGeneration = useRef(0);
@@ -70,6 +79,10 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
     requestGeneration.current = generation;
     setBooting(true);
     setError('');
+    if (fresh) {
+      setFreeInput('');
+      setFreeInputNotice(null);
+    }
 
     let stored = fresh
       ? null
@@ -123,10 +136,23 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
     if (stageRef.current) stageRef.current.scrollTop = stageRef.current.scrollHeight;
   }, [session?.history.length]);
 
+  const acting = actingMode !== null;
+
+  const restoreSession = async (sessionId: string) => {
+    try {
+      const restored = await api.gameSession(sessionId);
+      assertSessionIdentity(restored, binding);
+      setSession(restored);
+    } catch {
+      // Keep the last verified session visible when refresh also fails.
+    }
+  };
+
   const chooseAction = async (actionId: string) => {
     if (!session || session.status !== 'active' || acting) return;
-    setActing(true);
+    setActingMode('fixed');
     setError('');
+    setFreeInputNotice(null);
     try {
       const result = await api.gameTurn(session.session_id, {
         client_action_id: createRequestId('turn'),
@@ -136,16 +162,38 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
       assertSessionIdentity(result.session, binding);
       setSession(result.session);
     } catch (actionError) {
-      try {
-        const restored = await api.gameSession(session.session_id);
-        assertSessionIdentity(restored, binding);
-        setSession(restored);
-      } catch {
-        // Keep the last verified session visible when refresh also fails.
-      }
+      await restoreSession(session.session_id);
       setError(errorMessage(actionError));
     } finally {
-      setActing(false);
+      setActingMode(null);
+    }
+  };
+
+  const submitFreeInput = async () => {
+    const rawInput = freeInput.trim();
+    if (!session || session.status !== 'active' || acting || !rawInput) return;
+    setActingMode('free');
+    setError('');
+    setFreeInputNotice(null);
+    try {
+      const response = await api.gameFreeInput(session.session_id, {
+        client_action_id: createRequestId('turn'),
+        raw_input: rawInput,
+        expected_revision: session.revision,
+      });
+      if (response.kind === 'advanced') {
+        if (!response.result) throw new Error('服务器没有返回已完成的回合。');
+        assertSessionIdentity(response.result.session, binding);
+        setSession(response.result.session);
+        setFreeInput('');
+      } else {
+        setFreeInputNotice({ kind: response.kind, message: response.message });
+      }
+    } catch (actionError) {
+      await restoreSession(session.session_id);
+      setError(errorMessage(actionError));
+    } finally {
+      setActingMode(null);
     }
   };
 
@@ -191,6 +239,7 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
             <Button
               icon={<ReloadOutlined />}
               loading={booting}
+              disabled={acting}
               onClick={() => void openSession(true)}
             >
               重新开始
@@ -214,7 +263,12 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
               <p>{message.text}</p>
             </div>
           ))}
-          {acting ? <div className="chrono-game-thinking"><Spin size="small" /> 规则正在推演...</div> : null}
+          {acting ? (
+            <div className="chrono-game-thinking">
+              <Spin size="small" />
+              {actingMode === 'free' ? '正在理解并推演...' : '规则正在推演...'}
+            </div>
+          ) : null}
         </div>
 
         {error ? <Alert type="warning" showIcon message={error} closable onClose={() => setError('')} /> : null}
@@ -227,17 +281,69 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
             description={session.summary}
           />
         ) : (
-          <div className="chrono-game-actions">
-            {choices.map((choice, index) => (
-              <Button
-                key={choice.actionId}
-                disabled={acting}
-                onClick={() => void chooseAction(choice.actionId)}
-              >
-                <span>{index + 1}</span>
-                {choice.label}
-              </Button>
-            ))}
+          <div className="chrono-game-action-panel">
+            <div className="chrono-game-actions">
+              {choices.map((choice, index) => (
+                <Button
+                  key={choice.actionId}
+                  disabled={acting}
+                  onClick={() => void chooseAction(choice.actionId)}
+                >
+                  <span>{index + 1}</span>
+                  {choice.label}
+                </Button>
+              ))}
+            </div>
+            <form
+              className="chrono-game-free-input"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submitFreeInput();
+              }}
+            >
+              <label htmlFor="chrono-game-free-action">
+                <EditOutlined />
+                自拟行动
+              </label>
+              <div>
+                <Input.TextArea
+                  id="chrono-game-free-action"
+                  aria-label="自拟历史行动"
+                  autoSize={{ minRows: 1, maxRows: 3 }}
+                  disabled={acting}
+                  maxLength={400}
+                  placeholder="写下你想采取的行动"
+                  showCount
+                  value={freeInput}
+                  onChange={(event) => setFreeInput(event.target.value)}
+                  onPressEnter={(event) => {
+                    if (!event.shiftKey) {
+                      event.preventDefault();
+                      void submitFreeInput();
+                    }
+                  }}
+                />
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  icon={<SendOutlined />}
+                  loading={actingMode === 'free'}
+                  disabled={acting || !freeInput.trim()}
+                >
+                  提交
+                </Button>
+              </div>
+            </form>
+            {freeInputNotice ? (
+              <Alert
+                className="chrono-game-free-notice"
+                type={freeInputNotice.kind === 'clarification_required' ? 'info' : 'warning'}
+                showIcon
+                closable
+                message={freeInputNotice.message}
+                onClose={() => setFreeInputNotice(null)}
+              />
+            ) : null}
           </div>
         )}
       </section>
