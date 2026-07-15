@@ -357,6 +357,43 @@ class AdminContentApiTests(unittest.TestCase):
             sealed.json()["record"]["descriptor"]["checksum"],
         )
 
+        descriptor = sealed.json()["record"]["descriptor"]
+        detail_url = (
+            "/api/v1/admin/content/runtime-scenarios/low-code-scenario/versions/1"
+        )
+        unauthorized_detail = self.client.get(
+            detail_url,
+            params={
+                "course_id": payload["course_id"],
+                "lesson_id": payload["lesson_id"],
+                "scenario_checksum": descriptor["checksum"],
+            },
+        )
+        self.assertEqual(unauthorized_detail.status_code, 403)
+        loaded_detail = self.client.get(
+            detail_url,
+            headers=self.headers,
+            params={
+                "course_id": payload["course_id"],
+                "lesson_id": payload["lesson_id"],
+                "scenario_checksum": descriptor["checksum"],
+            },
+        )
+        self.assertEqual(loaded_detail.status_code, 200, loaded_detail.text)
+        self.assertEqual(loaded_detail.json()["item"], sealed.json()["item"])
+        self.assertEqual(loaded_detail.json()["descriptor"], descriptor)
+
+        missing_identity = self.client.get(
+            detail_url,
+            headers=self.headers,
+            params={
+                "course_id": payload["course_id"],
+                "lesson_id": payload["lesson_id"],
+                "scenario_checksum": "0" * 64,
+            },
+        )
+        self.assertEqual(missing_identity.status_code, 404, missing_identity.text)
+
         repeated = self.client.post(
             "/api/v1/admin/content/scenario-drafts/low-code-scenario/seal",
             headers=self.headers,

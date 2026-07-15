@@ -121,6 +121,7 @@ async def overview(_: str = Depends(require_admin)):
                 "POST /api/v1/admin/content/drafts/{lesson_id}/review",
                 "POST /api/v1/admin/content/drafts/{lesson_id}/seal",
                 "GET /api/v1/admin/content/runtime-scenarios",
+                "GET /api/v1/admin/content/runtime-scenarios/{scenario_id}/versions/{scenario_version}",
                 "POST /api/v1/admin/content/runtime-scenarios",
                 "GET /api/v1/admin/content/scenario-drafts/template",
                 "GET /api/v1/admin/content/scenario-drafts",
@@ -325,6 +326,31 @@ async def runtime_scenarios(_: str = Depends(require_admin)):
                 item.model_dump(mode="json")
                 for item in runtime_artifacts.list_staged_scenarios()
             ]
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/runtime-scenarios/{scenario_id}/versions/{scenario_version}")
+async def runtime_scenario_detail(
+    scenario_id: str,
+    scenario_version: int,
+    course_id: str,
+    lesson_id: str,
+    scenario_checksum: str,
+    _: str = Depends(require_admin),
+):
+    try:
+        item, descriptor = runtime_artifacts.load_staged_scenario(
+            course_id=course_id,
+            lesson_id=lesson_id,
+            scenario_id=scenario_id,
+            scenario_version=scenario_version,
+            scenario_checksum=scenario_checksum,
+        )
+        return {
+            "item": item.model_dump(mode="json"),
+            "descriptor": descriptor.model_dump(mode="json"),
         }
     except Exception as exc:
         _raise_content_error(exc)
