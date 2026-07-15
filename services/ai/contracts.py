@@ -171,3 +171,26 @@ class ActionClassificationV1(BaseModel):
         if (self.source, self.reason_code) not in allowed_result_shapes[self.kind]:
             raise ValueError("classification kind, source and reason_code are inconsistent")
         return self
+
+
+class NarratorModelOutputV1(BaseModel):
+    model_config = ConfigDict(
+        allow_inf_nan=False,
+        extra="forbid",
+        frozen=True,
+        revalidate_instances="always",
+        strict=True,
+        str_strip_whitespace=True,
+    )
+
+    narrative: str = Field(min_length=1, max_length=1200)
+    used_fact_refs: list[ContractId] = Field(default_factory=list, max_length=32)
+    used_source_ref_ids: list[ContractId] = Field(default_factory=list, max_length=32)
+
+    @model_validator(mode="after")
+    def validate_reference_shape(self) -> "NarratorModelOutputV1":
+        if len(set(self.used_fact_refs)) != len(self.used_fact_refs):
+            raise ValueError("used_fact_refs must be unique")
+        if len(set(self.used_source_ref_ids)) != len(self.used_source_ref_ids):
+            raise ValueError("used_source_ref_ids must be unique")
+        return self

@@ -170,7 +170,7 @@ async def apply_game_turn(
     request: GameTurnRequest,
 ) -> AdvanceResultV1:
     try:
-        result = get_game_runtime().apply_fixed_action(
+        result = await get_game_runtime().submit_fixed_action(
             session_id,
             client_action_id=request.client_action_id,
             action_id=request.action_id,

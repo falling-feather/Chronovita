@@ -33,6 +33,7 @@ from services.contracts.v1 import (
     CoursePackageV1,
     GameSessionV1,
     NarrativeEvidenceV1,
+    NarrativeFallbackReason,
     NarrativeMessageV1,
     NpcChangeV1,
     NpcStateV1,
@@ -181,6 +182,43 @@ class AdvanceResultV1(BaseModel):
     action_feedback: str = ""
     triggered_event_ids: tuple[ContractId, ...] = ()
     ending_id: ContractId | None = None
+
+
+class RuntimeNarrativeV1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        revalidate_instances="always",
+        str_strip_whitespace=True,
+        strict=True,
+    )
+
+    narrative: str = Field(min_length=1)
+    source: Literal["llm", "fallback"]
+    used_fact_refs: list[ContractId] = Field(default_factory=list)
+    used_source_ref_ids: list[ContractId] = Field(default_factory=list)
+    provider: str = Field(default="", max_length=32)
+    model: str = Field(default="", max_length=128)
+    fallback_reason_code: NarrativeFallbackReason = ""
+
+    @model_validator(mode="after")
+    def validate_narrative_shape(self) -> "RuntimeNarrativeV1":
+        if len(set(self.used_fact_refs)) != len(self.used_fact_refs):
+            raise ValueError("used_fact_refs must be unique")
+        if len(set(self.used_source_ref_ids)) != len(self.used_source_ref_ids):
+            raise ValueError("used_source_ref_ids must be unique")
+        if self.source == "llm":
+            if not self.provider or not self.model or self.fallback_reason_code:
+                raise ValueError("llm runtime narrative requires provider/model only")
+        elif (
+            self.provider
+            or self.model
+            or self.used_fact_refs
+            or self.used_source_ref_ids
+            or not self.fallback_reason_code
+        ):
+            raise ValueError("fallback runtime narrative requires only a reason code")
+        return self
 
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -627,6 +665,128 @@ class SituationEngineV1:
             ending_id=evaluated.ending_id,
         )
 
+    def with_narrative(
+        self,
+        session_before: GameSessionV1,
+        rule_result: AdvanceResultV1,
+        outcome: RuntimeNarrativeV1,
+    ) -> AdvanceResultV1:
+        checked = self._validated_session(session_before)
+        if checked.ai_evidence_version != 1:
+            raise SessionIntegrityError(
+                "only evidence-version-1 sessions accept historical narration"
+            )
+        turn = rule_result.turn
+        if (
+            rule_result.session.session_id != checked.session_id
+            or rule_result.session.revision != checked.revision + 1
+            or turn.session_id != checked.session_id
+            or turn.turn_no != checked.revision
+            or not rule_result.session.turns
+            or rule_result.session.turns[-1] != turn
+            or turn.narrative_source != "rules"
+            or turn.classification_evidence is None
+        ):
+            raise SessionIntegrityError("narration requires a fresh deterministic rule result")
+
+        snapshot = rule_snapshot_from_session(self.scenario, checked)
+        try:
+            evaluated = evaluate_rule_action(
+                self.scenario,
+                snapshot,
+                turn.classified_action_id,
+                turn.turn_no,
+            )
+        except (UnknownRuleAction, RuleActionUnavailable, RuleEvaluationError) as exc:
+            raise SessionIntegrityError(
+                "cannot reconstruct the deterministic narration basis"
+            ) from exc
+        rule_narrative = render_rule_narrative(self.scenario, evaluated)
+        if turn.narrative != rule_narrative:
+            raise SessionIntegrityError("rule result narrative does not match its ruleset")
+        if outcome.source == "fallback" and outcome.narrative != rule_narrative:
+            raise SessionIntegrityError("fallback narration must preserve the rule narrative")
+
+        allowed_fact_refs, allowed_source_ref_ids = reviewed_narrative_refs(
+            self.course,
+            self.scenario,
+            action_id=turn.classified_action_id,
+            triggered_event_ids=evaluated.triggered_event_ids,
+            ending_id=evaluated.ending_id,
+        )
+        if outcome.source == "llm" and not allowed_fact_refs:
+            raise SessionIntegrityError("llm narration requires reviewed fact context")
+        if not set(outcome.used_fact_refs).issubset(allowed_fact_refs):
+            raise SessionIntegrityError("narration fact references exceed the allowlist")
+        if not set(outcome.used_source_ref_ids).issubset(allowed_source_ref_ids):
+            raise SessionIntegrityError("narration source references exceed the allowlist")
+
+        narrative_evidence = NarrativeEvidenceV1(
+            source=outcome.source,
+            policy_version="historical-narrator/v1",
+            basis_checksum=calculate_narrative_basis_checksum(
+                course_checksum=str(self.course.checksum),
+                scenario_checksum=str(self.scenario.checksum),
+                session_id=checked.session_id,
+                turn_no=turn.turn_no,
+                classification_evidence=turn.classification_evidence,
+                action_feedback=self._actions[turn.classified_action_id].feedback,
+                snapshot_before=snapshot,
+                result=evaluated,
+                rule_narrative=rule_narrative,
+                allowed_fact_refs=allowed_fact_refs,
+                allowed_source_ref_ids=allowed_source_ref_ids,
+            ),
+            output_checksum=calculate_text_checksum(outcome.narrative),
+            allowed_fact_refs=allowed_fact_refs,
+            used_fact_refs=list(outcome.used_fact_refs),
+            allowed_source_ref_ids=allowed_source_ref_ids,
+            used_source_ref_ids=list(outcome.used_source_ref_ids),
+            provider=outcome.provider,
+            model=outcome.model,
+            fallback_reason_code=outcome.fallback_reason_code,
+        )
+        narrated_turn = TurnV1.model_validate(
+            {
+                **turn.model_dump(mode="python"),
+                "narrative": outcome.narrative,
+                "narrative_source": outcome.source,
+                "narrative_model": outcome.model,
+                "narrative_evidence": narrative_evidence,
+            }
+        )
+        history = list(rule_result.session.history)
+        if (
+            not history
+            or history[-1].role != "narrator"
+            or history[-1].turn_no != turn.turn_no
+        ):
+            raise SessionIntegrityError("rule result history lacks its narrator projection")
+        history[-1] = NarrativeMessageV1(
+            role="narrator",
+            text=outcome.narrative,
+            turn_no=turn.turn_no,
+        )
+        ending = self._endings.get(evaluated.ending_id) if evaluated.ending_id else None
+        session_payload = rule_result.session.model_dump(mode="python")
+        session_payload.update(
+            turns=[*rule_result.session.turns[:-1], narrated_turn],
+            history=history,
+            summary=(ending.summary if ending is not None else outcome.narrative),
+        )
+        try:
+            narrated_session = GameSessionV1.model_validate(session_payload)
+        except ValidationError as exc:
+            raise SessionIntegrityError(f"generated narrated session is invalid: {exc}") from exc
+        narrated_session = self._validated_session(narrated_session)
+        return AdvanceResultV1(
+            session=narrated_session,
+            turn=narrated_turn,
+            action_feedback=rule_result.action_feedback,
+            triggered_event_ids=rule_result.triggered_event_ids,
+            ending_id=rule_result.ending_id,
+        )
+
     def replay(
         self,
         *,
@@ -817,6 +977,7 @@ __all__ = [
     "RevisionConflict",
     "RuntimeClassificationContextV1",
     "RuntimeCommandV1",
+    "RuntimeNarrativeV1",
     "ScenarioDefinitionError",
     "ScenarioFileError",
     "ScenarioIntegrityError",

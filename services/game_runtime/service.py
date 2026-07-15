@@ -35,6 +35,7 @@ from services.game_runtime import (
     RevisionConflict,
     RuntimeClassificationContextV1,
     RuntimeCommandV1,
+    RuntimeNarrativeV1,
     SessionIntegrityError,
     SituationEngineV1,
 )
@@ -83,6 +84,16 @@ class ActionClassifierProtocol(Protocol):
         session: GameSessionV1,
         raw_input: str,
     ) -> ActionClassificationV1:
+        ...
+
+
+class HistoricalNarratorProtocol(Protocol):
+    async def narrate(
+        self,
+        engine: SituationEngineV1,
+        session: GameSessionV1,
+        rule_result: AdvanceResultV1,
+    ) -> RuntimeNarrativeV1:
         ...
 
 
@@ -217,10 +228,12 @@ class GameRuntimeService:
         repository: ScenarioCatalogRepository,
         store: GameRuntimeStore,
         classifier: ActionClassifierProtocol | None = None,
+        narrator: HistoricalNarratorProtocol | None = None,
     ) -> None:
         self.repository = repository
         self.store = store
         self._classifier = classifier
+        self._narrator = narrator
         self._lock = threading.RLock()
 
     def list_scenarios(self) -> tuple[ScenarioSummaryV1, ...]:
@@ -438,6 +451,60 @@ class GameRuntimeService:
                 ),
             )
 
+    async def submit_fixed_action(
+        self,
+        session_id: str,
+        *,
+        client_action_id: str,
+        action_id: str,
+        expected_revision: int,
+        occurred_at: datetime | None = None,
+    ) -> AdvanceResultV1:
+        """Settle rules, narrate outside the state lock, then commit one CAS."""
+
+        with self._lock:
+            record = self._load_record(session_id)
+            engine = self._engine_for(record.session)
+            session = self._validated_session(engine, record.session)
+            self._validate_linked_dossier(engine, session)
+            existing = _turn_for_client_action(session, client_action_id)
+            if existing is not None:
+                if (
+                    existing.action_source != "fixed"
+                    or existing.classified_action_id != action_id
+                    or existing.turn_no != expected_revision
+                ):
+                    raise DuplicateActionConflict(
+                        f"client_action_id {client_action_id} was already used"
+                    )
+                return _existing_advance_result(engine, session, existing)
+
+            engine.resolve_action_id(action_id, action_id)
+            label = next(
+                item.label
+                for item in engine.scenario.action_rules
+                if item.action_id == action_id
+            )
+            event_time = occurred_at or max(_utcnow(), session.updated_at)
+            command = RuntimeCommandV1(
+                client_action_id=client_action_id,
+                action_id=action_id,
+                raw_input=label,
+                action_source="fixed",
+                classification_confidence=None,
+                expected_revision=expected_revision,
+                occurred_at=event_time,
+            )
+            rule_result = engine.apply_action(session, command)
+
+        return await self._narrate_and_commit(
+            record,
+            engine,
+            session,
+            command,
+            rule_result,
+        )
+
     async def apply_free_input(
         self,
         session_id: str,
@@ -548,40 +615,22 @@ class GameRuntimeService:
                 expected_revision=expected_revision,
                 occurred_at=event_time,
             )
-            try:
-                result = self.apply_action(session_id, command)
-            except DuplicateActionConflict:
-                raced_record = self._load_record(session_id)
-                raced_engine = self._engine_for(raced_record.session)
-                raced_session = self._validated_session(
-                    raced_engine,
-                    raced_record.session,
-                )
-                self._validate_linked_dossier(
-                    raced_engine,
-                    raced_session,
-                )
-                raced_turn = _turn_for_client_action(
-                    raced_session,
-                    client_action_id,
-                )
-                if raced_turn is None:
-                    raise
-                return _existing_free_input_result(
-                    raced_engine,
-                    raced_session,
-                    raced_turn,
-                    raw_input=raw_input,
-                    expected_revision=expected_revision,
-                )
-            return FreeInputResultV1(
-                kind="advanced",
-                message=_FREE_INPUT_ADVANCED_MESSAGE,
-                available_actions=latest_engine.available_actions(
-                    result.session
-                ),
-                result=result,
-            )
+            rule_result = latest_engine.apply_action(latest_session, command)
+
+        result = await self._narrate_and_commit(
+            latest_record,
+            latest_engine,
+            latest_session,
+            command,
+            rule_result,
+        )
+        result_engine = self._engine_for(result.session)
+        return FreeInputResultV1(
+            kind="advanced",
+            message=_FREE_INPUT_ADVANCED_MESSAGE,
+            available_actions=result_engine.available_actions(result.session),
+            result=result,
+        )
 
     def apply_action(
         self,
@@ -647,6 +696,141 @@ class GameRuntimeService:
 
                 self._classifier = ActionClassifierV1()
             return self._classifier
+
+    def _get_narrator(self) -> HistoricalNarratorProtocol:
+        with self._lock:
+            if self._narrator is None:
+                from services.ai import HistoricalNarratorV1
+
+                self._narrator = HistoricalNarratorV1()
+            return self._narrator
+
+    async def _narrate_and_commit(
+        self,
+        record: StoredSessionRecord,
+        engine: SituationEngineV1,
+        session: GameSessionV1,
+        command: RuntimeCommandV1,
+        rule_result: AdvanceResultV1,
+    ) -> AdvanceResultV1:
+        if session.ai_evidence_version == 0:
+            prepared = rule_result
+        else:
+            try:
+                unchecked = await self._get_narrator().narrate(
+                    engine,
+                    session,
+                    rule_result,
+                )
+                outcome = RuntimeNarrativeV1.model_validate(
+                    unchecked.model_dump(mode="python"),
+                    strict=True,
+                )
+            except Exception:
+                outcome = _fallback_narrative(
+                    rule_result,
+                    "provider_unavailable",
+                )
+            try:
+                prepared = engine.with_narrative(
+                    session,
+                    rule_result,
+                    outcome,
+                )
+            except SessionIntegrityError:
+                if outcome.source != "llm":
+                    raise
+                prepared = engine.with_narrative(
+                    session,
+                    rule_result,
+                    _fallback_narrative(
+                        rule_result,
+                        "reference_out_of_bounds",
+                    ),
+                )
+        return self._commit_prepared_action(
+            record,
+            engine,
+            session,
+            command,
+            prepared,
+        )
+
+    def _commit_prepared_action(
+        self,
+        record: StoredSessionRecord,
+        engine: SituationEngineV1,
+        session: GameSessionV1,
+        command: RuntimeCommandV1,
+        result: AdvanceResultV1,
+    ) -> AdvanceResultV1:
+        with self._lock:
+            latest_record = self._load_record(session.session_id)
+            latest_engine = self._engine_for(latest_record.session)
+            latest_session = self._validated_session(
+                latest_engine,
+                latest_record.session,
+            )
+            self._validate_linked_dossier(latest_engine, latest_session)
+            existing = _turn_for_client_action(
+                latest_session,
+                command.client_action_id,
+            )
+            if existing is not None:
+                return _existing_result_for_command(
+                    latest_engine,
+                    latest_session,
+                    command,
+                    existing,
+                )
+            if latest_session.revision != session.revision:
+                raise RevisionConflict(
+                    f"expected revision {session.revision}, current revision is {latest_session.revision}"
+                )
+
+            next_session = result.session
+            dossier = None
+            if next_session.status == "completed":
+                next_session, dossier = self._build_dossier(
+                    engine,
+                    next_session,
+                )
+                result = AdvanceResultV1.model_validate(
+                    {
+                        **result.model_dump(mode="json"),
+                        "session": next_session.model_dump(mode="json"),
+                    }
+                )
+            try:
+                self.store.compare_and_swap(record, next_session, dossier)
+            except (
+                StoredSessionIntegrityError,
+                StoredDossierIntegrityError,
+            ) as exc:
+                raise SessionIntegrityError(str(exc)) from exc
+            except StoredSessionWriteConflict:
+                winner = self._load_record(session.session_id)
+                winner_engine = self._engine_for(winner.session)
+                winner_session = self._validated_session(
+                    winner_engine,
+                    winner.session,
+                )
+                self._validate_linked_dossier(winner_engine, winner_session)
+                winner_turn = _turn_for_client_action(
+                    winner_session,
+                    command.client_action_id,
+                )
+                if winner_turn is None:
+                    raise RevisionConflict(
+                        f"expected revision {session.revision}, current revision is {winner_session.revision}"
+                    )
+                return _existing_result_for_command(
+                    winner_engine,
+                    winner_session,
+                    command,
+                    winner_turn,
+                )
+            return result
 
     def _validate_linked_dossier(
         self,
@@ -985,6 +1169,17 @@ def _turn_for_client_action(
     )
 
 
+def _fallback_narrative(
+    rule_result: AdvanceResultV1,
+    reason_code: str,
+) -> RuntimeNarrativeV1:
+    return RuntimeNarrativeV1(
+        narrative=rule_result.turn.narrative,
+        source="fallback",
+        fallback_reason_code=reason_code,
+    )
+
+
 def _existing_advance_result(
     engine: SituationEngineV1,
     session: GameSessionV1,
@@ -1003,6 +1198,25 @@ def _existing_advance_result(
             occurred_at=turn.created_at,
         ),
     )
+
+
+def _existing_result_for_command(
+    engine: SituationEngineV1,
+    session: GameSessionV1,
+    command: RuntimeCommandV1,
+    turn: TurnV1,
+) -> AdvanceResultV1:
+    if command.action_source == "free_input":
+        if (
+            turn.action_source != "free_input"
+            or turn.raw_input != command.raw_input
+            or turn.turn_no != command.expected_revision
+        ):
+            raise DuplicateActionConflict(
+                f"client_action_id {command.client_action_id} was already used"
+            )
+        return _existing_advance_result(engine, session, turn)
+    return engine.apply_action(session, command)
 
 
 def _classification_context_from_result(

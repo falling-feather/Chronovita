@@ -1351,6 +1351,7 @@ def reviewed_narrative_refs(
         for item in course.facts
         if item.fact_id in relevant_fact_ids
         and item.source_ref_ids
+        and "教师待审" not in item.statement
         and all(sources[source_id].reliability == "reviewed" for source_id in item.source_ref_ids)
     ]
     for fact in course.facts:
