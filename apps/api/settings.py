@@ -36,6 +36,13 @@ class Settings(BaseSettings):
     deepseek_model_pro: str = "deepseek-v4-pro"
     # V4 thinking 模式：disabled / enabled / auto（默认 disabled，互动小说要快）
     deepseek_thinking: str = "disabled"
+    llm_structured_timeout_seconds: float = Field(default=12.0, ge=1, le=60)
+    llm_structured_max_tokens: int = Field(default=512, ge=32, le=4096)
+    llm_structured_max_response_bytes: int = Field(
+        default=32 * 1024,
+        ge=1024,
+        le=256 * 1024,
+    )
 
 
 settings = Settings()
