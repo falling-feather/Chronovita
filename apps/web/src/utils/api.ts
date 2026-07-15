@@ -263,6 +263,9 @@ export type SealedScenarioTemplate = Record<string, unknown> & {
 export interface ScenarioReleaseSelection {
   scenario_id: string; scenario_version: number; scenario_checksum: string; primary: boolean;
 }
+export interface LessonScenarioRef {
+  scenario_id: string; scenario_version: number; checksum: string; primary: boolean;
+}
 export interface Lesson {
   id: string; course_id: string; num: string; title: string;
   duration: string; abstract: string; body: string[];
@@ -276,6 +279,45 @@ export interface Lesson {
   content_status?: string; content_version?: number; sealed_at?: string | null; sealed_by?: string | null;
   content_checksum?: string | null;
   release_id?: string | null; release_no?: number | null; release_checksum?: string | null;
+  scenario_refs: LessonScenarioRef[]; primary_scenario_id: string | null;
+}
+
+export interface ScenarioReleasePin {
+  release_id: string; release_no: number; release_checksum: string;
+  course_id: string; lesson_id: string;
+  course_content_version: number; course_checksum: string;
+  scenario_version: number; scenario_checksum: string;
+}
+export interface GameScenarioSummary {
+  scenario_id: string; scenario_version: number; scenario_checksum: string;
+  course_id: string; lesson_id: string; title: string; scenario_type: string;
+  student_role: string; objective: string; max_turns: number;
+  audience: 'development' | 'published';
+  release_id: string | null; release_no: number | null; release_checksum: string | null;
+}
+export interface GameNarrativeMessage {
+  role: 'system' | 'player' | 'narrator'; text: string; turn_no: number;
+}
+export interface GameSession {
+  session_id: string; user_id: string; course_id: string; lesson_id: string;
+  scenario_id: string; scenario_version: number;
+  course_content_version: number; course_checksum: string; scenario_checksum: string;
+  status: 'active' | 'completed' | 'abandoned' | 'failed';
+  revision: number; current_turn: number; current_state: Record<string, number>;
+  available_action_ids: string[]; available_choices: string[];
+  summary: string; history: GameNarrativeMessage[]; ending_id: string | null;
+  started_at: string; updated_at: string; ended_at: string | null;
+}
+export interface GameStartRequest {
+  scenario_id: string; client_request_id: string; release_pin?: ScenarioReleasePin;
+}
+export interface GameStartResponse {
+  scenario: GameScenarioSummary; session: GameSession; session_storage: 'sqlite-json';
+}
+export interface GameTurnResponse {
+  session: GameSession;
+  turn: { turn_id: string; narrative: string; classified_action_id: string };
+  action_feedback: string; triggered_event_ids: string[]; ending_id: string | null;
 }
 
 export const api = {
@@ -290,6 +332,22 @@ export const api = {
   },
   course: (id: string) => jsonFetch<CourseDetail>(`/courses/${id}`),
   lesson: (cid: string, lid: string) => jsonFetch<Lesson>(`/courses/${cid}/lessons/${lid}`),
+  gameStart: (body: GameStartRequest) =>
+    jsonFetch<GameStartResponse>('/practice/game/sessions', {
+      method: 'POST', body: JSON.stringify(body),
+    }),
+  gameSession: (sessionId: string) =>
+    jsonFetch<GameSession>(`/practice/game/sessions/${encodeURIComponent(sessionId)}`),
+  gameTurn: (
+    sessionId: string,
+    body: {
+      client_action_id: string; action_id: string; raw_input: string;
+      expected_revision: number; action_source?: 'fixed';
+    },
+  ) => jsonFetch<GameTurnResponse>(
+    `/practice/game/sessions/${encodeURIComponent(sessionId)}/turns`,
+    { method: 'POST', body: JSON.stringify(body) },
+  ),
   llmInfo: () => jsonFetch<{ provider: string; ask_provider?: string }>('/practice/llm/info'),
   sandboxGet: (sid: string) => jsonFetch<any>(`/practice/sandbox/${sid}`),
   sandboxStep: (sid: string, body: { node_id: string; choice: string; state: Record<string, number> }) =>

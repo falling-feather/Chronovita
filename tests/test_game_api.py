@@ -7,6 +7,7 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -20,6 +21,7 @@ if str(API_ROOT) not in sys.path:
     sys.path.insert(0, str(API_ROOT))
 
 from main import app
+from routers import game as game_router
 from settings import settings
 from services import content
 from services.game_runtime import (
@@ -34,6 +36,8 @@ from services.game_runtime.catalog import (
 )
 from services.game_runtime.service import (
     GameRuntimeService,
+    PublishedScenarioPinRequired,
+    ScenarioReleasePinV1,
     configure_game_runtime,
     get_game_runtime,
 )
@@ -85,6 +89,9 @@ class GameApiTests(unittest.TestCase):
         session_id = session["session_id"]
         self.assertEqual(session["user_id"], "api-student")
         self.assertNotIn("state", started.json()["scenario"])
+        self.assertIsNone(started.json()["scenario"]["release_id"])
+        self.assertIsNone(started.json()["scenario"]["release_no"])
+        self.assertIsNone(started.json()["scenario"]["release_checksum"])
 
         specs = [
             ("survey-terrain", "先勘察地势和河道"),
@@ -269,6 +276,61 @@ class GameApiTests(unittest.TestCase):
             response.json()["detail"]["code"],
             "scenario_file_error",
         )
+
+    def test_published_pin_request_contract_and_missing_pin_error_are_stable(self):
+        class PinRequiredRuntime:
+            release_pin = None
+
+            def start_session(self, _scenario_id, **kwargs):
+                self.release_pin = kwargs["release_pin"]
+                raise PublishedScenarioPinRequired("published pin required")
+
+        runtime = PinRequiredRuntime()
+        full_pin = {
+            "release_id": "rel-abcdef0123-0001",
+            "release_no": 1,
+            "release_checksum": "a" * 64,
+            "course_id": "C-api-pin",
+            "lesson_id": "lesson-api-pin",
+            "course_content_version": 1,
+            "course_checksum": "b" * 64,
+            "scenario_version": 1,
+            "scenario_checksum": "c" * 64,
+        }
+        with patch.object(game_router, "get_game_runtime", return_value=runtime):
+            missing = self.client.post(
+                "/api/v1/practice/game/sessions",
+                json={
+                    "scenario_id": "scenario-api-pin",
+                    "client_request_id": "api-pin-missing-001",
+                },
+            )
+            accepted_contract = self.client.post(
+                "/api/v1/practice/game/sessions",
+                json={
+                    "scenario_id": "scenario-api-pin",
+                    "client_request_id": "api-pin-full-001",
+                    "release_pin": full_pin,
+                },
+            )
+            partial = self.client.post(
+                "/api/v1/practice/game/sessions",
+                json={
+                    "scenario_id": "scenario-api-pin",
+                    "client_request_id": "api-pin-partial-001",
+                    "release_pin": {"release_id": full_pin["release_id"]},
+                },
+            )
+
+        self.assertEqual(missing.status_code, 409, missing.text)
+        self.assertEqual(
+            missing.json()["detail"]["code"],
+            "published_scenario_pin_required",
+        )
+        self.assertEqual(accepted_contract.status_code, 409, accepted_contract.text)
+        self.assertIsInstance(runtime.release_pin, ScenarioReleasePinV1)
+        self.assertEqual(runtime.release_pin.model_dump(mode="json"), full_pin)
+        self.assertEqual(partial.status_code, 422, partial.text)
 
 
 class ScenarioCatalogTests(unittest.TestCase):

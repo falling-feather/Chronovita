@@ -195,6 +195,56 @@ class GamePersistenceApiTests(unittest.TestCase):
                 "session_integrity_error",
             )
 
+    def test_legacy_session_envelope_without_release_identity_remains_usable(self):
+        with TestClient(app) as client:
+            started = client.post(
+                "/api/v1/practice/game/sessions",
+                json={
+                    "scenario_id": "scenario-dayu-flood-control",
+                    "client_request_id": "legacy-envelope-start-001",
+                },
+            )
+            self.assertEqual(started.status_code, 200, started.text)
+            started_session = started.json()["session"]
+            session_id = started_session["session_id"]
+
+            store = get_game_runtime().store
+            record = store.load_session(session_id)
+            payload = json.loads(record.raw_data)
+            self.assertIsNone(payload.pop("release_identity"))
+            legacy_raw = json.dumps(
+                payload,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            with store.engine.begin() as connection:
+                connection.execute(
+                    update(game_sessions_table)
+                    .where(game_sessions_table.c.session_id == session_id)
+                    .values(data=legacy_raw)
+                )
+
+            recovered = client.get(
+                f"/api/v1/practice/game/sessions/{session_id}"
+            )
+            self.assertEqual(recovered.status_code, 200, recovered.text)
+            self.assertEqual(recovered.json(), started_session)
+            advanced = client.post(
+                f"/api/v1/practice/game/sessions/{session_id}/turns",
+                json={
+                    "client_action_id": "legacy-envelope-action-001",
+                    "action_id": "survey-terrain",
+                    "raw_input": "survey terrain",
+                    "expected_revision": 1,
+                },
+            )
+            self.assertEqual(advanced.status_code, 200, advanced.text)
+            self.assertEqual(advanced.json()["session"]["revision"], 2)
+            self.assertIsNone(
+                store.load_session(session_id).envelope.release_identity
+            )
+
     def test_storage_failure_returns_stable_service_unavailable(self):
         with TestClient(app) as client:
             started = client.post(

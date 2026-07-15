@@ -5,13 +5,14 @@ import json
 from dataclasses import dataclass
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from sqlalchemy import Column, DateTime, MetaData, String, Table, Text, insert, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from services.contracts.v1 import (
     Checksum,
+    ContractId,
     DossierV1,
     GameSessionV1,
     verify_contract_checksum,
@@ -50,6 +51,20 @@ class StoredDossierIntegrityError(GameStoreError):
     pass
 
 
+class GameSessionReleaseIdentityV1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        revalidate_instances="always",
+        strict=True,
+        str_strip_whitespace=True,
+    )
+
+    release_id: ContractId
+    release_no: int = Field(ge=1)
+    release_checksum: Checksum
+
+
 class PersistedGameSessionV1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -61,11 +76,15 @@ class PersistedGameSessionV1(BaseModel):
         "persisted-game-session/v1"
     )
     session: GameSessionV1
+    release_identity: GameSessionReleaseIdentityV1 | None = None
     checksum: Checksum
 
     @model_validator(mode="after")
     def validate_checksum(self) -> "PersistedGameSessionV1":
-        if self.checksum != _session_checksum(self.session):
+        if self.checksum != _session_checksum(
+            self.session,
+            self.release_identity,
+        ):
             raise ValueError("persisted game session checksum is invalid")
         return self
 
@@ -116,8 +135,10 @@ class GameRuntimeStore:
         self,
         session: GameSessionV1,
         dossier: DossierV1 | None = None,
+        *,
+        release_identity: GameSessionReleaseIdentityV1 | None = None,
     ) -> None:
-        raw_data = _encode_session(session)
+        raw_data = _encode_session(session, release_identity)
         dossier_raw = None
         if dossier is not None:
             _validate_dossier_link(session, dossier)
@@ -200,7 +221,10 @@ class GameRuntimeStore:
             raise ValueError("compare-and-swap cannot change session_id")
         if next_session.revision != previous.revision + 1:
             raise ValueError("compare-and-swap requires exactly one new revision")
-        raw_data = _encode_session(next_session)
+        raw_data = _encode_session(
+            next_session,
+            current.envelope.release_identity,
+        )
         dossier_raw = None
         if dossier is not None:
             _validate_dossier_link(next_session, dossier)
@@ -244,7 +268,10 @@ class GameRuntimeStore:
         if next_session.model_dump(mode="json") != expected:
             raise ValueError("dossier attachment can only set dossier_id")
         _validate_dossier_link(next_session, dossier)
-        raw_data = _encode_session(next_session)
+        raw_data = _encode_session(
+            next_session,
+            current.envelope.release_identity,
+        )
         dossier_raw = _encode_dossier(dossier)
         try:
             with self.engine.begin() as connection:
@@ -267,15 +294,35 @@ class GameRuntimeStore:
             raise GameStoreError("game dossier attachment failed") from exc
 
 
-def _session_checksum(session: GameSessionV1) -> str:
-    raw = _canonical_json(session.model_dump(mode="json"))
+def _session_checksum(
+    session: GameSessionV1,
+    release_identity: GameSessionReleaseIdentityV1 | None = None,
+) -> str:
+    payload: object = session.model_dump(mode="json")
+    if release_identity is not None:
+        payload = {
+            "session": payload,
+            "release_identity": release_identity.model_dump(mode="json"),
+        }
+    raw = _canonical_json(payload)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
-def _encode_session(session: GameSessionV1) -> str:
+def _encode_session(
+    session: GameSessionV1,
+    release_identity: GameSessionReleaseIdentityV1 | None = None,
+) -> str:
+    checked_release_identity = (
+        GameSessionReleaseIdentityV1.model_validate(
+            release_identity.model_dump(mode="python")
+        )
+        if release_identity is not None
+        else None
+    )
     envelope = PersistedGameSessionV1(
         session=GameSessionV1.model_validate(session.model_dump(mode="json")),
-        checksum=_session_checksum(session),
+        release_identity=checked_release_identity,
+        checksum=_session_checksum(session, checked_release_identity),
     )
     raw = _canonical_json(envelope.model_dump(mode="json"))
     try:
@@ -438,6 +485,7 @@ def _reject_duplicate_json_keys(pairs):
 
 
 __all__ = [
+    "GameSessionReleaseIdentityV1",
     "GameRuntimeStore",
     "GameStoreError",
     "MAX_DOSSIER_RECORD_BYTES",

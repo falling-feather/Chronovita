@@ -32,6 +32,8 @@ from services.game_runtime.service import (
     DossierNotReady,
     DuplicateStartConflict,
     GameSessionNotFound,
+    PublishedScenarioPinRequired,
+    ScenarioReleasePinV1,
     ScenarioSummaryV1,
     SessionReplayV1,
     TeacherSessionSummaryV1,
@@ -47,6 +49,7 @@ class GameStartRequest(BaseModel):
 
     scenario_id: ContractId
     client_request_id: ContractId
+    release_pin: ScenarioReleasePinV1 | None = None
 
 
 class GameTurnRequest(BaseModel):
@@ -91,6 +94,7 @@ async def start_game_session(request: GameStartRequest) -> GameStartResponse:
             request.scenario_id,
             user_id=settings.game_user_id,
             client_request_id=request.client_request_id,
+            release_pin=request.release_pin,
         )
     except Exception as exc:
         _raise_runtime_error(exc)
@@ -186,6 +190,7 @@ def _raise_runtime_error(exc: Exception) -> NoReturn:
             ActionUnavailable,
             DossierNotReady,
             DuplicateStartConflict,
+            PublishedScenarioPinRequired,
             DuplicateActionConflict,
             RevisionConflict,
             SessionTerminalError,

@@ -286,11 +286,29 @@ class AdminContentApiTests(unittest.TestCase):
             published.json()["release"]["items"][0]["primary_scenario_id"],
             scenario["scenario_id"],
         )
+        lesson = self.client.get(
+            f"/api/v1/courses/{payload['course_id']}/lessons/{payload['lesson_id']}"
+        )
+        self.assertEqual(lesson.status_code, 200, lesson.text)
+        lesson_payload = lesson.json()
+        release_payload = published.json()["release"]
+        self.assertEqual(lesson_payload["release_id"], release_payload["release_id"])
+        self.assertEqual(lesson_payload["release_no"], release_payload["release_no"])
         self.assertEqual(
-            self.client.get(
-                f"/api/v1/courses/{payload['course_id']}/lessons/{payload['lesson_id']}"
-            ).status_code,
-            200,
+            lesson_payload["release_checksum"],
+            release_payload["checksum"],
+        )
+        self.assertEqual(lesson_payload["primary_scenario_id"], scenario["scenario_id"])
+        self.assertEqual(
+            lesson_payload["scenario_refs"],
+            [
+                {
+                    "scenario_id": descriptor["artifact_id"],
+                    "scenario_version": descriptor["version"],
+                    "checksum": descriptor["checksum"],
+                    "primary": True,
+                }
+            ],
         )
 
     def test_admin_can_save_validate_and_idempotently_seal_scenario_draft(self):
@@ -649,12 +667,12 @@ class AdminContentApiTests(unittest.TestCase):
         )
         self.assertEqual(migrated.status_code, 200, migrated.text)
         self.assertEqual(migrated.json()["release"]["created_by"], "trusted-admin")
-        self.assertEqual(
-            self.client.get(
-                "/api/v1/courses/C-legacy-api/lessons/legacy-api-lesson"
-            ).status_code,
-            200,
+        legacy_lesson = self.client.get(
+            "/api/v1/courses/C-legacy-api/lessons/legacy-api-lesson"
         )
+        self.assertEqual(legacy_lesson.status_code, 200, legacy_lesson.text)
+        self.assertEqual(legacy_lesson.json()["scenario_refs"], [])
+        self.assertIsNone(legacy_lesson.json()["primary_scenario_id"])
 
         source_path = content.sealed_dir() / "legacy-api-lesson-v001.json"
         raw = json.loads(source_path.read_text(encoding="utf-8"))

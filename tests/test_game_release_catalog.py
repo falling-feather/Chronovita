@@ -32,7 +32,12 @@ from services.game_runtime.catalog import (
     ScenarioCatalogNotFound,
     ScenarioCatalogRepository,
 )
-from services.game_runtime.service import GameRuntimeService
+from services.game_runtime.service import (
+    DuplicateStartConflict,
+    GameRuntimeService,
+    PublishedScenarioPinRequired,
+    ScenarioReleasePinV1,
+)
 from services.game_runtime.store import GameRuntimeStore
 
 
@@ -108,6 +113,9 @@ class GameReleaseCatalogTests(unittest.TestCase):
         )
         loaded = by_id[published.scenario.scenario_id]
         self.assertEqual(loaded.entry.audience, "published")
+        self.assertEqual(loaded.release_id, manifest.release_id)
+        self.assertEqual(loaded.release_no, manifest.release_no)
+        self.assertEqual(loaded.release_checksum, manifest.checksum)
         verified = RuntimeBundleV1.model_validate(
             {
                 "course": loaded.engine.course.model_dump(mode="json"),
@@ -139,6 +147,7 @@ class GameReleaseCatalogTests(unittest.TestCase):
         _, session = service.start_session(
             first.scenario.scenario_id,
             user_id="release-history-student",
+            release_pin=_release_pin(first_manifest, first),
             now=NOW,
         )
         legacy_lookup = self.repository.get_exact(
@@ -210,6 +219,223 @@ class GameReleaseCatalogTests(unittest.TestCase):
             _get_exact(self.repository, second).course.checksum,
             second.course.checksum,
         )
+
+    def test_published_start_requires_exact_reachable_pin_and_full_idempotency(self):
+        first = _runtime_bundle(build_dayu_bundle())
+        first_manifest = _build_v2_manifest(first, release_no=1)
+        _write_v2_release(self.root, first_manifest, first)
+        _activate(
+            self.root,
+            first_manifest,
+            generation=1,
+            previous_release_id=None,
+        )
+        engine = create_engine(
+            "sqlite://",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+            future=True,
+        )
+        self.addCleanup(engine.dispose)
+        service = GameRuntimeService(self.repository, GameRuntimeStore(engine))
+        pin = _release_pin(first_manifest, first)
+
+        with self.assertRaises(PublishedScenarioPinRequired):
+            service.start_session(
+                first.scenario.scenario_id,
+                user_id="pin-student",
+                client_request_id="pin-start-001",
+                now=NOW,
+            )
+
+        invalid_pins = (
+            pin.model_copy(update={"release_id": f"{RELEASE_PREFIX}-0099"}),
+            pin.model_copy(update={"release_no": pin.release_no + 1}),
+            pin.model_copy(update={"release_checksum": "f" * 64}),
+            pin.model_copy(update={"course_id": "C-wrong"}),
+            pin.model_copy(update={"lesson_id": "lesson-wrong"}),
+            pin.model_copy(
+                update={"course_content_version": pin.course_content_version + 1}
+            ),
+            pin.model_copy(update={"course_checksum": "f" * 64}),
+            pin.model_copy(update={"scenario_version": pin.scenario_version + 1}),
+            pin.model_copy(update={"scenario_checksum": "f" * 64}),
+        )
+        for invalid_pin in invalid_pins:
+            with self.subTest(invalid_pin=invalid_pin):
+                with self.assertRaises(ScenarioCatalogNotFound):
+                    service.start_session(
+                        first.scenario.scenario_id,
+                        user_id="pin-student",
+                        client_request_id="pin-start-001",
+                        release_pin=invalid_pin,
+                        now=NOW,
+                    )
+
+        summary, started = service.start_session(
+            first.scenario.scenario_id,
+            user_id="pin-student",
+            client_request_id="pin-start-001",
+            release_pin=pin,
+            now=NOW,
+        )
+        retry_summary, retry = service.start_session(
+            first.scenario.scenario_id,
+            user_id="pin-student",
+            client_request_id="pin-start-001",
+            release_pin=pin,
+            now=NOW,
+        )
+        self.assertEqual(retry, started)
+        self.assertEqual(retry_summary, summary)
+        self.assertEqual(summary.release_id, first_manifest.release_id)
+        self.assertEqual(summary.release_no, first_manifest.release_no)
+        self.assertEqual(summary.release_checksum, first_manifest.checksum)
+
+        second = _bundle_with_course_version(first, content_version=2)
+        second_manifest = _build_v2_manifest(
+            second,
+            release_no=2,
+            parent=first_manifest,
+        )
+        _write_v2_release(self.root, second_manifest, second)
+        _activate(
+            self.root,
+            second_manifest,
+            generation=2,
+            previous_release_id=first_manifest.release_id,
+        )
+
+        old_summary, old_session = service.start_session(
+            first.scenario.scenario_id,
+            user_id="pin-student",
+            client_request_id="pin-start-old-after-publish",
+            release_pin=pin,
+            now=NOW,
+        )
+        new_pin = _release_pin(second_manifest, second)
+        new_summary, new_session = service.start_session(
+            second.scenario.scenario_id,
+            user_id="pin-student",
+            client_request_id="pin-start-new-after-publish",
+            release_pin=new_pin,
+            now=NOW,
+        )
+        self.assertEqual(old_summary.release_id, first_manifest.release_id)
+        self.assertEqual(old_session.course_checksum, first.course.checksum)
+        self.assertEqual(new_summary.release_id, second_manifest.release_id)
+        self.assertEqual(new_session.course_checksum, second.course.checksum)
+
+        with self.assertRaises(DuplicateStartConflict):
+            service.start_session(
+                second.scenario.scenario_id,
+                user_id="pin-student",
+                client_request_id="pin-start-001",
+                release_pin=new_pin,
+                now=NOW,
+            )
+
+    def test_reused_artifacts_in_new_release_cannot_relabel_idempotent_session(self):
+        bundle = _runtime_bundle(build_dayu_bundle())
+        first_manifest = _build_v2_manifest(bundle, release_no=1)
+        _write_v2_release(self.root, first_manifest, bundle)
+        _activate(
+            self.root,
+            first_manifest,
+            generation=1,
+            previous_release_id=None,
+        )
+        engine = create_engine(
+            "sqlite://",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+            future=True,
+        )
+        self.addCleanup(engine.dispose)
+        store = GameRuntimeStore(engine)
+        service = GameRuntimeService(self.repository, store)
+        _, first_session = service.start_session(
+            bundle.scenario.scenario_id,
+            user_id="release-reuse-student",
+            client_request_id="release-reuse-start-001",
+            release_pin=_release_pin(first_manifest, bundle),
+            now=NOW,
+        )
+        stored_identity = store.load_session(
+            first_session.session_id
+        ).envelope.release_identity
+        self.assertIsNotNone(stored_identity)
+        self.assertEqual(stored_identity.release_id, first_manifest.release_id)
+
+        reused_manifest = _build_v2_manifest(
+            bundle,
+            release_no=2,
+            parent=first_manifest,
+        )
+        _write_v2_release(self.root, reused_manifest, bundle)
+        _activate(
+            self.root,
+            reused_manifest,
+            generation=2,
+            previous_release_id=first_manifest.release_id,
+        )
+
+        with self.assertRaises(DuplicateStartConflict):
+            service.start_session(
+                bundle.scenario.scenario_id,
+                user_id="release-reuse-student",
+                client_request_id="release-reuse-start-001",
+                release_pin=_release_pin(reused_manifest, bundle),
+                now=NOW,
+            )
+        summary, second_session = service.start_session(
+            bundle.scenario.scenario_id,
+            user_id="release-reuse-student",
+            client_request_id="release-reuse-start-002",
+            release_pin=_release_pin(reused_manifest, bundle),
+            now=NOW,
+        )
+        self.assertNotEqual(second_session.session_id, first_session.session_id)
+        self.assertEqual(summary.release_id, reused_manifest.release_id)
+
+    def test_valid_but_unreachable_release_pin_fails_without_creating_session(self):
+        bundle = _runtime_bundle(build_dayu_bundle())
+        active_manifest = _build_v2_manifest(bundle, release_no=1)
+        _write_v2_release(self.root, active_manifest, bundle)
+        _activate(
+            self.root,
+            active_manifest,
+            generation=1,
+            previous_release_id=None,
+        )
+        isolated_manifest = _build_v2_manifest(bundle, release_no=9)
+        _write_v2_release(self.root, isolated_manifest, bundle)
+        engine = create_engine(
+            "sqlite://",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+            future=True,
+        )
+        self.addCleanup(engine.dispose)
+        service = GameRuntimeService(self.repository, GameRuntimeStore(engine))
+
+        with self.assertRaises(ScenarioCatalogNotFound):
+            service.start_session(
+                bundle.scenario.scenario_id,
+                user_id="isolated-release-student",
+                client_request_id="isolated-release-start-001",
+                release_pin=_release_pin(isolated_manifest, bundle),
+                now=NOW,
+            )
+        summary, session = service.start_session(
+            bundle.scenario.scenario_id,
+            user_id="isolated-release-student",
+            client_request_id="isolated-release-start-001",
+            release_pin=_release_pin(active_manifest, bundle),
+            now=NOW,
+        )
+        self.assertEqual(summary.release_id, active_manifest.release_id)
+        self.assertEqual(session.course_checksum, bundle.course.checksum)
 
     def test_static_catalog_rejects_published_and_exact_matches_inactive_identity(self):
         bundle = _runtime_bundle(build_shangyang_bundle())
@@ -346,6 +572,23 @@ def _repository(root: Path) -> ScenarioCatalogRepository:
 
 def _runtime_bundle(source: RuntimeBundleV1) -> RuntimeBundleV1:
     return RuntimeBundleV1(course=source.course, scenario=source.scenario)
+
+
+def _release_pin(
+    manifest: CourseReleaseManifestV2,
+    bundle: RuntimeBundleV1,
+) -> ScenarioReleasePinV1:
+    return ScenarioReleasePinV1(
+        release_id=manifest.release_id,
+        release_no=manifest.release_no,
+        release_checksum=manifest.checksum,
+        course_id=bundle.course.course_id,
+        lesson_id=bundle.course.lesson_id,
+        course_content_version=bundle.course.content_version,
+        course_checksum=bundle.course.checksum,
+        scenario_version=bundle.scenario.scenario_version,
+        scenario_checksum=bundle.scenario.checksum,
+    )
 
 
 def _bundle_with_course_version(

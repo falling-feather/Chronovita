@@ -765,3 +765,231 @@ body,
   color: var(--text-dark);
   line-height: 1.7;
 }
+
+/* ========== 发布锁定的历史抉择 ========== */
+.chrono-game-loading {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+}
+.chrono-game-loading > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-mute);
+  font-size: 13px;
+}
+.chrono-game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 20px;
+  align-items: start;
+}
+.chrono-game-main {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--bg-page);
+}
+.chrono-game-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.chrono-game-heading {
+  min-width: 0;
+}
+.chrono-game-heading h2 {
+  display: inline;
+  margin: 0 8px;
+  color: var(--text-dark);
+  font-size: 18px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+.chrono-game-heading > span {
+  color: var(--text-mute);
+  font-size: 12px;
+}
+.chrono-game-objective {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 3px 10px;
+  padding: 12px 14px;
+  border-left: 3px solid #9C2F2F;
+  background: var(--bg-warm-soft);
+}
+.chrono-game-objective span {
+  color: var(--text-mute);
+  font-size: 12px;
+}
+.chrono-game-objective strong {
+  color: var(--text-dark);
+  font-size: 13px;
+}
+.chrono-game-objective p {
+  grid-column: 1 / -1;
+  margin: 3px 0 0;
+  color: var(--text-dark);
+  line-height: 1.7;
+}
+.chrono-game-history {
+  height: 390px;
+  margin: 14px 0;
+  padding: 18px;
+  overflow-y: auto;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  background: #FCFAF6;
+}
+.chrono-game-message {
+  max-width: 88%;
+  margin-bottom: 16px;
+}
+.chrono-game-message p {
+  margin: 0;
+  color: var(--text-dark);
+  font-family: '霞鹜文楷', 'Noto Serif SC', 'KaiTi', serif;
+  font-size: 15px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+.chrono-game-message-player {
+  margin-left: auto;
+  padding: 10px 12px;
+  border-right: 3px solid #2F6B5F;
+  background: #EEF5F1;
+}
+.chrono-game-message-player > span {
+  display: block;
+  margin-bottom: 3px;
+  color: #2F6B5F;
+  font-size: 11px;
+  font-weight: 600;
+}
+.chrono-game-thinking {
+  color: var(--text-mute);
+  font-size: 12px;
+  text-align: center;
+}
+.chrono-game-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.chrono-game-actions .ant-btn {
+  height: auto;
+  min-height: 44px;
+  padding: 8px 12px;
+  text-align: left;
+  white-space: normal;
+}
+.chrono-game-actions .ant-btn > span:first-child {
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  margin-right: 7px;
+  place-items: center;
+  border-radius: 50%;
+  background: #9C2F2F;
+  color: white;
+  font-size: 11px;
+}
+.chrono-game-aside {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 0;
+}
+.chrono-game-progress > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: var(--text-mute);
+  font-size: 12px;
+}
+.chrono-game-progress strong {
+  color: var(--text-dark);
+  font-size: 13px;
+}
+.chrono-game-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  color: #2F6B5F;
+}
+.chrono-game-status > span {
+  font-size: 20px;
+}
+.chrono-game-status div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+.chrono-game-status strong {
+  color: var(--text-dark);
+  font-size: 13px;
+}
+.chrono-game-status div span {
+  color: var(--text-mute);
+  font-size: 11px;
+}
+.chrono-game-keywords h3 {
+  margin: 0 0 8px;
+  color: var(--text-dark);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.chrono-game-keywords > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 2px;
+}
+@media (max-width: 900px) {
+  .chrono-game-layout {
+    grid-template-columns: 1fr;
+  }
+  .chrono-game-aside {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .chrono-game-status {
+    border-top: 0;
+  }
+}
+@media (max-width: 620px) {
+  .chrono-game-main {
+    padding: 14px;
+  }
+  .chrono-game-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .chrono-game-header > .ant-btn {
+    align-self: flex-end;
+  }
+  .chrono-game-history {
+    height: 340px;
+    padding: 14px;
+  }
+  .chrono-game-message {
+    max-width: 96%;
+  }
+  .chrono-game-actions,
+  .chrono-game-aside {
+    grid-template-columns: 1fr;
+  }
+  .chrono-game-status {
+    border-top: 1px solid var(--border-soft);
+  }
+}

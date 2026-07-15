@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, ValidationError
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy.engine import Engine
 
 from services.contracts.v1 import (
@@ -26,6 +26,7 @@ from services.game_runtime import (
     SituationEngineV1,
 )
 from services.game_runtime.catalog import (
+    LoadedScenarioV1,
     ScenarioCatalogNotFound,
     ScenarioCatalogRepository,
 )
@@ -34,6 +35,7 @@ from services.game_runtime.dossier import (
     build_final_dossier,
 )
 from services.game_runtime.store import (
+    GameSessionReleaseIdentityV1,
     GameRuntimeStore,
     StoredDossierIntegrityError,
     StoredDossierNotFound,
@@ -57,6 +59,30 @@ class DuplicateStartConflict(ValueError):
     code = "duplicate_start_conflict"
 
 
+class PublishedScenarioPinRequired(ValueError):
+    code = "published_scenario_pin_required"
+
+
+class ScenarioReleasePinV1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        revalidate_instances="always",
+        str_strip_whitespace=True,
+        strict=True,
+    )
+
+    release_id: ContractId
+    release_no: int = Field(ge=1)
+    release_checksum: Checksum
+    course_id: ContractId
+    lesson_id: ContractId
+    course_content_version: int = Field(ge=1)
+    course_checksum: Checksum
+    scenario_version: int = Field(ge=1)
+    scenario_checksum: Checksum
+
+
 class ScenarioSummaryV1(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -71,6 +97,9 @@ class ScenarioSummaryV1(BaseModel):
     objective: str
     max_turns: int
     audience: Literal["development", "published"]
+    release_id: ContractId | None = None
+    release_no: int | None = None
+    release_checksum: Checksum | None = None
 
 
 class SessionReplayV1(BaseModel):
@@ -131,7 +160,7 @@ class GameRuntimeService:
 
     def list_scenarios(self) -> tuple[ScenarioSummaryV1, ...]:
         return tuple(
-            _summary(item.engine, audience=item.entry.audience)
+            _summary(item)
             for item in self.repository.list_active_records()
         )
 
@@ -141,9 +170,31 @@ class GameRuntimeService:
         *,
         user_id: str,
         client_request_id: str | None = None,
+        release_pin: ScenarioReleasePinV1 | None = None,
         now: datetime | None = None,
     ) -> tuple[ScenarioSummaryV1, GameSessionV1]:
-        loaded = self.repository.get_active_record(scenario_id)
+        if release_pin is None:
+            loaded = self.repository.get_active_record(scenario_id)
+            if loaded.entry.audience == "published":
+                raise PublishedScenarioPinRequired(
+                    "published scenarios require a complete release_pin"
+                )
+        else:
+            checked_pin = ScenarioReleasePinV1.model_validate(
+                release_pin.model_dump(mode="python")
+            )
+            loaded = self.repository.get_published_record(
+                scenario_id,
+                checked_pin.scenario_version,
+                str(checked_pin.scenario_checksum),
+                release_id=checked_pin.release_id,
+                release_no=checked_pin.release_no,
+                release_checksum=str(checked_pin.release_checksum),
+                course_id=checked_pin.course_id,
+                lesson_id=checked_pin.lesson_id,
+                course_content_version=checked_pin.course_content_version,
+                course_checksum=str(checked_pin.course_checksum),
+            )
         engine = loaded.engine
         started_at = now or _utcnow()
         session_id = (
@@ -160,7 +211,11 @@ class GameRuntimeService:
         if session.status == "completed":
             session, dossier = self._build_dossier(engine, session)
         try:
-            self.store.create_session(session, dossier)
+            self.store.create_session(
+                session,
+                dossier,
+                release_identity=_release_identity(loaded),
+            )
         except StoredSessionAlreadyExists as exc:
             if client_request_id is None:
                 raise SessionIntegrityError(str(exc)) from exc
@@ -172,7 +227,8 @@ class GameRuntimeService:
             )
             if (
                 existing_session.user_id != user_id
-                or existing_session.scenario_id != scenario_id
+                or _runtime_identity(existing_session) != _runtime_identity(session)
+                or existing.envelope.release_identity != _release_identity(loaded)
             ):
                 raise DuplicateStartConflict(
                     "client_request_id was already used for another game session"
@@ -183,7 +239,7 @@ class GameRuntimeService:
                     existing_session,
                 )
             return (
-                _summary(existing_engine, audience=loaded.entry.audience),
+                _summary(loaded),
                 existing_session,
             )
         except (
@@ -191,7 +247,7 @@ class GameRuntimeService:
             StoredDossierIntegrityError,
         ) as exc:
             raise SessionIntegrityError(str(exc)) from exc
-        return _summary(engine, audience=loaded.entry.audience), session
+        return _summary(loaded), session
 
     def get_session(self, session_id: str) -> GameSessionV1:
         record = self._load_record(session_id)
@@ -469,10 +525,9 @@ def shutdown_game_runtime() -> None:
 
 
 def _summary(
-    engine: SituationEngineV1,
-    *,
-    audience: Literal["development", "published"],
+    loaded: LoadedScenarioV1,
 ) -> ScenarioSummaryV1:
+    engine = loaded.engine
     scenario = engine.scenario
     return ScenarioSummaryV1(
         scenario_id=scenario.scenario_id,
@@ -485,7 +540,34 @@ def _summary(
         student_role=scenario.student_role,
         objective=scenario.objective,
         max_turns=scenario.max_turns,
-        audience=audience,
+        audience=loaded.entry.audience,
+        release_id=loaded.release_id,
+        release_no=loaded.release_no,
+        release_checksum=loaded.release_checksum,
+    )
+
+
+def _runtime_identity(session: GameSessionV1) -> tuple[str, str, int, str, str, int, str]:
+    return (
+        session.course_id,
+        session.lesson_id,
+        session.course_content_version,
+        str(session.course_checksum),
+        session.scenario_id,
+        session.scenario_version,
+        str(session.scenario_checksum),
+    )
+
+
+def _release_identity(
+    loaded: LoadedScenarioV1,
+) -> GameSessionReleaseIdentityV1 | None:
+    if loaded.entry.audience == "development":
+        return None
+    return GameSessionReleaseIdentityV1(
+        release_id=loaded.release_id,
+        release_no=loaded.release_no,
+        release_checksum=loaded.release_checksum,
     )
 
 
@@ -634,6 +716,8 @@ __all__ = [
     "DuplicateStartConflict",
     "GameRuntimeService",
     "GameSessionNotFound",
+    "PublishedScenarioPinRequired",
+    "ScenarioReleasePinV1",
     "ScenarioSummaryV1",
     "SessionReplayV1",
     "TeacherSessionSummaryV1",

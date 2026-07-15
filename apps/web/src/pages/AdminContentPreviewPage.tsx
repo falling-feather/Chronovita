@@ -44,6 +44,8 @@ function toLesson(item: LessonContentPackage): Lesson {
     sealed_at: item.sealed_at || null,
     sealed_by: item.sealed_by || null,
     content_checksum: item.checksum || null,
+    scenario_refs: [],
+    primary_scenario_id: null,
   };
 }
 

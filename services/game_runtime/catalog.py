@@ -131,6 +131,24 @@ class ScenarioCatalogNotFound(ScenarioFileError):
 class LoadedScenarioV1:
     entry: ScenarioCatalogEntryV1
     engine: SituationEngineV1
+    release_id: str | None = None
+    release_no: int | None = None
+    release_checksum: str | None = None
+
+    def __post_init__(self) -> None:
+        release_identity = (
+            self.release_id,
+            self.release_no,
+            self.release_checksum,
+        )
+        if self.entry.audience == "published" and any(
+            item is None for item in release_identity
+        ):
+            raise ValueError("published scenarios require a complete release identity")
+        if self.entry.audience == "development" and any(
+            item is not None for item in release_identity
+        ):
+            raise ValueError("development scenarios cannot carry a release identity")
 
 
 @dataclass(frozen=True)
@@ -260,7 +278,11 @@ class ScenarioCatalogRepository:
                     ):
                         continue
                     matches.extend(
-                        self._load_release_item_records(item, (descriptor,))
+                        self._load_release_item_records(
+                            manifest,
+                            item,
+                            (descriptor,),
+                        )
                     )
 
         unique_matches = {
@@ -275,6 +297,80 @@ class ScenarioCatalogRepository:
                 f"pinned scenario identity is ambiguous: {scenario_id} v{scenario_version}"
             )
         return next(iter(unique_matches.values())).engine
+
+    def get_published_record(
+        self,
+        scenario_id: str,
+        scenario_version: int,
+        scenario_checksum: str,
+        *,
+        release_id: str,
+        release_no: int,
+        release_checksum: str,
+        course_id: str,
+        lesson_id: str,
+        course_content_version: int,
+        course_checksum: str,
+    ) -> LoadedScenarioV1:
+        captured_releases = self._capture_active_releases(course_id=course_id)
+        matches: list[LoadedScenarioV1] = []
+        for manifest in self._reachable_release_history(captured_releases):
+            if not isinstance(manifest, CourseReleaseManifestV2):
+                continue
+            if (
+                manifest.course_id,
+                manifest.release_id,
+                manifest.release_no,
+                manifest.checksum,
+            ) != (
+                course_id,
+                release_id,
+                release_no,
+                release_checksum,
+            ):
+                continue
+            for item in manifest.items:
+                for descriptor in item.scenarios:
+                    entry = self._release_entry(item, descriptor)
+                    if not _matches_exact_identity(
+                        entry,
+                        scenario_id=scenario_id,
+                        scenario_version=scenario_version,
+                        scenario_checksum=scenario_checksum,
+                        course_id=course_id,
+                        lesson_id=lesson_id,
+                        course_content_version=course_content_version,
+                        course_checksum=course_checksum,
+                    ):
+                        continue
+                    matches.extend(
+                        self._load_release_item_records(
+                            manifest,
+                            item,
+                            (descriptor,),
+                        )
+                    )
+
+        unique_matches = {
+            (
+                record.release_id,
+                record.release_no,
+                record.release_checksum,
+                *_complete_identity(record.entry),
+            ): record
+            for record in matches
+        }
+        if not unique_matches:
+            raise ScenarioCatalogNotFound(
+                "published scenario release pin was not found or is not reachable: "
+                f"{scenario_id} v{scenario_version}"
+            )
+        if len(unique_matches) != 1:
+            raise ScenarioIntegrityError(
+                "published scenario release pin is ambiguous: "
+                f"{scenario_id} v{scenario_version}"
+            )
+        return next(iter(unique_matches.values()))
 
     def _capture_active_releases(
         self,
@@ -422,11 +518,14 @@ class ScenarioCatalogRepository:
     ) -> tuple[LoadedScenarioV1, ...]:
         records: list[LoadedScenarioV1] = []
         for item in manifest.items:
-            records.extend(self._load_release_item_records(item, item.scenarios))
+            records.extend(
+                self._load_release_item_records(manifest, item, item.scenarios)
+            )
         return tuple(records)
 
     def _load_release_item_records(
         self,
+        manifest: CourseReleaseManifestV2,
         item: CourseReleaseItemV2,
         scenario_descriptors: tuple[RuntimeArtifactDescriptorV1, ...],
     ) -> tuple[LoadedScenarioV1, ...]:
@@ -472,6 +571,9 @@ class ScenarioCatalogRepository:
                 LoadedScenarioV1(
                     entry=self._release_entry(item, scenario_descriptor),
                     engine=SituationEngineV1(bundle.course, bundle.scenario),
+                    release_id=manifest.release_id,
+                    release_no=manifest.release_no,
+                    release_checksum=str(manifest.checksum),
                 )
             )
         return tuple(records)

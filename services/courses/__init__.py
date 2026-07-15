@@ -61,6 +61,13 @@ class LessonSummary(BaseModel):
     state: str = "open"  # open | done | lock
 
 
+class LessonScenarioRef(BaseModel):
+    scenario_id: str
+    scenario_version: int
+    checksum: str
+    primary: bool = False
+
+
 class Lesson(BaseModel):
     id: str
     course_id: str
@@ -91,6 +98,8 @@ class Lesson(BaseModel):
     release_id: str | None = None
     release_no: int | None = None
     release_checksum: str | None = None
+    scenario_refs: list[LessonScenarioRef] = Field(default_factory=list)
+    primary_scenario_id: str | None = None
 
 
 class Course(BaseModel):
@@ -3033,6 +3042,16 @@ def _lesson_from_content(snapshot: PublishedCourseSnapshot) -> Lesson:
     legacy_materials = {item.kind: item for item in pkg.compatibility.legacy_materials}
     saga_material = legacy_materials.get("saga")
     sandbox_material = legacy_materials.get("sandbox")
+    scenario_refs = [
+        LessonScenarioRef(
+            scenario_id=item.scenario_id,
+            scenario_version=item.scenario_version,
+            checksum=str(item.checksum),
+            primary=item.primary,
+        )
+        for item in pkg.scenario_refs
+        if item.checksum is not None
+    ] if snapshot.release_schema_version == "course-release/v2" else []
     return _project_content_model(
         Lesson,
         f"lesson:{pkg.lesson_id}",
@@ -3078,4 +3097,9 @@ def _lesson_from_content(snapshot: PublishedCourseSnapshot) -> Lesson:
         release_id=snapshot.release_id,
         release_no=snapshot.release_no,
         release_checksum=snapshot.release_checksum,
+        scenario_refs=scenario_refs,
+        primary_scenario_id=next(
+            (item.scenario_id for item in scenario_refs if item.primary),
+            None,
+        ),
     )

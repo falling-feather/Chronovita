@@ -294,6 +294,10 @@ class ActiveReleasePointer(LifecycleModel):
 
 class PublishedCourseSnapshot(LifecycleModel):
     package: CoursePackageV1
+    release_schema_version: Literal[
+        "course-release/v1",
+        "course-release/v2",
+    ] | None = None
     release_id: str | None = None
     release_no: int | None = Field(default=None, ge=1)
     release_checksum: Checksum | None = None
@@ -305,6 +309,11 @@ class PublishedCourseSnapshot(LifecycleModel):
             item is not None for item in release_identity
         ):
             raise ValueError("release id, number and checksum must be stored together")
+        if all(item is None for item in release_identity):
+            if self.release_schema_version is not None:
+                raise ValueError("release schema version requires a release identity")
+        elif self.release_schema_version is None:
+            raise ValueError("published snapshots require a release schema version")
         return self
 
 
@@ -994,6 +1003,7 @@ def load_published_snapshots() -> list[PublishedCourseSnapshot]:
                 snapshots.append(
                     PublishedCourseSnapshot(
                         package=package,
+                        release_schema_version=manifest.schema_version,
                         release_id=manifest.release_id,
                         release_no=manifest.release_no,
                         release_checksum=manifest.checksum,

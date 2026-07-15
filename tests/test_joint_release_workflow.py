@@ -18,6 +18,7 @@ from services.contracts.v1 import (
 )
 from services.game_runtime import MAX_CONTRACT_FILE_BYTES
 from services.game_runtime.catalog import ScenarioCatalogRepository
+from services.courses import get_lesson
 
 
 class JointReleaseWorkflowTests(unittest.TestCase):
@@ -313,7 +314,13 @@ class JointReleaseWorkflowTests(unittest.TestCase):
         )
 
         self.assertEqual(workflow.get_current_release(sealed_v1.course_id).schema_version, "course-release/v1")
-        self.assertEqual(workflow.load_published_packages()[0].body[0], "Legacy body")
+        snapshots = workflow.load_published_snapshots()
+        self.assertEqual(snapshots[0].release_schema_version, "course-release/v1")
+        self.assertEqual(snapshots[0].package.body[0], "Legacy body")
+        legacy_lesson = get_lesson(sealed_v1.lesson_id)
+        self.assertEqual(legacy_lesson.release_id, legacy.release_id)
+        self.assertEqual(legacy_lesson.scenario_refs, [])
+        self.assertIsNone(legacy_lesson.primary_scenario_id)
 
         sealed_v2 = self._seal_next_version(sealed_v1.lesson_id, "Upgraded body")
         upgraded, _ = workflow.publish_version(
