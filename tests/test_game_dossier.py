@@ -45,6 +45,13 @@ DAYU_ACTIONS = [
     "allocate-food",
     "open-channels",
 ]
+DAYU_ACTION_LABELS = [
+    "勘察地势",
+    "向部族解释计划",
+    "开挖疏导线",
+    "分配粮食保障",
+    "开挖疏导线",
+]
 
 
 class GameDossierApiTests(unittest.TestCase):
@@ -106,7 +113,7 @@ class GameDossierApiTests(unittest.TestCase):
             self.assertEqual(len(dossier.state_trajectory), 6)
             self.assertEqual(
                 [item.choice for item in dossier.key_choices],
-                DAYU_ACTIONS,
+                DAYU_ACTION_LABELS,
             )
             self.assertEqual(dossier.reflection_notes, [])
             self.assertEqual(dossier.knowledge_edges, [])
@@ -299,7 +306,6 @@ class GameDossierApiTests(unittest.TestCase):
             json={
                 "client_action_id": f"dossier-action-{revision:03d}",
                 "action_id": action_id,
-                "raw_input": action_id,
                 "expected_revision": revision,
             },
         )

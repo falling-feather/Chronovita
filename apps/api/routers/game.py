@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Literal, NoReturn
 
 from fastapi import APIRouter, HTTPException
@@ -19,7 +18,6 @@ from services.game_runtime import (
     DuplicateActionConflict,
     GameRuntimeError,
     RevisionConflict,
-    RuntimeCommandV1,
     ScenarioDefinitionError,
     ScenarioFileError,
     ScenarioIntegrityError,
@@ -31,6 +29,7 @@ from services.game_runtime.catalog import ScenarioCatalogNotFound
 from services.game_runtime.service import (
     DossierNotReady,
     DuplicateStartConflict,
+    FreeInputResultV1,
     GameSessionNotFound,
     PublishedScenarioPinRequired,
     ScenarioReleasePinV1,
@@ -57,10 +56,15 @@ class GameTurnRequest(BaseModel):
 
     client_action_id: ContractId
     action_id: ContractId
+    expected_revision: int = Field(ge=1)
+
+
+class GameFreeInputRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    client_action_id: ContractId
     raw_input: PlayerInput
     expected_revision: int = Field(ge=1)
-    action_source: Literal["fixed", "free_input", "fallback"] = "fixed"
-    classification_confidence: float | None = Field(default=None, ge=0, le=1)
 
 
 class GameScenarioListResponse(BaseModel):
@@ -165,17 +169,33 @@ async def apply_game_turn(
     session_id: str,
     request: GameTurnRequest,
 ) -> AdvanceResultV1:
-    command = RuntimeCommandV1(
-        client_action_id=request.client_action_id,
-        action_id=request.action_id,
-        raw_input=request.raw_input,
-        expected_revision=request.expected_revision,
-        action_source=request.action_source,
-        classification_confidence=request.classification_confidence,
-        occurred_at=datetime.now(timezone.utc),
-    )
     try:
-        result = get_game_runtime().apply_action(session_id, command)
+        result = get_game_runtime().apply_fixed_action(
+            session_id,
+            client_action_id=request.client_action_id,
+            action_id=request.action_id,
+            expected_revision=request.expected_revision,
+        )
+    except Exception as exc:
+        _raise_runtime_error(exc)
+    return result
+
+
+@router.post(
+    "/sessions/{session_id}/free-input",
+    response_model=FreeInputResultV1,
+)
+async def apply_game_free_input(
+    session_id: str,
+    request: GameFreeInputRequest,
+) -> FreeInputResultV1:
+    try:
+        result = await get_game_runtime().apply_free_input(
+            session_id,
+            client_action_id=request.client_action_id,
+            raw_input=request.raw_input,
+            expected_revision=request.expected_revision,
+        )
     except Exception as exc:
         _raise_runtime_error(exc)
     return result

@@ -123,7 +123,7 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
     if (stageRef.current) stageRef.current.scrollTop = stageRef.current.scrollHeight;
   }, [session?.history.length]);
 
-  const chooseAction = async (actionId: string, label: string) => {
+  const chooseAction = async (actionId: string) => {
     if (!session || session.status !== 'active' || acting) return;
     setActing(true);
     setError('');
@@ -131,9 +131,7 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
       const result = await api.gameTurn(session.session_id, {
         client_action_id: createRequestId('turn'),
         action_id: actionId,
-        raw_input: label,
         expected_revision: session.revision,
-        action_source: 'fixed',
       });
       assertSessionIdentity(result.session, binding);
       setSession(result.session);
@@ -234,7 +232,7 @@ function PinnedGamePlayer({ lesson, binding }: { lesson: Lesson; binding: GameBi
               <Button
                 key={choice.actionId}
                 disabled={acting}
-                onClick={() => void chooseAction(choice.actionId, choice.label)}
+                onClick={() => void chooseAction(choice.actionId)}
               >
                 <span>{index + 1}</span>
                 {choice.label}

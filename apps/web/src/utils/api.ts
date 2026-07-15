@@ -319,6 +319,17 @@ export interface GameTurnResponse {
   turn: { turn_id: string; narrative: string; classified_action_id: string };
   action_feedback: string; triggered_event_ids: string[]; ending_id: string | null;
 }
+export interface GameAvailableAction {
+  action_id: string; label: string; description: string;
+}
+export interface GameFreeInputResponse {
+  schema_version: 'free-input-result/v1';
+  kind: 'advanced' | 'clarification_required' | 'rejected' | 'provider_unavailable';
+  reason_code: string | null;
+  message: string;
+  available_actions: GameAvailableAction[];
+  result: GameTurnResponse | null;
+}
 
 export const api = {
   eras: () => jsonFetch<{ items: Era[] }>('/courses/eras'),
@@ -341,11 +352,17 @@ export const api = {
   gameTurn: (
     sessionId: string,
     body: {
-      client_action_id: string; action_id: string; raw_input: string;
-      expected_revision: number; action_source?: 'fixed';
+      client_action_id: string; action_id: string; expected_revision: number;
     },
   ) => jsonFetch<GameTurnResponse>(
     `/practice/game/sessions/${encodeURIComponent(sessionId)}/turns`,
+    { method: 'POST', body: JSON.stringify(body) },
+  ),
+  gameFreeInput: (
+    sessionId: string,
+    body: { client_action_id: string; raw_input: string; expected_revision: number },
+  ) => jsonFetch<GameFreeInputResponse>(
+    `/practice/game/sessions/${encodeURIComponent(sessionId)}/free-input`,
     { method: 'POST', body: JSON.stringify(body) },
   ),
   llmInfo: () => jsonFetch<{ provider: string; ask_provider?: string }>('/practice/llm/info'),

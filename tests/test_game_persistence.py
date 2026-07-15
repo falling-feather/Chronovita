@@ -73,7 +73,6 @@ class GamePersistenceApiTests(unittest.TestCase):
                 json={
                     "client_action_id": "restart-action-001",
                     "action_id": "survey-terrain",
-                    "raw_input": "survey terrain",
                     "expected_revision": 1,
                 },
             )
@@ -92,7 +91,6 @@ class GamePersistenceApiTests(unittest.TestCase):
                 json={
                     "client_action_id": "restart-action-002",
                     "action_id": "explain-plan",
-                    "raw_input": "explain the plan",
                     "expected_revision": 2,
                 },
             )
@@ -154,7 +152,6 @@ class GamePersistenceApiTests(unittest.TestCase):
                 json={
                     "client_action_id": "replay-tamper-001",
                     "action_id": "survey-terrain",
-                    "raw_input": "survey terrain",
                     "expected_revision": 1,
                 },
             )
@@ -235,7 +232,6 @@ class GamePersistenceApiTests(unittest.TestCase):
                 json={
                     "client_action_id": "legacy-envelope-action-001",
                     "action_id": "survey-terrain",
-                    "raw_input": "survey terrain",
                     "expected_revision": 1,
                 },
             )

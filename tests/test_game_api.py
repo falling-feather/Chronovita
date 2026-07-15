@@ -94,19 +94,18 @@ class GameApiTests(unittest.TestCase):
         self.assertIsNone(started.json()["scenario"]["release_checksum"])
 
         specs = [
-            ("survey-terrain", "先勘察地势和河道"),
-            ("explain-plan", "向各部族解释疏导计划"),
-            ("open-channels", "按勘察结果开挖疏导线"),
-            ("allocate-food", "分配粮食，保障参与工程的民众"),
-            ("open-channels", "扩大已经见效的疏导工程"),
+            "survey-terrain",
+            "explain-plan",
+            "open-channels",
+            "allocate-food",
+            "open-channels",
         ]
-        for revision, (action_id, raw_input) in enumerate(specs, start=1):
+        for revision, action_id in enumerate(specs, start=1):
             response = self.client.post(
                 f"/api/v1/practice/game/sessions/{session_id}/turns",
                 json={
                     "client_action_id": f"api-action-{revision:03d}",
                     "action_id": action_id,
-                    "raw_input": raw_input,
                     "expected_revision": revision,
                 },
             )
@@ -127,7 +126,6 @@ class GameApiTests(unittest.TestCase):
             json={
                 "client_action_id": "api-illegal-state",
                 "action_id": "reinforce-dam",
-                "raw_input": "抢修堤坝",
                 "expected_revision": session["revision"],
                 "state": {"flood_risk": 1},
             },
@@ -146,7 +144,6 @@ class GameApiTests(unittest.TestCase):
         request = {
             "client_action_id": "api-idempotent-001",
             "action_id": "survey-terrain",
-            "raw_input": "先勘察地势和河道",
             "expected_revision": 1,
         }
         first = self.client.post(
@@ -166,7 +163,6 @@ class GameApiTests(unittest.TestCase):
             json={
                 "client_action_id": "api-stale-001",
                 "action_id": "reinforce-dam",
-                "raw_input": "抢修堤坝",
                 "expected_revision": 1,
             },
         )
@@ -178,7 +174,6 @@ class GameApiTests(unittest.TestCase):
             json={
                 **request,
                 "action_id": "reinforce-dam",
-                "raw_input": "抢修堤坝",
             },
         )
         self.assertEqual(conflicting_retry.status_code, 409, conflicting_retry.text)
@@ -214,6 +209,101 @@ class GameApiTests(unittest.TestCase):
             "/api/v1/practice/game/sessions/session-does-not-exist"
         )
         self.assertEqual(missing.status_code, 404)
+
+    def test_fixed_turn_authority_and_free_input_contract_are_separate(self):
+        started = self.client.post(
+            "/api/v1/practice/game/sessions",
+            json={
+                "scenario_id": "scenario-dayu-flood-control",
+                "client_request_id": "api-start-free-input-001",
+            },
+        ).json()["session"]
+        session_id = started["session_id"]
+
+        client_metadata = self.client.post(
+            f"/api/v1/practice/game/sessions/{session_id}/turns",
+            json={
+                "client_action_id": "api-fixed-metadata-001",
+                "action_id": "survey-terrain",
+                "raw_input": "客户端伪造的历史文本",
+                "action_source": "free_input",
+                "classification_confidence": 0.1,
+                "expected_revision": 1,
+            },
+        )
+        self.assertEqual(client_metadata.status_code, 422, client_metadata.text)
+
+        free_input_with_action = self.client.post(
+            f"/api/v1/practice/game/sessions/{session_id}/free-input",
+            json={
+                "client_action_id": "api-free-extra-001",
+                "raw_input": "勘察河道",
+                "action_id": "survey-terrain",
+                "expected_revision": 1,
+            },
+        )
+        self.assertEqual(
+            free_input_with_action.status_code,
+            422,
+            free_input_with_action.text,
+        )
+
+        request = {
+            "client_action_id": "api-free-exact-001",
+            "raw_input": "勘察河道",
+            "expected_revision": 1,
+        }
+        first = self.client.post(
+            f"/api/v1/practice/game/sessions/{session_id}/free-input",
+            json=request,
+        )
+        retry = self.client.post(
+            f"/api/v1/practice/game/sessions/{session_id}/free-input",
+            json=request,
+        )
+        self.assertEqual(first.status_code, 200, first.text)
+        self.assertEqual(retry.status_code, 200, retry.text)
+        self.assertEqual(first.json()["kind"], "advanced")
+        self.assertEqual(first.json(), retry.json())
+        self.assertEqual(
+            first.json()["result"]["turn"]["action_source"],
+            "free_input",
+        )
+        self.assertEqual(
+            first.json()["result"]["turn"]["raw_input"],
+            request["raw_input"],
+        )
+        self.assertEqual(
+            first.json()["result"]["turn"]["turn_id"],
+            retry.json()["result"]["turn"]["turn_id"],
+        )
+
+        fallback_session = self.client.post(
+            "/api/v1/practice/game/sessions",
+            json={
+                "scenario_id": "scenario-dayu-flood-control",
+                "client_request_id": "api-start-free-fallback-001",
+            },
+        ).json()["session"]
+        fallback = self.client.post(
+            f"/api/v1/practice/game/sessions/{fallback_session['session_id']}/free-input",
+            json={
+                "client_action_id": "api-free-fallback-001",
+                "raw_input": "先研究一下当前的复杂局势",
+                "expected_revision": 1,
+            },
+        )
+        self.assertEqual(fallback.status_code, 200, fallback.text)
+        self.assertEqual(fallback.json()["kind"], "provider_unavailable")
+        self.assertEqual(
+            fallback.json()["reason_code"],
+            "fact_context_unavailable",
+        )
+        fetched = self.client.get(
+            f"/api/v1/practice/game/sessions/{fallback_session['session_id']}"
+        )
+        self.assertEqual(fetched.json()["revision"], 1)
+        self.assertEqual(fetched.json()["turns"], [])
 
     def test_start_request_id_is_idempotent_and_cannot_be_reused(self):
         request = {

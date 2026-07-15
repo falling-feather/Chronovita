@@ -5,11 +5,19 @@ import threading
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Protocol
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, ValidationError
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    model_validator,
+)
 from sqlalchemy.engine import Engine
 
+from services.ai.contracts import ActionClassificationV1, ClassificationReason
 from services.contracts.v1 import (
     Checksum,
     ContractId,
@@ -18,9 +26,13 @@ from services.contracts.v1 import (
     GameSessionV1,
     RuntimeBundleV1,
     StateSnapshotV1,
+    TurnV1,
 )
 from services.game_runtime import (
     AdvanceResultV1,
+    AvailableActionV1,
+    DuplicateActionConflict,
+    RevisionConflict,
     RuntimeCommandV1,
     SessionIntegrityError,
     SituationEngineV1,
@@ -61,6 +73,16 @@ class DuplicateStartConflict(ValueError):
 
 class PublishedScenarioPinRequired(ValueError):
     code = "published_scenario_pin_required"
+
+
+class ActionClassifierProtocol(Protocol):
+    async def classify(
+        self,
+        engine: SituationEngineV1,
+        session: GameSessionV1,
+        raw_input: str,
+    ) -> ActionClassificationV1:
+        ...
 
 
 class ScenarioReleasePinV1(BaseModel):
@@ -113,6 +135,46 @@ class SessionReplayV1(BaseModel):
     session: GameSessionV1
 
 
+class FreeInputResultV1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        revalidate_instances="always",
+        strict=True,
+        str_strip_whitespace=True,
+    )
+
+    schema_version: Literal["free-input-result/v1"] = "free-input-result/v1"
+    kind: Literal[
+        "advanced",
+        "clarification_required",
+        "rejected",
+        "provider_unavailable",
+    ]
+    reason_code: ClassificationReason | None = None
+    message: str = Field(min_length=1, max_length=240)
+    available_actions: tuple[AvailableActionV1, ...] = ()
+    result: AdvanceResultV1 | None = None
+
+    @model_validator(mode="after")
+    def validate_result_shape(self) -> "FreeInputResultV1":
+        if self.kind == "advanced":
+            if self.result is None or self.reason_code is not None:
+                raise ValueError(
+                    "advanced free input requires a result and no reason_code"
+                )
+        elif self.result is not None or self.reason_code is None:
+            raise ValueError(
+                "non-advanced free input requires a reason_code and no result"
+            )
+        return self
+
+
+_FREE_INPUT_ADVANCED_MESSAGE = (
+    "已按你的表述执行，并由规则引擎完成本回合结算。"
+)
+
+
 class TeacherSessionSummaryV1(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -153,9 +215,11 @@ class GameRuntimeService:
         self,
         repository: ScenarioCatalogRepository,
         store: GameRuntimeStore,
+        classifier: ActionClassifierProtocol | None = None,
     ) -> None:
         self.repository = repository
         self.store = store
+        self._classifier = classifier
         self._lock = threading.RLock()
 
     def list_scenarios(self) -> tuple[ScenarioSummaryV1, ...]:
@@ -338,6 +402,196 @@ class GameRuntimeService:
         engine = self._engine_for(session)
         return _teacher_summary(engine, session, dossier)
 
+    def apply_fixed_action(
+        self,
+        session_id: str,
+        *,
+        client_action_id: str,
+        action_id: str,
+        expected_revision: int,
+        occurred_at: datetime | None = None,
+    ) -> AdvanceResultV1:
+        """Apply a fixed choice without trusting client-authored turn metadata."""
+
+        with self._lock:
+            record = self._load_record(session_id)
+            engine = self._engine_for(record.session)
+            session = self._validated_session(engine, record.session)
+            self._validate_linked_dossier(engine, session)
+            existing = _turn_for_client_action(session, client_action_id)
+            if existing is not None:
+                if (
+                    existing.action_source != "fixed"
+                    or existing.classified_action_id != action_id
+                    or existing.turn_no != expected_revision
+                ):
+                    raise DuplicateActionConflict(
+                        f"client_action_id {client_action_id} was already used"
+                    )
+                return _existing_advance_result(engine, session, existing)
+
+            engine.resolve_action_id(action_id, action_id)
+            label = next(
+                item.label
+                for item in engine.scenario.action_rules
+                if item.action_id == action_id
+            )
+            event_time = occurred_at or max(_utcnow(), session.updated_at)
+            return self.apply_action(
+                session_id,
+                RuntimeCommandV1(
+                    client_action_id=client_action_id,
+                    action_id=action_id,
+                    raw_input=label,
+                    action_source="fixed",
+                    classification_confidence=None,
+                    expected_revision=expected_revision,
+                    occurred_at=event_time,
+                ),
+            )
+
+    async def apply_free_input(
+        self,
+        session_id: str,
+        *,
+        client_action_id: str,
+        raw_input: str,
+        expected_revision: int,
+        occurred_at: datetime | None = None,
+    ) -> FreeInputResultV1:
+        """Classify outside the state lock, then settle against the same revision."""
+
+        with self._lock:
+            record = self._load_record(session_id)
+            engine = self._engine_for(record.session)
+            session = self._validated_session(engine, record.session)
+            self._validate_linked_dossier(engine, session)
+            existing = _turn_for_client_action(session, client_action_id)
+            if existing is not None:
+                return _existing_free_input_result(
+                    engine,
+                    session,
+                    existing,
+                    raw_input=raw_input,
+                    expected_revision=expected_revision,
+                )
+            if expected_revision != session.revision:
+                raise RevisionConflict(
+                    f"expected revision {expected_revision}, current revision is {session.revision}"
+                )
+            snapshot_actions = engine.available_actions(session)
+            snapshot_action_ids = tuple(
+                item.action_id for item in snapshot_actions
+            )
+            classifier = self._get_classifier()
+
+        try:
+            unchecked = await classifier.classify(engine, session, raw_input)
+        except Exception:
+            classification = _classification_unavailable(
+                snapshot_action_ids,
+                reason_code="provider_unavailable",
+            )
+        else:
+            try:
+                classification = ActionClassificationV1.model_validate(
+                    unchecked.model_dump(mode="python"),
+                    strict=True,
+                )
+                if (
+                    tuple(classification.available_action_ids)
+                    != snapshot_action_ids
+                ):
+                    raise ValueError(
+                        "classifier action context does not match the pinned revision"
+                    )
+            except Exception:
+                classification = _classification_unavailable(
+                    snapshot_action_ids,
+                    reason_code="classifier_context_invalid",
+                )
+
+        with self._lock:
+            latest_record = self._load_record(session_id)
+            latest_engine = self._engine_for(latest_record.session)
+            latest_session = self._validated_session(
+                latest_engine,
+                latest_record.session,
+            )
+            self._validate_linked_dossier(
+                latest_engine,
+                latest_session,
+            )
+            existing = _turn_for_client_action(
+                latest_session,
+                client_action_id,
+            )
+            if existing is not None:
+                return _existing_free_input_result(
+                    latest_engine,
+                    latest_session,
+                    existing,
+                    raw_input=raw_input,
+                    expected_revision=expected_revision,
+                )
+            if latest_session.revision != expected_revision:
+                raise RevisionConflict(
+                    f"expected revision {expected_revision}, current revision is {latest_session.revision}"
+                )
+            if classification.kind != "matched":
+                return _free_input_no_write_result(
+                    classification,
+                    latest_engine.available_actions(latest_session),
+                )
+
+            event_time = occurred_at or max(
+                _utcnow(),
+                latest_session.updated_at,
+            )
+            command = RuntimeCommandV1(
+                client_action_id=client_action_id,
+                action_id=classification.action_id,
+                raw_input=raw_input,
+                action_source="free_input",
+                classification_confidence=classification.confidence,
+                expected_revision=expected_revision,
+                occurred_at=event_time,
+            )
+            try:
+                result = self.apply_action(session_id, command)
+            except DuplicateActionConflict:
+                raced_record = self._load_record(session_id)
+                raced_engine = self._engine_for(raced_record.session)
+                raced_session = self._validated_session(
+                    raced_engine,
+                    raced_record.session,
+                )
+                self._validate_linked_dossier(
+                    raced_engine,
+                    raced_session,
+                )
+                raced_turn = _turn_for_client_action(
+                    raced_session,
+                    client_action_id,
+                )
+                if raced_turn is None:
+                    raise
+                return _existing_free_input_result(
+                    raced_engine,
+                    raced_session,
+                    raced_turn,
+                    raw_input=raw_input,
+                    expected_revision=expected_revision,
+                )
+            return FreeInputResultV1(
+                kind="advanced",
+                message=_FREE_INPUT_ADVANCED_MESSAGE,
+                available_actions=latest_engine.available_actions(
+                    result.session
+                ),
+                result=result,
+            )
+
     def apply_action(
         self,
         session_id: str,
@@ -394,6 +648,22 @@ class GameRuntimeService:
             raise GameSessionNotFound(str(exc)) from exc
         except StoredSessionIntegrityError as exc:
             raise SessionIntegrityError(str(exc)) from exc
+
+    def _get_classifier(self) -> ActionClassifierProtocol:
+        with self._lock:
+            if self._classifier is None:
+                from services.ai import ActionClassifierV1
+
+                self._classifier = ActionClassifierV1()
+            return self._classifier
+
+    def _validate_linked_dossier(
+        self,
+        engine: SituationEngineV1,
+        session: GameSessionV1,
+    ) -> None:
+        if session.dossier_id is not None:
+            self._load_validated_dossier(engine, session)
 
     def _engine_for(self, session: GameSessionV1) -> SituationEngineV1:
         try:
@@ -491,6 +761,7 @@ def configure_game_runtime(
     catalog_path: str | Path,
     engine: Engine | None = None,
     store: GameRuntimeStore | None = None,
+    classifier: ActionClassifierProtocol | None = None,
 ) -> GameRuntimeService:
     if store is None:
         if engine is None:
@@ -504,6 +775,7 @@ def configure_game_runtime(
             catalog_path=catalog_path,
         ),
         store,
+        classifier,
     )
     global _SERVICE
     with _SERVICE_LOCK:
@@ -707,13 +979,126 @@ def _teacher_summary(
     )
 
 
+def _turn_for_client_action(
+    session: GameSessionV1,
+    client_action_id: str,
+) -> TurnV1 | None:
+    return next(
+        (
+            turn
+            for turn in session.turns
+            if turn.client_action_id == client_action_id
+        ),
+        None,
+    )
+
+
+def _existing_advance_result(
+    engine: SituationEngineV1,
+    session: GameSessionV1,
+    turn: TurnV1,
+) -> AdvanceResultV1:
+    return engine.apply_action(
+        session,
+        RuntimeCommandV1(
+            client_action_id=turn.client_action_id,
+            action_id=turn.classified_action_id,
+            raw_input=turn.raw_input,
+            action_source=turn.action_source,
+            classification_confidence=turn.classification_confidence,
+            expected_revision=turn.turn_no,
+            occurred_at=turn.created_at,
+        ),
+    )
+
+
+def _existing_free_input_result(
+    engine: SituationEngineV1,
+    session: GameSessionV1,
+    turn: TurnV1,
+    *,
+    raw_input: str,
+    expected_revision: int,
+) -> FreeInputResultV1:
+    if (
+        turn.action_source != "free_input"
+        or turn.raw_input != raw_input
+        or turn.turn_no != expected_revision
+    ):
+        raise DuplicateActionConflict(
+            f"client_action_id {turn.client_action_id} was already used"
+        )
+    result = _existing_advance_result(engine, session, turn)
+    return FreeInputResultV1(
+        kind="advanced",
+        message=_FREE_INPUT_ADVANCED_MESSAGE,
+        available_actions=engine.available_actions(result.session),
+        result=result,
+    )
+
+
+def _classification_unavailable(
+    available_action_ids: tuple[str, ...],
+    *,
+    reason_code: Literal[
+        "classifier_context_invalid",
+        "provider_unavailable",
+    ],
+) -> ActionClassificationV1:
+    return ActionClassificationV1.model_validate(
+        {
+            "kind": "provider_unavailable",
+            "source": "fallback",
+            "reason_code": reason_code,
+            "available_action_ids": list(available_action_ids),
+        },
+        strict=True,
+    )
+
+
+def _free_input_no_write_result(
+    classification: ActionClassificationV1,
+    available_actions: tuple[AvailableActionV1, ...],
+) -> FreeInputResultV1:
+    if classification.kind == "matched":
+        raise SessionIntegrityError(
+            "matched classification cannot produce a no-write result"
+        )
+    if classification.kind == "clarification_required":
+        message = "我还不能确定你的意思，请换一种说法，或直接选择下方行动。"
+    elif classification.kind == "provider_unavailable":
+        message = "自由输入暂时不可用，请使用下方固定行动继续。"
+    elif classification.reason_code == "prompt_injection":
+        message = "这段输入包含无法作为历史行动处理的控制指令。"
+    elif classification.reason_code == "anachronism":
+        message = "这项行动不属于当前历史情境，请依据当时条件重新选择。"
+    elif classification.reason_code == "fact_conflict":
+        message = "这项行动与本关卡已审校的史实边界冲突，请重新表述。"
+    elif classification.reason_code == "out_of_scope":
+        message = "这项行动超出当前关卡范围，请围绕本回合目标重新表述。"
+    elif classification.reason_code == "action_unavailable":
+        message = "这项行动当前不可执行，请从下方可用行动中选择。"
+    elif classification.reason_code == "session_not_active":
+        message = "当前关卡已结束，不能再提交新的行动。"
+    else:
+        message = "这段输入目前不能作为有效行动，请调整后重试。"
+    return FreeInputResultV1(
+        kind=classification.kind,
+        reason_code=classification.reason_code,
+        message=message,
+        available_actions=available_actions,
+    )
+
+
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
 __all__ = [
+    "ActionClassifierProtocol",
     "DossierNotReady",
     "DuplicateStartConflict",
+    "FreeInputResultV1",
     "GameRuntimeService",
     "GameSessionNotFound",
     "PublishedScenarioPinRequired",
