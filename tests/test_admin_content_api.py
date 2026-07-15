@@ -18,7 +18,11 @@ if str(API_ROOT) not in sys.path:
 from routers import admin_content, courses as courses_router
 from settings import settings
 from services import content
-from services.contracts.v1 import ScenarioTemplateV1, calculate_contract_checksum
+from services.contracts.v1 import (
+    ScenarioTemplateV1,
+    calculate_contract_checksum,
+    verify_contract_checksum,
+)
 
 
 class AdminContentApiTests(unittest.TestCase):
@@ -288,6 +292,221 @@ class AdminContentApiTests(unittest.TestCase):
             ).status_code,
             200,
         )
+
+    def test_admin_can_save_validate_and_idempotently_seal_scenario_draft(self):
+        template = self.client.get(
+            "/api/v1/admin/content/scenario-drafts/template",
+            headers=self.headers,
+        )
+        self.assertEqual(template.status_code, 200, template.text)
+        payload = template.json()
+        payload.update(
+            {
+                "scenario_id": "low-code-scenario",
+                "course_id": "C-low-code",
+                "lesson_id": "low-code-lesson",
+                "title": "Low-code scenario",
+            }
+        )
+
+        unauthorized = self.client.post(
+            "/api/v1/admin/content/scenario-drafts",
+            json=payload,
+        )
+        self.assertEqual(unauthorized.status_code, 403)
+        saved = self.client.post(
+            "/api/v1/admin/content/scenario-drafts",
+            headers=self.headers,
+            json=payload,
+        )
+        self.assertEqual(saved.status_code, 200, saved.text)
+        self.assertEqual(saved.json()["item"]["revision"], 1)
+        self.assertEqual(saved.json()["item"]["updated_by"], "trusted-admin")
+
+        reopened = self.client.get(
+            "/api/v1/admin/content/scenario-drafts/low-code-scenario",
+            headers=self.headers,
+        )
+        self.assertEqual(reopened.status_code, 200, reopened.text)
+        self.assertEqual(reopened.json()["title"], "Low-code scenario")
+        listed = self.client.get(
+            "/api/v1/admin/content/scenario-drafts",
+            headers=self.headers,
+        )
+        self.assertEqual(listed.json()["items"][0]["scenario_id"], "low-code-scenario")
+
+        validated = self.client.post(
+            "/api/v1/admin/content/scenario-drafts/low-code-scenario/validate",
+            headers=self.headers,
+        )
+        self.assertEqual(validated.status_code, 200, validated.text)
+        self.assertTrue(validated.json()["report"]["valid"])
+        self.assertEqual(validated.json()["report"]["action_count"], 1)
+
+        sealed = self.client.post(
+            "/api/v1/admin/content/scenario-drafts/low-code-scenario/seal",
+            headers=self.headers,
+        )
+        self.assertEqual(sealed.status_code, 200, sealed.text)
+        self.assertFalse(sealed.json()["idempotent"])
+        self.assertEqual(sealed.json()["item"]["scenario_version"], 1)
+        sealed_contract = ScenarioTemplateV1.model_validate(sealed.json()["item"])
+        self.assertTrue(verify_contract_checksum(sealed_contract))
+        self.assertEqual(
+            sealed.json()["item"]["checksum"],
+            sealed.json()["record"]["descriptor"]["checksum"],
+        )
+
+        repeated = self.client.post(
+            "/api/v1/admin/content/scenario-drafts/low-code-scenario/seal",
+            headers=self.headers,
+        )
+        self.assertEqual(repeated.status_code, 200, repeated.text)
+        self.assertTrue(repeated.json()["idempotent"])
+        self.assertEqual(repeated.json()["item"]["scenario_version"], 1)
+
+        changed = reopened.json()
+        changed["revision"] = 1
+        changed["title"] = "Low-code scenario revised"
+        updated = self.client.put(
+            "/api/v1/admin/content/scenario-drafts/low-code-scenario",
+            headers=self.headers,
+            json=changed,
+        )
+        self.assertEqual(updated.status_code, 200, updated.text)
+        self.assertEqual(updated.json()["item"]["revision"], 2)
+        resealed = self.client.post(
+            "/api/v1/admin/content/scenario-drafts/low-code-scenario/seal",
+            headers=self.headers,
+        )
+        self.assertEqual(resealed.status_code, 200, resealed.text)
+        self.assertEqual(resealed.json()["item"]["scenario_version"], 2)
+
+    def test_scenario_draft_reports_cross_reference_errors_before_sealing(self):
+        for scenario_id in (
+            "invalid-unknown-ref",
+            "invalid-duplicate-id",
+            "invalid-variable-range",
+            "invalid-missing-ending",
+        ):
+            with self.subTest(scenario_id=scenario_id):
+                payload = self.client.get(
+                    "/api/v1/admin/content/scenario-drafts/template",
+                    headers=self.headers,
+                ).json()
+                payload["scenario_id"] = scenario_id
+                if scenario_id == "invalid-unknown-ref":
+                    payload["action_rules"][0]["effects"][0]["variable_id"] = (
+                        "unknown-variable"
+                    )
+                elif scenario_id == "invalid-duplicate-id":
+                    payload["variables"].append(dict(payload["variables"][0]))
+                elif scenario_id == "invalid-variable-range":
+                    payload["variables"][0]["initial"] = 200
+                else:
+                    payload["ending_rules"] = []
+
+                saved = self.client.post(
+                    "/api/v1/admin/content/scenario-drafts",
+                    headers=self.headers,
+                    json=payload,
+                )
+                self.assertEqual(saved.status_code, 200, saved.text)
+
+                validated = self.client.post(
+                    f"/api/v1/admin/content/scenario-drafts/{scenario_id}/validate",
+                    headers=self.headers,
+                )
+                self.assertEqual(validated.status_code, 200, validated.text)
+                self.assertFalse(validated.json()["report"]["valid"])
+                self.assertTrue(validated.json()["report"]["issues"])
+
+                sealed = self.client.post(
+                    f"/api/v1/admin/content/scenario-drafts/{scenario_id}/seal",
+                    headers=self.headers,
+                )
+                self.assertEqual(sealed.status_code, 422, sealed.text)
+                self.assertEqual(
+                    sealed.json()["detail"]["code"],
+                    "scenario_draft_invalid",
+                )
+                self.assertTrue(sealed.json()["detail"]["issues"])
+        self.assertEqual(list(content.runtime_scenario_dir().rglob("*.json")), [])
+
+    def test_scenario_draft_optimistic_revision_rejects_stale_writes(self):
+        payload = self.client.get(
+            "/api/v1/admin/content/scenario-drafts/template",
+            headers=self.headers,
+        ).json()
+        payload["scenario_id"] = "revision-guard-scenario"
+        first = self.client.post(
+            "/api/v1/admin/content/scenario-drafts",
+            headers=self.headers,
+            json=payload,
+        )
+        self.assertEqual(first.status_code, 200, first.text)
+
+        current = first.json()["item"]
+        current["title"] = "Current title"
+        second = self.client.put(
+            "/api/v1/admin/content/scenario-drafts/revision-guard-scenario",
+            headers=self.headers,
+            json=current,
+        )
+        self.assertEqual(second.status_code, 200, second.text)
+
+        stale = first.json()["item"]
+        stale["title"] = "Stale title"
+        rejected = self.client.put(
+            "/api/v1/admin/content/scenario-drafts/revision-guard-scenario",
+            headers=self.headers,
+            json=stale,
+        )
+        self.assertEqual(rejected.status_code, 409, rejected.text)
+        self.assertEqual(
+            rejected.json()["detail"]["code"],
+            "scenario_draft_conflict",
+        )
+
+    def test_scenario_draft_seal_ignores_unrelated_damaged_staged_file(self):
+        staged = self.client.post(
+            "/api/v1/admin/content/runtime-scenarios",
+            headers=self.headers,
+            json=self._scenario_payload(
+                "unrelated-damaged-scenario",
+                "C-unrelated",
+                "unrelated-lesson",
+            ),
+        )
+        self.assertEqual(staged.status_code, 200, staged.text)
+        damaged_path = content.content_root() / Path(
+            staged.json()["item"]["descriptor"]["path"]
+        )
+        damaged_path.write_text("{broken", encoding="utf-8")
+
+        payload = self.client.get(
+            "/api/v1/admin/content/scenario-drafts/template",
+            headers=self.headers,
+        ).json()
+        payload.update(
+            {
+                "scenario_id": "healthy-author-scenario",
+                "course_id": "C-healthy",
+                "lesson_id": "healthy-lesson",
+            }
+        )
+        saved = self.client.post(
+            "/api/v1/admin/content/scenario-drafts",
+            headers=self.headers,
+            json=payload,
+        )
+        self.assertEqual(saved.status_code, 200, saved.text)
+        sealed = self.client.post(
+            "/api/v1/admin/content/scenario-drafts/healthy-author-scenario/seal",
+            headers=self.headers,
+        )
+        self.assertEqual(sealed.status_code, 200, sealed.text)
+        self.assertEqual(sealed.json()["item"]["scenario_version"], 1)
 
     def test_concurrent_divergent_scenario_registration_has_one_winner(self):
         first = self._scenario_payload(

@@ -74,6 +74,10 @@ def runtime_scenario_dir() -> Path:
     return runtime_dir() / "scenarios"
 
 
+def scenario_draft_dir() -> Path:
+    return _CONTENT_ROOT / "scenario-drafts"
+
+
 def assets_dir() -> Path:
     return _CONTENT_ROOT / "assets"
 
@@ -94,6 +98,7 @@ def ensure_content_dirs() -> None:
     package_dir().mkdir(parents=True, exist_ok=True)
     runtime_course_package_dir().mkdir(parents=True, exist_ok=True)
     runtime_scenario_dir().mkdir(parents=True, exist_ok=True)
+    scenario_draft_dir().mkdir(parents=True, exist_ok=True)
     people_asset_dir().mkdir(parents=True, exist_ok=True)
     keyword_asset_dir().mkdir(parents=True, exist_ok=True)
 

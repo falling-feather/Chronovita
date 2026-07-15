@@ -11,6 +11,7 @@ from services import content
 from services import courses as courses_data
 from services.content import KeywordProfilePackage, LessonContentPackage, PersonProfilePackage
 from services.content import runtime_artifacts
+from services.content import scenario_authoring
 from services.content import workflow as content_workflow
 from services.contracts.v1 import ScenarioTemplateV1
 
@@ -121,6 +122,13 @@ async def overview(_: str = Depends(require_admin)):
                 "POST /api/v1/admin/content/drafts/{lesson_id}/seal",
                 "GET /api/v1/admin/content/runtime-scenarios",
                 "POST /api/v1/admin/content/runtime-scenarios",
+                "GET /api/v1/admin/content/scenario-drafts/template",
+                "GET /api/v1/admin/content/scenario-drafts",
+                "GET /api/v1/admin/content/scenario-drafts/{scenario_id}",
+                "POST /api/v1/admin/content/scenario-drafts",
+                "PUT /api/v1/admin/content/scenario-drafts/{scenario_id}",
+                "POST /api/v1/admin/content/scenario-drafts/{scenario_id}/validate",
+                "POST /api/v1/admin/content/scenario-drafts/{scenario_id}/seal",
                 "POST /api/v1/admin/content/sealed/{lesson_id}/versions/{version}/publish",
                 "POST /api/v1/admin/content/releases/{course_id}/bootstrap-legacy",
                 "POST /api/v1/admin/content/releases/{course_id}/rollback",
@@ -335,6 +343,101 @@ async def stage_runtime_scenario(
         _raise_content_error(exc)
 
 
+@router.get("/scenario-drafts/template")
+async def scenario_draft_template(_: str = Depends(require_admin)):
+    return scenario_authoring.scenario_draft_template().model_dump(mode="json")
+
+
+@router.get("/scenario-drafts")
+async def scenario_drafts(_: str = Depends(require_admin)):
+    try:
+        return {
+            "items": [
+                item.model_dump(mode="json")
+                for item in scenario_authoring.list_scenario_drafts()
+            ]
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/scenario-drafts/{scenario_id}")
+async def scenario_draft_detail(scenario_id: str, _: str = Depends(require_admin)):
+    try:
+        item = scenario_authoring.get_scenario_draft(scenario_id)
+        if item is None:
+            raise FileNotFoundError(f"Scenario draft not found: {scenario_id}")
+        return item.model_dump(mode="json")
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/scenario-drafts")
+async def save_scenario_draft(
+    payload: scenario_authoring.ScenarioAuthorDraftV1,
+    admin: str = Depends(require_admin),
+):
+    try:
+        item = scenario_authoring.save_scenario_draft(payload, saved_by=admin)
+        return {"item": item.model_dump(mode="json")}
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.put("/scenario-drafts/{scenario_id}")
+async def update_scenario_draft(
+    scenario_id: str,
+    payload: scenario_authoring.ScenarioAuthorDraftV1,
+    admin: str = Depends(require_admin),
+):
+    if payload.scenario_id != scenario_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Path scenario_id must match payload.scenario_id.",
+        )
+    try:
+        item = scenario_authoring.save_scenario_draft(payload, saved_by=admin)
+        return {"item": item.model_dump(mode="json")}
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/scenario-drafts/{scenario_id}/validate")
+async def validate_scenario_draft(scenario_id: str, _: str = Depends(require_admin)):
+    try:
+        report = scenario_authoring.validate_saved_scenario_draft(scenario_id)
+        return {"report": report.model_dump(mode="json")}
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/scenario-drafts/{scenario_id}/seal")
+async def seal_scenario_draft(
+    scenario_id: str,
+    admin: str = Depends(require_admin),
+):
+    try:
+        with content_workflow.workflow_write_lock():
+            item, record, idempotent = scenario_authoring.seal_scenario_draft(
+                scenario_id,
+                sealed_by=admin,
+            )
+        return {
+            "item": item.model_dump(mode="json"),
+            "record": record.model_dump(mode="json"),
+            "idempotent": idempotent,
+        }
+    except scenario_authoring.ScenarioDraftValidationFailed as exc:
+        detail = {
+            "code": exc.code,
+            "message": str(exc),
+            "issues": [item.model_dump(mode="json") for item in exc.report.issues],
+        }
+        raise HTTPException(status_code=422, detail=detail) from exc
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
 @router.post(
     "/sealed/{lesson_id}/versions/{version}/publish",
     response_model=ReleaseResponse,
@@ -522,6 +625,8 @@ def _raise_content_error(exc: Exception) -> NoReturn:
         ]
     if isinstance(exc, (content_workflow.ContentNotFound, FileNotFoundError)):
         raise HTTPException(status_code=404, detail=detail) from exc
+    if isinstance(exc, scenario_authoring.ScenarioDraftConflict):
+        raise HTTPException(status_code=409, detail=detail) from exc
     if isinstance(
         exc,
         (

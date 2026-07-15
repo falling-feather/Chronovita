@@ -66,7 +66,10 @@ def stage_scenario(
     return _scenario_record(scenario, descriptor)
 
 
-def list_staged_scenarios() -> list[RuntimeScenarioRecord]:
+def list_staged_scenarios(
+    *,
+    scenario_id: str | None = None,
+) -> list[RuntimeScenarioRecord]:
     root = content_data.runtime_scenario_dir()
     if not root.exists() and not root.is_symlink():
         return []
@@ -89,6 +92,8 @@ def list_staged_scenarios() -> list[RuntimeScenarioRecord]:
                 )
         for filename in files:
             if not filename.endswith(".json"):
+                continue
+            if scenario_id is not None and current_path.name != scenario_id:
                 continue
             scenario, descriptor = load_staged_scenario_path(current_path / filename)
             records.append(_scenario_record(scenario, descriptor))
