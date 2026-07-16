@@ -18,7 +18,7 @@ for import_root in (REPO_ROOT, API_ROOT):
         sys.path.insert(0, str(import_root))
 
 import main as api_main
-from settings import Settings, settings
+from settings import Settings, runtime_env_file, settings
 from services import persistence
 from services.operations import (
     RuntimeConfigurationError,
@@ -47,6 +47,7 @@ class RuntimeConfigurationTests(unittest.TestCase):
             database_url=f"postgresql://chrono:{database_secret}@db/chronovita",
             admin_token=admin_secret,
             cors_origins=["http://localhost:5173", "https://*.example.test"],
+            trusted_hosts=["*", "localhost"],
         )
 
         with self.assertRaises(RuntimeConfigurationError) as caught:
@@ -62,6 +63,7 @@ class RuntimeConfigurationTests(unittest.TestCase):
                 "runtime.production_schema_validate_required",
                 "runtime.production_secure_cookie_required",
                 "runtime.production_shared_admin_token_forbidden",
+                "runtime.trusted_host_invalid",
             },
         )
         self.assertNotIn(database_secret, str(caught.exception))
@@ -106,6 +108,30 @@ class RuntimeConfigurationTests(unittest.TestCase):
             },
         )
 
+    def test_runtime_profiles_reject_hosts_outside_their_trust_boundary(self):
+        local = Settings(
+            runtime_profile="local",
+            debug=True,
+            auth_mode="legacy-local",
+            trusted_hosts=["teacher.example.test"],
+            _env_file=None,
+        )
+        production = self._production_settings(trusted_hosts=["localhost"])
+
+        with self.assertRaises(RuntimeConfigurationError) as local_error:
+            validate_runtime_configuration(local)
+        with self.assertRaises(RuntimeConfigurationError) as production_error:
+            validate_runtime_configuration(production)
+
+        self.assertEqual(
+            {issue.code for issue in local_error.exception.issues},
+            {"runtime.local_legacy_trusted_host_invalid"},
+        )
+        self.assertEqual(
+            {issue.code for issue in production_error.exception.issues},
+            {"runtime.production_trusted_host_invalid"},
+        )
+
     def test_runtime_secrets_are_masked_by_settings(self):
         secrets = (
             "admin-token-must-not-leak",
@@ -123,6 +149,20 @@ class RuntimeConfigurationTests(unittest.TestCase):
         for secret in secrets:
             self.assertNotIn(secret, rendered)
 
+    def test_dotenv_can_be_disabled_for_the_isolated_local_launcher(self):
+        with patch.dict(
+            "os.environ",
+            {"CHRONO_DISABLE_DOTENV": "true"},
+            clear=False,
+        ):
+            self.assertIsNone(runtime_env_file())
+        with patch.dict(
+            "os.environ",
+            {"CHRONO_DISABLE_DOTENV": "false"},
+            clear=False,
+        ):
+            self.assertEqual(runtime_env_file(), ".env")
+
     @staticmethod
     def _production_settings(**overrides) -> Settings:
         values = {
@@ -134,6 +174,7 @@ class RuntimeConfigurationTests(unittest.TestCase):
             "database_url": "postgresql://chrono:secret@db/chronovita",
             "admin_token": "",
             "cors_origins": ["https://chronovita.example.test"],
+            "trusted_hosts": ["chronovita.example.test"],
             "auth_bootstrap_username": "",
             "auth_bootstrap_password": "",
             "llm_provider": "mock",

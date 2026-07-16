@@ -1,3 +1,5 @@
+param([switch] $SkipBrowser)
+
 $ErrorActionPreference = "Stop"
 
 $Root = Resolve-Path (Join-Path $PSScriptRoot "..")
@@ -18,21 +20,6 @@ $ApiErrLog = Join-Path $LogDir "api.err.log"
 $WebOutLog = Join-Path $LogDir "web.out.log"
 $WebErrLog = Join-Path $LogDir "web.err.log"
 
-if (-not $env:CHRONO_ADMIN_TOKEN) {
-  $tokenBytes = New-Object byte[] 32
-  $tokenGenerator = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-  try {
-    $tokenGenerator.GetBytes($tokenBytes)
-  } finally {
-    $tokenGenerator.Dispose()
-  }
-  $env:CHRONO_ADMIN_TOKEN = [Convert]::ToBase64String($tokenBytes).TrimEnd("=").Replace("+", "-").Replace("/", "_")
-}
-$env:VITE_ADMIN_TOKEN = $env:CHRONO_ADMIN_TOKEN
-if (-not $env:CHRONO_ADMIN_ACTOR) {
-  $env:CHRONO_ADMIN_ACTOR = "local-admin"
-}
-
 function Write-Step {
   param([string] $Message)
   Write-Host ""
@@ -44,9 +31,85 @@ function Test-Command {
   return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
+function Repair-DuplicateProcessEnvironment {
+  $entries = @([System.Environment]::GetEnvironmentVariables().GetEnumerator())
+  $duplicates = $entries |
+    Group-Object { $_.Key.ToString().ToUpperInvariant() } |
+    Where-Object { $_.Count -gt 1 }
+
+  foreach ($duplicate in $duplicates) {
+    $preferred = @($duplicate.Group | Where-Object {
+      $_.Key.ToString() -ceq $_.Key.ToString().ToUpperInvariant()
+    } | Select-Object -First 1)
+    if ($preferred.Count -eq 0) {
+      $preferred = @($duplicate.Group | Select-Object -First 1)
+    }
+    foreach ($entry in $duplicate.Group) {
+      [System.Environment]::SetEnvironmentVariable(
+        $entry.Key.ToString(),
+        $null,
+        [System.EnvironmentVariableTarget]::Process
+      )
+    }
+    [System.Environment]::SetEnvironmentVariable(
+      $preferred[0].Key.ToString(),
+      $preferred[0].Value.ToString(),
+      [System.EnvironmentVariableTarget]::Process
+    )
+  }
+}
+
 function Quote-ProcessArgument {
   param([string] $Value)
   return '"' + $Value + '"'
+}
+
+function Set-LocalRuntimeEnvironment {
+  $inheritedChronoKeys = @(
+    [System.Environment]::GetEnvironmentVariables().Keys |
+      Where-Object { $_.ToString().StartsWith("CHRONO_", [System.StringComparison]::OrdinalIgnoreCase) }
+  )
+  foreach ($key in $inheritedChronoKeys) {
+    [System.Environment]::SetEnvironmentVariable(
+      $key.ToString(),
+      $null,
+      [System.EnvironmentVariableTarget]::Process
+    )
+  }
+
+  $env:CHRONO_DISABLE_DOTENV = "true"
+  $env:CHRONO_RUNTIME_PROFILE = "local"
+  $env:CHRONO_DEBUG = "true"
+  $env:CHRONO_CORS_ORIGINS = '["http://127.0.0.1:5173"]'
+  $env:CHRONO_TRUSTED_HOSTS = '["127.0.0.1","localhost"]'
+  $env:CHRONO_SQLITE_PATH = "data/chronovita.db"
+  $env:CHRONO_DATABASE_MIGRATION_MODE = "apply-safe"
+  $env:CHRONO_CONTENT_ROOT = "content"
+  $env:CHRONO_AUTH_MODE = "legacy-local"
+  $env:CHRONO_AUTH_SESSION_TTL_SECONDS = "28800"
+  $env:CHRONO_AUTH_COOKIE_NAME = "chronovita_session"
+  $env:CHRONO_AUTH_COOKIE_SECURE = "false"
+  $env:CHRONO_AUTH_LOGIN_RATE_LIMIT_ATTEMPTS = "10"
+  $env:CHRONO_AUTH_LOGIN_RATE_LIMIT_WINDOW_SECONDS = "60"
+  $env:CHRONO_AUTH_LOGIN_RATE_LIMIT_MAX_CLIENTS = "10000"
+  $env:CHRONO_GAME_CATALOG_PATH = "scenarios/catalog.v1.json"
+  $env:CHRONO_GAME_USER_ID = "local-student"
+  $env:CHRONO_LLM_PROVIDER = "mock"
+  $env:CHRONO_LLM_STRUCTURED_TIMEOUT_SECONDS = "12"
+  $env:CHRONO_LLM_STRUCTURED_MAX_TOKENS = "512"
+  $env:CHRONO_LLM_STRUCTURED_MAX_RESPONSE_BYTES = "32768"
+  $env:CHRONO_ADMIN_ACTOR = "local-admin"
+  $env:VITE_API_PROXY_TARGET = "http://127.0.0.1:8000"
+
+  $tokenBytes = New-Object byte[] 32
+  $tokenGenerator = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  try {
+    $tokenGenerator.GetBytes($tokenBytes)
+  } finally {
+    $tokenGenerator.Dispose()
+  }
+  $env:CHRONO_ADMIN_TOKEN = [Convert]::ToBase64String($tokenBytes).TrimEnd("=").Replace("+", "-").Replace("/", "_")
+  $env:VITE_ADMIN_TOKEN = $env:CHRONO_ADMIN_TOKEN
 }
 
 function Invoke-Checked {
@@ -85,6 +148,33 @@ function Test-LocalPort {
   }
 }
 
+function Open-ExistingEditor {
+  $apiInUse = Test-LocalPort $ApiHost $ApiPort
+  $webInUse = Test-LocalPort $WebHost $WebPort
+  if (-not $apiInUse -and -not $webInUse) {
+    return $false
+  }
+  if ($apiInUse -ne $webInUse) {
+    throw "Only one launcher port is in use. Close the process on ports $ApiPort/$WebPort, then run the launcher again."
+  }
+
+  try {
+    $health = Invoke-RestMethod -Method Get -Uri "http://$ApiHost`:$ApiPort/healthz" -TimeoutSec 3
+    $web = Invoke-WebRequest -UseBasicParsing -Method Get -Uri $EditorUrl -TimeoutSec 3
+  } catch {
+    throw "Ports $ApiPort and $WebPort are occupied by services that are not a healthy Chronovita editor."
+  }
+  if ($health.status -ne "alive" -or $web.StatusCode -ne 200 -or $web.Content -notmatch "Chronovita") {
+    throw "Ports $ApiPort and $WebPort are occupied by services that are not a healthy Chronovita editor."
+  }
+
+  Write-Host "Chronovita is already running. Opening the existing editor." -ForegroundColor Green
+  if (-not $SkipBrowser) {
+    Start-Process $EditorUrl
+  }
+  return $true
+}
+
 function Wait-LocalPort {
   param(
     [string] $Name,
@@ -116,6 +206,19 @@ function Wait-LocalPort {
     Get-Content $ErrorLog -Tail 60
   }
   throw "$Name did not become ready on http://$HostName`:$Port."
+}
+
+function Stop-StartedProcessTree {
+  param([System.Diagnostics.Process] $Process)
+  if (-not $Process -or $Process.HasExited) {
+    return
+  }
+  $taskkill = Join-Path $env:SystemRoot "System32\taskkill.exe"
+  try {
+    & $taskkill /PID "$($Process.Id)" /T /F 2>$null | Out-Null
+  } catch {
+    Stop-Process -Id $Process.Id -Force -ErrorAction SilentlyContinue
+  }
 }
 
 function Ensure-PythonEnvironment {
@@ -182,8 +285,7 @@ function Ensure-WebDependencies {
 
 function Start-Api {
   if (Test-LocalPort $ApiHost $ApiPort) {
-    Write-Host "API is already available on http://$ApiHost`:$ApiPort" -ForegroundColor Green
-    return $null
+    throw "API port $ApiPort became occupied before startup."
   }
 
   Write-Step "Starting API"
@@ -200,8 +302,7 @@ function Start-Api {
 
 function Start-Web {
   if (Test-LocalPort $WebHost $WebPort) {
-    Write-Host "Web app is already available on http://$WebHost`:$WebPort" -ForegroundColor Green
-    return $null
+    throw "Web port $WebPort became occupied before startup."
   }
 
   Write-Step "Starting web editor"
@@ -216,11 +317,22 @@ function Start-Web {
   return $process
 }
 
+$apiProcess = $null
+$webProcess = $null
+
 try {
   New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
 
   Write-Host "Chronovita teacher editor launcher"
   Write-Host "Project root: $Root"
+
+  Repair-DuplicateProcessEnvironment
+
+  if (Open-ExistingEditor) {
+    exit 0
+  }
+
+  Set-LocalRuntimeEnvironment
 
   Ensure-PythonEnvironment
   Ensure-ApiDependencies
@@ -234,11 +346,15 @@ try {
 
   Write-Step "Opening editor"
   Write-Host $EditorUrl -ForegroundColor Green
-  Start-Process $EditorUrl
+  if (-not $SkipBrowser) {
+    Start-Process $EditorUrl
+  }
   Write-Host ""
   Write-Host "Ready. Keep this window open if you want to read the launch log."
   Write-Host "Runtime logs are saved in: $LogDir"
 } catch {
+  Stop-StartedProcessTree $webProcess
+  Stop-StartedProcessTree $apiProcess
   Write-Host ""
   Write-Host "Launch failed:" -ForegroundColor Red
   Write-Host $_.Exception.Message -ForegroundColor Red

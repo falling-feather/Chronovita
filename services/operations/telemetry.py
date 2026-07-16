@@ -127,7 +127,12 @@ def _log_access_event(
     duration_ms: float,
     error_type: str | None,
 ) -> None:
-    route = getattr(scope.get("route"), "path", None) or "<unmatched>"
+    state = scope.get("state") or {}
+    route = (
+        getattr(scope.get("route"), "path", None)
+        or state.get("telemetry_route")
+        or "<unmatched>"
+    )
     event = {
         "client": _client_fingerprint(scope),
         "duration_ms": round(max(duration_ms, 0.0), 3),

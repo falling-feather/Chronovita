@@ -1,3 +1,4 @@
+import os
 from typing import Literal
 
 from pydantic import Field, SecretStr
@@ -12,6 +13,13 @@ def secret_value(value: str | SecretStr) -> str:
     return value
 
 
+def runtime_env_file() -> str | None:
+    disabled = os.environ.get("CHRONO_DISABLE_DOTENV", "").strip().casefold()
+    if disabled in {"1", "true", "yes", "on"}:
+        return None
+    return ".env"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="CHRONO_", extra="ignore")
 
@@ -23,6 +31,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://localhost:5173",
     ]
+    trusted_hosts: list[str] = ["127.0.0.1", "localhost", "testserver"]
     sqlite_path: str = "data/chronovita.db"
     database_url: SecretStr = SecretStr("")
     database_migration_mode: Literal["apply-safe", "validate"] = "apply-safe"
@@ -38,6 +47,13 @@ class Settings(BaseSettings):
         pattern=r"^[A-Za-z][A-Za-z0-9_-]+$",
     )
     auth_cookie_secure: bool = False
+    auth_login_rate_limit_attempts: int = Field(default=10, ge=1, le=1000)
+    auth_login_rate_limit_window_seconds: int = Field(default=60, ge=1, le=3600)
+    auth_login_rate_limit_max_clients: int = Field(
+        default=10_000,
+        ge=1,
+        le=1_000_000,
+    )
     auth_bootstrap_username: str = ""
     auth_bootstrap_password: SecretStr = SecretStr("")
     auth_bootstrap_display_name: str = "Chronovita Admin"
@@ -70,4 +86,4 @@ class Settings(BaseSettings):
     )
 
 
-settings = Settings()
+settings = Settings(_env_file=runtime_env_file())

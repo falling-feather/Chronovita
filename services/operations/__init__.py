@@ -9,6 +9,12 @@ from .health import (
     probe_database_connectivity,
     probe_database_readiness,
 )
+from .rate_limit import (
+    LOGIN_PATH,
+    LoginAttemptLimiter,
+    LoginRateLimitMiddleware,
+    RateLimitDecision,
+)
 from .telemetry import (
     RequestTelemetryMiddleware,
     configure_runtime_logging,
@@ -20,6 +26,10 @@ from .telemetry import (
 
 __all__ = [
     "DatabaseReadiness",
+    "LOGIN_PATH",
+    "LoginAttemptLimiter",
+    "LoginRateLimitMiddleware",
+    "RateLimitDecision",
     "RuntimeConfigurationError",
     "RuntimeConfigurationIssue",
     "RuntimeReadinessError",

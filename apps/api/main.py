@@ -11,6 +11,7 @@ for _path in (_API_ROOT, _REPO_ROOT):
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from settings import secret_value, settings
 from routers import (
@@ -29,6 +30,7 @@ from services.auth import AuthServiceConfig, configure_identity, shutdown_identi
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
 from services.operations import (
+    LoginRateLimitMiddleware,
     RequestTelemetryMiddleware,
     RuntimeReadinessError,
     configure_runtime_logging,
@@ -92,12 +94,23 @@ app = FastAPI(
 )
 
 app.add_middleware(
+    LoginRateLimitMiddleware,
+    max_attempts=settings.auth_login_rate_limit_attempts,
+    window_seconds=settings.auth_login_rate_limit_window_seconds,
+    max_clients=settings.auth_login_rate_limit_max_clients,
+)
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=settings.trusted_hosts,
+    www_redirect=False,
+)
+app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Request-ID"],
+    expose_headers=["X-Request-ID", "Retry-After"],
 )
 app.add_middleware(
     RequestTelemetryMiddleware,

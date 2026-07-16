@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ipaddress
+import re
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlsplit
@@ -28,6 +29,7 @@ def validate_runtime_configuration(config: Any) -> None:
     profile = config.runtime_profile
     bootstrap_username = config.auth_bootstrap_username.strip()
     bootstrap_password = _secret_value(config.auth_bootstrap_password).strip()
+    trusted_hosts_valid = _validate_exact_trusted_hosts(config, issues)
 
     if bool(bootstrap_username) != bool(bootstrap_password):
         issues.append(
@@ -45,8 +47,19 @@ def validate_runtime_configuration(config: Any) -> None:
                     field="debug",
                 )
             )
+        if (
+            trusted_hosts_valid
+            and config.auth_mode == "legacy-local"
+            and any(not _is_local_host(host) for host in config.trusted_hosts)
+        ):
+            issues.append(
+                RuntimeConfigurationIssue(
+                    code="runtime.local_legacy_trusted_host_invalid",
+                    field="trusted_hosts",
+                )
+            )
     elif profile == "production":
-        _validate_production(config, issues)
+        _validate_production(config, issues, trusted_hosts_valid=trusted_hosts_valid)
     else:
         issues.append(
             RuntimeConfigurationIssue(
@@ -62,6 +75,8 @@ def validate_runtime_configuration(config: Any) -> None:
 def _validate_production(
     config: Any,
     issues: list[RuntimeConfigurationIssue],
+    *,
+    trusted_hosts_valid: bool,
 ) -> None:
     requirements = (
         (
@@ -127,6 +142,82 @@ def _validate_production(
                 field="deepseek_api_key",
             )
         )
+
+    if trusted_hosts_valid and any(
+        _is_local_host(host) for host in config.trusted_hosts
+    ):
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.production_trusted_host_invalid",
+                field="trusted_hosts",
+            )
+        )
+
+
+def _validate_exact_trusted_hosts(
+    config: Any,
+    issues: list[RuntimeConfigurationIssue],
+) -> bool:
+    hosts = tuple(config.trusted_hosts)
+    if not hosts:
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.trusted_host_required",
+                field="trusted_hosts",
+            )
+        )
+        return False
+    canonical = tuple(str(host).casefold() for host in hosts)
+    if len(set(canonical)) != len(hosts) or any(
+        not _is_exact_host(host) for host in hosts
+    ):
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.trusted_host_invalid",
+                field="trusted_hosts",
+            )
+        )
+        return False
+    return True
+
+
+def _is_exact_host(host: object) -> bool:
+    if not isinstance(host, str):
+        return False
+    candidate = host.strip()
+    if (
+        not candidate
+        or candidate != host
+        or candidate != candidate.casefold()
+        or "*" in candidate
+        or "://" in candidate
+        or "/" in candidate
+    ):
+        return False
+    try:
+        ipaddress.ip_address(candidate)
+        return True
+    except ValueError:
+        pass
+    if len(candidate) > 253 or candidate.endswith("."):
+        return False
+    label_pattern = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\Z")
+    return all(label_pattern.fullmatch(label) for label in candidate.split("."))
+
+
+def _is_local_host(host: object) -> bool:
+    candidate = str(host).casefold()
+    if (
+        candidate == "testserver"
+        or candidate == "localhost"
+        or candidate.endswith(".localhost")
+    ):
+        return True
+    try:
+        address = ipaddress.ip_address(candidate)
+    except ValueError:
+        return False
+    return address.is_loopback or address.is_unspecified
 
 
 def _is_secure_exact_origin(origin: object) -> bool:
