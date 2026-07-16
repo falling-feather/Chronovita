@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     database_pool_timeout_seconds: float = Field(default=30.0, ge=1, le=300)
     database_pool_recycle_seconds: int = Field(default=1800, ge=30, le=86_400)
     database_connect_timeout_seconds: int = Field(default=10, ge=1, le=60)
+    database_migration_lock_timeout_seconds: float = Field(
+        default=30.0,
+        ge=0.1,
+        le=300,
+    )
     content_root: str = "content"
     admin_token: SecretStr = SecretStr("")
     admin_actor: str = "local-admin"

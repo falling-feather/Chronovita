@@ -10,10 +10,11 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 from pathlib import Path
+from time import monotonic
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from sqlalchemy import inspect, select
+from sqlalchemy import inspect, select, text
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -37,7 +38,9 @@ from services.persistence.database import (
     resolve_database_target,
 )
 from services.persistence.schema import (
+    DatabaseMigrationBusy,
     LATEST_SCHEMA_VERSION,
+    _POSTGRES_MIGRATION_LOCK_ID,
     ensure_current_schema,
     inspect_schema,
     schema_migrations_table,
@@ -93,6 +96,7 @@ class PostgresServiceTests(unittest.TestCase):
         self.assertEqual(versions, list(range(1, LATEST_SCHEMA_VERSION + 1)))
 
         self._verify_postgres_cli(first, target)
+        self._verify_migration_lock_timeout(first, target)
         self._verify_concurrent_audit(first, second)
         self._verify_identity_invariants(first, second)
         self._verify_kv_invariants()
@@ -130,6 +134,61 @@ class PostgresServiceTests(unittest.TestCase):
             self.assertEqual(payload["result"]["database_url_env"], env_name)
             if target.url.password:
                 self.assertNotIn(target.url.password, output)
+
+    def _verify_migration_lock_timeout(self, engine, target) -> None:
+        schema_name = "chronovita_lock_timeout_matrix"
+        with engine.begin() as connection:
+            connection.exec_driver_sql(
+                "CREATE SCHEMA chronovita_lock_timeout_matrix"
+            )
+        lock_url = target.url.update_query_dict(
+            {"options": f"-c search_path={schema_name}"}
+        ).render_as_string(hide_password=False)
+        lock_target = resolve_database_target(
+            database_url=lock_url,
+            sqlite_path="ignored.db",
+        )
+        lock_engine = create_database_engine(
+            lock_target,
+            options=DatabaseEngineOptions(
+                pool_size=2,
+                max_overflow=1,
+                pool_timeout_seconds=5,
+                pool_recycle_seconds=60,
+                connect_timeout_seconds=3,
+                migration_lock_timeout_seconds=0.2,
+            ),
+        )
+        try:
+            self.assertEqual(inspect(lock_engine).get_table_names(), [])
+            with lock_engine.connect() as blocker:
+                blocker.execute(
+                    text("SELECT pg_advisory_lock(:lock_id)"),
+                    {"lock_id": _POSTGRES_MIGRATION_LOCK_ID},
+                )
+                blocker.commit()
+                started = monotonic()
+                try:
+                    with self.assertRaises(DatabaseMigrationBusy):
+                        ensure_current_schema(
+                            lock_engine,
+                            migration_lock_timeout_seconds=0.2,
+                        )
+                    elapsed = monotonic() - started
+                    self.assertGreaterEqual(elapsed, 0.15)
+                    self.assertLess(elapsed, 2)
+                    self.assertEqual(inspect(lock_engine).get_table_names(), [])
+                finally:
+                    released = blocker.execute(
+                        text("SELECT pg_advisory_unlock(:lock_id)"),
+                        {"lock_id": _POSTGRES_MIGRATION_LOCK_ID},
+                    ).scalar_one()
+                    blocker.commit()
+                    self.assertTrue(released)
+
+            self.assertTrue(ensure_current_schema(lock_engine).is_current)
+        finally:
+            lock_engine.dispose()
 
     def _verify_concurrent_audit(self, first, second) -> None:
         write_count = 32

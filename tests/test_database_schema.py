@@ -332,6 +332,20 @@ class DatabaseSchemaTests(unittest.TestCase):
         self.assertTrue(inspect_schema(engine).is_current)
         self.assertIn(schema_migrations_table.name, inspect(engine).get_table_names())
 
+    def test_migration_lock_timeout_bounds_are_validated_before_io(self):
+        engine = self._engine("invalid-lock-timeout.db")
+        try:
+            for value in (0, 0.09, 300.1):
+                with self.subTest(value=value):
+                    with self.assertRaisesRegex(ValueError, "migration lock timeout"):
+                        ensure_current_schema(
+                            engine,
+                            migration_lock_timeout_seconds=value,
+                        )
+            self.assertEqual(inspect(engine).get_table_names(), [])
+        finally:
+            engine.dispose()
+
     def test_store_constructors_do_not_create_or_initialize_schema(self):
         engine = self._engine("store-construction.db")
         try:

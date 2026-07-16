@@ -67,6 +67,7 @@ class DatabaseEngineOptions:
     pool_timeout_seconds: float = 30.0
     pool_recycle_seconds: int = 1800
     connect_timeout_seconds: int = 10
+    migration_lock_timeout_seconds: float = 30.0
 
     def __post_init__(self) -> None:
         if (
@@ -75,6 +76,7 @@ class DatabaseEngineOptions:
             or not 1 <= self.pool_timeout_seconds <= 300
             or not 30 <= self.pool_recycle_seconds <= 86_400
             or not 1 <= self.connect_timeout_seconds <= 60
+            or not 0.1 <= self.migration_lock_timeout_seconds <= 300
         ):
             raise DatabaseEngineOptionsInvalid(
                 "database engine options are outside supported bounds"

@@ -74,7 +74,13 @@ def init_engine(
         try:
             from services.persistence.schema import ensure_current_schema
 
-            ensure_current_schema(engine, mode=migration_mode)
+            ensure_current_schema(
+                engine,
+                mode=migration_mode,
+                migration_lock_timeout_seconds=(
+                    resolved_options.migration_lock_timeout_seconds
+                ),
+            )
         except BaseException:
             engine.dispose()
             raise

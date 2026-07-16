@@ -55,6 +55,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Allow creation when the database file does not yet exist",
     )
+    migrate.add_argument(
+        "--migration-lock-timeout-seconds",
+        type=float,
+        default=30.0,
+        help="Maximum PostgreSQL migration-lock wait (0.1 to 300 seconds)",
+    )
 
     backup = commands.add_parser("backup", help="Create a verified SQLite snapshot")
     _add_database_argument(backup)
@@ -190,7 +196,14 @@ def _schema_command(
             raise DatabaseCommandError(
                 "database is empty; pass --initialize to create the schema"
             )
-        status = ensure_current_schema(engine) if migrate else inspect_schema(engine)
+        status = (
+            ensure_current_schema(
+                engine,
+                migration_lock_timeout_seconds=args.migration_lock_timeout_seconds,
+            )
+            if migrate
+            else inspect_schema(engine)
+        )
         return status, source
     except (DatabaseCommandError, DatabaseSchemaError):
         raise

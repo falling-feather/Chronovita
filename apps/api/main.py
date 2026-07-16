@@ -58,6 +58,9 @@ async def lifespan(app: FastAPI):
             pool_timeout_seconds=settings.database_pool_timeout_seconds,
             pool_recycle_seconds=settings.database_pool_recycle_seconds,
             connect_timeout_seconds=settings.database_connect_timeout_seconds,
+            migration_lock_timeout_seconds=(
+                settings.database_migration_lock_timeout_seconds
+            ),
         ),
     )
     app.state.database_engine = engine

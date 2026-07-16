@@ -205,6 +205,7 @@ class DatabaseConfigurationTests(unittest.TestCase):
             pool_timeout_seconds=12.5,
             pool_recycle_seconds=900,
             connect_timeout_seconds=4,
+            migration_lock_timeout_seconds=8.5,
         )
         fake_engine = Mock()
         fake_engine.dialect.name = "postgresql"
@@ -233,6 +234,8 @@ class DatabaseConfigurationTests(unittest.TestCase):
             {"pool_timeout_seconds": 301},
             {"pool_recycle_seconds": 29},
             {"connect_timeout_seconds": 61},
+            {"migration_lock_timeout_seconds": 0},
+            {"migration_lock_timeout_seconds": 301},
         )
         for values in invalid_options:
             with self.subTest(values=values):

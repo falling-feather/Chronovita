@@ -4,6 +4,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from time import monotonic, sleep
 from typing import Callable, Literal
 
 from pydantic import BaseModel, ConfigDict
@@ -40,6 +41,7 @@ LATEST_SCHEMA_VERSION = 3
 _SUPPORTED_DIALECTS = frozenset({"sqlite", "postgresql"})
 _SQLITE_LOCK_ERRORS = ("database is locked", "database table is locked")
 _POSTGRES_MIGRATION_LOCK_ID = 0x4348524F4E4F
+_POSTGRES_MIGRATION_LOCK_POLL_SECONDS = 0.05
 _ZERO_HASH = "0" * 64
 
 
@@ -127,10 +129,12 @@ def ensure_current_schema(
     engine: Engine,
     *,
     mode: MigrationMode = "apply-safe",
+    migration_lock_timeout_seconds: float = 30.0,
 ) -> DatabaseSchemaStatus:
     """Validate or safely advance the registered Chronovita database schema."""
 
     _validate_mode(mode)
+    _validate_migration_lock_timeout(migration_lock_timeout_seconds)
     dialect = _dialect(engine)
     if mode == "validate":
         status = inspect_schema(engine)
@@ -142,7 +146,11 @@ def ensure_current_schema(
         return status
     try:
         with engine.connect() as connection:
-            _begin_migration_transaction(connection, dialect)
+            _begin_migration_transaction(
+                connection,
+                dialect,
+                lock_timeout_seconds=migration_lock_timeout_seconds,
+            )
             try:
                 status = _apply_registered_migrations(connection, dialect)
                 connection.commit()
@@ -276,21 +284,54 @@ def _apply_registered_migrations(
     )
 
 
-def _begin_migration_transaction(connection: Connection, dialect: str) -> None:
+def _begin_migration_transaction(
+    connection: Connection,
+    dialect: str,
+    *,
+    lock_timeout_seconds: float,
+) -> None:
     if dialect == "sqlite":
         connection.exec_driver_sql("BEGIN IMMEDIATE")
         return
-    connection.execute(
-        text("SELECT pg_advisory_lock(:lock_id)"),
-        {"lock_id": _POSTGRES_MIGRATION_LOCK_ID},
+    _acquire_postgres_migration_lock(
+        connection,
+        timeout_seconds=lock_timeout_seconds,
     )
-    connection.commit()
     try:
         _configure_snapshot_isolation(connection, dialect)
         connection.begin()
     except BaseException:
         _end_migration_transaction(connection, dialect)
         raise
+
+
+def _acquire_postgres_migration_lock(
+    connection: Connection,
+    *,
+    timeout_seconds: float,
+) -> None:
+    deadline = monotonic() + timeout_seconds
+    while True:
+        acquired = False
+        try:
+            acquired = bool(
+                connection.execute(
+                    text("SELECT pg_try_advisory_lock(:lock_id)"),
+                    {"lock_id": _POSTGRES_MIGRATION_LOCK_ID},
+                ).scalar_one()
+            )
+            connection.commit()
+        except BaseException:
+            connection.invalidate()
+            raise
+        if acquired:
+            return
+        remaining = deadline - monotonic()
+        if remaining <= 0:
+            raise DatabaseMigrationBusy(
+                "timed out waiting for the database migration lock"
+            )
+        sleep(min(_POSTGRES_MIGRATION_LOCK_POLL_SECONDS, remaining))
 
 
 def _end_migration_transaction(connection: Connection, dialect: str) -> None:
@@ -667,6 +708,13 @@ def _dialect(engine: Engine) -> Literal["sqlite", "postgresql"]:
 def _validate_mode(mode: str) -> None:
     if mode not in ("apply-safe", "validate"):
         raise ValueError("database migration mode must be apply-safe or validate")
+
+
+def _validate_migration_lock_timeout(value: float) -> None:
+    if not 0.1 <= value <= 300:
+        raise ValueError(
+            "database migration lock timeout must be between 0.1 and 300 seconds"
+        )
 
 
 def _checksum(payload: object) -> str:
