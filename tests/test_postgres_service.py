@@ -23,6 +23,12 @@ for import_root in (REPO_ROOT, API_ROOT):
         sys.path.insert(0, str(import_root))
 
 from scripts import manage_database as database_cli
+from services.auth import (
+    AuthService,
+    AuthServiceConfig,
+    LastAdminRequired,
+    Principal,
+)
 from services.auth.store import AuditWrite, AuthStore
 from services.persistence.database import (
     DatabaseEngineOptions,
@@ -87,6 +93,7 @@ class PostgresServiceTests(unittest.TestCase):
 
         self._verify_postgres_cli(first, target)
         self._verify_concurrent_audit(first, second)
+        self._verify_identity_invariants(first, second)
         first.dispose()
         second.dispose()
         self._verify_application_runtime()
@@ -183,6 +190,121 @@ class PostgresServiceTests(unittest.TestCase):
         )
         self.assertTrue(verifier.verify_audit_chain())
         self.assertTrue(inspect_schema(first).is_current)
+
+    def _verify_identity_invariants(self, first, second) -> None:
+        config = AuthServiceConfig(
+            mode="accounts",
+            session_ttl_seconds=3600,
+            bootstrap_username="ci.admin",
+            bootstrap_password="CI admin password 123!",
+            bootstrap_display_name="CI Admin",
+        )
+        bootstrap_barrier = threading.Barrier(4)
+
+        def start_service(engine):
+            bootstrap_barrier.wait(timeout=10)
+            return AuthService(engine, config)
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            services = tuple(
+                executor.map(start_service, (first, second, first, second))
+            )
+
+        users = services[0].store.list_users()
+        self.assertEqual([user.username for user in users], ["ci.admin"])
+        self.assertEqual(
+            len(
+                [
+                    event
+                    for event in services[0].store.list_audit(limit=200)
+                    if event.action == "auth.bootstrap"
+                ]
+            ),
+            1,
+        )
+        root = users[0]
+        root_actor = self._principal(root)
+        second_admin = services[0].create_user(
+            username="ci.admin.two",
+            password="CI second admin password 123!",
+            display_name="CI Admin Two",
+            roles=("admin",),
+            actor=root_actor,
+            request_id="postgres-create-second-admin",
+        )
+        change_barrier = threading.Barrier(2)
+
+        def remove_admin(service, user_id: str, request_id: str) -> str:
+            change_barrier.wait(timeout=10)
+            try:
+                service.update_user(
+                    user_id,
+                    display_name=None,
+                    roles=("teacher",),
+                    enabled=None,
+                    actor=root_actor,
+                    request_id=request_id,
+                )
+            except LastAdminRequired:
+                return "blocked"
+            return "updated"
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = tuple(
+                executor.map(
+                    lambda args: remove_admin(*args),
+                    (
+                        (services[0], root.user_id, "postgres-demote-root"),
+                        (
+                            services[1],
+                            second_admin.user_id,
+                            "postgres-demote-second",
+                        ),
+                    ),
+                )
+            )
+
+        self.assertEqual(sorted(results), ["blocked", "updated"])
+        root = services[0].store.get_user(root.user_id)
+        other = services[0].store.get_user(second_admin.user_id)
+        self.assertIsNotNone(root)
+        self.assertIsNotNone(other)
+        if "admin" not in root.roles:
+            services[0].update_user(
+                root.user_id,
+                display_name=None,
+                roles=("admin",),
+                enabled=None,
+                actor=self._principal(other),
+                request_id="postgres-restore-ci-admin",
+            )
+            root = services[0].store.get_user(root.user_id)
+            services[0].update_user(
+                other.user_id,
+                display_name=None,
+                roles=("teacher",),
+                enabled=None,
+                actor=self._principal(root),
+                request_id="postgres-demote-temporary-admin",
+            )
+
+        enabled_admins = [
+            user
+            for user in services[0].store.list_users()
+            if user.enabled and "admin" in user.roles
+        ]
+        self.assertEqual([user.username for user in enabled_admins], ["ci.admin"])
+        self.assertTrue(services[0].store.verify_audit_chain())
+
+    @staticmethod
+    def _principal(user) -> Principal:
+        return Principal(
+            user_id=user.user_id,
+            username=user.username,
+            display_name=user.display_name,
+            roles=user.roles,
+            auth_version=user.auth_version,
+        )
 
     def _verify_application_runtime(self) -> None:
         runtime_env = {

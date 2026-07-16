@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import shutil
 import sys
+import threading
 import unittest
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from pathlib import Path
 from unittest.mock import patch
@@ -25,6 +27,8 @@ from services.auth import (
     AuthService,
     AuthServiceConfig,
     BootstrapRequired,
+    LastAdminRequired,
+    Principal,
     configure_identity,
     get_identity,
     shutdown_identity,
@@ -404,6 +408,105 @@ class AuthPrimitiveTests(unittest.TestCase):
                 )
         finally:
             engine.dispose()
+            shutil.rmtree(tmp_root, ignore_errors=True)
+            try:
+                tmp_root.parent.rmdir()
+            except OSError:
+                pass
+
+    def test_concurrent_bootstrap_and_last_admin_changes_are_serialized(self):
+        tmp_root = Path.cwd() / ".tmp-auth-invariant-tests" / uuid.uuid4().hex
+        tmp_root.mkdir(parents=True)
+        url = URL.create("sqlite", database=str(tmp_root / "auth.db"))
+        engines = [
+            create_engine(
+                url,
+                connect_args={"check_same_thread": False, "timeout": 10},
+            )
+            for _ in range(4)
+        ]
+        try:
+            ensure_current_schema(engines[0])
+            config = AuthServiceConfig(
+                mode="accounts",
+                session_ttl_seconds=3600,
+                bootstrap_username="race.admin",
+                bootstrap_password="Race admin password 123!",
+                bootstrap_display_name="Race Admin",
+            )
+            bootstrap_barrier = threading.Barrier(len(engines))
+
+            def start_service(engine):
+                bootstrap_barrier.wait(timeout=10)
+                return AuthService(engine, config)
+
+            with ThreadPoolExecutor(max_workers=len(engines)) as executor:
+                services = tuple(executor.map(start_service, engines))
+
+            users = services[0].store.list_users()
+            self.assertEqual([user.username for user in users], ["race.admin"])
+            bootstrap_events = [
+                event
+                for event in services[0].store.list_audit(limit=20)
+                if event.action == "auth.bootstrap"
+            ]
+            self.assertEqual(len(bootstrap_events), 1)
+
+            root = users[0]
+            actor = Principal(
+                user_id=root.user_id,
+                username=root.username,
+                display_name=root.display_name,
+                roles=root.roles,
+                auth_version=root.auth_version,
+            )
+            second = services[0].create_user(
+                username="race.admin.two",
+                password="Race second password 123!",
+                display_name="Race Admin Two",
+                roles=("admin",),
+                actor=actor,
+                request_id="sqlite-create-second-admin",
+            )
+            change_barrier = threading.Barrier(2)
+
+            def remove_admin(service, user_id: str, request_id: str) -> str:
+                change_barrier.wait(timeout=10)
+                try:
+                    service.update_user(
+                        user_id,
+                        display_name=None,
+                        roles=("teacher",),
+                        enabled=None,
+                        actor=actor,
+                        request_id=request_id,
+                    )
+                except LastAdminRequired:
+                    return "blocked"
+                return "updated"
+
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                results = tuple(
+                    executor.map(
+                        lambda args: remove_admin(*args),
+                        (
+                            (services[0], root.user_id, "sqlite-demote-root"),
+                            (services[1], second.user_id, "sqlite-demote-second"),
+                        ),
+                    )
+                )
+
+            self.assertEqual(sorted(results), ["blocked", "updated"])
+            enabled_admins = [
+                user
+                for user in services[0].store.list_users()
+                if user.enabled and "admin" in user.roles
+            ]
+            self.assertEqual(len(enabled_admins), 1)
+            self.assertTrue(services[0].store.verify_audit_chain())
+        finally:
+            for engine in engines:
+                engine.dispose()
             shutil.rmtree(tmp_root, ignore_errors=True)
             try:
                 tmp_root.parent.rmdir()

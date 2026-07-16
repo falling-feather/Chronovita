@@ -3,9 +3,10 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
+from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable, Iterator
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -18,6 +19,7 @@ from sqlalchemy import (
     Text,
     insert,
     select,
+    text,
     update,
 )
 from sqlalchemy.engine import Connection, Engine, RowMapping
@@ -41,6 +43,14 @@ class UserNotFound(AuthStoreError):
     code = "user_not_found"
 
 
+class BootstrapUserRequired(AuthStoreError):
+    code = "bootstrap_admin_required"
+
+
+class LastAdminInvariantViolation(AuthStoreError):
+    code = "last_admin_required"
+
+
 class AuditHeadBusy(AuthStoreError):
     code = "audit_head_busy"
 
@@ -60,6 +70,7 @@ class AuditWrite:
 
 
 _METADATA = MetaData()
+_POSTGRES_IDENTITY_INVARIANT_LOCK_ID = 0x4348524F4E4F4155
 
 users_table = Table(
     "auth_users",
@@ -138,7 +149,7 @@ class AuthStore:
     ) -> UserRecord:
         values = _user_values(user)
         try:
-            with self._write_lock, self.engine.begin() as connection:
+            with self._identity_change_transaction() as connection:
                 try:
                     connection.execute(insert(users_table).values(**values))
                 except IntegrityError as exc:
@@ -150,6 +161,37 @@ class AuthStore:
         except SQLAlchemyError as exc:
             raise AuthStoreError("identity user write failed") from exc
         return user
+
+    def create_bootstrap_user_if_empty(
+        self,
+        factory: Callable[[], tuple[UserRecord, AuditWrite]] | None,
+    ) -> UserRecord | None:
+        """Create exactly one bootstrap user while serializing independent workers."""
+
+        try:
+            with self._identity_change_transaction() as connection:
+                existing = connection.execute(
+                    select(users_table.c.user_id).limit(1)
+                ).first()
+                if existing is not None:
+                    return None
+                if factory is None:
+                    raise BootstrapUserRequired(
+                        "accounts mode requires bootstrap admin credentials for an empty database"
+                    )
+                user, audit = factory()
+                try:
+                    connection.execute(
+                        insert(users_table).values(**_user_values(user))
+                    )
+                except IntegrityError as exc:
+                    raise UserAlreadyExists("username is already in use") from exc
+                self._append_audit_event(connection, audit)
+                return user
+        except (BootstrapUserRequired, UserAlreadyExists):
+            raise
+        except SQLAlchemyError as exc:
+            raise AuthStoreError("identity bootstrap write failed") from exc
 
     def get_user(self, user_id: str) -> UserRecord | None:
         return self._find_user(users_table.c.user_id == user_id)
@@ -179,16 +221,31 @@ class AuthStore:
     ) -> UserRecord:
         now = _utc_now()
         try:
-            with self._write_lock, self.engine.begin() as connection:
+            with self._identity_change_transaction() as connection:
                 row = connection.execute(
-                    select(users_table).where(users_table.c.user_id == user_id)
+                    select(users_table)
+                    .where(users_table.c.user_id == user_id)
+                    .with_for_update()
                 ).mappings().first()
                 if row is None:
                     raise UserNotFound(f"user not found: {user_id}")
                 current = _user_from_row(row)
+                next_roles = (
+                    normalize_roles(roles) if roles is not None else current.roles
+                )
+                next_enabled = enabled if enabled is not None else current.enabled
+                removes_admin = (
+                    current.enabled
+                    and "admin" in current.roles
+                    and (not next_enabled or "admin" not in next_roles)
+                )
+                if removes_admin and _count_enabled_admins(connection) <= 1:
+                    raise LastAdminInvariantViolation(
+                        "the final enabled administrator cannot be removed"
+                    )
                 security_change = any(
                     (
-                        roles is not None and normalize_roles(roles) != current.roles,
+                        roles is not None and next_roles != current.roles,
                         enabled is not None and enabled != current.enabled,
                         password_hash is not None and password_hash != current.password_hash,
                     )
@@ -197,7 +254,7 @@ class AuthStore:
                 if display_name is not None:
                     values["display_name"] = display_name
                 if roles is not None:
-                    values["roles"] = _json_dump(list(normalize_roles(roles)))
+                    values["roles"] = _json_dump(list(next_roles))
                 if enabled is not None:
                     values["enabled"] = enabled
                 if password_hash is not None:
@@ -235,7 +292,7 @@ class AuthStore:
                             },
                         ),
                     )
-        except UserNotFound:
+        except (LastAdminInvariantViolation, UserNotFound):
             raise
         except SQLAlchemyError as exc:
             raise AuthStoreError("identity user update failed") from exc
@@ -426,6 +483,29 @@ class AuthStore:
             raise AuthStoreError("identity user read failed") from exc
         return _user_from_row(row) if row is not None else None
 
+    @contextmanager
+    def _identity_change_transaction(self) -> Iterator[Connection]:
+        with self._write_lock, self.engine.connect() as connection:
+            try:
+                dialect = connection.dialect.name
+                if dialect == "sqlite":
+                    connection.exec_driver_sql("BEGIN IMMEDIATE")
+                elif dialect == "postgresql":
+                    connection.begin()
+                    connection.execute(
+                        text("SELECT pg_advisory_xact_lock(:lock_id)"),
+                        {"lock_id": _POSTGRES_IDENTITY_INVARIANT_LOCK_ID},
+                    )
+                else:
+                    raise AuthStoreError(
+                        f"identity transactions do not support dialect: {dialect}"
+                    )
+                yield connection
+                connection.commit()
+            except BaseException:
+                connection.rollback()
+                raise
+
     def _append_audit_event(
         self,
         connection: Connection,
@@ -491,6 +571,17 @@ def _user_values(user: UserRecord) -> dict[str, Any]:
         "created_at": _dt_string(user.created_at),
         "updated_at": _dt_string(user.updated_at),
     }
+
+
+def _count_enabled_admins(connection: Connection) -> int:
+    rows = connection.execute(
+        select(users_table.c.enabled, users_table.c.roles)
+    ).mappings()
+    return sum(
+        1
+        for row in rows
+        if bool(row["enabled"]) and "admin" in tuple(json.loads(row["roles"]))
+    )
 
 
 def _session_values(session: SessionRecord) -> dict[str, Any]:

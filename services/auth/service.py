@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import re
 import secrets
-import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
@@ -22,7 +21,13 @@ from .models import (
     normalize_roles,
 )
 from .passwords import DUMMY_PASSWORD_HASH, hash_password, validate_password, verify_password
-from .store import AuditWrite, AuthStore, AuthStoreError, UserAlreadyExists, UserNotFound
+from .store import (
+    AuditWrite,
+    AuthStore,
+    AuthStoreError,
+    BootstrapUserRequired,
+    LastAdminInvariantViolation,
+)
 
 
 AuthMode = Literal["legacy-local", "accounts"]
@@ -62,7 +67,6 @@ class AuthService:
     def __init__(self, engine: Engine, config: AuthServiceConfig) -> None:
         self.store = AuthStore(engine)
         self.config = config
-        self._user_change_lock = threading.RLock()
         if config.mode == "accounts":
             self._bootstrap_if_empty()
 
@@ -195,26 +199,7 @@ class AuthService:
         if display_name is not None:
             display_name = normalize_display_name(display_name)
         normalized_roles = normalize_roles(roles) if roles is not None else None
-        with self._user_change_lock:
-            current = self.store.get_user(user_id)
-            if current is None:
-                raise UserNotFound(f"user not found: {user_id}")
-            removes_admin = (
-                current.enabled
-                and "admin" in current.roles
-                and (
-                    enabled is False
-                    or (normalized_roles is not None and "admin" not in normalized_roles)
-                )
-            )
-            if removes_admin:
-                enabled_admins = [
-                    user
-                    for user in self.store.list_users()
-                    if user.enabled and "admin" in user.roles
-                ]
-                if len(enabled_admins) <= 1:
-                    raise LastAdminRequired("the final enabled administrator cannot be removed")
+        try:
             updated = self.store.update_user(
                 user_id,
                 display_name=display_name,
@@ -228,6 +213,10 @@ class AuthService:
                     details={},
                 ),
             )
+        except LastAdminInvariantViolation as exc:
+            raise LastAdminRequired(
+                "the final enabled administrator cannot be removed"
+            ) from exc
         return UserView.from_record(updated)
 
     def reset_password(
@@ -290,21 +279,26 @@ class AuthService:
         )
 
     def _bootstrap_if_empty(self) -> None:
-        if self.store.count_users() > 0:
-            return
-        if not self.config.bootstrap_username or not self.config.bootstrap_password:
+        factory = None
+        if self.config.bootstrap_username and self.config.bootstrap_password:
+            factory = self._build_bootstrap_user
+        try:
+            self.store.create_bootstrap_user_if_empty(factory)
+        except BootstrapUserRequired as exc:
             raise BootstrapRequired(
                 "accounts mode requires bootstrap admin credentials for an empty database"
-            )
+            ) from exc
+
+    def _build_bootstrap_user(self) -> tuple[UserRecord, AuditWrite]:
         user = self._new_user(
             username=self.config.bootstrap_username,
             password=self.config.bootstrap_password,
             display_name=self.config.bootstrap_display_name,
             roles=("admin",),
         )
-        self.store.create_user(
+        return (
             user,
-            audit=AuditWrite(
+            AuditWrite(
                 occurred_at=user.created_at,
                 actor_user_id=user.user_id,
                 actor_session_id=None,
