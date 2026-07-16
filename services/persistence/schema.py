@@ -174,6 +174,7 @@ def inspect_schema(engine: Engine) -> DatabaseSchemaStatus:
     dialect = _dialect(engine)
     try:
         with engine.connect() as connection:
+            _configure_snapshot_isolation(connection, dialect)
             table_names = _table_names(connection)
             ledger_present = schema_migrations_table.name in table_names
             if not ledger_present:
@@ -277,11 +278,17 @@ def _begin_migration_transaction(connection: Connection, dialect: str) -> None:
     if dialect == "sqlite":
         connection.exec_driver_sql("BEGIN IMMEDIATE")
         return
+    _configure_snapshot_isolation(connection, dialect)
     connection.begin()
     connection.execute(
         text("SELECT pg_advisory_xact_lock(:lock_id)"),
         {"lock_id": _POSTGRES_MIGRATION_LOCK_ID},
     )
+
+
+def _configure_snapshot_isolation(connection: Connection, dialect: str) -> None:
+    if dialect == "postgresql":
+        connection.execution_options(isolation_level="REPEATABLE READ")
 
 
 def _validate_legacy_layout(

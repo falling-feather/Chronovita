@@ -8,6 +8,7 @@ import threading
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import redirect_stderr, redirect_stdout
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -22,6 +23,7 @@ for import_root in (REPO_ROOT, API_ROOT):
         sys.path.insert(0, str(import_root))
 
 from scripts import manage_database as database_cli
+from services.auth.store import AuditWrite, AuthStore
 from services.persistence.database import (
     DatabaseEngineOptions,
     create_database_engine,
@@ -84,6 +86,7 @@ class PostgresServiceTests(unittest.TestCase):
         self.assertEqual(versions, list(range(1, LATEST_SCHEMA_VERSION + 1)))
 
         self._verify_postgres_cli(first, target)
+        self._verify_concurrent_audit(first, second)
         first.dispose()
         second.dispose()
         self._verify_application_runtime()
@@ -118,6 +121,68 @@ class PostgresServiceTests(unittest.TestCase):
             self.assertEqual(payload["result"]["database_url_env"], env_name)
             if target.url.password:
                 self.assertNotIn(target.url.password, output)
+
+    def _verify_concurrent_audit(self, first, second) -> None:
+        write_count = 32
+        start = threading.Event()
+        stop = threading.Event()
+        failures: list[str] = []
+        failure_lock = threading.Lock()
+        stores = tuple(
+            AuthStore(first if index % 2 == 0 else second)
+            for index in range(8)
+        )
+        verifier = AuthStore(second)
+
+        def verify_while_writing() -> None:
+            if not start.wait(timeout=10):
+                raise AssertionError("concurrent audit start timed out")
+            while not stop.is_set():
+                try:
+                    if not verifier.verify_audit_chain():
+                        raise AssertionError("audit chain reported an invalid snapshot")
+                    if not inspect_schema(second).is_current:
+                        raise AssertionError("schema inspection reported a stale snapshot")
+                except Exception as exc:
+                    with failure_lock:
+                        failures.append(f"{type(exc).__name__}: {exc}")
+                    stop.set()
+
+        def append_event(index: int):
+            if not start.wait(timeout=10):
+                raise AssertionError("concurrent audit start timed out")
+            return stores[index % len(stores)].append_audit(
+                occurred_at=datetime.now(timezone.utc),
+                actor_user_id=None,
+                actor_session_id=None,
+                actor_roles=(),
+                action="qa.audit.concurrent",
+                resource_type="postgres-service",
+                resource_id=f"event-{index:03d}",
+                outcome="succeeded",
+                request_id=f"postgres-audit-{index:03d}",
+            )
+
+        with ThreadPoolExecutor(max_workers=9) as executor:
+            verification = executor.submit(verify_while_writing)
+            writes = tuple(
+                executor.submit(append_event, index)
+                for index in range(write_count)
+            )
+            start.set()
+            try:
+                events = tuple(future.result(timeout=15) for future in writes)
+            finally:
+                stop.set()
+            verification.result(timeout=15)
+
+        self.assertEqual(failures, [])
+        self.assertEqual(
+            sorted(event.sequence for event in events),
+            list(range(1, write_count + 1)),
+        )
+        self.assertTrue(verifier.verify_audit_chain())
+        self.assertTrue(inspect_schema(first).is_current)
 
     def _verify_application_runtime(self) -> None:
         runtime_env = {

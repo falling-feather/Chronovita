@@ -377,6 +377,10 @@ class AuthStore:
     def verify_audit_chain(self) -> bool:
         try:
             with self.engine.connect() as connection:
+                if connection.dialect.name == "postgresql":
+                    connection.execution_options(
+                        isolation_level="REPEATABLE READ"
+                    )
                 rows = connection.execute(
                     select(audit_events_table).order_by(audit_events_table.c.sequence)
                 ).mappings().fetchall()
@@ -430,7 +434,9 @@ class AuthStore:
         event_id = f"aud_{uuid4().hex}"
         safe_details = audit.details or {}
         head = connection.execute(
-            select(audit_head_table).where(audit_head_table.c.head_id == 1)
+            select(audit_head_table)
+            .where(audit_head_table.c.head_id == 1)
+            .with_for_update()
         ).mappings().one()
         sequence = int(head["sequence"]) + 1
         previous_hash = str(head["event_hash"])
