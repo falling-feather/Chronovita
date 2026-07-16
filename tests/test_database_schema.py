@@ -32,6 +32,7 @@ from services.auth.store import (
     users_table,
 )
 from services.game_runtime.store import (
+    GameRuntimeStore,
     game_dossiers_table,
     game_sessions_table,
 )
@@ -194,7 +195,7 @@ class DatabaseSchemaTests(unittest.TestCase):
         try:
             kv_table.metadata.create_all(engine)
             game_sessions_table.metadata.create_all(engine)
-            AuthStore(engine)
+            self._create_legacy_identity_layout(engine)
             with engine.begin() as connection:
                 connection.execute(
                     insert(users_table).values(
@@ -331,6 +332,15 @@ class DatabaseSchemaTests(unittest.TestCase):
         self.assertTrue(inspect_schema(engine).is_current)
         self.assertIn(schema_migrations_table.name, inspect(engine).get_table_names())
 
+    def test_store_constructors_do_not_create_or_initialize_schema(self):
+        engine = self._engine("store-construction.db")
+        try:
+            AuthStore(engine)
+            GameRuntimeStore(engine)
+            self.assertEqual(inspect(engine).get_table_names(), [])
+        finally:
+            engine.dispose()
+
     def test_published_migration_contract_checksums_are_stable(self):
         self.assertEqual(
             migration_contract_checksums(),
@@ -414,7 +424,19 @@ class DatabaseSchemaTests(unittest.TestCase):
 
     @staticmethod
     def _create_non_prefix_layout(engine: Engine) -> None:
-        AuthStore(engine)
+        DatabaseSchemaTests._create_legacy_identity_layout(engine)
+
+    @staticmethod
+    def _create_legacy_identity_layout(engine: Engine) -> None:
+        users_table.metadata.create_all(engine)
+        with engine.begin() as connection:
+            connection.execute(
+                insert(audit_head_table).values(
+                    head_id=1,
+                    sequence=0,
+                    event_hash="0" * 64,
+                )
+            )
 
     @staticmethod
     def _rewrite_checksum(engine: Engine) -> None:

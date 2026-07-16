@@ -30,6 +30,7 @@ from services.auth import (
     shutdown_identity,
 )
 from services.auth.passwords import hash_password, verify_password
+from services.persistence.schema import ensure_current_schema
 from services.auth.store import AuthStoreError, audit_events_table, sessions_table
 
 
@@ -389,6 +390,7 @@ class AuthPrimitiveTests(unittest.TestCase):
         tmp_root.mkdir(parents=True)
         engine = create_engine(URL.create("sqlite", database=str(tmp_root / "auth.db")))
         try:
+            ensure_current_schema(engine)
             with self.assertRaises(BootstrapRequired):
                 AuthService(
                     engine,

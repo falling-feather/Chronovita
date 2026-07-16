@@ -41,6 +41,7 @@ from services.game_runtime.store import (
     game_sessions_table,
 )
 from services.persistence.db import kv_table
+from services.persistence.schema import ensure_current_schema
 from services.persistence.student_assets import (
     StudentAssetMigrationAuthorizationError,
     StudentAssetMigrationConflict,
@@ -82,7 +83,7 @@ class StudentAssetMigrationTests(unittest.TestCase):
             connect_args={"check_same_thread": False},
             future=True,
         )
-        kv_table.metadata.create_all(self.engine)
+        ensure_current_schema(self.engine)
         self.auth_store = AuthStore(self.engine)
         self.game_store = GameRuntimeStore(self.engine)
         self._create_user(ADMIN_ID, "root.admin", ("admin",))
@@ -446,6 +447,59 @@ class StudentAssetMigrationTests(unittest.TestCase):
         error = json.loads(stderr.getvalue())
         self.assertFalse(error["ok"])
         self.assertEqual(error["code"], "student_asset_command_invalid")
+
+    def test_offline_account_and_asset_commands_require_current_schema(self):
+        unmanaged = self.tmp_root / "unmanaged.db"
+        unmanaged.touch()
+        cases = (
+            (
+                create_student_cli.main,
+                [
+                    "--database",
+                    str(unmanaged),
+                    "--actor-username",
+                    "root.admin",
+                    "--username",
+                    "student.new",
+                    "--display-name",
+                    "Student New",
+                ],
+                {
+                    "CHRONO_MIGRATION_ACTOR_PASSWORD": TEST_PASSWORD,
+                    "CHRONO_NEW_STUDENT_PASSWORD": TEST_PASSWORD,
+                },
+            ),
+            (
+                migration_cli.main,
+                [
+                    "--database",
+                    str(unmanaged),
+                    "--actor-username",
+                    "root.admin",
+                    "--target-username",
+                    "student.one",
+                    "--source-game-user-id",
+                    LEGACY_GAME_USER,
+                ],
+                {"CHRONO_MIGRATION_ACTOR_PASSWORD": TEST_PASSWORD},
+            ),
+        )
+
+        for entrypoint, argv, environment in cases:
+            with self.subTest(command=entrypoint.__module__):
+                stderr = io.StringIO()
+                stdout = io.StringIO()
+                with patch.dict(
+                    os.environ,
+                    environment,
+                    clear=False,
+                ), redirect_stderr(stderr), redirect_stdout(stdout):
+                    result = entrypoint(argv)
+                self.assertEqual(result, 2)
+                self.assertEqual(stdout.getvalue(), "")
+                error = json.loads(stderr.getvalue())
+                self.assertFalse(error["ok"])
+                self.assertEqual(error["code"], "database_migration_pending")
 
     def _migrate(self, *, apply: bool):
         return migrate_legacy_student_assets(

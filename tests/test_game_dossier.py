@@ -35,6 +35,7 @@ from services.game_runtime.store import (
     game_dossiers_table,
     game_sessions_table,
 )
+from services.persistence.schema import ensure_current_schema
 
 
 BASE_TIME = datetime(2026, 7, 14, 12, 0, tzinfo=timezone.utc)
@@ -331,6 +332,7 @@ class GameDossierServiceTests(unittest.TestCase):
             connect_args={"check_same_thread": False},
             future=True,
         )
+        ensure_current_schema(self.engine)
         self.engines = [self.engine]
         self.store = GameRuntimeStore(self.engine)
         self.repository = ScenarioCatalogRepository(

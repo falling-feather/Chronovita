@@ -39,6 +39,7 @@ from services.game_runtime.service import (
     ScenarioReleasePinV1,
 )
 from services.game_runtime.store import GameRuntimeStore
+from services.persistence.schema import ensure_current_schema
 
 
 NOW = datetime(2026, 7, 14, 8, 0, tzinfo=timezone.utc)
@@ -142,6 +143,7 @@ class GameReleaseCatalogTests(unittest.TestCase):
             poolclass=StaticPool,
             future=True,
         )
+        ensure_current_schema(engine)
         self.addCleanup(engine.dispose)
         service = GameRuntimeService(self.repository, GameRuntimeStore(engine))
         _, session = service.start_session(
@@ -236,6 +238,7 @@ class GameReleaseCatalogTests(unittest.TestCase):
             poolclass=StaticPool,
             future=True,
         )
+        ensure_current_schema(engine)
         self.addCleanup(engine.dispose)
         service = GameRuntimeService(self.repository, GameRuntimeStore(engine))
         pin = _release_pin(first_manifest, first)
@@ -351,6 +354,7 @@ class GameReleaseCatalogTests(unittest.TestCase):
             poolclass=StaticPool,
             future=True,
         )
+        ensure_current_schema(engine)
         self.addCleanup(engine.dispose)
         store = GameRuntimeStore(engine)
         service = GameRuntimeService(self.repository, store)
@@ -416,6 +420,7 @@ class GameReleaseCatalogTests(unittest.TestCase):
             poolclass=StaticPool,
             future=True,
         )
+        ensure_current_schema(engine)
         self.addCleanup(engine.dispose)
         service = GameRuntimeService(self.repository, GameRuntimeStore(engine))
 

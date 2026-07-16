@@ -157,11 +157,10 @@ game_dossiers_table = Table(
 
 
 class GameRuntimeStore:
-    """SQLAlchemy Core JSON mirror with whole-record optimistic CAS."""
+    """JSON mirror with whole-record CAS over a schema-validated engine."""
 
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
-        _METADATA.create_all(engine)
 
     def create_session(
         self,

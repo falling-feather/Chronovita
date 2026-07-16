@@ -35,6 +35,7 @@ from services.game_runtime import (
 from services.game_runtime.catalog import ScenarioCatalogRepository
 from services.game_runtime.service import GameRuntimeService
 from services.game_runtime.store import GameRuntimeStore, game_dossiers_table
+from services.persistence.schema import ensure_current_schema
 
 
 BASE_TIME = datetime(2026, 7, 15, 12, 0, tzinfo=timezone.utc)
@@ -482,6 +483,7 @@ class GameFreeInputServiceTests(unittest.IsolatedAsyncioTestCase):
             poolclass=StaticPool,
             future=True,
         )
+        ensure_current_schema(engine)
         self.addCleanup(engine.dispose)
         return GameRuntimeService(
             self._reviewed_repository(),
@@ -501,6 +503,7 @@ class GameFreeInputServiceTests(unittest.IsolatedAsyncioTestCase):
             )
             for _ in range(2)
         ]
+        ensure_current_schema(engines[0])
         for engine in engines:
             self.addCleanup(engine.dispose)
         services = []

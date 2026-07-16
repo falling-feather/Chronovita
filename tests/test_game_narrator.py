@@ -36,6 +36,7 @@ from services.llm import (
     StructuredCompletionInfo,
     StructuredLLMError,
 )
+from services.persistence.schema import ensure_current_schema
 
 
 BASE_TIME = datetime(2026, 7, 15, 16, 0, tzinfo=timezone.utc)
@@ -262,6 +263,7 @@ class HistoricalNarratorTests(unittest.IsolatedAsyncioTestCase):
             future=True,
         )
         self.addCleanup(database.dispose)
+        ensure_current_schema(database)
         store = CountingStore(database)
         completer = RecordingCompleter()
         service = GameRuntimeService(
@@ -305,6 +307,7 @@ class HistoricalNarratorTests(unittest.IsolatedAsyncioTestCase):
             future=True,
         )
         self.addCleanup(database.dispose)
+        ensure_current_schema(database)
         store = CountingStore(database)
         narrator = RacingNarrator()
         service = GameRuntimeService(

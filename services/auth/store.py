@@ -117,14 +117,11 @@ audit_events_table = Table(
 
 
 class AuthStore:
+    """Identity persistence over an engine already validated by the schema manager."""
+
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
         self._write_lock = threading.RLock()
-        try:
-            _METADATA.create_all(engine)
-            self._ensure_audit_head()
-        except SQLAlchemyError as exc:
-            raise AuthStoreError("identity storage initialization failed") from exc
 
     def count_users(self) -> int:
         try:
@@ -475,24 +472,6 @@ class AuthStore:
             )
         )
         return AuditEvent(**payload, event_hash=event_hash)
-
-    def _ensure_audit_head(self) -> None:
-        try:
-            with self.engine.begin() as connection:
-                exists = connection.execute(
-                    select(audit_head_table.c.head_id).where(audit_head_table.c.head_id == 1)
-                ).first()
-                if exists is None:
-                    connection.execute(
-                        insert(audit_head_table).values(
-                            head_id=1,
-                            sequence=0,
-                            event_hash=ZERO_HASH,
-                        )
-                    )
-        except IntegrityError:
-            return
-
 
 def _user_values(user: UserRecord) -> dict[str, Any]:
     return {

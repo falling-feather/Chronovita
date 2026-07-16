@@ -30,6 +30,7 @@ from services.auth import (
     shutdown_identity,
 )
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
+from services.persistence.schema import ensure_current_schema
 
 
 class GameOwnershipApiTests(unittest.TestCase):
@@ -69,6 +70,7 @@ class GameOwnershipApiTests(unittest.TestCase):
                 future=True,
             )
             try:
+                ensure_current_schema(engine)
                 configure_identity(
                     engine,
                     AuthServiceConfig(

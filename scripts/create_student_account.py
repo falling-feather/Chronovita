@@ -8,10 +8,6 @@ import sys
 from pathlib import Path
 from uuid import uuid4
 
-from sqlalchemy import create_engine
-from sqlalchemy.engine import URL
-
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -23,6 +19,12 @@ from services.auth import (
     AuthStoreError,
     UserAlreadyExists,
 )
+from services.persistence.database import (
+    DatabaseConfigurationError,
+    create_database_engine,
+    resolve_database_target,
+)
+from services.persistence.schema import DatabaseSchemaError, ensure_current_schema
 
 
 _ACTOR_PASSWORD_ENV = "CHRONO_MIGRATION_ACTOR_PASSWORD"
@@ -51,14 +53,17 @@ def main(argv: list[str] | None = None) -> int:
             "student_account_database_not_found",
             f"database file does not exist: {database}",
         )
-    engine = create_engine(
-        URL.create("sqlite", database=str(database)),
-        connect_args={"check_same_thread": False},
-        future=True,
-    )
+    engine = None
     issued = None
     operation_request_id = f"student-account:{uuid4().hex}"
     try:
+        engine = create_database_engine(
+            resolve_database_target(
+                database_url=None,
+                sqlite_path=str(database),
+            )
+        )
+        ensure_current_schema(engine, mode="validate")
         identity = AuthService(
             engine,
             AuthServiceConfig(mode="accounts", session_ttl_seconds=300),
@@ -84,7 +89,14 @@ def main(argv: list[str] | None = None) -> int:
             actor=issued.principal,
             request_id=f"{operation_request_id}:create",
         )
-    except (AuthError, AuthStoreError, UserAlreadyExists, ValueError) as exc:
+    except (
+        AuthError,
+        AuthStoreError,
+        DatabaseConfigurationError,
+        DatabaseSchemaError,
+        UserAlreadyExists,
+        ValueError,
+    ) as exc:
         return _error(getattr(exc, "code", "student_account_invalid"), str(exc))
     finally:
         if issued is not None:
@@ -95,7 +107,8 @@ def main(argv: list[str] | None = None) -> int:
                 )
             except (AuthError, AuthStoreError):
                 pass
-        engine.dispose()
+        if engine is not None:
+            engine.dispose()
     print(
         json.dumps(
             {"ok": True, "user": user.model_dump(mode="json")},

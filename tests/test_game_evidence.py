@@ -27,6 +27,7 @@ from services.game_runtime import SessionIntegrityError
 from services.game_runtime.catalog import ScenarioCatalogRepository
 from services.game_runtime.service import GameRuntimeService
 from services.game_runtime.store import GameRuntimeStore, game_sessions_table
+from services.persistence.schema import ensure_current_schema
 
 
 BASE_TIME = datetime(2026, 7, 15, 14, 0, tzinfo=timezone.utc)
@@ -49,6 +50,7 @@ class GameEvidenceTests(unittest.TestCase):
             poolclass=StaticPool,
             future=True,
         )
+        ensure_current_schema(self.database)
         self.addCleanup(self.database.dispose)
         self.repository = ScenarioCatalogRepository(
             content_root=REPO_ROOT / "content",

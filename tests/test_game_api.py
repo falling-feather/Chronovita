@@ -42,6 +42,7 @@ from services.game_runtime.service import (
     get_game_runtime,
 )
 from services.game_runtime.store import GameRuntimeStore
+from services.persistence.schema import ensure_current_schema
 
 
 class GameApiTests(unittest.TestCase):
@@ -607,6 +608,7 @@ class GameRuntimeServiceTests(unittest.TestCase):
             poolclass=StaticPool,
             future=True,
         )
+        ensure_current_schema(engine)
         self.addCleanup(engine.dispose)
         return GameRuntimeService(
             ScenarioCatalogRepository(

@@ -32,6 +32,7 @@ from services.game_runtime.store import (
     StoredSessionWriteConflict,
     game_sessions_table,
 )
+from services.persistence.schema import ensure_current_schema
 
 
 STARTED_AT = datetime(2026, 7, 14, 10, 0, tzinfo=timezone.utc)
@@ -41,11 +42,13 @@ class GamePersistenceApiTests(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.previous = {
+            "auth_mode": settings.auth_mode,
             "content_root": settings.content_root,
             "game_catalog_path": settings.game_catalog_path,
             "game_user_id": settings.game_user_id,
             "sqlite_path": settings.sqlite_path,
         }
+        settings.auth_mode = "legacy-local"
         settings.content_root = str(REPO_ROOT / "content")
         settings.game_catalog_path = "scenarios/catalog.v1.json"
         settings.game_user_id = "restart-student"
@@ -531,6 +534,7 @@ class GameRuntimeStoreTests(unittest.TestCase):
             connect_args={"check_same_thread": False},
             future=True,
         )
+        ensure_current_schema(engine)
         self.engines.append(engine)
         return engine
 
