@@ -38,7 +38,11 @@ kv_table = Table(
 )
 
 
-def init_engine(sqlite_path: str) -> Engine:
+def init_engine(
+    sqlite_path: str,
+    *,
+    migration_mode: str = "apply-safe",
+) -> Engine:
     global _ENGINE
     with _LOCK:
         if _ENGINE is not None:
@@ -48,9 +52,20 @@ def init_engine(sqlite_path: str) -> Engine:
             path = (_REPO_ROOT / path).resolve()
         path.parent.mkdir(parents=True, exist_ok=True)
         url = URL.create("sqlite", database=str(path))
-        _ENGINE = create_engine(url, connect_args={"check_same_thread": False}, future=True)
-        _METADATA.create_all(_ENGINE)
-        return _ENGINE
+        engine = create_engine(
+            url,
+            connect_args={"check_same_thread": False},
+            future=True,
+        )
+        try:
+            from services.persistence.schema import ensure_current_schema
+
+            ensure_current_schema(engine, mode=migration_mode)
+        except BaseException:
+            engine.dispose()
+            raise
+        _ENGINE = engine
+        return engine
 
 
 def close_engine() -> None:

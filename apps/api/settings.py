@@ -8,13 +8,14 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="CHRONO_", extra="ignore")
 
     app_name: str = "Chronovita API"
-    app_version: str = "0.9.5"
+    app_version: str = "0.9.7"
     debug: bool = True
     cors_origins: list[str] = [
         "http://127.0.0.1:5173",
         "http://localhost:5173",
     ]
     sqlite_path: str = "data/chronovita.db"
+    database_migration_mode: Literal["apply-safe", "validate"] = "apply-safe"
     content_root: str = "content"
     admin_token: str = ""
     admin_actor: str = "local-admin"

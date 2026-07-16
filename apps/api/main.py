@@ -32,7 +32,10 @@ from services.persistence.student_assets import assert_no_unmapped_student_asset
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    engine = persistence.init_engine(settings.sqlite_path)
+    engine = persistence.init_engine(
+        settings.sqlite_path,
+        migration_mode=settings.database_migration_mode,
+    )
     try:
         configure_identity(
             engine,
