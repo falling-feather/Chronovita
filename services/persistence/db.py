@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import threading
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Iterable
 
 from sqlalchemy import (
@@ -13,19 +12,25 @@ from sqlalchemy import (
     String,
     Table,
     Text,
-    create_engine,
     delete,
     insert,
     select,
     update,
 )
-from sqlalchemy.engine import Engine, URL
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
+
+from services.persistence.database import (
+    DatabaseEngineConflict,
+    DatabaseTarget,
+    create_database_engine,
+    resolve_database_target,
+)
 
 _LOCK = threading.RLock()
 _ENGINE: Engine | None = None
+_ENGINE_TARGET: DatabaseTarget | None = None
 _METADATA = MetaData()
-_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 kv_table = Table(
@@ -39,24 +44,24 @@ kv_table = Table(
 
 
 def init_engine(
-    sqlite_path: str,
+    sqlite_path: str = "data/chronovita.db",
     *,
+    database_url: str | None = None,
     migration_mode: str = "apply-safe",
 ) -> Engine:
-    global _ENGINE
+    global _ENGINE, _ENGINE_TARGET
+    target = resolve_database_target(
+        database_url=database_url,
+        sqlite_path=sqlite_path,
+    )
     with _LOCK:
         if _ENGINE is not None:
+            if _ENGINE_TARGET != target:
+                raise DatabaseEngineConflict(
+                    "persistence engine is already initialized for another target"
+                )
             return _ENGINE
-        path = Path(sqlite_path)
-        if not path.is_absolute():
-            path = (_REPO_ROOT / path).resolve()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        url = URL.create("sqlite", database=str(path))
-        engine = create_engine(
-            url,
-            connect_args={"check_same_thread": False},
-            future=True,
-        )
+        engine = create_database_engine(target)
         try:
             from services.persistence.schema import ensure_current_schema
 
@@ -65,15 +70,17 @@ def init_engine(
             engine.dispose()
             raise
         _ENGINE = engine
+        _ENGINE_TARGET = target
         return engine
 
 
 def close_engine() -> None:
-    global _ENGINE
+    global _ENGINE, _ENGINE_TARGET
     with _LOCK:
         if _ENGINE is not None:
             _ENGINE.dispose()
             _ENGINE = None
+            _ENGINE_TARGET = None
 
 
 def _engine() -> Engine:

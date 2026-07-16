@@ -21,9 +21,9 @@ from services.persistence.schema import (
     DatabaseSchemaStatus,
     inspect_schema,
 )
+from services.version import APP_VERSION
 
 
-APP_VERSION = "0.9.8"
 MANIFEST_SUFFIX = ".manifest.json"
 _HASH_CHUNK_BYTES = 1024 * 1024
 _MAX_MANIFEST_BYTES = 1024 * 1024

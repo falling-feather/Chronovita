@@ -9,9 +9,26 @@ from .db import (
     kv_list_prefix,
     kv_set,
 )
+from .database import (
+    DatabaseConfigurationError,
+    DatabaseDriverUnavailable,
+    DatabaseEngineConflict,
+    DatabaseTarget,
+    DatabaseUrlInvalid,
+    UnsupportedDatabaseDialect,
+    UnsupportedDatabaseDriver,
+    create_database_engine,
+    resolve_database_target,
+)
 
 __all__ = [
     "close_engine",
+    "create_database_engine",
+    "DatabaseConfigurationError",
+    "DatabaseDriverUnavailable",
+    "DatabaseEngineConflict",
+    "DatabaseTarget",
+    "DatabaseUrlInvalid",
     "init_engine",
     "kv_set",
     "kv_get",
@@ -20,4 +37,7 @@ __all__ = [
     "kv_delete",
     "kv_list",
     "kv_list_prefix",
+    "resolve_database_target",
+    "UnsupportedDatabaseDialect",
+    "UnsupportedDatabaseDriver",
 ]

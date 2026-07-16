@@ -34,6 +34,7 @@ from services.persistence.student_assets import assert_no_unmapped_student_asset
 async def lifespan(app: FastAPI):
     engine = persistence.init_engine(
         settings.sqlite_path,
+        database_url=settings.database_url.get_secret_value(),
         migration_mode=settings.database_migration_mode,
     )
     try:

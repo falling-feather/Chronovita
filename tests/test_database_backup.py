@@ -36,6 +36,7 @@ from services.persistence.schema import (
     inspect_schema,
     schema_migrations_table,
 )
+from services.version import APP_VERSION
 
 
 NOW = datetime(2026, 7, 16, 14, 0, tzinfo=timezone.utc)
@@ -63,6 +64,7 @@ class DatabaseBackupTests(unittest.TestCase):
         restored = restore_sqlite_backup(backup, target)
 
         self.assertEqual(manifest.database_schema_version, 3)
+        self.assertEqual(manifest.app_version, APP_VERSION)
         self.assertTrue(manifest.ledger_present)
         self.assertEqual(verification.manifest, manifest)
         self.assertEqual(restored.backup_id, manifest.backup_id)

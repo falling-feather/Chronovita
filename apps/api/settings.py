@@ -1,20 +1,23 @@
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from services.version import APP_VERSION
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="CHRONO_", extra="ignore")
 
     app_name: str = "Chronovita API"
-    app_version: str = "0.9.8"
+    app_version: str = APP_VERSION
     debug: bool = True
     cors_origins: list[str] = [
         "http://127.0.0.1:5173",
         "http://localhost:5173",
     ]
     sqlite_path: str = "data/chronovita.db"
+    database_url: SecretStr = SecretStr("")
     database_migration_mode: Literal["apply-safe", "validate"] = "apply-safe"
     content_root: str = "content"
     admin_token: str = ""
