@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-import hashlib
-import re
 from typing import Annotated, NoReturn
-from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from auth_dependencies import AuthContext, require_auth_context, require_permission
+from auth_dependencies import (
+    AuthContext,
+    client_fingerprint,
+    request_id,
+    require_auth_context,
+    require_permission,
+)
 from settings import settings
 from services.auth import (
     AccountsModeRequired,
@@ -81,8 +84,8 @@ async def login(payload: LoginRequest, request: Request, response: Response) -> 
         issued = get_identity().login(
             payload.username,
             payload.password,
-            request_id=_request_id(request),
-            client_fingerprint=_client_fingerprint(request),
+            request_id=request_id(request),
+            client_fingerprint=client_fingerprint(request),
         )
     except Exception as exc:
         _raise_auth_error(exc)
@@ -116,7 +119,7 @@ async def logout(
 ) -> Response:
     try:
         if not context.principal.synthetic:
-            get_identity().logout(context.principal, request_id=_request_id(request))
+            get_identity().logout(context.principal, request_id=request_id(request))
     except Exception as exc:
         _raise_auth_error(exc)
     response.delete_cookie(
@@ -153,7 +156,7 @@ async def create_user(
             display_name=payload.display_name,
             roles=payload.roles,
             actor=context.principal,
-            request_id=_request_id(request),
+            request_id=request_id(request),
         )
     except Exception as exc:
         _raise_auth_error(exc)
@@ -173,7 +176,7 @@ async def update_user(
             roles=payload.roles,
             enabled=payload.enabled,
             actor=context.principal,
-            request_id=_request_id(request),
+            request_id=request_id(request),
         )
     except Exception as exc:
         _raise_auth_error(exc)
@@ -191,7 +194,7 @@ async def reset_password(
             user_id,
             password=payload.password,
             actor=context.principal,
-            request_id=_request_id(request),
+            request_id=request_id(request),
         )
     except Exception as exc:
         _raise_auth_error(exc)
@@ -250,16 +253,3 @@ def _raise_auth_error(exc: Exception) -> NoReturn:
             detail={"code": exc.code, "message": "Identity service is unavailable."},
         ) from exc
     raise exc
-
-
-def _request_id(request: Request) -> str:
-    supplied = request.headers.get("X-Request-ID", "").strip()
-    if supplied and re.fullmatch(r"[A-Za-z0-9._:-]{1,100}", supplied):
-        return supplied
-    return f"req_{uuid4().hex}"
-
-
-def _client_fingerprint(request: Request) -> str:
-    host = request.client.host if request.client else "unknown"
-    agent = request.headers.get("User-Agent", "")[:200]
-    return hashlib.sha256(f"{host}\x1f{agent}".encode("utf-8")).hexdigest()[:24]

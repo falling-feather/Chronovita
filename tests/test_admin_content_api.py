@@ -57,7 +57,7 @@ class AdminContentApiTests(unittest.TestCase):
             "/api/v1/admin/content/drafts",
             json=payload,
         )
-        self.assertEqual(unauthorized.status_code, 403)
+        self.assertEqual(unauthorized.status_code, 401)
 
         saved = self.client.post(
             "/api/v1/admin/content/drafts",
@@ -246,7 +246,7 @@ class AdminContentApiTests(unittest.TestCase):
             "/api/v1/admin/content/runtime-scenarios",
             json=scenario,
         )
-        self.assertEqual(unauthorized.status_code, 403)
+        self.assertEqual(unauthorized.status_code, 401)
         staged = self.client.post(
             "/api/v1/admin/content/runtime-scenarios",
             headers=self.headers,
@@ -254,6 +254,20 @@ class AdminContentApiTests(unittest.TestCase):
         )
         self.assertEqual(staged.status_code, 200, staged.text)
         descriptor = staged.json()["item"]["descriptor"]
+        staged_detail = self.client.get(
+            (
+                "/api/v1/admin/content/runtime-scenarios/"
+                f"{scenario['scenario_id']}/versions/{scenario['scenario_version']}"
+            ),
+            headers=self.headers,
+            params={
+                "course_id": scenario["course_id"],
+                "lesson_id": scenario["lesson_id"],
+                "scenario_checksum": descriptor["checksum"],
+            },
+        )
+        self.assertEqual(staged_detail.status_code, 200, staged_detail.text)
+        self.assertEqual(staged_detail.json()["item"]["sealed_by"], "trusted-admin")
         self.assertEqual(
             self.client.get(
                 f"/api/v1/courses/{payload['course_id']}/lessons/{payload['lesson_id']}"
@@ -331,7 +345,7 @@ class AdminContentApiTests(unittest.TestCase):
             "/api/v1/admin/content/scenario-drafts",
             json=payload,
         )
-        self.assertEqual(unauthorized.status_code, 403)
+        self.assertEqual(unauthorized.status_code, 401)
         saved = self.client.post(
             "/api/v1/admin/content/scenario-drafts",
             headers=self.headers,
@@ -387,7 +401,7 @@ class AdminContentApiTests(unittest.TestCase):
                 "scenario_checksum": descriptor["checksum"],
             },
         )
-        self.assertEqual(unauthorized_detail.status_code, 403)
+        self.assertEqual(unauthorized_detail.status_code, 401)
         loaded_detail = self.client.get(
             detail_url,
             headers=self.headers,
@@ -410,7 +424,7 @@ class AdminContentApiTests(unittest.TestCase):
                 "scenario_checksum": descriptor["checksum"],
             },
         )
-        self.assertEqual(unauthorized_file.status_code, 403)
+        self.assertEqual(unauthorized_file.status_code, 401)
         downloaded_file = self.client.get(
             file_url,
             headers=self.headers,

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-import secrets
 from typing import Annotated, Literal, NoReturn
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 
-from settings import settings
+from auth_dependencies import (
+    AuthContext,
+    audit_authorized_action,
+    require_permission,
+    trusted_actor,
+)
 from services import content
 from services import courses as courses_data
 from services.content import KeywordProfilePackage, LessonContentPackage, PersonProfilePackage
@@ -16,6 +20,11 @@ from services.content import workflow as content_workflow
 from services.contracts.v1 import ScenarioTemplateV1
 
 router = APIRouter()
+
+ContentReader = Annotated[AuthContext, Depends(require_permission("content.read"))]
+ContentAuthor = Annotated[AuthContext, Depends(require_permission("content.author"))]
+ContentReviewer = Annotated[AuthContext, Depends(require_permission("content.review"))]
+ContentPublisher = Annotated[AuthContext, Depends(require_permission("content.publish"))]
 
 
 class ApiModel(BaseModel):
@@ -86,26 +95,11 @@ class LessonSourceRecord(ApiModel):
     source: str = "builtin"
 
 
-def require_admin(
-    authorization: Annotated[str | None, Header()] = None,
-    x_admin_token: Annotated[str | None, Header(alias="X-Admin-Token")] = None,
-) -> str:
-    token = x_admin_token or _bearer_token(authorization)
-    if not settings.admin_token:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Admin token is not configured.",
-        )
-    if token is None or not secrets.compare_digest(token, settings.admin_token):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin token required.")
-    return settings.admin_actor
-
-
 @router.get("/")
-async def overview(_: str = Depends(require_admin)):
+async def overview(context: ContentReader):
     try:
         return {
-            "auth": "temporary-token",
+            "auth": "legacy-local" if context.principal.synthetic else "accounts",
             "content_root": str(content.content_root()),
             "drafts": len(content.list_drafts()),
             "sealed": len(content.list_sealed()),
@@ -144,12 +138,12 @@ async def overview(_: str = Depends(require_admin)):
 
 
 @router.get("/template")
-async def template(_: str = Depends(require_admin)):
+async def template(_: ContentReader):
     return content.content_template().model_dump(mode="json")
 
 
 @router.get("/source-lessons")
-async def source_lessons(_: str = Depends(require_admin)):
+async def source_lessons(_: ContentReader):
     return {
         "items": [
             _source_record(lesson).model_dump(mode="json")
@@ -159,7 +153,7 @@ async def source_lessons(_: str = Depends(require_admin)):
 
 
 @router.get("/source-lessons/{lesson_id}")
-async def source_lesson_detail(lesson_id: str, _: str = Depends(require_admin)):
+async def source_lesson_detail(lesson_id: str, _: ContentReader):
     lesson = courses_data.get_builtin_lesson(lesson_id)
     if lesson is None:
         raise HTTPException(status_code=404, detail="Source lesson not found.")
@@ -167,7 +161,7 @@ async def source_lesson_detail(lesson_id: str, _: str = Depends(require_admin)):
 
 
 @router.get("/drafts")
-async def drafts(_: str = Depends(require_admin)):
+async def drafts(_: ContentReader):
     try:
         return {"items": [item.model_dump(mode="json") for item in content.list_drafts()]}
     except Exception as exc:
@@ -175,7 +169,7 @@ async def drafts(_: str = Depends(require_admin)):
 
 
 @router.get("/drafts/{lesson_id}")
-async def draft_detail(lesson_id: str, _: str = Depends(require_admin)):
+async def draft_detail(lesson_id: str, _: ContentReader):
     try:
         draft = content.get_draft(lesson_id)
         if draft is None:
@@ -186,7 +180,7 @@ async def draft_detail(lesson_id: str, _: str = Depends(require_admin)):
 
 
 @router.get("/drafts/{lesson_id}/workflow", response_model=WorkflowResponse)
-async def draft_workflow(lesson_id: str, _: str = Depends(require_admin)):
+async def draft_workflow(lesson_id: str, _: ContentReader):
     try:
         workflow = content_workflow.get_workflow(lesson_id)
         if workflow is None:
@@ -197,9 +191,23 @@ async def draft_workflow(lesson_id: str, _: str = Depends(require_admin)):
 
 
 @router.post("/drafts")
-async def create_or_update_draft(payload: LessonContentPackage, admin: str = Depends(require_admin)):
+async def create_or_update_draft(
+    payload: LessonContentPackage,
+    request: Request,
+    context: ContentAuthor,
+):
     try:
-        saved = content.save_draft(payload, saved_by=admin)
+        with content_workflow.workflow_write_lock():
+            _require_lesson_author(context, payload.lesson_id, allow_missing=True)
+            _audit_content_write(
+                request,
+                context,
+                permission="content.author",
+                action="content.draft.save.authorize",
+                resource_type="lesson-draft",
+                resource_id=payload.lesson_id,
+            )
+            saved = content.save_draft(payload, saved_by=trusted_actor(context))
         workflow = content_workflow.get_workflow(saved.lesson_id)
         return {
             "item": saved.model_dump(mode="json"),
@@ -213,12 +221,23 @@ async def create_or_update_draft(payload: LessonContentPackage, admin: str = Dep
 async def update_draft(
     lesson_id: str,
     payload: LessonContentPackage,
-    admin: str = Depends(require_admin),
+    request: Request,
+    context: ContentAuthor,
 ):
     if payload.lesson_id != lesson_id:
         raise HTTPException(status_code=400, detail="Path lesson_id must match payload.lesson_id.")
     try:
-        saved = content.save_draft(payload, saved_by=admin)
+        with content_workflow.workflow_write_lock():
+            _require_lesson_author(context, lesson_id)
+            _audit_content_write(
+                request,
+                context,
+                permission="content.author",
+                action="content.draft.save.authorize",
+                resource_type="lesson-draft",
+                resource_id=lesson_id,
+            )
+            saved = content.save_draft(payload, saved_by=trusted_actor(context))
         workflow = content_workflow.get_workflow(saved.lesson_id)
         return {
             "item": saved.model_dump(mode="json"),
@@ -229,7 +248,7 @@ async def update_draft(
 
 
 @router.post("/preview")
-async def preview(payload: LessonContentPackage, _: str = Depends(require_admin)):
+async def preview(payload: LessonContentPackage, _: ContentReader):
     item = content.preview_package(payload)
     return {"item": item.model_dump(mode="json")}
 
@@ -237,13 +256,23 @@ async def preview(payload: LessonContentPackage, _: str = Depends(require_admin)
 @router.post("/drafts/{lesson_id}/validate", response_model=WorkflowResponse)
 async def validate_draft(
     lesson_id: str,
+    request: Request,
+    context: ContentAuthor,
     req: ActorRequest | None = None,
-    admin: str = Depends(require_admin),
 ):
     try:
+        _require_lesson_author(context, lesson_id)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.author",
+            action="content.draft.validate.authorize",
+            resource_type="lesson-draft",
+            resource_id=lesson_id,
+        )
         workflow = content_workflow.validate_draft(
             lesson_id,
-            actor=admin,
+            actor=trusted_actor(context),
         )
         return WorkflowResponse(workflow=workflow, report=workflow.validation)
     except Exception as exc:
@@ -253,13 +282,23 @@ async def validate_draft(
 @router.post("/drafts/{lesson_id}/submit-review", response_model=WorkflowResponse)
 async def submit_review(
     lesson_id: str,
+    request: Request,
+    context: ContentAuthor,
     req: ActorRequest | None = None,
-    admin: str = Depends(require_admin),
 ):
     try:
+        _require_lesson_author(context, lesson_id)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.author",
+            action="content.draft.submit_review.authorize",
+            resource_type="lesson-draft",
+            resource_id=lesson_id,
+        )
         workflow = content_workflow.submit_for_review(
             lesson_id,
-            actor=admin,
+            actor=trusted_actor(context),
             note=(req.note if req else ""),
         )
         return WorkflowResponse(workflow=workflow, report=workflow.validation)
@@ -271,19 +310,35 @@ async def submit_review(
 async def review_draft(
     lesson_id: str,
     req: ReviewRequest,
-    admin: str = Depends(require_admin),
+    request: Request,
+    context: ContentReviewer,
 ):
     try:
+        _require_independent_reviewer(context, lesson_id)
+        action = (
+            "content.draft.approve.authorize"
+            if req.decision == "approve"
+            else "content.draft.request_changes.authorize"
+        )
+        _audit_content_write(
+            request,
+            context,
+            permission="content.review",
+            action=action,
+            resource_type="lesson-draft",
+            resource_id=lesson_id,
+            details={"decision": req.decision},
+        )
         if req.decision == "approve":
             workflow = content_workflow.approve_draft(
                 lesson_id,
-                actor=admin,
+                actor=trusted_actor(context),
                 note=req.note,
             )
         else:
             workflow = content_workflow.request_changes(
                 lesson_id,
-                actor=admin,
+                actor=trusted_actor(context),
                 note=req.note,
             )
         return WorkflowResponse(workflow=workflow, report=workflow.validation)
@@ -294,13 +349,22 @@ async def review_draft(
 @router.post("/drafts/{lesson_id}/seal")
 async def seal_draft(
     lesson_id: str,
+    request: Request,
+    context: ContentPublisher,
     req: SealRequest | None = None,
-    admin: str = Depends(require_admin),
 ):
     try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.draft.seal.authorize",
+            resource_type="lesson-draft",
+            resource_id=lesson_id,
+        )
         item, path, workflow = content_workflow.seal_approved_draft(
             lesson_id,
-            actor=admin,
+            actor=trusted_actor(context),
         )
     except Exception as exc:
         _raise_content_error(exc)
@@ -312,7 +376,7 @@ async def seal_draft(
 
 
 @router.get("/sealed")
-async def sealed(_: str = Depends(require_admin)):
+async def sealed(_: ContentReader):
     try:
         return {"items": [item.model_dump(mode="json") for item in content.list_sealed()]}
     except Exception as exc:
@@ -320,7 +384,7 @@ async def sealed(_: str = Depends(require_admin)):
 
 
 @router.get("/runtime-scenarios")
-async def runtime_scenarios(_: str = Depends(require_admin)):
+async def runtime_scenarios(_: ContentReader):
     try:
         return {
             "items": [
@@ -339,7 +403,7 @@ async def runtime_scenario_detail(
     course_id: str,
     lesson_id: str,
     scenario_checksum: str,
-    _: str = Depends(require_admin),
+    _: ContentReader,
 ):
     try:
         item, descriptor = runtime_artifacts.load_staged_scenario(
@@ -364,7 +428,7 @@ async def runtime_scenario_file(
     course_id: str,
     lesson_id: str,
     scenario_checksum: str,
-    _: str = Depends(require_admin),
+    _: ContentReader,
 ):
     try:
         raw, descriptor = runtime_artifacts.load_staged_scenario_bytes(
@@ -391,23 +455,36 @@ async def runtime_scenario_file(
 @router.post("/runtime-scenarios")
 async def stage_runtime_scenario(
     payload: ScenarioTemplateV1,
-    _: str = Depends(require_admin),
+    request: Request,
+    context: ContentPublisher,
 ):
     try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.scenario.stage.authorize",
+            resource_type="runtime-scenario",
+            resource_id=payload.scenario_id,
+            details={"scenario_version": payload.scenario_version},
+        )
         with content_workflow.workflow_write_lock():
-            item = runtime_artifacts.stage_scenario(payload)
+            item = runtime_artifacts.stage_scenario(
+                payload,
+                sealed_by=trusted_actor(context),
+            )
         return {"item": item.model_dump(mode="json")}
     except Exception as exc:
         _raise_content_error(exc)
 
 
 @router.get("/scenario-drafts/template")
-async def scenario_draft_template(_: str = Depends(require_admin)):
+async def scenario_draft_template(_: ContentReader):
     return scenario_authoring.scenario_draft_template().model_dump(mode="json")
 
 
 @router.get("/scenario-drafts")
-async def scenario_drafts(_: str = Depends(require_admin)):
+async def scenario_drafts(_: ContentReader):
     try:
         return {
             "items": [
@@ -420,7 +497,7 @@ async def scenario_drafts(_: str = Depends(require_admin)):
 
 
 @router.get("/scenario-drafts/{scenario_id}")
-async def scenario_draft_detail(scenario_id: str, _: str = Depends(require_admin)):
+async def scenario_draft_detail(scenario_id: str, _: ContentReader):
     try:
         item = scenario_authoring.get_scenario_draft(scenario_id)
         if item is None:
@@ -433,10 +510,24 @@ async def scenario_draft_detail(scenario_id: str, _: str = Depends(require_admin
 @router.post("/scenario-drafts")
 async def save_scenario_draft(
     payload: scenario_authoring.ScenarioAuthorDraftV1,
-    admin: str = Depends(require_admin),
+    request: Request,
+    context: ContentAuthor,
 ):
     try:
-        item = scenario_authoring.save_scenario_draft(payload, saved_by=admin)
+        with content_workflow.workflow_write_lock():
+            _require_scenario_author(context, payload.scenario_id, allow_missing=True)
+            _audit_content_write(
+                request,
+                context,
+                permission="content.author",
+                action="content.scenario_draft.save.authorize",
+                resource_type="scenario-draft",
+                resource_id=payload.scenario_id,
+            )
+            item = scenario_authoring.save_scenario_draft(
+                payload,
+                saved_by=trusted_actor(context),
+            )
         return {"item": item.model_dump(mode="json")}
     except Exception as exc:
         _raise_content_error(exc)
@@ -446,7 +537,8 @@ async def save_scenario_draft(
 async def update_scenario_draft(
     scenario_id: str,
     payload: scenario_authoring.ScenarioAuthorDraftV1,
-    admin: str = Depends(require_admin),
+    request: Request,
+    context: ContentAuthor,
 ):
     if payload.scenario_id != scenario_id:
         raise HTTPException(
@@ -454,15 +546,41 @@ async def update_scenario_draft(
             detail="Path scenario_id must match payload.scenario_id.",
         )
     try:
-        item = scenario_authoring.save_scenario_draft(payload, saved_by=admin)
+        with content_workflow.workflow_write_lock():
+            _require_scenario_author(context, scenario_id)
+            _audit_content_write(
+                request,
+                context,
+                permission="content.author",
+                action="content.scenario_draft.save.authorize",
+                resource_type="scenario-draft",
+                resource_id=scenario_id,
+            )
+            item = scenario_authoring.save_scenario_draft(
+                payload,
+                saved_by=trusted_actor(context),
+            )
         return {"item": item.model_dump(mode="json")}
     except Exception as exc:
         _raise_content_error(exc)
 
 
 @router.post("/scenario-drafts/{scenario_id}/validate")
-async def validate_scenario_draft(scenario_id: str, _: str = Depends(require_admin)):
+async def validate_scenario_draft(
+    scenario_id: str,
+    request: Request,
+    context: ContentAuthor,
+):
     try:
+        _require_scenario_author(context, scenario_id)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.author",
+            action="content.scenario_draft.validate.authorize",
+            resource_type="scenario-draft",
+            resource_id=scenario_id,
+        )
         report = scenario_authoring.validate_saved_scenario_draft(scenario_id)
         return {"report": report.model_dump(mode="json")}
     except Exception as exc:
@@ -472,13 +590,22 @@ async def validate_scenario_draft(scenario_id: str, _: str = Depends(require_adm
 @router.post("/scenario-drafts/{scenario_id}/seal")
 async def seal_scenario_draft(
     scenario_id: str,
-    admin: str = Depends(require_admin),
+    request: Request,
+    context: ContentPublisher,
 ):
     try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.scenario_draft.seal.authorize",
+            resource_type="scenario-draft",
+            resource_id=scenario_id,
+        )
         with content_workflow.workflow_write_lock():
             item, record, idempotent = scenario_authoring.seal_scenario_draft(
                 scenario_id,
-                sealed_by=admin,
+                sealed_by=trusted_actor(context),
             )
         return {
             "item": item.model_dump(mode="json"),
@@ -503,14 +630,23 @@ async def seal_scenario_draft(
 async def publish_version(
     lesson_id: str,
     version: int,
+    request: Request,
+    context: ContentPublisher,
     req: PublishRequest | None = None,
-    admin: str = Depends(require_admin),
 ):
     try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.release.publish.authorize",
+            resource_type="sealed-lesson",
+            resource_id=f"{lesson_id}:v{version}",
+        )
         release, workflow = content_workflow.publish_version(
             lesson_id,
             version,
-            actor=admin,
+            actor=trusted_actor(context),
             note=(req.note if req else ""),
             scenario_selections=(req.scenarios if req else None),
         )
@@ -526,13 +662,22 @@ async def publish_version(
 async def bootstrap_legacy_release(
     course_id: str,
     req: LegacyBootstrapRequest,
-    admin: str = Depends(require_admin),
+    request: Request,
+    context: ContentPublisher,
 ):
     try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.release.bootstrap_legacy.authorize",
+            resource_type="course-release",
+            resource_id=course_id,
+        )
         release = content_workflow.bootstrap_legacy_release(
             course_id,
             req.selections,
-            actor=admin,
+            actor=trusted_actor(context),
             note=req.note,
         )
         return ReleaseResponse(release=release)
@@ -542,8 +687,8 @@ async def bootstrap_legacy_release(
 
 @router.get("/releases", response_model=ReleaseListResponse)
 async def releases(
+    _: ContentReader,
     course_id: str | None = None,
-    _: str = Depends(require_admin),
 ):
     try:
         return ReleaseListResponse(items=content_workflow.list_releases(course_id))
@@ -552,7 +697,7 @@ async def releases(
 
 
 @router.get("/releases/{course_id}/current", response_model=ReleaseResponse)
-async def current_release(course_id: str, _: str = Depends(require_admin)):
+async def current_release(course_id: str, _: ContentReader):
     try:
         release = content_workflow.get_current_release(course_id)
         if release is None:
@@ -566,7 +711,7 @@ async def current_release(course_id: str, _: str = Depends(require_admin)):
 async def release_detail(
     course_id: str,
     release_id: str,
-    _: str = Depends(require_admin),
+    _: ContentReader,
 ):
     try:
         return ReleaseResponse(release=content_workflow.get_release(course_id, release_id))
@@ -577,13 +722,25 @@ async def release_detail(
 @router.post("/releases/{course_id}/rollback", response_model=ReleaseResponse)
 async def rollback_release(
     course_id: str,
+    request: Request,
+    context: ContentPublisher,
     req: RollbackRequest | None = None,
-    admin: str = Depends(require_admin),
 ):
     try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.release.rollback.authorize",
+            resource_type="course-release",
+            resource_id=course_id,
+            details={
+                "target_release_id": req.target_release_id if req else None,
+            },
+        )
         release = content_workflow.rollback_release(
             course_id,
-            actor=admin,
+            actor=trusted_actor(context),
             target_release_id=(req.target_release_id if req else None),
             note=(req.note if req else ""),
         )
@@ -594,8 +751,8 @@ async def rollback_release(
 
 @router.get("/assets")
 async def assets(
+    _: ContentReader,
     kind: Literal["person", "keyword"] | None = None,
-    _: str = Depends(require_admin),
 ):
     try:
         return {"items": [item.model_dump(mode="json") for item in content.list_assets(kind)]}
@@ -604,12 +761,12 @@ async def assets(
 
 
 @router.get("/assets/people/template")
-async def person_template(_: str = Depends(require_admin)):
+async def person_template(_: ContentReader):
     return content.person_template().model_dump(mode="json")
 
 
 @router.get("/assets/people/{asset_id}")
-async def person_detail(asset_id: str, _: str = Depends(require_admin)):
+async def person_detail(asset_id: str, _: ContentReader):
     try:
         item = content.get_person_profile(asset_id)
         if item is None:
@@ -620,8 +777,20 @@ async def person_detail(asset_id: str, _: str = Depends(require_admin)):
 
 
 @router.post("/assets/people")
-async def save_person(payload: PersonProfilePackage, _: str = Depends(require_admin)):
+async def save_person(
+    payload: PersonProfilePackage,
+    request: Request,
+    context: ContentAuthor,
+):
     try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.author",
+            action="content.person.save.authorize",
+            resource_type="person-profile",
+            resource_id=payload.asset_id,
+        )
         saved = content.save_person_profile(payload)
         return {"item": saved.model_dump(mode="json")}
     except Exception as exc:
@@ -629,12 +798,12 @@ async def save_person(payload: PersonProfilePackage, _: str = Depends(require_ad
 
 
 @router.get("/assets/keywords/template")
-async def keyword_template(_: str = Depends(require_admin)):
+async def keyword_template(_: ContentReader):
     return content.keyword_template().model_dump(mode="json")
 
 
 @router.get("/assets/keywords/{asset_id}")
-async def keyword_detail(asset_id: str, _: str = Depends(require_admin)):
+async def keyword_detail(asset_id: str, _: ContentReader):
     try:
         item = content.get_keyword_profile(asset_id)
         if item is None:
@@ -645,21 +814,107 @@ async def keyword_detail(asset_id: str, _: str = Depends(require_admin)):
 
 
 @router.post("/assets/keywords")
-async def save_keyword(payload: KeywordProfilePackage, _: str = Depends(require_admin)):
+async def save_keyword(
+    payload: KeywordProfilePackage,
+    request: Request,
+    context: ContentAuthor,
+):
     try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.author",
+            action="content.keyword.save.authorize",
+            resource_type="keyword-profile",
+            resource_id=payload.asset_id,
+        )
         saved = content.save_keyword_profile(payload)
         return {"item": saved.model_dump(mode="json")}
     except Exception as exc:
         _raise_content_error(exc)
 
 
-def _bearer_token(authorization: str | None) -> str | None:
-    if not authorization:
-        return None
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token:
-        return None
-    return token.strip()
+def _audit_content_write(
+    request: Request,
+    context: AuthContext,
+    *,
+    permission: str,
+    action: str,
+    resource_type: str,
+    resource_id: str,
+    details: dict[str, object] | None = None,
+) -> None:
+    audit_authorized_action(
+        request,
+        context,
+        permission=permission,
+        action=action,
+        resource_type=resource_type,
+        resource_id=resource_id,
+        details=details,
+    )
+
+
+def _require_lesson_author(
+    context: AuthContext,
+    lesson_id: str,
+    *,
+    allow_missing: bool = False,
+) -> None:
+    if "admin" in context.principal.roles:
+        return
+    workflow = content_workflow.get_workflow(lesson_id)
+    if workflow is None:
+        if allow_missing:
+            return
+        raise content_workflow.ContentNotFound(f"Workflow not found: {lesson_id}")
+    owner = next((event.actor for event in workflow.history if event.action == "save"), None)
+    if owner != trusted_actor(context):
+        _raise_ownership_error("lesson draft")
+
+
+def _require_independent_reviewer(context: AuthContext, lesson_id: str) -> None:
+    if "admin" in context.principal.roles:
+        return
+    workflow = content_workflow.get_workflow(lesson_id)
+    if workflow is None:
+        raise content_workflow.ContentNotFound(f"Workflow not found: {lesson_id}")
+    actor = trusted_actor(context)
+    if any(event.action == "save" and event.actor == actor for event in workflow.history):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "self_review_forbidden",
+                "message": "An author cannot review the same lesson draft.",
+            },
+        )
+
+
+def _require_scenario_author(
+    context: AuthContext,
+    scenario_id: str,
+    *,
+    allow_missing: bool = False,
+) -> None:
+    if "admin" in context.principal.roles:
+        return
+    draft = scenario_authoring.get_scenario_draft(scenario_id)
+    if draft is None:
+        if allow_missing:
+            return
+        raise FileNotFoundError(f"Scenario draft not found: {scenario_id}")
+    if draft.created_by != trusted_actor(context):
+        _raise_ownership_error("scenario draft")
+
+
+def _raise_ownership_error(resource: str) -> NoReturn:
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail={
+            "code": "content_owner_required",
+            "message": f"Only the owning author or an administrator may change this {resource}.",
+        },
+    )
 
 
 def _raise_content_error(exc: Exception) -> NoReturn:

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import hashlib
+import re
 import secrets
 from dataclasses import dataclass
-from typing import Annotated, Callable
+from typing import Annotated, Any, Callable
+from uuid import uuid4
 
 from fastapi import Depends, Header, HTTPException, Request, status
 
 from settings import settings
-from services.auth import Principal, get_identity, has_permission
+from services.auth import AuthStoreError, Principal, get_identity, has_permission
 
 
 @dataclass(frozen=True)
@@ -72,7 +75,10 @@ def require_auth_context(
 
 
 def require_permission(permission: str) -> Callable[..., AuthContext]:
-    def dependency(context: AuthContext = Depends(require_auth_context)) -> AuthContext:
+    def dependency(
+        request: Request,
+        context: AuthContext = Depends(require_auth_context),
+    ) -> AuthContext:
         if not has_permission(context.principal, permission):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -81,9 +87,87 @@ def require_permission(permission: str) -> Callable[..., AuthContext]:
                     "message": "The authenticated account cannot perform this action.",
                 },
             )
+        _require_cookie_write_origin(request, context)
         return context
 
     return dependency
+
+
+def trusted_actor(context: AuthContext) -> str:
+    if context.principal.synthetic:
+        return context.principal.username
+    return context.principal.user_id
+
+
+def audit_authorized_action(
+    request: Request,
+    context: AuthContext,
+    *,
+    permission: str,
+    action: str,
+    resource_type: str,
+    resource_id: str,
+    details: dict[str, Any] | None = None,
+) -> None:
+    if not has_permission(context.principal, permission):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "permission_denied",
+                "message": "The authenticated account cannot perform this action.",
+            },
+        )
+    if context.principal.synthetic:
+        return
+    _require_cookie_write_origin(request, context)
+    try:
+        get_identity().record_authorized_action(
+            principal=context.principal,
+            action=action,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            request_id=request_id(request),
+            details={
+                "permission": permission,
+                "client": client_fingerprint(request),
+                **(details or {}),
+            },
+        )
+    except AuthStoreError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": exc.code,
+                "message": "Required audit storage is unavailable.",
+            },
+        ) from exc
+
+
+def request_id(request: Request) -> str:
+    supplied = request.headers.get("X-Request-ID", "").strip()
+    if supplied and re.fullmatch(r"[A-Za-z0-9._:-]{1,100}", supplied):
+        return supplied
+    return f"req_{uuid4().hex}"
+
+
+def client_fingerprint(request: Request) -> str:
+    host = request.client.host if request.client else "unknown"
+    agent = request.headers.get("User-Agent", "")[:200]
+    return hashlib.sha256(f"{host}\x1f{agent}".encode("utf-8")).hexdigest()[:24]
+
+
+def _require_cookie_write_origin(request: Request, context: AuthContext) -> None:
+    if request.method in {"GET", "HEAD", "OPTIONS"} or context.source != "cookie":
+        return
+    origin = request.headers.get("Origin", "").strip()
+    if not origin or origin not in settings.cors_origins:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "csrf_origin_rejected",
+                "message": "Cookie-authenticated writes require a trusted Origin.",
+            },
+        )
 
 
 def _bearer_token(authorization: str | None) -> str | None:

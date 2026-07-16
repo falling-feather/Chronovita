@@ -45,11 +45,20 @@ class RuntimeScenarioRecord(BaseModel):
 
 def stage_scenario(
     scenario: ScenarioTemplateV1,
+    *,
+    sealed_by: str | None = None,
 ) -> RuntimeScenarioRecord:
     """Store a sealed scenario without making it visible to published readers."""
 
     if scenario.status != "sealed" or not verify_contract_checksum(scenario):
         raise ValueError("scenario must be sealed and checksum-valid")
+    if sealed_by is not None:
+        payload = scenario.model_dump(mode="json")
+        payload["sealed_by"] = sealed_by
+        payload["checksum"] = "0" * 64
+        provisional = ScenarioTemplateV1.model_validate(payload)
+        payload["checksum"] = calculate_contract_checksum(provisional)
+        scenario = ScenarioTemplateV1.model_validate(payload)
     _validate_sealed_scenario(scenario)
     descriptor = descriptor_for_scenario(scenario)
     root = content_data.content_root()

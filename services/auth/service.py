@@ -265,6 +265,30 @@ class AuthService:
         self._require_accounts_mode()
         return self.store.verify_audit_chain()
 
+    def record_authorized_action(
+        self,
+        *,
+        principal: Principal,
+        action: str,
+        resource_type: str,
+        resource_id: str,
+        request_id: str,
+        details: dict[str, Any] | None = None,
+    ) -> AuditEvent:
+        self._require_accounts_mode()
+        return self.store.append_audit(
+            occurred_at=_utc_now(),
+            actor_user_id=principal.user_id,
+            actor_session_id=principal.session_id,
+            actor_roles=principal.roles,
+            action=action,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            outcome="succeeded",
+            request_id=request_id,
+            details=details,
+        )
+
     def _bootstrap_if_empty(self) -> None:
         if self.store.count_users() > 0:
             return

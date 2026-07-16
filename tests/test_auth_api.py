@@ -144,6 +144,31 @@ class AuthApiTests(unittest.TestCase):
 
     def test_user_management_permissions_and_session_revocation(self):
         admin_token = self._login("root.admin", "Root password 123!")["access_token"]
+        rejected_cookie_write = self.client.post(
+            "/api/v1/auth/users",
+            json={
+                "username": "cookie.rejected",
+                "password": "Cookie password 123!",
+                "display_name": "Cookie Rejected",
+                "roles": ["teacher"],
+            },
+        )
+        self.assertEqual(rejected_cookie_write.status_code, 403, rejected_cookie_write.text)
+        self.assertEqual(
+            rejected_cookie_write.json()["detail"]["code"],
+            "csrf_origin_rejected",
+        )
+        accepted_cookie_write = self.client.post(
+            "/api/v1/auth/users",
+            headers={"Origin": settings.cors_origins[0]},
+            json={
+                "username": "cookie.accepted",
+                "password": "Cookie password 123!",
+                "display_name": "Cookie Accepted",
+                "roles": ["teacher"],
+            },
+        )
+        self.assertEqual(accepted_cookie_write.status_code, 201, accepted_cookie_write.text)
         self.client.cookies.clear()
         admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
@@ -208,7 +233,8 @@ class AuthApiTests(unittest.TestCase):
             401,
         )
 
-        root_id = self.client.get("/api/v1/auth/users", headers=admin_headers).json()["items"][0]["user_id"]
+        users = self.client.get("/api/v1/auth/users", headers=admin_headers).json()["items"]
+        root_id = next(item["user_id"] for item in users if item["username"] == "root.admin")
         last_admin = self.client.patch(
             f"/api/v1/auth/users/{root_id}",
             headers=admin_headers,
