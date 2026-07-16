@@ -216,6 +216,7 @@ class PostgresServiceTests(unittest.TestCase):
                     created.json()["user_id"],
                 )
 
+                client.cookies.clear()
                 audit = client.get("/api/v1/auth/audit", headers=admin_headers)
                 self.assertEqual(audit.status_code, 200, audit.text)
                 self.assertTrue(audit.json()["valid_chain"])
