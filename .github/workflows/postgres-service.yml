@@ -52,4 +52,17 @@ jobs:
         run: python -m pip install --disable-pip-version-check -r apps/api/requirements.txt
 
       - name: Run PostgreSQL 16 service matrix
-        run: python -m unittest tests.test_postgres_service -v
+        shell: bash
+        run: |
+          set +e
+          python -m unittest tests.test_postgres_service -v 2>&1 | tee postgres-service.log
+          test_status=${PIPESTATUS[0]}
+          set -e
+          {
+            echo "### PostgreSQL service matrix"
+            echo
+            echo '```text'
+            tail -n 160 postgres-service.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$test_status"
