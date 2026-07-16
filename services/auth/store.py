@@ -356,6 +356,15 @@ class AuthStore:
         except SQLAlchemyError as exc:
             raise AuthStoreError("identity audit write failed") from exc
 
+    def append_audit_in_transaction(
+        self,
+        connection: Connection,
+        audit: AuditWrite,
+    ) -> AuditEvent:
+        """Append an audit event inside a caller-owned business transaction."""
+
+        return self._append_audit_event(connection, audit)
+
     def list_audit(self, *, limit: int = 100) -> list[AuditEvent]:
         try:
             with self.engine.connect() as connection:

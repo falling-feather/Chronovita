@@ -27,6 +27,7 @@ from services import content, persistence
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
+from services.persistence.student_assets import assert_no_unmapped_student_assets
 
 
 @asynccontextmanager
@@ -43,6 +44,8 @@ async def lifespan(app: FastAPI):
                 bootstrap_display_name=settings.auth_bootstrap_display_name,
             ),
         )
+        if settings.auth_mode == "accounts":
+            assert_no_unmapped_student_assets(engine)
         content.configure(settings.content_root)
         content_workflow.recover_pending_release_transactions()
         configure_game_runtime(

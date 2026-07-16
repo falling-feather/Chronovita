@@ -595,6 +595,45 @@ def _reject_duplicate_json_keys(pairs):
     return result
 
 
+def decode_stored_session(
+    raw_data: str,
+    session_id: str,
+) -> PersistedGameSessionEnvelope:
+    """Decode and verify one persisted session without opening a store."""
+
+    return _decode_session(raw_data, session_id)
+
+
+def encode_stored_session(
+    session: GameSessionV1,
+    release_identity: GameSessionReleaseIdentityV1 | None = None,
+) -> str:
+    """Encode one verified session using the current storage envelope."""
+
+    return _encode_session(session, release_identity)
+
+
+def decode_stored_dossier(raw_data: str, dossier_id: str) -> DossierV1:
+    """Decode and verify one persisted final dossier."""
+
+    return _decode_dossier(raw_data, dossier_id)
+
+
+def encode_stored_dossier(dossier: DossierV1) -> str:
+    """Encode one verified final dossier."""
+
+    return _encode_dossier(dossier)
+
+
+def validate_stored_dossier_link(
+    session: GameSessionV1,
+    dossier: DossierV1,
+) -> None:
+    """Verify the cross-record identity used by atomic storage operations."""
+
+    _validate_dossier_link(session, dossier)
+
+
 __all__ = [
     "GameSessionReleaseIdentityV1",
     "GameRuntimeStore",
@@ -611,6 +650,11 @@ __all__ = [
     "StoredSessionNotFound",
     "StoredSessionRecord",
     "StoredSessionWriteConflict",
+    "decode_stored_dossier",
+    "decode_stored_session",
+    "encode_stored_dossier",
+    "encode_stored_session",
     "game_dossiers_table",
     "game_sessions_table",
+    "validate_stored_dossier_link",
 ]
