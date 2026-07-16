@@ -65,4 +65,7 @@ jobs:
             tail -n 160 postgres-service.log
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$test_status" -ne 0 ]]; then
+            python -c "from pathlib import Path; text='\n'.join(Path('postgres-service.log').read_text(encoding='utf-8', errors='replace').splitlines()[-120:]); print('::error title=PostgreSQL service matrix failed::' + text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))"
+          fi
           exit "$test_status"
