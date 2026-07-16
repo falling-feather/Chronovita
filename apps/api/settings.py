@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     app_name: str = "Chronovita API"
     app_version: str = APP_VERSION
+    runtime_profile: Literal["local", "production"] = "local"
     debug: bool = True
     cors_origins: list[str] = [
         "http://127.0.0.1:5173",

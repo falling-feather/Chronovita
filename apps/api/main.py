@@ -8,8 +8,9 @@ for _path in (_API_ROOT, _REPO_ROOT):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from settings import settings
 from routers import (
@@ -27,16 +28,27 @@ from services import content, persistence
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
+from services.operations import (
+    RuntimeReadinessError,
+    probe_database_connectivity,
+    probe_database_readiness,
+    validate_runtime_configuration,
+)
 from services.persistence.student_assets import assert_no_unmapped_student_assets
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.database_engine = None
+    app.state.database_readiness = None
+    app.state.runtime_ready = False
+    validate_runtime_configuration(settings)
     engine = persistence.init_engine(
         settings.sqlite_path,
         database_url=settings.database_url.get_secret_value(),
         migration_mode=settings.database_migration_mode,
     )
+    app.state.database_engine = engine
     try:
         configure_identity(
             engine,
@@ -57,8 +69,13 @@ async def lifespan(app: FastAPI):
             catalog_path=settings.game_catalog_path,
             engine=engine,
         )
+        app.state.database_readiness = probe_database_readiness(engine)
+        app.state.runtime_ready = True
         yield
     finally:
+        app.state.runtime_ready = False
+        app.state.database_readiness = None
+        app.state.database_engine = None
         shutdown_game_runtime()
         shutdown_identity()
         persistence.close_engine()
@@ -111,4 +128,40 @@ async def root():
 
 @app.get("/healthz", tags=["common"])
 async def healthz():
-    return {"status": "ok"}
+    return {
+        "status": "alive",
+        "version": settings.app_version,
+    }
+
+
+@app.get("/readyz", tags=["common"])
+async def readyz(request: Request):
+    engine = getattr(request.app.state, "database_engine", None)
+    readiness = getattr(request.app.state, "database_readiness", None)
+    if (
+        not getattr(request.app.state, "runtime_ready", False)
+        or engine is None
+        or readiness is None
+    ):
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+                "code": "runtime_startup_incomplete",
+            },
+        )
+    try:
+        probe_database_connectivity(engine)
+    except RuntimeReadinessError:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+                "code": RuntimeReadinessError.code,
+            },
+        )
+    return {
+        "status": "ready",
+        "version": settings.app_version,
+        "checks": readiness.public_checks(),
+    }
