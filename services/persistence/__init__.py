@@ -6,6 +6,7 @@ from .db import (
     kv_get,
     kv_get_with_presence,
     kv_list,
+    kv_list_prefix,
     kv_set,
 )
 
@@ -18,4 +19,5 @@ __all__ = [
     "kv_compare_and_set",
     "kv_delete",
     "kv_list",
+    "kv_list_prefix",
 ]

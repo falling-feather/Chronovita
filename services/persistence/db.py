@@ -170,3 +170,17 @@ def kv_list(namespace: str) -> Iterable[dict]:
         ).fetchall()
     for (raw,) in rows:
         yield json.loads(raw)
+
+
+def kv_list_prefix(namespace: str, key_prefix: str) -> Iterable[tuple[str, Any]]:
+    """List values whose keys begin with an exact, escaped prefix."""
+
+    with _engine().begin() as conn:
+        rows = conn.execute(
+            select(kv_table.c.key, kv_table.c.data).where(
+                (kv_table.c.namespace == namespace)
+                & kv_table.c.key.startswith(key_prefix, autoescape=True)
+            )
+        ).fetchall()
+    for key, raw in rows:
+        yield key, json.loads(raw)

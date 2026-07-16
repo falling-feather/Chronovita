@@ -20,10 +20,12 @@ class CanvasApiTests(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.previous = {
+            "auth_mode": settings.auth_mode,
             "content_root": settings.content_root,
             "game_catalog_path": settings.game_catalog_path,
             "sqlite_path": settings.sqlite_path,
         }
+        settings.auth_mode = "legacy-local"
         settings.content_root = str(REPO_ROOT / "content")
         settings.game_catalog_path = "scenarios/catalog.v1.json"
         settings.sqlite_path = str(Path(self.temp_dir.name) / "chronovita.db")

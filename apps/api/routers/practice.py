@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from auth_dependencies import AuthContext, require_student_context
 from services import llm, persistence, sandbox, saga
+from services.contracts.v1 import ContractId
 
 router = APIRouter()
 
@@ -58,7 +60,7 @@ async def saga_act(saga_id: str, req: SagaActRequest):
 # ============= 「创」 知识画板 LLM 自动生成（V0.3.0 新） =============
 
 class CanvasGenRequest(BaseModel):
-    lesson_id: str
+    lesson_id: ContractId
     lesson_title: str
     abstract: str
     keywords: list[str] = []
@@ -66,7 +68,10 @@ class CanvasGenRequest(BaseModel):
 
 
 @router.post("/canvas/generate")
-async def canvas_generate(req: CanvasGenRequest):
+async def canvas_generate(
+    req: CanvasGenRequest,
+    _context: AuthContext = Depends(require_student_context),
+):
     sys = (
         "你是一名历史教师，正在为学生构建一张「知识谱系图」。"
         "给定一节课程的标题与摘要，输出 6-9 个核心知识节点与它们之间的关系（边）。\n"
@@ -246,8 +251,12 @@ _CANVAS_NS = "canvas"
 
 
 @router.get("/canvas/{lesson_id}")
-async def canvas_get(lesson_id: str) -> CanvasResponse:
-    found, raw = persistence.kv_get_with_presence(_CANVAS_NS, lesson_id)
+async def canvas_get(
+    lesson_id: ContractId,
+    context: AuthContext = Depends(require_student_context),
+) -> CanvasResponse:
+    key = _canvas_key(lesson_id, context)
+    found, raw = persistence.kv_get_with_presence(_CANVAS_NS, key)
     if not found:
         return CanvasResponse(found=False, revision=0, nodes=[], edges=[])
     stored = _parse_canvas_document(raw)
@@ -260,8 +269,13 @@ async def canvas_get(lesson_id: str) -> CanvasResponse:
 
 
 @router.put("/canvas/{lesson_id}")
-async def canvas_save(lesson_id: str, payload: CanvasSaveRequest) -> CanvasResponse:
-    found, raw = persistence.kv_get_with_presence(_CANVAS_NS, lesson_id)
+async def canvas_save(
+    lesson_id: ContractId,
+    payload: CanvasSaveRequest,
+    context: AuthContext = Depends(require_student_context),
+) -> CanvasResponse:
+    key = _canvas_key(lesson_id, context)
+    found, raw = persistence.kv_get_with_presence(_CANVAS_NS, key)
     current_revision = 0 if not found else _parse_canvas_document(raw).revision
     if payload.expected_revision != current_revision:
         raise _canvas_revision_conflict()
@@ -273,7 +287,7 @@ async def canvas_save(lesson_id: str, payload: CanvasSaveRequest) -> CanvasRespo
     )
     if not persistence.kv_compare_and_set(
         _CANVAS_NS,
-        lesson_id,
+        key,
         raw,
         stored.model_dump(mode="json"),
     ):
@@ -284,6 +298,12 @@ async def canvas_save(lesson_id: str, payload: CanvasSaveRequest) -> CanvasRespo
         nodes=stored.nodes,
         edges=stored.edges,
     )
+
+
+def _canvas_key(lesson_id: str, context: AuthContext) -> str:
+    if context.source == "legacy-local-student":
+        return lesson_id
+    return f"{context.principal.user_id}:{lesson_id}"
 
 
 def _parse_canvas_document(raw: Any) -> CanvasStoredDocument:

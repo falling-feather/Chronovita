@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="CHRONO_", extra="ignore")
 
     app_name: str = "Chronovita API"
-    app_version: str = "0.9.3"
+    app_version: str = "0.9.4"
     debug: bool = True
     cors_origins: list[str] = [
         "http://127.0.0.1:5173",
