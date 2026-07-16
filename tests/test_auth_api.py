@@ -102,8 +102,10 @@ class AuthApiTests(unittest.TestCase):
         self.assertEqual(denied.status_code, 401, denied.text)
         self.assertEqual(denied.json()["detail"]["code"], "invalid_credentials")
 
+        login_request_id = "auth-login-request-001"
         logged_in_response = self.client.post(
             "/api/v1/auth/login",
+            headers={"X-Request-ID": login_request_id},
             json={"username": "root.admin", "password": "Root password 123!"},
         )
         self.assertEqual(logged_in_response.status_code, 200, logged_in_response.text)
@@ -129,6 +131,10 @@ class AuthApiTests(unittest.TestCase):
         self.assertEqual(audit.status_code, 200, audit.text)
         self.assertTrue(audit.json()["valid_chain"])
         self.assertIn("auth.login", {item["action"] for item in audit.json()["items"]})
+        login_event = next(
+            item for item in audit.json()["items"] if item["action"] == "auth.login"
+        )
+        self.assertEqual(login_event["request_id"], login_request_id)
 
         logout = self.client.post("/api/v1/auth/logout")
         self.assertEqual(logout.status_code, 204, logout.text)

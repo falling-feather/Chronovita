@@ -6,6 +6,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from services.version import APP_VERSION
 
 
+def secret_value(value: str | SecretStr) -> str:
+    if isinstance(value, SecretStr):
+        return value.get_secret_value()
+    return value
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="CHRONO_", extra="ignore")
 
@@ -21,7 +27,7 @@ class Settings(BaseSettings):
     database_url: SecretStr = SecretStr("")
     database_migration_mode: Literal["apply-safe", "validate"] = "apply-safe"
     content_root: str = "content"
-    admin_token: str = ""
+    admin_token: SecretStr = SecretStr("")
     admin_actor: str = "local-admin"
     auth_mode: Literal["legacy-local", "accounts"] = "legacy-local"
     auth_session_ttl_seconds: int = Field(default=8 * 60 * 60, ge=300, le=30 * 24 * 60 * 60)
@@ -33,7 +39,7 @@ class Settings(BaseSettings):
     )
     auth_cookie_secure: bool = False
     auth_bootstrap_username: str = ""
-    auth_bootstrap_password: str = ""
+    auth_bootstrap_password: SecretStr = SecretStr("")
     auth_bootstrap_display_name: str = "Chronovita Admin"
     game_catalog_path: str = Field(
         default="scenarios/catalog.v1.json",
@@ -48,7 +54,7 @@ class Settings(BaseSettings):
 
     # LLM 适配层
     llm_provider: str = "mock"  # mock | deepseek
-    deepseek_api_key: str = ""
+    deepseek_api_key: SecretStr = SecretStr("")
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-v4-flash"
     # 「问 · 跨时对话」用更准的 pro 模型（saga 仍用 flash 以保证流式速度）

@@ -8,7 +8,7 @@ from typing import Any, Iterable, TypeVar
 import httpx
 from pydantic import BaseModel, ValidationError
 
-from settings import settings
+from settings import secret_value, settings
 
 from .contracts import (
     LLMFailureCode,
@@ -43,7 +43,7 @@ class StructuredLLMAdapter:
     ) -> None:
         self.provider = (provider or settings.llm_provider or "mock").strip().lower()
         self.api_key = (
-            settings.deepseek_api_key if api_key is None else api_key
+            secret_value(settings.deepseek_api_key) if api_key is None else api_key
         ).strip()
         self.base_url = (
             base_url or settings.deepseek_base_url

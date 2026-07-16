@@ -7,7 +7,7 @@ from typing import AsyncIterator, Iterable
 
 import httpx
 
-from settings import settings
+from settings import secret_value, settings
 
 from .adapter import StructuredLLMAdapter, complete_json
 from .contracts import (
@@ -41,7 +41,8 @@ async def _mock_stream(messages: Iterable[Message]) -> AsyncIterator[str]:
 
 
 async def _deepseek_stream(messages: list[Message], *, model: str | None = None) -> AsyncIterator[str]:
-    if not settings.deepseek_api_key:
+    api_key = secret_value(settings.deepseek_api_key)
+    if not api_key:
         async for c in _mock_stream(messages):
             yield c
         return
@@ -49,7 +50,7 @@ async def _deepseek_stream(messages: list[Message], *, model: str | None = None)
     use_model = model or settings.deepseek_model
     url = f"{settings.deepseek_base_url.rstrip('/')}/chat/completions"
     headers = {
-        "Authorization": f"Bearer {settings.deepseek_api_key}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     payload: dict = {
@@ -114,7 +115,7 @@ async def stream_chat(
 
 def current_provider_label(model: str | None = None) -> str:
     p = (settings.llm_provider or "mock").lower()
-    if p == "deepseek" and settings.deepseek_api_key:
+    if p == "deepseek" and secret_value(settings.deepseek_api_key):
         return f"deepseek · {model or settings.deepseek_model}"
     return "mock（离线）"
 

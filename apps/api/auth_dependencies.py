@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import hashlib
-import re
 import secrets
 from dataclasses import dataclass
 from typing import Annotated, Any, Callable
-from uuid import uuid4
 
 from fastapi import Depends, Header, HTTPException, Request, status
 
-from settings import settings
+from settings import secret_value, settings
 from services.auth import AuthStoreError, Principal, get_identity, has_permission
+from services.operations import request_id_for_state
 
 
 @dataclass(frozen=True)
@@ -32,7 +31,8 @@ def require_auth_context(
         if len(set(candidates)) > 1:
             raise _authentication_error("credential_conflict", "Conflicting credentials.")
         token = candidates[0] if candidates else None
-        if not settings.admin_token:
+        admin_token = secret_value(settings.admin_token)
+        if not admin_token:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail={
@@ -40,7 +40,7 @@ def require_auth_context(
                     "message": "Local administrator token is not configured.",
                 },
             )
-        if token is None or not secrets.compare_digest(token, settings.admin_token):
+        if token is None or not secrets.compare_digest(token, admin_token):
             raise _authentication_error()
         return AuthContext(
             principal=Principal(
@@ -183,10 +183,10 @@ def audit_authorized_action(
 
 
 def request_id(request: Request) -> str:
-    supplied = request.headers.get("X-Request-ID", "").strip()
-    if supplied and re.fullmatch(r"[A-Za-z0-9._:-]{1,100}", supplied):
-        return supplied
-    return f"req_{uuid4().hex}"
+    return request_id_for_state(
+        request.state,
+        request.headers.get("X-Request-ID"),
+    )
 
 
 def client_fingerprint(request: Request) -> str:

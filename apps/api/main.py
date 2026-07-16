@@ -12,7 +12,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from settings import settings
+from settings import secret_value, settings
 from routers import (
     admin_content,
     auth,
@@ -29,7 +29,9 @@ from services.auth import AuthServiceConfig, configure_identity, shutdown_identi
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
 from services.operations import (
+    RequestTelemetryMiddleware,
     RuntimeReadinessError,
+    configure_runtime_logging,
     probe_database_connectivity,
     probe_database_readiness,
     validate_runtime_configuration,
@@ -42,6 +44,7 @@ async def lifespan(app: FastAPI):
     app.state.database_engine = None
     app.state.database_readiness = None
     app.state.runtime_ready = False
+    configure_runtime_logging()
     validate_runtime_configuration(settings)
     engine = persistence.init_engine(
         settings.sqlite_path,
@@ -56,7 +59,7 @@ async def lifespan(app: FastAPI):
                 mode=settings.auth_mode,
                 session_ttl_seconds=settings.auth_session_ttl_seconds,
                 bootstrap_username=settings.auth_bootstrap_username,
-                bootstrap_password=settings.auth_bootstrap_password,
+                bootstrap_password=secret_value(settings.auth_bootstrap_password),
                 bootstrap_display_name=settings.auth_bootstrap_display_name,
             ),
         )
@@ -94,6 +97,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],
+)
+app.add_middleware(
+    RequestTelemetryMiddleware,
+    handle_exceptions=not settings.debug,
 )
 
 API_PREFIX = "/api/v1"

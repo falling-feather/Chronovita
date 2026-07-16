@@ -106,6 +106,23 @@ class RuntimeConfigurationTests(unittest.TestCase):
             },
         )
 
+    def test_runtime_secrets_are_masked_by_settings(self):
+        secrets = (
+            "admin-token-must-not-leak",
+            "bootstrap-password-must-not-leak",
+            "model-key-must-not-leak",
+        )
+        configured = Settings(
+            admin_token=secrets[0],
+            auth_bootstrap_password=secrets[1],
+            deepseek_api_key=secrets[2],
+            _env_file=None,
+        )
+
+        rendered = repr(configured)
+        for secret in secrets:
+            self.assertNotIn(secret, rendered)
+
     @staticmethod
     def _production_settings(**overrides) -> Settings:
         values = {
@@ -186,6 +203,7 @@ class RuntimeHealthTests(unittest.TestCase):
             live = client.get("/healthz")
             ready = client.get("/readyz")
             self.assertEqual(live.status_code, 200, live.text)
+            self.assertRegex(live.headers["X-Request-ID"], r"^req_[0-9a-f]{32}$")
             self.assertEqual(live.json()["status"], "alive")
             self.assertEqual(ready.status_code, 200, ready.text)
             self.assertEqual(ready.json()["status"], "ready")
