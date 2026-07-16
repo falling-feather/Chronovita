@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from settings import settings
 from routers import (
     admin_content,
+    auth,
     common,
     courses,
     game,
@@ -23,6 +24,7 @@ from routers import (
     profile,
 )
 from services import content, persistence
+from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
 
@@ -31,6 +33,16 @@ from services.game_runtime.service import configure_game_runtime, shutdown_game_
 async def lifespan(app: FastAPI):
     engine = persistence.init_engine(settings.sqlite_path)
     try:
+        configure_identity(
+            engine,
+            AuthServiceConfig(
+                mode=settings.auth_mode,
+                session_ttl_seconds=settings.auth_session_ttl_seconds,
+                bootstrap_username=settings.auth_bootstrap_username,
+                bootstrap_password=settings.auth_bootstrap_password,
+                bootstrap_display_name=settings.auth_bootstrap_display_name,
+            ),
+        )
         content.configure(settings.content_root)
         content_workflow.recover_pending_release_transactions()
         configure_game_runtime(
@@ -41,6 +53,7 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         shutdown_game_runtime()
+        shutdown_identity()
         persistence.close_engine()
 
 
@@ -62,6 +75,7 @@ app.add_middleware(
 API_PREFIX = "/api/v1"
 
 app.include_router(common.router, prefix=API_PREFIX, tags=["common"])
+app.include_router(auth.router, prefix=f"{API_PREFIX}/auth", tags=["auth"])
 app.include_router(admin_content.router, prefix=f"{API_PREFIX}/admin/content", tags=["admin-content"])
 app.include_router(home.router, prefix=f"{API_PREFIX}/home", tags=["home"])
 app.include_router(courses.router, prefix=f"{API_PREFIX}/courses", tags=["courses"])

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -6,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="CHRONO_", extra="ignore")
 
     app_name: str = "Chronovita API"
-    app_version: str = "0.1.0"
+    app_version: str = "0.9.1"
     debug: bool = True
     cors_origins: list[str] = [
         "http://127.0.0.1:5173",
@@ -16,6 +18,18 @@ class Settings(BaseSettings):
     content_root: str = "content"
     admin_token: str = ""
     admin_actor: str = "local-admin"
+    auth_mode: Literal["legacy-local", "accounts"] = "legacy-local"
+    auth_session_ttl_seconds: int = Field(default=8 * 60 * 60, ge=300, le=30 * 24 * 60 * 60)
+    auth_cookie_name: str = Field(
+        default="chronovita_session",
+        min_length=3,
+        max_length=64,
+        pattern=r"^[A-Za-z][A-Za-z0-9_-]+$",
+    )
+    auth_cookie_secure: bool = False
+    auth_bootstrap_username: str = ""
+    auth_bootstrap_password: str = ""
+    auth_bootstrap_display_name: str = "Chronovita Admin"
     game_catalog_path: str = Field(
         default="scenarios/catalog.v1.json",
         min_length=1,
