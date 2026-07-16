@@ -191,7 +191,14 @@ class StudentResourceOwnershipApiTests(unittest.TestCase):
         original_cas = persistence.kv_compare_and_set
         injected = False
 
-        def inject_competing_layer(namespace, key, expected, data):
+        def inject_competing_layer(
+            namespace,
+            key,
+            expected,
+            data,
+            *,
+            expected_present=None,
+        ):
             nonlocal injected
             if not injected:
                 injected = True
@@ -199,9 +206,23 @@ class StudentResourceOwnershipApiTests(unittest.TestCase):
                 competitor["last_layer"] = "practice"
                 competitor["layers"]["practice"] = True
                 competitor["updated_at"] = "2026-07-16T03:00:00+00:00"
-                self.assertTrue(original_cas(namespace, key, expected, competitor))
+                self.assertTrue(
+                    original_cas(
+                        namespace,
+                        key,
+                        expected,
+                        competitor,
+                        expected_present=expected_present,
+                    )
+                )
                 return False
-            return original_cas(namespace, key, expected, data)
+            return original_cas(
+                namespace,
+                key,
+                expected,
+                data,
+                expected_present=expected_present,
+            )
 
         with patch.object(
             persistence,

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 import threading
+from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Any, Iterable
+from typing import Any, Iterable, Iterator
 
 from sqlalchemy import (
     Column,
@@ -17,7 +18,9 @@ from sqlalchemy import (
     select,
     update,
 )
-from sqlalchemy.engine import Engine
+from sqlalchemy.dialects.postgresql import insert as postgresql_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import IntegrityError
 
 from services.persistence.database import (
@@ -98,7 +101,14 @@ def _engine() -> Engine:
 
 
 def _dumps(obj: Any) -> str:
-    return json.dumps(obj, ensure_ascii=False, default=_json_default)
+    return json.dumps(
+        obj,
+        ensure_ascii=False,
+        default=_json_default,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
 
 
 def _json_default(o: Any) -> Any:
@@ -113,23 +123,26 @@ def kv_set(namespace: str, key: str, data: Any) -> None:
     payload = _dumps(data)
     now = datetime.now(timezone.utc)
     with _engine().begin() as conn:
-        existing = conn.execute(
-            select(kv_table.c.key).where(
-                (kv_table.c.namespace == namespace) & (kv_table.c.key == key)
-            )
-        ).first()
-        if existing is None:
-            conn.execute(
-                insert(kv_table).values(
-                    namespace=namespace, key=key, data=payload, updated_at=now
-                )
-            )
+        values = {
+            "namespace": namespace,
+            "key": key,
+            "data": payload,
+            "updated_at": now,
+        }
+        if conn.dialect.name == "sqlite":
+            statement = sqlite_insert(kv_table).values(**values)
+        elif conn.dialect.name == "postgresql":
+            statement = postgresql_insert(kv_table).values(**values)
         else:
-            conn.execute(
-                update(kv_table)
-                .where((kv_table.c.namespace == namespace) & (kv_table.c.key == key))
-                .values(data=payload, updated_at=now)
+            raise RuntimeError(
+                f"kv persistence does not support dialect: {conn.dialect.name}"
             )
+        conn.execute(
+            statement.on_conflict_do_update(
+                index_elements=[kv_table.c.namespace, kv_table.c.key],
+                set_={"data": payload, "updated_at": now},
+            )
+        )
 
 
 def kv_get(namespace: str, key: str) -> Any | None:
@@ -153,14 +166,36 @@ def kv_compare_and_set(
     key: str,
     expected: Any | None,
     data: Any,
+    *,
+    expected_present: bool | None = None,
 ) -> bool:
-    """Atomically insert an absent key or replace the exact value previously read."""
+    """Atomically replace one structured JSON value or insert an absent key.
+
+    ``expected_present`` distinguishes an absent key from a stored JSON null. When
+    omitted, the legacy contract remains: ``expected is None`` means absent.
+    """
+
+    if expected_present is False and expected is not None:
+        raise ValueError("expected must be None when expected_present is false")
     payload = _dumps(data)
-    expected_payload = _dumps(expected) if expected is not None else None
+    expected_payload = _dumps(expected)
+    should_exist = (
+        expected is not None if expected_present is None else expected_present
+    )
     now = datetime.now(timezone.utc)
     try:
-        with _engine().begin() as conn:
-            if expected_payload is None:
+        with _kv_write_transaction() as conn:
+            row = conn.execute(
+                select(kv_table.c.data)
+                .where(
+                    (kv_table.c.namespace == namespace)
+                    & (kv_table.c.key == key)
+                )
+                .with_for_update()
+            ).first()
+            if row is None:
+                if should_exist:
+                    return False
                 conn.execute(
                     insert(kv_table).values(
                         namespace=namespace,
@@ -170,18 +205,41 @@ def kv_compare_and_set(
                     )
                 )
                 return True
+            if not should_exist:
+                return False
+            actual_payload = _dumps(json.loads(row[0]))
+            if actual_payload != expected_payload:
+                return False
             result = conn.execute(
                 update(kv_table)
                 .where(
                     (kv_table.c.namespace == namespace)
                     & (kv_table.c.key == key)
-                    & (kv_table.c.data == expected_payload)
                 )
                 .values(data=payload, updated_at=now)
             )
             return result.rowcount == 1
     except IntegrityError:
         return False
+
+
+@contextmanager
+def _kv_write_transaction() -> Iterator[Connection]:
+    with _engine().connect() as conn:
+        try:
+            if conn.dialect.name == "sqlite":
+                conn.exec_driver_sql("BEGIN IMMEDIATE")
+            elif conn.dialect.name == "postgresql":
+                conn.begin()
+            else:
+                raise RuntimeError(
+                    f"kv persistence does not support dialect: {conn.dialect.name}"
+                )
+            yield conn
+            conn.commit()
+        except BaseException:
+            conn.rollback()
+            raise
 
 
 def kv_delete(namespace: str, key: str) -> None:

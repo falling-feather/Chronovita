@@ -290,6 +290,7 @@ async def canvas_save(
         key,
         raw,
         stored.model_dump(mode="json"),
+        expected_present=found,
     ):
         raise _canvas_revision_conflict()
     return CanvasResponse(

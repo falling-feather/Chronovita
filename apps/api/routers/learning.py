@@ -197,6 +197,7 @@ async def touch_progress(
             key,
             raw if found else None,
             next_record.model_dump(mode="json"),
+            expected_present=found,
         ):
             return {"ok": True, "item": _enrich(next_record).model_dump()}
     raise HTTPException(

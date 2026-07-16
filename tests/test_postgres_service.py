@@ -30,6 +30,7 @@ from services.auth import (
     Principal,
 )
 from services.auth.store import AuditWrite, AuthStore
+from services.persistence import db as persistence_db
 from services.persistence.database import (
     DatabaseEngineOptions,
     create_database_engine,
@@ -94,6 +95,7 @@ class PostgresServiceTests(unittest.TestCase):
         self._verify_postgres_cli(first, target)
         self._verify_concurrent_audit(first, second)
         self._verify_identity_invariants(first, second)
+        self._verify_kv_invariants()
         first.dispose()
         second.dispose()
         self._verify_application_runtime()
@@ -295,6 +297,101 @@ class PostgresServiceTests(unittest.TestCase):
         ]
         self.assertEqual([user.username for user in enabled_admins], ["ci.admin"])
         self.assertTrue(services[0].store.verify_audit_chain())
+
+    def _verify_kv_invariants(self) -> None:
+        options = DatabaseEngineOptions(
+            pool_size=4,
+            max_overflow=4,
+            pool_timeout_seconds=5,
+            pool_recycle_seconds=60,
+            connect_timeout_seconds=3,
+        )
+        persistence_db.init_engine(
+            sqlite_path="ignored.db",
+            database_url=POSTGRES_URL,
+            migration_mode="validate",
+            engine_options=options,
+        )
+        try:
+            write_count = 16
+            upsert_barrier = threading.Barrier(write_count)
+
+            def set_shared(value: int) -> None:
+                upsert_barrier.wait(timeout=10)
+                persistence_db.kv_set(
+                    "postgres-service-upsert",
+                    "shared",
+                    {"value": value},
+                )
+
+            with ThreadPoolExecutor(max_workers=write_count) as executor:
+                tuple(executor.map(set_shared, range(write_count)))
+            self.assertIn(
+                persistence_db.kv_get("postgres-service-upsert", "shared")[
+                    "value"
+                ],
+                range(write_count),
+            )
+
+            original = {"revision": 1, "nodes": []}
+            persistence_db.kv_set("postgres-service-cas", "shared", original)
+            cas_barrier = threading.Barrier(write_count)
+
+            def replace_shared(revision: int) -> bool:
+                cas_barrier.wait(timeout=10)
+                return persistence_db.kv_compare_and_set(
+                    "postgres-service-cas",
+                    "shared",
+                    original,
+                    {"revision": revision, "nodes": []},
+                    expected_present=True,
+                )
+
+            with ThreadPoolExecutor(max_workers=write_count) as executor:
+                results = tuple(
+                    executor.map(replace_shared, range(2, write_count + 2))
+                )
+            self.assertEqual(results.count(True), 1)
+
+            persistence_db.kv_set(
+                "postgres-service-cas",
+                "legacy-format",
+                original,
+            )
+            with persistence_db._engine().begin() as connection:
+                connection.execute(
+                    persistence_db.kv_table.update()
+                    .where(
+                        (
+                            persistence_db.kv_table.c.namespace
+                            == "postgres-service-cas"
+                        )
+                        & (persistence_db.kv_table.c.key == "legacy-format")
+                    )
+                    .values(data='{ "nodes": [ ], "revision": 1 }')
+                )
+            self.assertTrue(
+                persistence_db.kv_compare_and_set(
+                    "postgres-service-cas",
+                    "legacy-format",
+                    original,
+                    {"revision": 2, "nodes": []},
+                    expected_present=True,
+                )
+            )
+
+            persistence_db.kv_set("postgres-service-cas", "null-value", None)
+            self.assertTrue(
+                persistence_db.kv_compare_and_set(
+                    "postgres-service-cas",
+                    "null-value",
+                    None,
+                    {"revision": 1},
+                    expected_present=True,
+                )
+            )
+        finally:
+            persistence_db.close_engine()
 
     @staticmethod
     def _principal(user) -> Principal:
