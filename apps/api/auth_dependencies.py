@@ -93,6 +93,45 @@ def require_permission(permission: str) -> Callable[..., AuthContext]:
     return dependency
 
 
+def require_student_context(
+    request: Request,
+    authorization: Annotated[str | None, Header()] = None,
+    x_admin_token: Annotated[str | None, Header(alias="X-Admin-Token")] = None,
+) -> AuthContext:
+    """Resolve the authoritative owner for student-scoped resources."""
+
+    if settings.auth_mode == "legacy-local":
+        return AuthContext(
+            principal=Principal(
+                user_id=settings.game_user_id,
+                username=settings.game_user_id,
+                display_name="Local student",
+                roles=("student",),
+                session_id=None,
+                auth_version=1,
+                synthetic=True,
+            ),
+            raw_token=None,
+            source="legacy-local-student",
+        )
+
+    context = require_auth_context(
+        request,
+        authorization=authorization,
+        x_admin_token=x_admin_token,
+    )
+    if not has_permission(context.principal, "student.own"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "permission_denied",
+                "message": "The authenticated account cannot perform this action.",
+            },
+        )
+    _require_cookie_write_origin(request, context)
+    return context
+
+
 def trusted_actor(context: AuthContext) -> str:
     if context.principal.synthetic:
         return context.principal.username

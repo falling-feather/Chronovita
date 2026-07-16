@@ -58,11 +58,15 @@ class GameDossierApiTests(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.previous = {
+            "auth_mode": settings.auth_mode,
+            "admin_token": settings.admin_token,
             "content_root": settings.content_root,
             "game_catalog_path": settings.game_catalog_path,
             "game_user_id": settings.game_user_id,
             "sqlite_path": settings.sqlite_path,
         }
+        settings.auth_mode = "legacy-local"
+        settings.admin_token = "dossier-admin-token"
         settings.content_root = str(REPO_ROOT / "content")
         settings.game_catalog_path = "scenarios/catalog.v1.json"
         settings.game_user_id = "dossier-student"
@@ -90,7 +94,8 @@ class GameDossierApiTests(unittest.TestCase):
                 "dossier_not_ready",
             )
             active_summary = first_client.get(
-                f"/api/v1/practice/game/sessions/{session_id}/summary"
+                f"/api/v1/practice/game/sessions/{session_id}/summary",
+                headers={"X-Admin-Token": settings.admin_token},
             )
             self.assertEqual(active_summary.status_code, 200, active_summary.text)
             self.assertEqual(active_summary.json()["status"], "active")
@@ -170,7 +175,8 @@ class GameDossierApiTests(unittest.TestCase):
             self.assertEqual(replay.json()["session"], completed)
 
             summary = first_client.get(
-                f"/api/v1/practice/game/sessions/{session_id}/summary"
+                f"/api/v1/practice/game/sessions/{session_id}/summary",
+                headers={"X-Admin-Token": settings.admin_token},
             )
             self.assertEqual(summary.status_code, 200, summary.text)
             self.assertEqual(summary.json()["status"], "completed")

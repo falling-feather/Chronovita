@@ -198,7 +198,12 @@ class GameRuntimeStore:
         except SQLAlchemyError as exc:
             raise GameStoreError("game session storage write failed") from exc
 
-    def load_session(self, session_id: str) -> StoredSessionRecord:
+    def load_session(
+        self,
+        session_id: str,
+        *,
+        owner_user_id: str | None = None,
+    ) -> StoredSessionRecord:
         try:
             with self.engine.connect() as connection:
                 row = connection.execute(
@@ -215,10 +220,16 @@ class GameRuntimeStore:
             raise StoredSessionIntegrityError(
                 f"game session record is not text: {session_id}"
             )
-        return StoredSessionRecord(
+        record = StoredSessionRecord(
             envelope=_decode_session(raw_data, session_id),
             raw_data=raw_data,
         )
+        if (
+            owner_user_id is not None
+            and record.session.user_id != owner_user_id
+        ):
+            raise StoredSessionNotFound("resource not found")
+        return record
 
     def load_dossier(self, dossier_id: str) -> StoredDossierRecord:
         try:
@@ -251,6 +262,8 @@ class GameRuntimeStore:
         previous = current.session
         if next_session.session_id != previous.session_id:
             raise ValueError("compare-and-swap cannot change session_id")
+        if next_session.user_id != previous.user_id:
+            raise ValueError("compare-and-swap cannot change user_id")
         if next_session.revision != previous.revision + 1:
             raise ValueError("compare-and-swap requires exactly one new revision")
         raw_data = _encode_session(

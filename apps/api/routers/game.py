@@ -2,10 +2,15 @@ from __future__ import annotations
 
 from typing import Literal, NoReturn
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
-from settings import settings
+from auth_dependencies import (
+    AuthContext,
+    audit_authorized_action,
+    require_permission,
+    require_student_context,
+)
 from services.contracts.v1 import (
     ContractId,
     DossierV1,
@@ -92,11 +97,14 @@ async def list_game_scenarios() -> GameScenarioListResponse:
 
 
 @router.post("/sessions", response_model=GameStartResponse)
-async def start_game_session(request: GameStartRequest) -> GameStartResponse:
+async def start_game_session(
+    request: GameStartRequest,
+    context: AuthContext = Depends(require_student_context),
+) -> GameStartResponse:
     try:
-        scenario, session = get_game_runtime().start_session(
+        runtime = get_game_runtime().for_owner(context.principal.user_id)
+        scenario, session = runtime.start_session(
             request.scenario_id,
-            user_id=settings.game_user_id,
             client_request_id=request.client_request_id,
             release_pin=request.release_pin,
         )
@@ -106,9 +114,13 @@ async def start_game_session(request: GameStartRequest) -> GameStartResponse:
 
 
 @router.get("/sessions/{session_id}", response_model=GameSessionV1)
-async def get_game_session(session_id: str) -> GameSessionV1:
+async def get_game_session(
+    session_id: str,
+    context: AuthContext = Depends(require_student_context),
+) -> GameSessionV1:
     try:
-        session = get_game_runtime().get_session(session_id)
+        runtime = get_game_runtime().for_owner(context.principal.user_id)
+        session = runtime.get_session(session_id)
     except Exception as exc:
         _raise_runtime_error(exc)
     return session
@@ -118,9 +130,13 @@ async def get_game_session(session_id: str) -> GameSessionV1:
     "/sessions/{session_id}/replay",
     response_model=SessionReplayV1,
 )
-async def replay_game_session(session_id: str) -> SessionReplayV1:
+async def replay_game_session(
+    session_id: str,
+    context: AuthContext = Depends(require_student_context),
+) -> SessionReplayV1:
     try:
-        replay = get_game_runtime().replay_session(session_id)
+        runtime = get_game_runtime().for_owner(context.principal.user_id)
+        replay = runtime.replay_session(session_id)
     except Exception as exc:
         _raise_runtime_error(exc)
     return replay
@@ -130,9 +146,13 @@ async def replay_game_session(session_id: str) -> SessionReplayV1:
     "/sessions/{session_id}/dossier",
     response_model=DossierV1,
 )
-async def get_game_dossier(session_id: str) -> DossierV1:
+async def get_game_dossier(
+    session_id: str,
+    context: AuthContext = Depends(require_student_context),
+) -> DossierV1:
     try:
-        dossier = get_game_runtime().get_dossier(session_id)
+        runtime = get_game_runtime().for_owner(context.principal.user_id)
+        dossier = runtime.get_dossier(session_id)
     except Exception as exc:
         _raise_runtime_error(exc)
     return dossier
@@ -142,9 +162,13 @@ async def get_game_dossier(session_id: str) -> DossierV1:
     "/sessions/{session_id}/dossier",
     response_model=DossierV1,
 )
-async def ensure_game_dossier(session_id: str) -> DossierV1:
+async def ensure_game_dossier(
+    session_id: str,
+    context: AuthContext = Depends(require_student_context),
+) -> DossierV1:
     try:
-        dossier = get_game_runtime().ensure_dossier(session_id)
+        runtime = get_game_runtime().for_owner(context.principal.user_id)
+        dossier = runtime.ensure_dossier(session_id)
     except Exception as exc:
         _raise_runtime_error(exc)
     return dossier
@@ -156,11 +180,21 @@ async def ensure_game_dossier(session_id: str) -> DossierV1:
 )
 async def get_teacher_session_summary(
     session_id: str,
+    request: Request,
+    context: AuthContext = Depends(require_permission("student.summary")),
 ) -> TeacherSessionSummaryV1:
     try:
         summary = get_game_runtime().teacher_summary(session_id)
     except Exception as exc:
         _raise_runtime_error(exc)
+    audit_authorized_action(
+        request,
+        context,
+        permission="student.summary",
+        action="student.summary.read",
+        resource_type="game_session",
+        resource_id=session_id,
+    )
     return summary
 
 
@@ -168,9 +202,11 @@ async def get_teacher_session_summary(
 async def apply_game_turn(
     session_id: str,
     request: GameTurnRequest,
+    context: AuthContext = Depends(require_student_context),
 ) -> AdvanceResultV1:
     try:
-        result = await get_game_runtime().submit_fixed_action(
+        runtime = get_game_runtime().for_owner(context.principal.user_id)
+        result = await runtime.submit_fixed_action(
             session_id,
             client_action_id=request.client_action_id,
             action_id=request.action_id,
@@ -188,9 +224,11 @@ async def apply_game_turn(
 async def apply_game_free_input(
     session_id: str,
     request: GameFreeInputRequest,
+    context: AuthContext = Depends(require_student_context),
 ) -> FreeInputResultV1:
     try:
-        result = await get_game_runtime().apply_free_input(
+        runtime = get_game_runtime().for_owner(context.principal.user_id)
+        result = await runtime.apply_free_input(
             session_id,
             client_action_id=request.client_action_id,
             raw_input=request.raw_input,

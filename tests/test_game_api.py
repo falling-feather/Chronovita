@@ -371,6 +371,9 @@ class GameApiTests(unittest.TestCase):
         class PinRequiredRuntime:
             release_pin = None
 
+            def for_owner(self, _user_id):
+                return self
+
             def start_session(self, _scenario_id, **kwargs):
                 self.release_pin = kwargs["release_pin"]
                 raise PublishedScenarioPinRequired("published pin required")

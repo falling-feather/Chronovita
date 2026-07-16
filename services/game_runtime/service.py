@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import threading
 import uuid
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal, Protocol
@@ -62,7 +63,7 @@ from services.game_runtime.store import (
 
 
 class GameSessionNotFound(ValueError):
-    code = "game_session_not_found"
+    code = "resource_not_found"
 
 
 class DossierNotReady(ValueError):
@@ -242,6 +243,9 @@ class GameRuntimeService:
             for item in self.repository.list_active_records()
         )
 
+    def for_owner(self, user_id: str) -> OwnedGameRuntime:
+        return OwnedGameRuntime(runtime=self, user_id=user_id)
+
     def start_session(
         self,
         scenario_id: str,
@@ -298,7 +302,10 @@ class GameRuntimeService:
         except StoredSessionAlreadyExists as exc:
             if client_request_id is None:
                 raise SessionIntegrityError(str(exc)) from exc
-            existing = self._load_record(session_id)
+            existing = self._load_record(
+                session_id,
+                owner_user_id=user_id,
+            )
             existing_engine = self._engine_for(existing.session)
             existing_session = self._validated_session(
                 existing_engine,
@@ -328,16 +335,32 @@ class GameRuntimeService:
             raise SessionIntegrityError(str(exc)) from exc
         return _summary(loaded), session
 
-    def get_session(self, session_id: str) -> GameSessionV1:
-        record = self._load_record(session_id)
+    def get_session(
+        self,
+        session_id: str,
+        *,
+        owner_user_id: str | None = None,
+    ) -> GameSessionV1:
+        record = self._load_record(
+            session_id,
+            owner_user_id=owner_user_id,
+        )
         engine = self._engine_for(record.session)
         session = self._validated_session(engine, record.session)
         if session.dossier_id is not None:
             self._load_validated_dossier(engine, session)
         return session
 
-    def get_dossier(self, session_id: str) -> DossierV1:
-        record = self._load_record(session_id)
+    def get_dossier(
+        self,
+        session_id: str,
+        *,
+        owner_user_id: str | None = None,
+    ) -> DossierV1:
+        record = self._load_record(
+            session_id,
+            owner_user_id=owner_user_id,
+        )
         engine = self._engine_for(record.session)
         session = self._validated_session(engine, record.session)
         if session.status != "completed":
@@ -350,9 +373,17 @@ class GameRuntimeService:
             )
         return self._load_validated_dossier(engine, session)
 
-    def ensure_dossier(self, session_id: str) -> DossierV1:
+    def ensure_dossier(
+        self,
+        session_id: str,
+        *,
+        owner_user_id: str | None = None,
+    ) -> DossierV1:
         with self._lock:
-            record = self._load_record(session_id)
+            record = self._load_record(
+                session_id,
+                owner_user_id=owner_user_id,
+            )
             engine = self._engine_for(record.session)
             session = self._validated_session(engine, record.session)
             if session.status != "completed":
@@ -365,7 +396,10 @@ class GameRuntimeService:
             try:
                 self.store.attach_dossier(record, attached_session, dossier)
             except StoredSessionWriteConflict:
-                latest = self._load_record(session_id)
+                latest = self._load_record(
+                    session_id,
+                    owner_user_id=owner_user_id,
+                )
                 latest_engine = self._engine_for(latest.session)
                 latest_session = self._validated_session(
                     latest_engine,
@@ -386,8 +420,16 @@ class GameRuntimeService:
                 raise SessionIntegrityError(str(exc)) from exc
             return dossier
 
-    def replay_session(self, session_id: str) -> SessionReplayV1:
-        record = self._load_record(session_id)
+    def replay_session(
+        self,
+        session_id: str,
+        *,
+        owner_user_id: str | None = None,
+    ) -> SessionReplayV1:
+        record = self._load_record(
+            session_id,
+            owner_user_id=owner_user_id,
+        )
         engine = self._engine_for(record.session)
         session = self._validated_session(engine, record.session)
         if session.dossier_id is not None:
@@ -411,11 +453,15 @@ class GameRuntimeService:
         action_id: str,
         expected_revision: int,
         occurred_at: datetime | None = None,
+        owner_user_id: str | None = None,
     ) -> AdvanceResultV1:
         """Apply a fixed choice without trusting client-authored turn metadata."""
 
         with self._lock:
-            record = self._load_record(session_id)
+            record = self._load_record(
+                session_id,
+                owner_user_id=owner_user_id,
+            )
             engine = self._engine_for(record.session)
             session = self._validated_session(engine, record.session)
             self._validate_linked_dossier(engine, session)
@@ -449,6 +495,7 @@ class GameRuntimeService:
                     expected_revision=expected_revision,
                     occurred_at=event_time,
                 ),
+                owner_user_id=owner_user_id,
             )
 
     async def submit_fixed_action(
@@ -459,11 +506,15 @@ class GameRuntimeService:
         action_id: str,
         expected_revision: int,
         occurred_at: datetime | None = None,
+        owner_user_id: str | None = None,
     ) -> AdvanceResultV1:
         """Settle rules, narrate outside the state lock, then commit one CAS."""
 
         with self._lock:
-            record = self._load_record(session_id)
+            record = self._load_record(
+                session_id,
+                owner_user_id=owner_user_id,
+            )
             engine = self._engine_for(record.session)
             session = self._validated_session(engine, record.session)
             self._validate_linked_dossier(engine, session)
@@ -503,6 +554,7 @@ class GameRuntimeService:
             session,
             command,
             rule_result,
+            owner_user_id=owner_user_id,
         )
 
     async def apply_free_input(
@@ -513,11 +565,15 @@ class GameRuntimeService:
         raw_input: str,
         expected_revision: int,
         occurred_at: datetime | None = None,
+        owner_user_id: str | None = None,
     ) -> FreeInputResultV1:
         """Classify outside the state lock, then settle against the same revision."""
 
         with self._lock:
-            record = self._load_record(session_id)
+            record = self._load_record(
+                session_id,
+                owner_user_id=owner_user_id,
+            )
             engine = self._engine_for(record.session)
             session = self._validated_session(engine, record.session)
             self._validate_linked_dossier(engine, session)
@@ -567,7 +623,10 @@ class GameRuntimeService:
                 )
 
         with self._lock:
-            latest_record = self._load_record(session_id)
+            latest_record = self._load_record(
+                session_id,
+                owner_user_id=owner_user_id,
+            )
             latest_engine = self._engine_for(latest_record.session)
             latest_session = self._validated_session(
                 latest_engine,
@@ -623,6 +682,7 @@ class GameRuntimeService:
             latest_session,
             command,
             rule_result,
+            owner_user_id=owner_user_id,
         )
         result_engine = self._engine_for(result.session)
         return FreeInputResultV1(
@@ -636,9 +696,14 @@ class GameRuntimeService:
         self,
         session_id: str,
         command: RuntimeCommandV1,
+        *,
+        owner_user_id: str | None = None,
     ) -> AdvanceResultV1:
         with self._lock:
-            record = self._load_record(session_id)
+            record = self._load_record(
+                session_id,
+                owner_user_id=owner_user_id,
+            )
             engine = self._engine_for(record.session)
             session = self._validated_session(engine, record.session)
             if session.dossier_id is not None:
@@ -667,7 +732,10 @@ class GameRuntimeService:
             ) as exc:
                 raise SessionIntegrityError(str(exc)) from exc
             except StoredSessionWriteConflict:
-                latest = self._load_record(session_id)
+                latest = self._load_record(
+                    session_id,
+                    owner_user_id=owner_user_id,
+                )
                 latest_engine = self._engine_for(latest.session)
                 latest_session = self._validated_session(
                     latest_engine,
@@ -681,11 +749,19 @@ class GameRuntimeService:
                 return latest_engine.apply_action(latest_session, command)
             return result
 
-    def _load_record(self, session_id: str) -> StoredSessionRecord:
+    def _load_record(
+        self,
+        session_id: str,
+        *,
+        owner_user_id: str | None = None,
+    ) -> StoredSessionRecord:
         try:
-            return self.store.load_session(session_id)
+            return self.store.load_session(
+                session_id,
+                owner_user_id=owner_user_id,
+            )
         except StoredSessionNotFound as exc:
-            raise GameSessionNotFound(str(exc)) from exc
+            raise GameSessionNotFound("resource not found") from exc
         except StoredSessionIntegrityError as exc:
             raise SessionIntegrityError(str(exc)) from exc
 
@@ -712,6 +788,8 @@ class GameRuntimeService:
         session: GameSessionV1,
         command: RuntimeCommandV1,
         rule_result: AdvanceResultV1,
+        *,
+        owner_user_id: str | None = None,
     ) -> AdvanceResultV1:
         if session.ai_evidence_version == 0:
             prepared = rule_result
@@ -754,6 +832,7 @@ class GameRuntimeService:
             session,
             command,
             prepared,
+            owner_user_id=owner_user_id,
         )
 
     def _commit_prepared_action(
@@ -763,9 +842,14 @@ class GameRuntimeService:
         session: GameSessionV1,
         command: RuntimeCommandV1,
         result: AdvanceResultV1,
+        *,
+        owner_user_id: str | None = None,
     ) -> AdvanceResultV1:
         with self._lock:
-            latest_record = self._load_record(session.session_id)
+            latest_record = self._load_record(
+                session.session_id,
+                owner_user_id=owner_user_id,
+            )
             latest_engine = self._engine_for(latest_record.session)
             latest_session = self._validated_session(
                 latest_engine,
@@ -809,7 +893,10 @@ class GameRuntimeService:
             ) as exc:
                 raise SessionIntegrityError(str(exc)) from exc
             except StoredSessionWriteConflict:
-                winner = self._load_record(session.session_id)
+                winner = self._load_record(
+                    session.session_id,
+                    owner_user_id=owner_user_id,
+                )
                 winner_engine = self._engine_for(winner.session)
                 winner_session = self._validated_session(
                     winner_engine,
@@ -924,6 +1011,84 @@ class GameRuntimeService:
         if bundle.session is None:
             raise SessionIntegrityError("persisted runtime bundle lost its session")
         return bundle.session
+
+
+@dataclass(frozen=True)
+class OwnedGameRuntime:
+    """Student-facing runtime view with one non-overridable owner."""
+
+    runtime: GameRuntimeService
+    user_id: str
+
+    def start_session(
+        self,
+        scenario_id: str,
+        *,
+        client_request_id: str,
+        release_pin: ScenarioReleasePinV1 | None = None,
+    ) -> tuple[ScenarioSummaryV1, GameSessionV1]:
+        return self.runtime.start_session(
+            scenario_id,
+            user_id=self.user_id,
+            client_request_id=client_request_id,
+            release_pin=release_pin,
+        )
+
+    def get_session(self, session_id: str) -> GameSessionV1:
+        return self.runtime.get_session(
+            session_id,
+            owner_user_id=self.user_id,
+        )
+
+    def get_dossier(self, session_id: str) -> DossierV1:
+        return self.runtime.get_dossier(
+            session_id,
+            owner_user_id=self.user_id,
+        )
+
+    def ensure_dossier(self, session_id: str) -> DossierV1:
+        return self.runtime.ensure_dossier(
+            session_id,
+            owner_user_id=self.user_id,
+        )
+
+    def replay_session(self, session_id: str) -> SessionReplayV1:
+        return self.runtime.replay_session(
+            session_id,
+            owner_user_id=self.user_id,
+        )
+
+    async def submit_fixed_action(
+        self,
+        session_id: str,
+        *,
+        client_action_id: str,
+        action_id: str,
+        expected_revision: int,
+    ) -> AdvanceResultV1:
+        return await self.runtime.submit_fixed_action(
+            session_id,
+            client_action_id=client_action_id,
+            action_id=action_id,
+            expected_revision=expected_revision,
+            owner_user_id=self.user_id,
+        )
+
+    async def apply_free_input(
+        self,
+        session_id: str,
+        *,
+        client_action_id: str,
+        raw_input: str,
+        expected_revision: int,
+    ) -> FreeInputResultV1:
+        return await self.runtime.apply_free_input(
+            session_id,
+            client_action_id=client_action_id,
+            raw_input=raw_input,
+            expected_revision=expected_revision,
+            owner_user_id=self.user_id,
+        )
 
 
 _SERVICE_LOCK = threading.RLock()
@@ -1341,6 +1506,7 @@ __all__ = [
     "FreeInputResultV1",
     "GameRuntimeService",
     "GameSessionNotFound",
+    "OwnedGameRuntime",
     "PublishedScenarioPinRequired",
     "ScenarioReleasePinV1",
     "ScenarioSummaryV1",
