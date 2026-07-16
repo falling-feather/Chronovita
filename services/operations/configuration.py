@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlsplit
 
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError
+
 
 @dataclass(frozen=True)
 class RuntimeConfigurationIssue:
@@ -114,6 +117,10 @@ def _validate_production(
         if not valid:
             issues.append(RuntimeConfigurationIssue(code=code, field=field))
 
+    database_url = _secret_value(config.database_url).strip()
+    if database_url:
+        _validate_production_database_url(database_url, issues)
+
     origins = tuple(config.cors_origins)
     if not origins:
         issues.append(
@@ -150,6 +157,41 @@ def _validate_production(
             RuntimeConfigurationIssue(
                 code="runtime.production_trusted_host_invalid",
                 field="trusted_hosts",
+            )
+        )
+
+
+def _validate_production_database_url(
+    raw_url: str,
+    issues: list[RuntimeConfigurationIssue],
+) -> None:
+    try:
+        url = make_url(raw_url)
+    except (ArgumentError, TypeError, ValueError):
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.production_database_url_invalid",
+                field="database_url",
+            )
+        )
+        return
+    if (
+        url.get_backend_name() != "postgresql"
+        or url.drivername not in {"postgresql", "postgresql+psycopg"}
+    ):
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.production_postgres_required",
+                field="database_url",
+            )
+        )
+        return
+    sslmode = url.query.get("sslmode")
+    if not isinstance(sslmode, str) or sslmode.casefold() != "verify-full":
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.production_database_tls_required",
+                field="database_url",
             )
         )
 

@@ -52,6 +52,13 @@ async def lifespan(app: FastAPI):
         settings.sqlite_path,
         database_url=settings.database_url.get_secret_value(),
         migration_mode=settings.database_migration_mode,
+        engine_options=persistence.DatabaseEngineOptions(
+            pool_size=settings.database_pool_size,
+            max_overflow=settings.database_max_overflow,
+            pool_timeout_seconds=settings.database_pool_timeout_seconds,
+            pool_recycle_seconds=settings.database_pool_recycle_seconds,
+            connect_timeout_seconds=settings.database_connect_timeout_seconds,
+        ),
     )
     app.state.database_engine = engine
     try:

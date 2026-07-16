@@ -1,0 +1,20 @@
+name: chronovita-postgres-test
+
+services:
+  postgres:
+    image: postgres:16.14-alpine3.24
+    environment:
+      POSTGRES_USER: chronovita_test
+      POSTGRES_PASSWORD: chronovita_test_only
+      POSTGRES_DB: chronovita_test
+    ports:
+      - "127.0.0.1:${CHRONO_POSTGRES_TEST_PORT:-55432}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U chronovita_test -d chronovita_test
+      interval: 5s
+      timeout: 5s
+      retries: 12

@@ -3,7 +3,7 @@ from __future__ import annotations
 import shutil
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from sqlalchemy import text
@@ -23,6 +23,8 @@ from services.persistence import db
 from services.persistence.database import (
     DatabaseDriverUnavailable,
     DatabaseEngineConflict,
+    DatabaseEngineOptions,
+    DatabaseEngineOptionsInvalid,
     DatabaseUrlInvalid,
     UnsupportedDatabaseDialect,
     UnsupportedDatabaseDriver,
@@ -191,6 +193,51 @@ class DatabaseConfigurationTests(unittest.TestCase):
             self.assertEqual(engine.url.drivername, "postgresql+psycopg")
         finally:
             engine.dispose()
+
+    def test_postgres_engine_applies_explicit_pool_and_connect_limits(self):
+        target = resolve_database_target(
+            database_url="postgresql://chrono:secret@db/chronovita",
+            sqlite_path="ignored.db",
+        )
+        options = DatabaseEngineOptions(
+            pool_size=7,
+            max_overflow=3,
+            pool_timeout_seconds=12.5,
+            pool_recycle_seconds=900,
+            connect_timeout_seconds=4,
+        )
+        fake_engine = Mock()
+        fake_engine.dialect.name = "postgresql"
+
+        with patch(
+            "services.persistence.database.create_engine",
+            return_value=fake_engine,
+        ) as factory:
+            created = create_database_engine(target, options=options)
+
+        self.assertIs(created, fake_engine)
+        kwargs = factory.call_args.kwargs
+        self.assertTrue(kwargs["pool_pre_ping"])
+        self.assertEqual(kwargs["pool_size"], 7)
+        self.assertEqual(kwargs["max_overflow"], 3)
+        self.assertEqual(kwargs["pool_timeout"], 12.5)
+        self.assertEqual(kwargs["pool_recycle"], 900)
+        self.assertEqual(kwargs["connect_args"], {"connect_timeout": 4})
+
+    def test_database_engine_options_reject_invalid_bounds(self):
+        invalid_options = (
+            {"pool_size": 0},
+            {"pool_size": 101},
+            {"max_overflow": -1},
+            {"max_overflow": 101},
+            {"pool_timeout_seconds": 301},
+            {"pool_recycle_seconds": 29},
+            {"connect_timeout_seconds": 61},
+        )
+        for values in invalid_options:
+            with self.subTest(values=values):
+                with self.assertRaises(DatabaseEngineOptionsInvalid):
+                    DatabaseEngineOptions(**values)
 
     def test_driver_load_failure_is_sanitized(self):
         secret = "driver-error-secret"

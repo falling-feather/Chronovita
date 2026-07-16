@@ -347,17 +347,21 @@ def _validate_table(connection: Connection, expected: Table) -> None:
         raise DatabaseSchemaDrift(
             f"could not inspect table contract: {expected.name}"
         ) from exc
-    expected_columns = tuple(_column_contract(column) for column in expected.columns)
-    found_columns = tuple(_inspected_column_contract(column) for column in actual_columns)
-    if found_columns != expected_columns:
-        raise DatabaseSchemaDrift(
-            f"table column contract drifted: {expected.name}"
-        )
     expected_pk = tuple(column.name for column in expected.primary_key.columns)
     found_pk = tuple(actual_pk.get("constrained_columns") or ())
     if found_pk != expected_pk:
         raise DatabaseSchemaDrift(
             f"table primary key drifted: {expected.name}"
+        )
+    expected_columns = tuple(_column_contract(column) for column in expected.columns)
+    found_pk_names = frozenset(found_pk)
+    found_columns = tuple(
+        _inspected_column_contract(column, primary_keys=found_pk_names)
+        for column in actual_columns
+    )
+    if found_columns != expected_columns:
+        raise DatabaseSchemaDrift(
+            f"table column contract drifted: {expected.name}"
         )
     expected_unique = {
         tuple(column.name for column in constraint.columns)
@@ -396,12 +400,16 @@ def _column_contract(column: Column) -> tuple[object, ...]:
     )
 
 
-def _inspected_column_contract(column: dict) -> tuple[object, ...]:
+def _inspected_column_contract(
+    column: dict,
+    *,
+    primary_keys: frozenset[str],
+) -> tuple[object, ...]:
     return (
         str(column["name"]),
         _type_contract(column["type"]),
         bool(column.get("nullable", True)),
-        bool(column.get("primary_key", 0)),
+        str(column["name"]) in primary_keys,
     )
 
 

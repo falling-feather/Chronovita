@@ -59,6 +59,7 @@ class RuntimeConfigurationTests(unittest.TestCase):
             {
                 "runtime.production_accounts_required",
                 "runtime.production_cors_origin_invalid",
+                "runtime.production_database_tls_required",
                 "runtime.production_debug_disabled",
                 "runtime.production_schema_validate_required",
                 "runtime.production_secure_cookie_required",
@@ -86,6 +87,32 @@ class RuntimeConfigurationTests(unittest.TestCase):
                 "runtime.production_llm_key_required",
             },
         )
+
+    def test_production_requires_postgres_with_verified_tls(self):
+        cases = (
+            (
+                "sqlite:///data/chronovita.db",
+                "runtime.production_postgres_required",
+            ),
+            (
+                "postgresql://chrono:secret@db/chronovita?sslmode=require",
+                "runtime.production_database_tls_required",
+            ),
+            (
+                "not a database URL",
+                "runtime.production_database_url_invalid",
+            ),
+        )
+
+        for database_url, expected_code in cases:
+            with self.subTest(expected_code=expected_code):
+                configured = self._production_settings(database_url=database_url)
+                with self.assertRaises(RuntimeConfigurationError) as caught:
+                    validate_runtime_configuration(configured)
+                self.assertEqual(
+                    {issue.code for issue in caught.exception.issues},
+                    {expected_code},
+                )
 
     def test_local_legacy_mode_requires_debug_and_complete_bootstrap_pair(self):
         configured = Settings(
@@ -171,7 +198,9 @@ class RuntimeConfigurationTests(unittest.TestCase):
             "auth_mode": "accounts",
             "auth_cookie_secure": True,
             "database_migration_mode": "validate",
-            "database_url": "postgresql://chrono:secret@db/chronovita",
+            "database_url": (
+                "postgresql://chrono:secret@db/chronovita?sslmode=verify-full"
+            ),
             "admin_token": "",
             "cors_origins": ["https://chronovita.example.test"],
             "trusted_hosts": ["chronovita.example.test"],

@@ -22,6 +22,7 @@ from sqlalchemy.exc import IntegrityError
 
 from services.persistence.database import (
     DatabaseEngineConflict,
+    DatabaseEngineOptions,
     DatabaseTarget,
     create_database_engine,
     resolve_database_target,
@@ -30,6 +31,7 @@ from services.persistence.database import (
 _LOCK = threading.RLock()
 _ENGINE: Engine | None = None
 _ENGINE_TARGET: DatabaseTarget | None = None
+_ENGINE_OPTIONS: DatabaseEngineOptions | None = None
 _METADATA = MetaData()
 
 
@@ -48,20 +50,24 @@ def init_engine(
     *,
     database_url: str | None = None,
     migration_mode: str = "apply-safe",
+    engine_options: DatabaseEngineOptions | None = None,
 ) -> Engine:
-    global _ENGINE, _ENGINE_TARGET
+    global _ENGINE, _ENGINE_OPTIONS, _ENGINE_TARGET
     target = resolve_database_target(
         database_url=database_url,
         sqlite_path=sqlite_path,
     )
+    resolved_options = DatabaseEngineOptions()
+    if target.dialect == "postgresql" and engine_options is not None:
+        resolved_options = engine_options
     with _LOCK:
         if _ENGINE is not None:
-            if _ENGINE_TARGET != target:
+            if _ENGINE_TARGET != target or _ENGINE_OPTIONS != resolved_options:
                 raise DatabaseEngineConflict(
-                    "persistence engine is already initialized for another target"
+                    "persistence engine is already initialized for another target or option set"
                 )
             return _ENGINE
-        engine = create_database_engine(target)
+        engine = create_database_engine(target, options=resolved_options)
         try:
             from services.persistence.schema import ensure_current_schema
 
@@ -71,16 +77,18 @@ def init_engine(
             raise
         _ENGINE = engine
         _ENGINE_TARGET = target
+        _ENGINE_OPTIONS = resolved_options
         return engine
 
 
 def close_engine() -> None:
-    global _ENGINE, _ENGINE_TARGET
+    global _ENGINE, _ENGINE_OPTIONS, _ENGINE_TARGET
     with _LOCK:
         if _ENGINE is not None:
             _ENGINE.dispose()
             _ENGINE = None
             _ENGINE_TARGET = None
+            _ENGINE_OPTIONS = None
 
 
 def _engine() -> Engine:

@@ -48,12 +48,37 @@ class DatabaseEngineConflict(DatabaseConfigurationError):
     code = "database_engine_conflict"
 
 
+class DatabaseEngineOptionsInvalid(DatabaseConfigurationError):
+    code = "database_engine_options_invalid"
+
+
 @dataclass(frozen=True)
 class DatabaseTarget:
     dialect: DatabaseDialect
     source: DatabaseSource
     url: URL = field(repr=False)
     sqlite_path: Path | None = field(default=None, repr=False)
+
+
+@dataclass(frozen=True)
+class DatabaseEngineOptions:
+    pool_size: int = 5
+    max_overflow: int = 10
+    pool_timeout_seconds: float = 30.0
+    pool_recycle_seconds: int = 1800
+    connect_timeout_seconds: int = 10
+
+    def __post_init__(self) -> None:
+        if (
+            not 1 <= self.pool_size <= 100
+            or not 0 <= self.max_overflow <= 100
+            or not 1 <= self.pool_timeout_seconds <= 300
+            or not 30 <= self.pool_recycle_seconds <= 86_400
+            or not 1 <= self.connect_timeout_seconds <= 60
+        ):
+            raise DatabaseEngineOptionsInvalid(
+                "database engine options are outside supported bounds"
+            )
 
 
 def resolve_database_target(
@@ -85,7 +110,12 @@ def resolve_database_target(
     )
 
 
-def create_database_engine(target: DatabaseTarget) -> Engine:
+def create_database_engine(
+    target: DatabaseTarget,
+    *,
+    options: DatabaseEngineOptions | None = None,
+) -> Engine:
+    resolved_options = options or DatabaseEngineOptions()
     if target.sqlite_path is not None:
         try:
             target.sqlite_path.parent.mkdir(parents=True, exist_ok=True)
@@ -100,7 +130,18 @@ def create_database_engine(target: DatabaseTarget) -> Engine:
         if target.sqlite_path is None:
             kwargs["poolclass"] = StaticPool
     else:
-        kwargs["pool_pre_ping"] = True
+        kwargs.update(
+            {
+                "pool_pre_ping": True,
+                "pool_size": resolved_options.pool_size,
+                "max_overflow": resolved_options.max_overflow,
+                "pool_timeout": resolved_options.pool_timeout_seconds,
+                "pool_recycle": resolved_options.pool_recycle_seconds,
+                "connect_args": {
+                    "connect_timeout": resolved_options.connect_timeout_seconds,
+                },
+            }
+        )
     try:
         engine = create_engine(target.url, **kwargs)
     except (ImportError, ModuleNotFoundError, NoSuchModuleError) as exc:
@@ -186,6 +227,8 @@ __all__ = [
     "DatabaseDialect",
     "DatabaseDriverUnavailable",
     "DatabaseEngineConflict",
+    "DatabaseEngineOptions",
+    "DatabaseEngineOptionsInvalid",
     "DatabaseSource",
     "DatabaseTarget",
     "DatabaseUrlInvalid",

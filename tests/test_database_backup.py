@@ -14,6 +14,7 @@ from unittest.mock import patch
 
 from sqlalchemy import Column, Integer, MetaData, Table, create_engine, insert, select
 from sqlalchemy.engine import Engine, URL
+from sqlalchemy.exc import SQLAlchemyError
 
 from scripts import manage_database as database_cli
 from services.game_runtime.store import game_sessions_table
@@ -334,6 +335,37 @@ class DatabaseBackupTests(unittest.TestCase):
         code, output, _error = self._cli("status", "--database", str(restored))
         self.assertEqual(code, 0)
         self.assertTrue(json.loads(output)["result"]["is_current"])
+
+    def test_database_cli_reads_postgres_url_only_from_named_env_and_redacts_errors(self):
+        env_name = "CHRONO_TEST_DATABASE_URL"
+        secret = "postgres-command-secret-must-not-leak"
+        with patch.dict(
+            os.environ,
+            {env_name: f"postgresql://chrono:{secret}@db/chronovita"},
+            clear=False,
+        ), patch.object(
+            database_cli,
+            "inspect",
+            side_effect=SQLAlchemyError(f"connection failed near {secret}"),
+        ):
+            code, _output, error = self._cli(
+                "status",
+                "--database-url-env",
+                env_name,
+            )
+
+        self.assertEqual(code, 2)
+        self.assertEqual(json.loads(error)["code"], "database_command_invalid")
+        self.assertNotIn(secret, error)
+
+        code, _output, missing_error = self._cli(
+            "migrate",
+            "--database-url-env",
+            "CHRONO_MISSING_DATABASE_URL",
+            "--initialize",
+        )
+        self.assertEqual(code, 2)
+        self.assertNotIn("postgresql://", missing_error)
 
     def _current_database(self, filename: str, *, value: str) -> Path:
         path = self.tmp_root / filename
