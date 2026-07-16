@@ -146,10 +146,12 @@ def ensure_current_schema(
             try:
                 status = _apply_registered_migrations(connection, dialect)
                 connection.commit()
-                return status
             except BaseException:
                 connection.rollback()
                 raise
+            finally:
+                _end_migration_transaction(connection, dialect)
+            return status
     except DatabaseSchemaError:
         raise
     except OperationalError as exc:
@@ -278,12 +280,40 @@ def _begin_migration_transaction(connection: Connection, dialect: str) -> None:
     if dialect == "sqlite":
         connection.exec_driver_sql("BEGIN IMMEDIATE")
         return
-    _configure_snapshot_isolation(connection, dialect)
-    connection.begin()
     connection.execute(
-        text("SELECT pg_advisory_xact_lock(:lock_id)"),
+        text("SELECT pg_advisory_lock(:lock_id)"),
         {"lock_id": _POSTGRES_MIGRATION_LOCK_ID},
     )
+    connection.commit()
+    try:
+        _configure_snapshot_isolation(connection, dialect)
+        connection.begin()
+    except BaseException:
+        _end_migration_transaction(connection, dialect)
+        raise
+
+
+def _end_migration_transaction(connection: Connection, dialect: str) -> None:
+    if dialect != "postgresql":
+        return
+    try:
+        if connection.in_transaction():
+            connection.rollback()
+        released = connection.execute(
+            text("SELECT pg_advisory_unlock(:lock_id)"),
+            {"lock_id": _POSTGRES_MIGRATION_LOCK_ID},
+        ).scalar_one()
+        connection.commit()
+    except SQLAlchemyError as exc:
+        connection.invalidate()
+        raise DatabaseSchemaStorageError(
+            "database migration lock release failed"
+        ) from exc
+    if released is not True:
+        connection.invalidate()
+        raise DatabaseSchemaStorageError(
+            "database migration lock ownership was lost"
+        )
 
 
 def _configure_snapshot_isolation(connection: Connection, dialect: str) -> None:
