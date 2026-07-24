@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import asyncio
+import json
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import StaticPool
@@ -21,6 +24,7 @@ import main as api_main
 from settings import Settings, runtime_env_file, settings
 from services import persistence
 from services.operations import (
+    RequestBodyLimitMiddleware,
     RuntimeConfigurationError,
     RuntimeReadinessError,
     probe_database_connectivity,
@@ -35,6 +39,17 @@ class RuntimeConfigurationTests(unittest.TestCase):
         configured = self._production_settings()
 
         validate_runtime_configuration(configured)
+
+    def test_production_requires_a_single_declared_api_worker(self):
+        configured = self._production_settings(api_worker_count=2)
+
+        with self.assertRaises(RuntimeConfigurationError) as caught:
+            validate_runtime_configuration(configured)
+
+        self.assertEqual(
+            {issue.code for issue in caught.exception.issues},
+            {"runtime.production_single_worker_required"},
+        )
 
     def test_production_profile_rejects_unsafe_settings_without_secret_values(self):
         database_secret = "database-secret-must-not-leak"
@@ -113,6 +128,60 @@ class RuntimeConfigurationTests(unittest.TestCase):
                     {issue.code for issue in caught.exception.issues},
                     {expected_code},
                 )
+
+    def test_production_requires_a_trusted_https_deepseek_endpoint(self):
+        configured = self._production_settings(
+            llm_provider="deepseek",
+            deepseek_api_key="model-key",
+            deepseek_base_url="https://api.deepseek.com/v1",
+        )
+        validate_runtime_configuration(configured)
+
+        cases = (
+            (
+                {"deepseek_base_url": "http://api.deepseek.com"},
+                "runtime.production_llm_endpoint_untrusted",
+            ),
+            (
+                {"deepseek_base_url": "https://untrusted.example.test"},
+                "runtime.production_llm_endpoint_untrusted",
+            ),
+            (
+                {
+                    "deepseek_base_url": (
+                        "https://operator:secret@api.deepseek.com"
+                    )
+                },
+                "runtime.production_llm_endpoint_untrusted",
+            ),
+            (
+                {"deepseek_base_url": "https://api.deepseek.com?target=other"},
+                "runtime.production_llm_endpoint_untrusted",
+            ),
+            (
+                {
+                    "deepseek_allowed_hosts": [
+                        "api.deepseek.com",
+                        "api.deepseek.com",
+                    ]
+                },
+                "runtime.production_llm_allowed_hosts_invalid",
+            ),
+        )
+        for overrides, expected_code in cases:
+            with self.subTest(expected_code=expected_code, overrides=overrides):
+                candidate = self._production_settings(
+                    llm_provider="deepseek",
+                    deepseek_api_key="model-key",
+                    **overrides,
+                )
+                with self.assertRaises(RuntimeConfigurationError) as caught:
+                    validate_runtime_configuration(candidate)
+                self.assertEqual(
+                    {issue.code for issue in caught.exception.issues},
+                    {expected_code},
+                )
+                self.assertNotIn("operator:secret", str(caught.exception))
 
     def test_local_legacy_mode_requires_debug_and_complete_bootstrap_pair(self):
         configured = Settings(
@@ -211,6 +280,156 @@ class RuntimeConfigurationTests(unittest.TestCase):
         }
         values.update(overrides)
         return Settings(**values, _env_file=None)
+
+
+class RequestBodyLimitTests(unittest.TestCase):
+    def test_fastapi_rejects_oversized_body_before_authentication(self):
+        authentication_calls = 0
+
+        async def authenticate() -> None:
+            nonlocal authentication_calls
+            authentication_calls += 1
+
+        app = FastAPI()
+        app.add_middleware(RequestBodyLimitMiddleware, max_body_bytes=10)
+
+        @app.post("/bounded", dependencies=[Depends(authenticate)])
+        async def bounded(payload: dict) -> dict:
+            return payload
+
+        with TestClient(app) as client:
+            response = client.post(
+                "/bounded",
+                content=b"x" * 11,
+                headers={"Content-Type": "application/json"},
+            )
+
+        self.assertEqual(response.status_code, 413, response.text)
+        self.assertEqual(authentication_calls, 0)
+
+    def test_declared_oversized_body_is_rejected_without_reading(self):
+        receive_calls = 0
+        sent: list[dict] = []
+
+        async def downstream(scope, receive, send):
+            del scope, receive, send
+            self.fail("downstream application must not run")
+
+        async def receive():
+            nonlocal receive_calls
+            receive_calls += 1
+            self.fail("declared oversized body must not be read")
+
+        async def send(message):
+            sent.append(message)
+
+        middleware = RequestBodyLimitMiddleware(
+            downstream,
+            max_body_bytes=10,
+        )
+        asyncio.run(
+            middleware(
+                self._scope(headers=[(b"content-length", b"11")]),
+                receive,
+                send,
+            )
+        )
+
+        self.assertEqual(receive_calls, 0)
+        self._assert_too_large(sent)
+
+    def test_chunked_oversized_body_stops_at_the_first_excess_chunk(self):
+        chunks = [
+            {"type": "http.request", "body": b"123456", "more_body": True},
+            {"type": "http.request", "body": b"abcdef", "more_body": True},
+            {"type": "http.request", "body": b"ignored", "more_body": False},
+        ]
+        receive_calls = 0
+        sent: list[dict] = []
+
+        async def downstream(scope, receive, send):
+            del scope, send
+            while True:
+                message = await receive()
+                if not message.get("more_body", False):
+                    return
+
+        async def receive():
+            nonlocal receive_calls
+            message = chunks[receive_calls]
+            receive_calls += 1
+            return message
+
+        async def send(message):
+            sent.append(message)
+
+        middleware = RequestBodyLimitMiddleware(
+            downstream,
+            max_body_bytes=10,
+        )
+        asyncio.run(middleware(self._scope(), receive, send))
+
+        self.assertEqual(receive_calls, 2)
+        self._assert_too_large(sent)
+
+    def test_body_within_limit_reaches_the_application(self):
+        chunks = [
+            {"type": "http.request", "body": b"1234", "more_body": True},
+            {"type": "http.request", "body": b"5678", "more_body": False},
+        ]
+        sent: list[dict] = []
+
+        async def downstream(scope, receive, send):
+            del scope
+            body = b""
+            while True:
+                message = await receive()
+                body += message.get("body", b"")
+                if not message.get("more_body", False):
+                    break
+            self.assertEqual(body, b"12345678")
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": 204,
+                    "headers": [],
+                }
+            )
+            await send({"type": "http.response.body", "body": b""})
+
+        async def receive():
+            return chunks.pop(0)
+
+        async def send(message):
+            sent.append(message)
+
+        middleware = RequestBodyLimitMiddleware(
+            downstream,
+            max_body_bytes=10,
+        )
+        asyncio.run(middleware(self._scope(), receive, send))
+
+        self.assertEqual(sent[0]["status"], 204)
+
+    @staticmethod
+    def _scope(*, headers: list[tuple[bytes, bytes]] | None = None) -> dict:
+        return {
+            "type": "http",
+            "method": "POST",
+            "path": "/api/v1/practice/ask",
+            "headers": headers or [],
+            "state": {},
+        }
+
+    def _assert_too_large(self, sent: list[dict]) -> None:
+        self.assertEqual(sent[0]["status"], 413)
+        headers = dict(sent[0]["headers"])
+        self.assertEqual(headers[b"cache-control"], b"no-store")
+        payload = json.loads(sent[1]["body"])
+        self.assertEqual(
+            payload["detail"]["code"],
+            "request_body_too_large",
+        )
 
 
 class RuntimeHealthTests(unittest.TestCase):

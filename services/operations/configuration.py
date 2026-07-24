@@ -112,6 +112,11 @@ def _validate_production(
             "runtime.production_shared_admin_token_forbidden",
             "admin_token",
         ),
+        (
+            config.api_worker_count == 1,
+            "runtime.production_single_worker_required",
+            "api_worker_count",
+        ),
     )
     for valid, code, field in requirements:
         if not valid:
@@ -139,16 +144,8 @@ def _validate_production(
             )
         )
 
-    if (
-        str(config.llm_provider).strip().casefold() == "deepseek"
-        and not _secret_value(config.deepseek_api_key).strip()
-    ):
-        issues.append(
-            RuntimeConfigurationIssue(
-                code="runtime.production_llm_key_required",
-                field="deepseek_api_key",
-            )
-        )
+    if str(config.llm_provider).strip().casefold() == "deepseek":
+        _validate_production_deepseek(config, issues)
 
     if trusted_hosts_valid and any(
         _is_local_host(host) for host in config.trusted_hosts
@@ -192,6 +189,67 @@ def _validate_production_database_url(
             RuntimeConfigurationIssue(
                 code="runtime.production_database_tls_required",
                 field="database_url",
+            )
+        )
+
+
+def _validate_production_deepseek(
+    config: Any,
+    issues: list[RuntimeConfigurationIssue],
+) -> None:
+    if not _secret_value(config.deepseek_api_key).strip():
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.production_llm_key_required",
+                field="deepseek_api_key",
+            )
+        )
+
+    allowed_hosts = tuple(config.deepseek_allowed_hosts)
+    canonical_hosts = tuple(
+        str(host).casefold()
+        for host in allowed_hosts
+    )
+    allowed_hosts_valid = (
+        bool(allowed_hosts)
+        and len(set(canonical_hosts)) == len(allowed_hosts)
+        and all(
+            _is_exact_host(host) and not _is_local_host(host)
+            for host in allowed_hosts
+        )
+    )
+    if not allowed_hosts_valid:
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.production_llm_allowed_hosts_invalid",
+                field="deepseek_allowed_hosts",
+            )
+        )
+
+    raw_url = str(config.deepseek_base_url).strip()
+    try:
+        parsed = urlsplit(raw_url)
+        _ = parsed.port
+    except ValueError:
+        parsed = None
+    endpoint_valid = (
+        parsed is not None
+        and raw_url == str(config.deepseek_base_url)
+        and parsed.scheme.casefold() == "https"
+        and bool(parsed.hostname)
+        and parsed.username is None
+        and parsed.password is None
+        and not parsed.query
+        and not parsed.fragment
+        and "\\" not in raw_url
+        and not any(character.isspace() for character in raw_url)
+        and parsed.hostname.casefold() in canonical_hosts
+    )
+    if not endpoint_valid:
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.production_llm_endpoint_untrusted",
+                field="deepseek_base_url",
             )
         )
 

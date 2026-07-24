@@ -1,26 +1,100 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+import asyncio
+import json
+import re
+from threading import Lock
+from typing import Annotated, Any, Callable, Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from auth_dependencies import AuthContext, require_student_context
+from settings import settings
 from services import llm, persistence, sandbox, saga
 from services.contracts.v1 import ContractId
+from services.operations import ConcurrentCallLimiter, TokenBucketLimiter
 
 router = APIRouter()
+_PRACTICE_LLM_RATE_LIMITER = TokenBucketLimiter(
+    max_attempts=settings.practice_llm_rate_limit_requests,
+    window_seconds=settings.practice_llm_rate_limit_window_seconds,
+    max_clients=settings.practice_llm_rate_limit_max_users,
+)
+_PRACTICE_LLM_CONCURRENCY_LIMITER = ConcurrentCallLimiter(
+    max_calls=settings.practice_llm_max_concurrent_per_user,
+    max_clients=settings.practice_llm_rate_limit_max_users,
+)
+
+
+class _CleanupStreamingResponse(StreamingResponse):
+    def __init__(
+        self,
+        *args,
+        cleanup: Callable[[], None],
+        **kwargs,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self._cleanup = cleanup
+
+    async def __call__(self, scope, receive, send) -> None:
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            try:
+                await _close_async_iterator(self.body_iterator)
+            finally:
+                self._cleanup()
+
+
+def _once(*callbacks: Callable[[], None]) -> Callable[[], None]:
+    lock = Lock()
+    completed = False
+
+    def run() -> None:
+        nonlocal completed
+        with lock:
+            if completed:
+                return
+            completed = True
+        first_error: BaseException | None = None
+        for callback in callbacks:
+            try:
+                callback()
+            except BaseException as exc:
+                if first_error is None:
+                    first_error = exc
+        if first_error is not None:
+            raise first_error
+
+    return run
+
+
+async def _close_async_iterator(iterator) -> None:
+    close = getattr(iterator, "aclose", None)
+    if close is not None:
+        await close()
 
 
 # ============= 「练」 互动小说 saga（V0.3.0 新） =============
 
 class SagaStartRequest(BaseModel):
-    lesson_id: str
+    model_config = ConfigDict(extra="forbid")
+
+    lesson_id: str = Field(min_length=1, max_length=64)
 
 
 class SagaActRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     action: str = Field(..., min_length=1, max_length=400)
+
+
+SagaId = Annotated[
+    str,
+    Path(min_length=12, max_length=12, pattern=r"^[0-9a-f]{12}$"),
+]
 
 
 @router.get("/saga/templates")
@@ -29,42 +103,168 @@ async def saga_templates():
 
 
 @router.post("/saga/start")
-async def saga_start(req: SagaStartRequest):
-    state = saga.start(req.lesson_id)
+async def saga_start(
+    req: SagaStartRequest,
+    context: AuthContext = Depends(require_student_context),
+):
+    try:
+        state = saga.start(
+            req.lesson_id,
+            owner_user_id=context.principal.user_id,
+            ttl_seconds=settings.practice_saga_ttl_seconds,
+            max_active_per_owner=settings.practice_saga_max_active_per_user,
+            max_active_global=settings.practice_saga_max_active_global,
+        )
+    except saga.SagaCapacityError as exc:
+        raise _saga_capacity_error(exc.scope) from exc
     if not state:
         raise HTTPException(status_code=404, detail="该课程暂无互动剧本")
     return state.public()
 
 
 @router.get("/saga/{saga_id}")
-async def saga_get(saga_id: str):
-    state = saga.get(saga_id)
-    if not state:
+async def saga_get(
+    saga_id: SagaId,
+    context: AuthContext = Depends(require_student_context),
+):
+    public_state = saga.get_public(
+        saga_id,
+        owner_user_id=context.principal.user_id,
+        ttl_seconds=settings.practice_saga_ttl_seconds,
+    )
+    if public_state is None:
         raise HTTPException(status_code=404, detail="saga 不存在或已过期")
-    return state.public()
+    return public_state
 
 
 @router.post("/saga/{saga_id}/act")
-async def saga_act(saga_id: str, req: SagaActRequest):
-    state = saga.get(saga_id)
-    if not state:
+async def saga_act(
+    saga_id: SagaId,
+    req: SagaActRequest,
+    context: AuthContext = Depends(require_student_context),
+):
+    try:
+        state = saga.begin_act(
+            saga_id,
+            owner_user_id=context.principal.user_id,
+            ttl_seconds=settings.practice_saga_ttl_seconds,
+        )
+    except saga.SagaBusyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "saga_action_in_progress",
+                "message": "This saga already has an action in progress.",
+            },
+        ) from exc
+    except saga.SagaEndedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "saga_already_ended",
+                "message": "This saga has already ended.",
+            },
+        ) from exc
+    if state is None:
         raise HTTPException(status_code=404, detail="saga 不存在或已过期")
 
-    async def gen():
-        async for chunk in saga.act_stream(saga_id, req.action):
-            yield chunk
+    try:
+        limiter_key = _acquire_llm_lease(context)
+    except HTTPException:
+        saga.release_act(state)
+        raise
 
-    return StreamingResponse(gen(), media_type="text/plain; charset=utf-8")
+    release_resources = _once(
+        lambda: saga.release_act(state),
+        lambda: _PRACTICE_LLM_CONCURRENCY_LIMITER.release(limiter_key),
+    )
+
+    async def gen():
+        stream = saga.act_stream(
+            state,
+            req.action,
+            max_response_chars=settings.practice_llm_max_response_chars,
+        )
+        try:
+            async with asyncio.timeout(settings.practice_llm_timeout_seconds):
+                async for chunk in stream:
+                    yield chunk
+        finally:
+            try:
+                await _close_async_iterator(stream)
+            finally:
+                release_resources()
+
+    return _CleanupStreamingResponse(
+        gen(),
+        media_type="text/plain; charset=utf-8",
+        cleanup=release_resources,
+    )
+
+
+def _acquire_llm_lease(context: AuthContext) -> str:
+    limiter_key = context.principal.user_id
+    decision = _PRACTICE_LLM_RATE_LIMITER.consume(limiter_key)
+    if not decision.allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "practice_llm_rate_limited",
+                "message": "Too many AI practice requests. Try again later.",
+            },
+            headers={
+                "Retry-After": str(decision.retry_after_seconds),
+                "Cache-Control": "no-store",
+            },
+        )
+    if not _PRACTICE_LLM_CONCURRENCY_LIMITER.acquire(limiter_key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "practice_llm_concurrency_limited",
+                "message": "Too many AI practice requests are already running.",
+            },
+            headers={
+                "Retry-After": "1",
+                "Cache-Control": "no-store",
+            },
+        )
+    return limiter_key
+
+
+def _saga_capacity_error(scope: str) -> HTTPException:
+    message = (
+        "This student already has too many retained sagas."
+        if scope == "owner"
+        else "The saga service is at capacity."
+    )
+    return HTTPException(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        detail={
+            "code": "saga_capacity_reached",
+            "message": message,
+        },
+        headers={
+            "Retry-After": str(min(settings.practice_saga_ttl_seconds, 3600)),
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 # ============= 「创」 知识画板 LLM 自动生成（V0.3.0 新） =============
 
 class CanvasGenRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     lesson_id: ContractId
-    lesson_title: str
-    abstract: str
-    keywords: list[str] = []
-    seed: list[str] = []  # 已有节点 label
+    lesson_title: str = Field(min_length=1, max_length=200)
+    abstract: str = Field(min_length=1, max_length=4000)
+    keywords: list[
+        Annotated[str, Field(min_length=1, max_length=80)]
+    ] = Field(default_factory=list, max_length=32)
+    seed: list[
+        Annotated[str, Field(min_length=1, max_length=100)]
+    ] = Field(default_factory=list, max_length=100)
 
 
 @router.post("/canvas/generate")
@@ -86,32 +286,74 @@ async def canvas_generate(
         f"已有节点：{', '.join(req.seed) or '（无）'}\n"
         "请生成 6-9 个节点与若干边。"
     )
-    full = ""
-    async for c in llm.stream_chat([{"role": "system", "content": sys}, {"role": "user", "content": user}]):
-        full += c
-    # 提取 JSON
-    import json as _json
-    import re as _re
-    m = _re.search(r"\{[\s\S]*\}", full)
+    limiter_key = _acquire_llm_lease(_context)
+    stream = llm.stream_chat([
+        {"role": "system", "content": sys},
+        {"role": "user", "content": user},
+    ])
     try:
-        data = _json.loads(m.group(0)) if m else {"nodes": [], "edges": []}
-    except Exception:
+        try:
+            async with asyncio.timeout(settings.practice_llm_timeout_seconds):
+                full = ""
+                async for chunk in stream:
+                    full += chunk
+                    if len(full) > settings.practice_llm_max_response_chars:
+                        raise HTTPException(
+                            status_code=status.HTTP_502_BAD_GATEWAY,
+                            detail={
+                                "code": "practice_llm_output_too_large",
+                                "message": "The AI response exceeded the allowed size.",
+                            },
+                        )
+        except TimeoutError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail={
+                    "code": "practice_llm_timeout",
+                    "message": "The AI response exceeded the allowed time.",
+                },
+            ) from exc
+    finally:
+        try:
+            await _close_async_iterator(stream)
+        finally:
+            _PRACTICE_LLM_CONCURRENCY_LIMITER.release(limiter_key)
+
+    # 提取 JSON
+    match = re.search(r"\{[\s\S]*\}", full)
+    try:
+        data = json.loads(match.group(0)) if match else {"nodes": [], "edges": []}
+    except json.JSONDecodeError:
         data = {"nodes": [], "edges": [], "raw": full[:500]}
     return data
 
 
 # ============= 「问」 跨时对话 =============
 
+class AskHistoryItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=2000)
+
+
 class AskRequest(BaseModel):
-    persona: str = Field(default="expert", description="expert(专家) | peer(同窗)")
-    lesson_id: str | None = None
-    lesson_title: str | None = None
-    user_message: str
-    history: list[dict] = []
+    model_config = ConfigDict(extra="forbid")
+
+    persona: Literal["expert", "peer"] = Field(
+        default="expert",
+        description="expert(专家) | peer(同窗)",
+    )
+    lesson_id: str | None = Field(default=None, max_length=64)
+    lesson_title: str | None = Field(default=None, max_length=200)
+    user_message: str = Field(min_length=1, max_length=2000)
+    history: list[AskHistoryItem] = Field(default_factory=list, max_length=12)
     # peer 模式下的对谈历史人物（如 "孔子"、"嵇康"）；为空时取课程默认 figure
-    peer_character: str | None = None    # peer 自定义对象时由前端传入的一句简介，用于帮 LLM 锁定人物身份与时代
-    peer_intro: str | None = None    # 课程时期，用于把同窗回答框定在该时期之内
-    era: str | None = None
+    peer_character: str | None = Field(default=None, max_length=80)
+    # peer 自定义对象时由前端传入的一句简介，用于帮 LLM 锁定人物身份与时代
+    peer_intro: str | None = Field(default=None, max_length=500)
+    # 课程时期，用于把同窗回答框定在该时期之内
+    era: str | None = Field(default=None, max_length=100)
 
 
 def _system_prompt(
@@ -153,7 +395,10 @@ def _system_prompt(
 
 
 @router.post("/ask")
-async def ask(req: AskRequest):
+async def ask(
+    req: AskRequest,
+    context: AuthContext = Depends(require_student_context),
+):
     messages = [{
         "role": "system",
         "content": _system_prompt(
@@ -165,27 +410,46 @@ async def ask(req: AskRequest):
         ),
     }]
     for h in req.history[-6:]:
-        if h.get("role") in ("user", "assistant") and h.get("content"):
-            messages.append({"role": h["role"], "content": str(h["content"])})
+        messages.append({"role": h.role, "content": h.content})
     messages.append({"role": "user", "content": req.user_message})
 
     # 「问」追求准确度而非速度 → 走 deepseek-v4-pro
-    from settings import settings as _settings
-    use_model = _settings.deepseek_model_pro
+    use_model = settings.deepseek_model_pro
+    limiter_key = _acquire_llm_lease(context)
+    release_resources = _once(
+        lambda: _PRACTICE_LLM_CONCURRENCY_LIMITER.release(limiter_key),
+    )
 
     async def gen():
-        async for chunk in llm.stream_chat(messages, model=use_model):
-            yield chunk
+        emitted_chars = 0
+        stream = llm.stream_chat(messages, model=use_model)
+        try:
+            async with asyncio.timeout(settings.practice_llm_timeout_seconds):
+                async for chunk in stream:
+                    emitted_chars += len(chunk)
+                    if emitted_chars > settings.practice_llm_max_response_chars:
+                        raise RuntimeError("practice LLM output exceeded the limit")
+                    yield chunk
+        finally:
+            try:
+                await _close_async_iterator(stream)
+            finally:
+                release_resources()
 
-    return StreamingResponse(gen(), media_type="text/plain; charset=utf-8")
+    return _CleanupStreamingResponse(
+        gen(),
+        media_type="text/plain; charset=utf-8",
+        cleanup=release_resources,
+    )
 
 
 @router.get("/llm/info")
-async def llm_info():
-    from settings import settings as _settings
+async def llm_info(
+    _context: AuthContext = Depends(require_student_context),
+):
     return {
         "provider": llm.current_provider_label(),
-        "ask_provider": llm.current_provider_label(_settings.deepseek_model_pro),
+        "ask_provider": llm.current_provider_label(settings.deepseek_model_pro),
     }
 
 

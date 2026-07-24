@@ -28,8 +28,8 @@ class _TokenBucket:
     updated_at: float
 
 
-class LoginAttemptLimiter:
-    """Bound password verification work with a process-local token bucket."""
+class TokenBucketLimiter:
+    """Bound calls per key with a process-local token bucket."""
 
     def __init__(
         self,
@@ -98,6 +98,50 @@ class LoginAttemptLimiter:
     def _make_room(self) -> None:
         while len(self._buckets) >= self.max_clients:
             self._buckets.popitem(last=False)
+
+
+class LoginAttemptLimiter(TokenBucketLimiter):
+    """Bound password verification work with a process-local token bucket."""
+
+
+class ConcurrentCallLimiter:
+    """Bound concurrent calls per key without evicting active leases."""
+
+    def __init__(self, *, max_calls: int, max_clients: int) -> None:
+        if max_calls < 1:
+            raise ValueError("max_calls must be positive")
+        if max_clients < 1:
+            raise ValueError("max_clients must be positive")
+        self.max_calls = max_calls
+        self.max_clients = max_clients
+        self._active: OrderedDict[str, int] = OrderedDict()
+        self._lock = Lock()
+
+    def acquire(self, client_key: str) -> bool:
+        with self._lock:
+            active = self._active.get(client_key, 0)
+            if active >= self.max_calls:
+                return False
+            if client_key not in self._active and len(self._active) >= self.max_clients:
+                return False
+            self._active[client_key] = active + 1
+            self._active.move_to_end(client_key)
+            return True
+
+    def release(self, client_key: str) -> None:
+        with self._lock:
+            active = self._active.get(client_key)
+            if active is None:
+                return
+            if active <= 1:
+                self._active.pop(client_key, None)
+                return
+            self._active[client_key] = active - 1
+
+    @property
+    def tracked_clients(self) -> int:
+        with self._lock:
+            return len(self._active)
 
 
 class LoginRateLimitMiddleware:
@@ -171,8 +215,10 @@ def _client_key(scope: Scope) -> str:
 
 
 __all__ = [
+    "ConcurrentCallLimiter",
     "LOGIN_PATH",
     "LoginAttemptLimiter",
     "LoginRateLimitMiddleware",
     "RateLimitDecision",
+    "TokenBucketLimiter",
 ]

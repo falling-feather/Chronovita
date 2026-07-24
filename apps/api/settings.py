@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     app_name: str = "Chronovita API"
     app_version: str = APP_VERSION
     runtime_profile: Literal["local", "production"] = "local"
+    api_worker_count: int = Field(default=1, ge=1, le=64)
+    api_max_request_body_bytes: int = Field(
+        default=4 * 1024 * 1024,
+        ge=64 * 1024,
+        le=64 * 1024 * 1024,
+    )
     debug: bool = True
     cors_origins: list[str] = [
         "http://127.0.0.1:5173",
@@ -64,6 +70,35 @@ class Settings(BaseSettings):
         ge=1,
         le=1_000_000,
     )
+    practice_llm_rate_limit_requests: int = Field(default=20, ge=1, le=1000)
+    practice_llm_rate_limit_window_seconds: int = Field(
+        default=60,
+        ge=1,
+        le=3600,
+    )
+    practice_llm_rate_limit_max_users: int = Field(
+        default=10_000,
+        ge=1,
+        le=1_000_000,
+    )
+    practice_llm_max_concurrent_per_user: int = Field(default=2, ge=1, le=20)
+    practice_llm_timeout_seconds: float = Field(default=90.0, ge=5.0, le=300.0)
+    practice_llm_max_response_chars: int = Field(
+        default=8192,
+        ge=1024,
+        le=262_144,
+    )
+    practice_saga_ttl_seconds: int = Field(
+        default=60 * 60,
+        ge=60,
+        le=24 * 60 * 60,
+    )
+    practice_saga_max_active_per_user: int = Field(default=8, ge=1, le=100)
+    practice_saga_max_active_global: int = Field(
+        default=5000,
+        ge=1,
+        le=100_000,
+    )
     auth_bootstrap_username: str = ""
     auth_bootstrap_password: SecretStr = SecretStr("")
     auth_bootstrap_display_name: str = "Chronovita Admin"
@@ -82,6 +117,7 @@ class Settings(BaseSettings):
     llm_provider: str = "mock"  # mock | deepseek
     deepseek_api_key: SecretStr = SecretStr("")
     deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_allowed_hosts: list[str] = ["api.deepseek.com"]
     deepseek_model: str = "deepseek-v4-flash"
     # 「问 · 跨时对话」用更准的 pro 模型（saga 仍用 flash 以保证流式速度）
     deepseek_model_pro: str = "deepseek-v4-pro"

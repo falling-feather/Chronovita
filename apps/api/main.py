@@ -25,12 +25,13 @@ from routers import (
     practice,
     profile,
 )
-from services import content, persistence
+from services import content, persistence, saga
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
 from services.operations import (
     LoginRateLimitMiddleware,
+    RequestBodyLimitMiddleware,
     RequestTelemetryMiddleware,
     RuntimeReadinessError,
     configure_runtime_logging,
@@ -48,6 +49,7 @@ async def lifespan(app: FastAPI):
     app.state.runtime_ready = False
     configure_runtime_logging()
     validate_runtime_configuration(settings)
+    saga.clear_states()
     engine = persistence.init_engine(
         settings.sqlite_path,
         database_url=settings.database_url.get_secret_value(),
@@ -91,6 +93,7 @@ async def lifespan(app: FastAPI):
         app.state.runtime_ready = False
         app.state.database_readiness = None
         app.state.database_engine = None
+        saga.clear_states()
         shutdown_game_runtime()
         shutdown_identity()
         persistence.close_engine()
@@ -121,6 +124,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Request-ID", "Retry-After"],
+)
+app.add_middleware(
+    RequestBodyLimitMiddleware,
+    max_body_bytes=settings.api_max_request_body_bytes,
 )
 app.add_middleware(
     RequestTelemetryMiddleware,
