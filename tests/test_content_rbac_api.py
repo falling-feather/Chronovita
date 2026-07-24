@@ -424,18 +424,19 @@ class ContentRbacApiTests(unittest.TestCase):
             ("POST", f"{prefix}/assets/keywords"): "content.author",
         }
         seen_writes: set[tuple[str, str]] = set()
-        for route in self.client.app.routes:
-            if not isinstance(route, APIRoute) or not route.path.startswith(prefix):
+        for route in admin_content.router.routes:
+            if not isinstance(route, APIRoute):
                 continue
+            full_path = f"{prefix}{route.path}"
             permission = None
             for dependency in route.dependant.dependencies:
                 closure = inspect.getclosurevars(dependency.call)
                 if "permission" in closure.nonlocals:
                     permission = closure.nonlocals["permission"]
                     break
-            self.assertIsNotNone(permission, f"unguarded content route: {route.path}")
+            self.assertIsNotNone(permission, f"unguarded content route: {full_path}")
             for method in route.methods:
-                key = (method, route.path)
+                key = (method, full_path)
                 expected = "content.read" if method == "GET" else write_permissions.get(key)
                 self.assertIsNotNone(expected, f"unclassified content route: {key}")
                 self.assertEqual(permission, expected, f"wrong permission for {key}")
