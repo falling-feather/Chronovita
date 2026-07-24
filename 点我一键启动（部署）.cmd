@@ -18,16 +18,17 @@ if not exist "%LAUNCHER%" (
   exit /b 1
 )
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%LAUNCHER%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%LAUNCHER%" %*
 set "EXIT_CODE=%ERRORLEVEL%"
 echo.
 if not "%EXIT_CODE%"=="0" (
   echo Launch failed. Please send the error text or the .teacher-editor-logs folder to the developer team.
   echo.
-  pause
-  exit /b %EXIT_CODE%
+) else (
+  echo If the browser did not open, visit:
+  echo http://127.0.0.1:5173/admin/content
+  echo.
 )
-echo If the browser did not open, visit:
-echo http://127.0.0.1:5173/admin/content
-echo.
+if defined CI exit /b %EXIT_CODE%
 pause
+exit /b %EXIT_CODE%

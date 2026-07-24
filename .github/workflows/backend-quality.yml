@@ -49,6 +49,31 @@ jobs:
       - name: Compile backend sources
         run: python -m compileall -q apps services scripts tests
 
+      - name: Install pinned actionlint
+        shell: bash
+        env:
+          ACTIONLINT_VERSION: "1.7.12"
+          ACTIONLINT_ARCHIVE_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+        run: |
+          set -euo pipefail
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          release_url="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
+          curl --fail --location --proto '=https' --tlsv1.2 --retry 3 \
+            --output "${RUNNER_TEMP}/${archive}" \
+            "${release_url}"
+          printf '%s  %s\n' \
+            "${ACTIONLINT_ARCHIVE_SHA256}" \
+            "${RUNNER_TEMP}/${archive}" |
+            sha256sum --check -
+          mkdir -p "${RUNNER_TEMP}/actionlint"
+          tar -xzf "${RUNNER_TEMP}/${archive}" \
+            -C "${RUNNER_TEMP}/actionlint" \
+            actionlint
+
+      - name: Validate GitHub Actions workflows
+        run: |
+          "${RUNNER_TEMP}/actionlint/actionlint" -color=false
+
       - name: Validate canonical project documents
         run: python scripts/check_project_docs.py
 

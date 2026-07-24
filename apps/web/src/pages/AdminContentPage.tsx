@@ -1663,7 +1663,7 @@ export default function AdminContentPage() {
   };
 
   return (
-    <div className="chrono-page" style={{ maxWidth: 1320, margin: '0 auto' }}>
+    <div data-testid="admin-content-editor" className="chrono-page" style={{ maxWidth: 1320, margin: '0 auto' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16, alignItems: 'end', marginBottom: 18 }}>
         <div>
           <div className="chrono-course-eyeline">

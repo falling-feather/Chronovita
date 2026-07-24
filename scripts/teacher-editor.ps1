@@ -127,6 +127,25 @@ function Invoke-Checked {
   }
 }
 
+function Invoke-NpmChecked {
+  param(
+    [string] $Title,
+    [string[]] $Arguments
+  )
+
+  $npmCommand = Get-Command "npm.cmd" -ErrorAction Stop
+  Write-Host $Title
+  Push-Location $WebDir
+  try {
+    & $npmCommand.Source @Arguments
+    if ($LASTEXITCODE -ne 0) {
+      throw "$Title failed with exit code $LASTEXITCODE."
+    }
+  } finally {
+    Pop-Location
+  }
+}
+
 function Test-LocalPort {
   param(
     [string] $HostName,
@@ -208,6 +227,49 @@ function Wait-LocalPort {
   throw "$Name did not become ready on http://$HostName`:$Port."
 }
 
+function Wait-EditorRuntime {
+  param(
+    [System.Diagnostics.Process] $ApiProcess,
+    [System.Diagnostics.Process] $WebProcess
+  )
+
+  for ($i = 0; $i -lt 40; $i += 1) {
+    if ($ApiProcess.HasExited -or $WebProcess.HasExited) {
+      throw "A launcher process exited before the editor became ready."
+    }
+    try {
+      $ready = Invoke-RestMethod `
+        -Method Get `
+        -Uri "http://$ApiHost`:$ApiPort/readyz" `
+        -TimeoutSec 3
+      $editor = Invoke-WebRequest `
+        -UseBasicParsing `
+        -Method Get `
+        -Uri $EditorUrl `
+        -TimeoutSec 3
+      if (
+        $ready.status -eq "ready" `
+        -and $editor.StatusCode -eq 200 `
+        -and $editor.Content -match "Chronovita"
+      ) {
+        Write-Host "API and editor HTTP services are ready." -ForegroundColor Green
+        return
+      }
+    } catch {
+      # The services can accept TCP connections before application startup ends.
+    }
+    Start-Sleep -Milliseconds 500
+  }
+
+  Write-Host "The editor did not pass its HTTP readiness checks." -ForegroundColor Red
+  foreach ($errorLog in @($ApiErrLog, $WebErrLog)) {
+    if (Test-Path $errorLog) {
+      Get-Content -LiteralPath $errorLog -Tail 60
+    }
+  }
+  throw "Chronovita teacher editor did not become ready."
+}
+
 function Stop-StartedProcessTree {
   param([System.Diagnostics.Process] $Process)
   if (-not $Process -or $Process.HasExited) {
@@ -280,7 +342,12 @@ function Ensure-WebDependencies {
   }
 
   Write-Step "Installing web dependencies"
-  Invoke-Checked "Running npm install in apps\web" "npm" @("install") $WebDir
+  Invoke-NpmChecked "Running npm install in apps\web" @("install")
+}
+
+function Test-WebBuild {
+  Write-Step "Validating web editor build"
+  Invoke-NpmChecked "Running npm build in apps\web" @("run", "build")
 }
 
 function Start-Api {
@@ -337,12 +404,14 @@ try {
   Ensure-PythonEnvironment
   Ensure-ApiDependencies
   Ensure-WebDependencies
+  Test-WebBuild
 
   $apiProcess = Start-Api
   $webProcess = Start-Web
 
   Wait-LocalPort "API" $ApiHost $ApiPort $apiProcess $ApiErrLog
   Wait-LocalPort "Web editor" $WebHost $WebPort $webProcess $WebErrLog
+  Wait-EditorRuntime $apiProcess $webProcess
 
   Write-Step "Opening editor"
   Write-Host $EditorUrl -ForegroundColor Green
@@ -350,7 +419,7 @@ try {
     Start-Process $EditorUrl
   }
   Write-Host ""
-  Write-Host "Ready. Keep this window open if you want to read the launch log."
+  Write-Host "Services are ready. Keep this window open if you want to read the launch log."
   Write-Host "Runtime logs are saved in: $LogDir"
 } catch {
   Stop-StartedProcessTree $webProcess
