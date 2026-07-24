@@ -56,9 +56,15 @@ jobs:
             throw "PowerShell launcher parsing failed."
           }
 
+          $rootLaunchers = @(
+            Get-ChildItem -LiteralPath "." -File -Filter "*.cmd"
+          )
+          if ($rootLaunchers.Count -ne 1) {
+            throw "Expected exactly one teacher-facing CMD at the repository root."
+          }
           $cmdFiles = @(
-            "点我一键启动（部署）.cmd",
-            "scripts\teacher-editor.cmd"
+            $rootLaunchers[0].FullName,
+            (Resolve-Path "scripts\teacher-editor.cmd").Path
           )
           foreach ($cmdFile in $cmdFiles) {
             $nonAscii = [System.IO.File]::ReadAllBytes(
@@ -70,8 +76,18 @@ jobs:
           }
 
       - name: Start through the teacher-facing launcher
-        shell: cmd
-        run: call "点我一键启动（部署）.cmd" -SkipBrowser
+        shell: powershell
+        run: |
+          $rootLaunchers = @(
+            Get-ChildItem -LiteralPath "." -File -Filter "*.cmd"
+          )
+          if ($rootLaunchers.Count -ne 1) {
+            throw "Expected exactly one teacher-facing CMD at the repository root."
+          }
+          & $rootLaunchers[0].FullName -SkipBrowser
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
 
       - name: Verify API and rendered editor
         shell: powershell
