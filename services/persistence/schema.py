@@ -360,6 +360,11 @@ def _end_migration_transaction(connection: Connection, dialect: str) -> None:
 def _configure_snapshot_isolation(connection: Connection, dialect: str) -> None:
     if dialect == "postgresql":
         connection.execution_options(isolation_level="REPEATABLE READ")
+    elif dialect == "sqlite":
+        # Python's sqlite3 legacy transaction mode does not begin a transaction
+        # for SELECT statements. Start one explicitly so every reflection and
+        # audit query in a schema inspection observes the same WAL snapshot.
+        connection.exec_driver_sql("BEGIN")
 
 
 def _validate_legacy_layout(

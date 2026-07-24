@@ -187,6 +187,172 @@ class DatabaseBackupTests(unittest.TestCase):
         self.assertFalse(backup.exists())
         self.assertFalse(manifest.exists())
 
+    def test_backup_directory_flush_failure_removes_the_published_pair(self):
+        source = self._current_database("durable-source.db", value="safe")
+        backup = self.tmp_root / "durable.db"
+        manifest = manifest_path_for(backup)
+        real_fsync_directory = backup_module._fsync_directory
+        flush_failed = False
+
+        def fail_after_pair_publish(path):
+            nonlocal flush_failed
+            if not flush_failed and backup.exists() and manifest.exists():
+                flush_failed = True
+                raise DatabaseBackupError("injected directory flush failure")
+            return real_fsync_directory(path)
+
+        with patch.object(
+            backup_module,
+            "_fsync_directory",
+            side_effect=fail_after_pair_publish,
+        ):
+            with self.assertRaisesRegex(
+                DatabaseBackupError,
+                "durably publish backup pair",
+            ):
+                backup_sqlite_database(source, backup)
+
+        self.assertTrue(flush_failed)
+        self.assertFalse(backup.exists())
+        self.assertFalse(manifest.exists())
+
+    def test_manifest_is_the_commit_marker_after_database_directory_sync(self):
+        source = self._current_database("commit-source.db", value="safe")
+        database_directory = self.tmp_root / "database-publication"
+        manifest_directory = self.tmp_root / "manifest-publication"
+        database_directory.mkdir()
+        manifest_directory.mkdir()
+        backup = database_directory / "committed.db"
+        manifest = manifest_directory / "committed.manifest.json"
+        real_link = os.link
+        real_fsync_directory = backup_module._fsync_directory
+        events = []
+
+        def track_link(source_path, target_path):
+            events.append(("link", Path(target_path)))
+            return real_link(source_path, target_path)
+
+        def track_directory_sync(path):
+            events.append(("sync", path))
+            return real_fsync_directory(path)
+
+        with patch.object(
+            backup_module.os,
+            "link",
+            side_effect=track_link,
+        ), patch.object(
+            backup_module,
+            "_fsync_directory",
+            side_effect=track_directory_sync,
+        ):
+            backup_sqlite_database(
+                source,
+                backup,
+                manifest_path=manifest,
+            )
+
+        self.assertEqual(
+            events,
+            [
+                ("link", backup),
+                ("sync", database_directory),
+                ("link", manifest),
+                ("sync", manifest_directory),
+            ],
+        )
+        self.assertEqual(
+            verify_sqlite_backup(backup, manifest_path=manifest).status,
+            "verified",
+        )
+
+    def test_file_identity_errors_fail_closed(self):
+        left = self.tmp_root / "identity-left.db"
+        right = self.tmp_root / "identity-right.db"
+        left.write_bytes(b"left")
+        right.write_bytes(b"right")
+
+        with patch.object(
+            backup_module.os.path,
+            "samefile",
+            side_effect=PermissionError("injected identity failure"),
+        ):
+            with self.assertRaisesRegex(
+                DatabaseBackupError,
+                "identity could not be verified",
+            ):
+                backup_module._same_file(left, right)
+
+    def test_temp_cleanup_failure_does_not_replace_the_primary_error(self):
+        source = self._current_database("cleanup-source.db", value="safe")
+        backup = self.tmp_root / "cleanup.db"
+        real_unlink = Path.unlink
+
+        def fail_backup_after_temp_write(_source, destination):
+            destination.write_bytes(b"incomplete")
+            raise DatabaseBackupIntegrityError("injected primary failure")
+
+        def fail_temp_unlink(path, *args, **kwargs):
+            if path.name.endswith(".tmp"):
+                raise PermissionError("injected cleanup failure")
+            return real_unlink(path, *args, **kwargs)
+
+        with patch.object(
+            backup_module,
+            "_sqlite_backup",
+            side_effect=fail_backup_after_temp_write,
+        ), patch.object(
+            backup_module.Path,
+            "unlink",
+            autospec=True,
+            side_effect=fail_temp_unlink,
+        ):
+            with self.assertRaisesRegex(
+                DatabaseBackupIntegrityError,
+                "injected primary failure",
+            ) as raised:
+                backup_sqlite_database(source, backup)
+
+        self.assertTrue(
+            any(
+                "temporary database cleanup also failed" in note
+                for note in getattr(raised.exception, "__notes__", ())
+            )
+        )
+
+    def test_outer_exception_does_not_hide_operation_cleanup_failure(self):
+        source = self._current_database("outer-source.db", value="safe")
+        backup = self.tmp_root / "outer-cleanup.db"
+        real_unlink = Path.unlink
+
+        def fail_temp_unlink(path, *args, **kwargs):
+            if path.name.endswith(".tmp"):
+                raise PermissionError("injected cleanup failure")
+            return real_unlink(path, *args, **kwargs)
+
+        outer_error = ValueError("unrelated outer exception")
+        try:
+            raise outer_error
+        except ValueError:
+            with patch.object(
+                backup_module.Path,
+                "unlink",
+                autospec=True,
+                side_effect=fail_temp_unlink,
+            ):
+                with self.assertRaisesRegex(
+                    DatabaseBackupError,
+                    "temporary database cleanup failed",
+                ):
+                    backup_sqlite_database(source, backup)
+
+        self.assertFalse(
+            any(
+                "temporary database cleanup also failed" in note
+                for note in getattr(outer_error, "__notes__", ())
+            )
+        )
+        self.assertEqual(verify_sqlite_backup(backup).status, "verified")
+
     def test_restore_requires_confirmation_and_replacement_has_safety_backup(self):
         source = self._current_database("restore-source.db", value="new-value")
         backup = self.tmp_root / "restore-input.db"
@@ -214,6 +380,84 @@ class DatabaseBackupTests(unittest.TestCase):
         os.link(backup, alias)
         with self.assertRaises(DatabaseBackupError):
             restore_sqlite_backup(backup, alias, replace_existing=True)
+
+    def test_restore_directory_flush_failure_rolls_back_existing_target(self):
+        source = self._current_database("flush-source.db", value="new")
+        backup = self.tmp_root / "flush-input.db"
+        backup_sqlite_database(source, backup)
+        target = self._current_database("flush-target.db", value="old")
+        safety = self.tmp_root / "flush-safety.db"
+        expected_bytes = backup.read_bytes()
+        real_fsync_directory = backup_module._fsync_directory
+        flush_failed = False
+
+        def fail_after_target_replace(path):
+            nonlocal flush_failed
+            if (
+                not flush_failed
+                and path == target.parent
+                and target.exists()
+                and target.read_bytes() == expected_bytes
+            ):
+                flush_failed = True
+                raise DatabaseBackupError("injected directory flush failure")
+            return real_fsync_directory(path)
+
+        with patch.object(
+            backup_module,
+            "_fsync_directory",
+            side_effect=fail_after_target_replace,
+        ):
+            with self.assertRaisesRegex(
+                DatabaseBackupError,
+                "durably publish restored database",
+            ):
+                restore_sqlite_backup(
+                    backup,
+                    target,
+                    replace_existing=True,
+                    safety_backup_path=safety,
+                )
+
+        self.assertTrue(flush_failed)
+        self.assertEqual(self._kv_value(target), "old")
+        self.assertEqual(self._kv_value(safety), "old")
+        self.assertEqual(verify_sqlite_backup(safety).status, "verified")
+
+    def test_restore_directory_flush_failure_removes_new_target(self):
+        source = self._current_database("new-target-source.db", value="new")
+        backup = self.tmp_root / "new-target-input.db"
+        backup_sqlite_database(source, backup)
+        target = self.tmp_root / "restored" / "new-target.db"
+        expected_bytes = backup.read_bytes()
+        real_fsync_directory = backup_module._fsync_directory
+        flush_failed = False
+
+        def fail_after_target_link(path):
+            nonlocal flush_failed
+            if (
+                not flush_failed
+                and path == target.parent
+                and target.exists()
+                and target.read_bytes() == expected_bytes
+            ):
+                flush_failed = True
+                raise DatabaseBackupError("injected directory flush failure")
+            return real_fsync_directory(path)
+
+        with patch.object(
+            backup_module,
+            "_fsync_directory",
+            side_effect=fail_after_target_link,
+        ):
+            with self.assertRaisesRegex(
+                DatabaseBackupError,
+                "durably publish restored database",
+            ):
+                restore_sqlite_backup(backup, target)
+
+        self.assertTrue(flush_failed)
+        self.assertFalse(target.exists())
 
     def test_corrupt_restore_input_and_sidecars_never_change_target(self):
         source = self._current_database("guard-source.db", value="new")

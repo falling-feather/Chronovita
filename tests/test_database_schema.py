@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import sqlite3
 import unittest
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -279,6 +280,64 @@ class DatabaseSchemaTests(unittest.TestCase):
             with self.assertRaises(DatabaseSchemaDrift):
                 inspect_schema(engine)
         finally:
+            engine.dispose()
+
+    def test_sqlite_inspection_pins_one_snapshot_across_audit_queries(self):
+        path = self.tmp_root / "audit-snapshot.db"
+        engine = self._engine_at(path)
+        writer_engine = self._engine_at(path)
+        try:
+            ensure_current_schema(engine)
+            with sqlite3.connect(path) as connection:
+                journal_mode = connection.execute(
+                    "PRAGMA journal_mode=WAL"
+                ).fetchone()
+            self.assertEqual(str(journal_mode[0]).lower(), "wal")
+
+            writer = AuthStore(writer_engine)
+            audit_appended = False
+
+            def append_after_head_read(
+                _connection,
+                _cursor,
+                statement,
+                _parameters,
+                _context,
+                _executemany,
+            ):
+                nonlocal audit_appended
+                normalized = " ".join(statement.lower().split())
+                if audit_appended or "from auth_audit_events" not in normalized:
+                    return
+                audit_appended = True
+                writer.append_audit(
+                    occurred_at=NOW,
+                    actor_user_id=None,
+                    actor_session_id=None,
+                    actor_roles=(),
+                    action="schema.snapshot.test",
+                    resource_type="database",
+                    resource_id="audit-snapshot",
+                    outcome="succeeded",
+                    request_id="req_schema_snapshot",
+                )
+
+            event.listen(engine, "before_cursor_execute", append_after_head_read)
+            try:
+                status = inspect_schema(engine)
+            finally:
+                event.remove(
+                    engine,
+                    "before_cursor_execute",
+                    append_after_head_read,
+                )
+
+            self.assertTrue(audit_appended)
+            self.assertTrue(status.is_current)
+            self.assertEqual(len(writer.list_audit()), 1)
+            self.assertTrue(inspect_schema(engine).is_current)
+        finally:
+            writer_engine.dispose()
             engine.dispose()
 
     def test_migration_failure_rolls_back_tables_and_ledger(self):

@@ -138,12 +138,14 @@ def backup_sqlite_database(
     _require_distinct_paths(source, destination, manifest_destination)
     _require_absent(destination)
     _require_absent(manifest_destination)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    manifest_destination.parent.mkdir(parents=True, exist_ok=True)
+    _ensure_directory(destination.parent)
+    _ensure_directory(manifest_destination.parent)
 
     database_temp = _temp_path(destination)
     manifest_temp = _temp_path(manifest_destination)
     database_published = False
+    manifest_published = False
+    primary_error: BaseException | None = None
     try:
         _sqlite_backup(source, database_temp)
         status = _inspect_database(database_temp)
@@ -162,21 +164,44 @@ def backup_sqlite_database(
         try:
             os.link(database_temp, destination)
             database_published = True
+            _fsync_directory(destination.parent)
             os.link(manifest_temp, manifest_destination)
+            manifest_published = True
+            _fsync_directory(manifest_destination.parent)
         except FileExistsError as exc:
-            if database_published and _same_file(destination, database_temp):
-                destination.unlink()
+            _rollback_backup_publication(
+                database_temp=database_temp,
+                destination=destination,
+                database_published=database_published,
+                manifest_temp=manifest_temp,
+                manifest_destination=manifest_destination,
+                manifest_published=manifest_published,
+            )
             raise DatabaseBackupDestinationExists(
                 "backup database or manifest already exists"
             ) from exc
-        except OSError as exc:
-            if database_published and _same_file(destination, database_temp):
-                destination.unlink()
-            raise DatabaseBackupError("could not publish backup atomically") from exc
+        except (OSError, DatabaseBackupError) as exc:
+            _rollback_backup_publication(
+                database_temp=database_temp,
+                destination=destination,
+                database_published=database_published,
+                manifest_temp=manifest_temp,
+                manifest_destination=manifest_destination,
+                manifest_published=manifest_published,
+            )
+            raise DatabaseBackupError(
+                "could not durably publish backup pair"
+            ) from exc
         return manifest
+    except BaseException as exc:
+        primary_error = exc
+        raise
     finally:
-        _cleanup_temp_database(database_temp)
-        manifest_temp.unlink(missing_ok=True)
+        _cleanup_temp_databases(
+            database_temp,
+            manifest_temp,
+            primary_error=primary_error,
+        )
 
 
 def verify_sqlite_backup(
@@ -224,7 +249,7 @@ def restore_sqlite_backup(
     manifest = verification.manifest
     _require_distinct_paths(backup, manifest_file, target)
     _reject_sqlite_sidecars(target)
-    target.parent.mkdir(parents=True, exist_ok=True)
+    _ensure_directory(target.parent)
 
     target_exists = target.exists() or target.is_symlink()
     safety_manifest: DatabaseBackupManifest | None = None
@@ -252,6 +277,7 @@ def restore_sqlite_backup(
 
     restore_temp = _temp_path(target)
     target_published = False
+    primary_error: BaseException | None = None
     try:
         _copy_regular_file(backup, restore_temp)
         _verify_database_against_manifest(
@@ -266,12 +292,24 @@ def restore_sqlite_backup(
             else:
                 os.link(restore_temp, target)
             target_published = True
+            _fsync_directory(target.parent)
         except FileExistsError as exc:
             raise DatabaseRestoreConflict(
                 "restore target appeared while publishing"
             ) from exc
-        except OSError as exc:
-            raise DatabaseBackupError("could not publish restored database") from exc
+        except (OSError, DatabaseBackupError) as exc:
+            if (
+                target_published
+                and target_exists
+                and safety_backup is not None
+                and safety_manifest is not None
+            ):
+                _rollback_restore(target, safety_backup, safety_manifest)
+            elif target_published and _same_file(target, restore_temp):
+                _unlink_and_fsync(target)
+            raise DatabaseBackupError(
+                "could not durably publish restored database"
+            ) from exc
 
         try:
             _verify_database_against_manifest(
@@ -283,7 +321,7 @@ def restore_sqlite_backup(
             if target_exists and safety_backup is not None and safety_manifest is not None:
                 _rollback_restore(target, safety_backup, safety_manifest)
             elif target_published and _same_file(target, restore_temp):
-                target.unlink(missing_ok=True)
+                _unlink_and_fsync(target)
             raise
         return DatabaseRestoreReport(
             restored_at=datetime.now(timezone.utc),
@@ -296,8 +334,14 @@ def restore_sqlite_backup(
             ),
             database_schema_version=manifest.database_schema_version,
         )
+    except BaseException as exc:
+        primary_error = exc
+        raise
     finally:
-        _cleanup_temp_database(restore_temp)
+        _cleanup_temp_databases(
+            restore_temp,
+            primary_error=primary_error,
+        )
 
 
 def _sqlite_backup(source: Path, destination: Path) -> None:
@@ -465,6 +509,7 @@ def _rollback_restore(
     safety_manifest: DatabaseBackupManifest,
 ) -> None:
     rollback_temp = _temp_path(target)
+    primary_error: BaseException | None = None
     try:
         _copy_regular_file(safety_backup, rollback_temp)
         _verify_database_against_manifest(
@@ -473,17 +518,25 @@ def _rollback_restore(
             require_filename=False,
         )
         os.replace(rollback_temp, target)
+        _fsync_directory(target.parent)
         _verify_database_against_manifest(
             target,
             safety_manifest,
             require_filename=False,
         )
     except (OSError, DatabaseBackupError) as exc:
-        raise DatabaseBackupIntegrityError(
+        primary_error = DatabaseBackupIntegrityError(
             "restore verification failed and the safety rollback also failed"
-        ) from exc
+        )
+        raise primary_error from exc
+    except BaseException as exc:
+        primary_error = exc
+        raise
     finally:
-        _cleanup_temp_database(rollback_temp)
+        _cleanup_temp_databases(
+            rollback_temp,
+            primary_error=primary_error,
+        )
 
 
 def _hash_regular_file(path: Path) -> tuple[int, str]:
@@ -515,6 +568,137 @@ def _fsync_file(path: Path) -> None:
             os.fsync(handle.fileno())
     except OSError as exc:
         raise DatabaseBackupError("backup file could not be flushed") from exc
+
+
+def _ensure_directory(path: Path) -> None:
+    missing: list[Path] = []
+    cursor = path
+    while not cursor.exists():
+        missing.append(cursor)
+        parent = cursor.parent
+        if parent == cursor:
+            break
+        cursor = parent
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise DatabaseBackupError("backup directory could not be created") from exc
+    for created in reversed(missing):
+        _fsync_directory(created.parent)
+        _fsync_directory(created)
+
+
+def _fsync_directories(*paths: Path) -> None:
+    seen: set[str] = set()
+    for path in paths:
+        identity = os.path.normcase(str(path.resolve(strict=False)))
+        if identity in seen:
+            continue
+        seen.add(identity)
+        _fsync_directory(path)
+
+
+def _fsync_directory(path: Path) -> None:
+    try:
+        if os.name == "nt":
+            _fsync_windows_directory(path)
+            return
+        flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+        descriptor = os.open(path, flags)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+    except OSError as exc:
+        raise DatabaseBackupError(
+            "backup directory metadata could not be flushed"
+        ) from exc
+
+
+def _fsync_windows_directory(path: Path) -> None:
+    import ctypes
+    from ctypes import wintypes
+
+    generic_write = 0x40000000
+    share_all = 0x00000001 | 0x00000002 | 0x00000004
+    open_existing = 3
+    backup_semantics = 0x02000000
+    invalid_handle = ctypes.c_void_p(-1).value
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    create_file = kernel32.CreateFileW
+    create_file.argtypes = (
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    )
+    create_file.restype = wintypes.HANDLE
+    flush_file_buffers = kernel32.FlushFileBuffers
+    flush_file_buffers.argtypes = (wintypes.HANDLE,)
+    flush_file_buffers.restype = wintypes.BOOL
+    close_handle = kernel32.CloseHandle
+    close_handle.argtypes = (wintypes.HANDLE,)
+    close_handle.restype = wintypes.BOOL
+
+    handle = create_file(
+        str(path),
+        generic_write,
+        share_all,
+        None,
+        open_existing,
+        backup_semantics,
+        None,
+    )
+    if handle == invalid_handle:
+        raise ctypes.WinError(ctypes.get_last_error())
+    flush_error = 0
+    if not flush_file_buffers(handle):
+        flush_error = ctypes.get_last_error()
+    close_error = 0
+    if not close_handle(handle):
+        close_error = ctypes.get_last_error()
+    if flush_error:
+        raise ctypes.WinError(flush_error)
+    if close_error:
+        raise ctypes.WinError(close_error)
+
+
+def _rollback_backup_publication(
+    *,
+    database_temp: Path,
+    destination: Path,
+    database_published: bool,
+    manifest_temp: Path,
+    manifest_destination: Path,
+    manifest_published: bool,
+) -> None:
+    removed_parents: list[Path] = []
+    try:
+        if manifest_published and _same_file(manifest_destination, manifest_temp):
+            manifest_destination.unlink()
+            removed_parents.append(manifest_destination.parent)
+        if database_published and _same_file(destination, database_temp):
+            destination.unlink()
+            removed_parents.append(destination.parent)
+        _fsync_directories(*removed_parents)
+    except (OSError, DatabaseBackupError) as exc:
+        raise DatabaseBackupError(
+            "failed backup publication could not be rolled back durably"
+        ) from exc
+
+
+def _unlink_and_fsync(path: Path) -> None:
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        return
+    except OSError as exc:
+        raise DatabaseBackupError("database path could not be removed") from exc
+    _fsync_directory(path.parent)
 
 
 def _require_regular_file(path: Path, *, source: bool) -> None:
@@ -582,10 +766,32 @@ def _temp_path(destination: Path) -> Path:
     return destination.with_name(f".{destination.name}.{uuid4().hex}.tmp")
 
 
-def _cleanup_temp_database(path: Path) -> None:
-    path.unlink(missing_ok=True)
-    for suffix in _SQLITE_SIDECAR_SUFFIXES:
-        Path(f"{path}{suffix}").unlink(missing_ok=True)
+def _cleanup_temp_databases(
+    *paths: Path,
+    primary_error: BaseException | None = None,
+) -> None:
+    first_error: OSError | None = None
+    for path in paths:
+        candidates = (
+            path,
+            *(Path(f"{path}{suffix}") for suffix in _SQLITE_SIDECAR_SUFFIXES),
+        )
+        for candidate in candidates:
+            try:
+                candidate.unlink()
+            except FileNotFoundError:
+                continue
+            except OSError as exc:
+                if first_error is None:
+                    first_error = exc
+    if first_error is None:
+        return
+    if primary_error is not None:
+        primary_error.add_note(
+            "temporary database cleanup also failed; inspect the operation directory"
+        )
+        return
+    raise DatabaseBackupError("temporary database cleanup failed") from first_error
 
 
 def _absolute_path(value: str | Path) -> Path:
@@ -595,8 +801,12 @@ def _absolute_path(value: str | Path) -> Path:
 def _same_file(left: Path, right: Path) -> bool:
     try:
         return os.path.samefile(left, right)
-    except OSError:
+    except FileNotFoundError:
         return False
+    except OSError as exc:
+        raise DatabaseBackupError(
+            "database path identity could not be verified"
+        ) from exc
 
 
 __all__ = [
