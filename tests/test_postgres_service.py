@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy import inspect, select, text
+from sqlalchemy.exc import DBAPIError
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +25,13 @@ for import_root in (REPO_ROOT, API_ROOT):
         sys.path.insert(0, str(import_root))
 
 from scripts import manage_database as database_cli
+from scripts.provision_postgres_test import (
+    POSTGRES_CLI_SCHEMA,
+    POSTGRES_LOCK_SCHEMA,
+    POSTGRES_MIGRATOR_ROLE,
+    POSTGRES_RUNTIME_ROLE,
+    POSTGRES_RUNTIME_SCHEMA,
+)
 from services.auth import (
     AuthService,
     AuthServiceConfig,
@@ -48,20 +56,65 @@ from services.persistence.schema import (
 )
 
 
-POSTGRES_URL = os.environ.get("CHRONO_TEST_POSTGRES_URL", "").strip()
+POSTGRES_MIGRATION_URL = os.environ.get(
+    "CHRONO_TEST_POSTGRES_MIGRATION_URL",
+    "",
+).strip()
+POSTGRES_RUNTIME_URL = os.environ.get(
+    "CHRONO_TEST_POSTGRES_RUNTIME_URL",
+    "",
+).strip()
+POSTGRES_MATRIX_CONFIGURED = bool(POSTGRES_MIGRATION_URL or POSTGRES_RUNTIME_URL)
+RUNTIME_TABLE_PRIVILEGES = {
+    "chronovita_schema_migrations": frozenset({"SELECT"}),
+    "kv": frozenset({"SELECT", "INSERT", "UPDATE"}),
+    "game_sessions": frozenset({"SELECT", "INSERT", "UPDATE"}),
+    "game_dossiers": frozenset({"SELECT", "INSERT"}),
+    "auth_users": frozenset({"SELECT", "INSERT", "UPDATE"}),
+    "auth_sessions": frozenset({"SELECT", "INSERT", "UPDATE"}),
+    "auth_audit_head": frozenset({"SELECT", "UPDATE"}),
+    "auth_audit_events": frozenset({"SELECT", "INSERT"}),
+}
+TABLE_PRIVILEGES = (
+    "SELECT",
+    "INSERT",
+    "UPDATE",
+    "DELETE",
+    "TRUNCATE",
+    "REFERENCES",
+    "TRIGGER",
+)
 
 
 @unittest.skipUnless(
-    POSTGRES_URL,
-    "CHRONO_TEST_POSTGRES_URL is required for the dedicated PostgreSQL service matrix",
+    POSTGRES_MATRIX_CONFIGURED,
+    (
+        "CHRONO_TEST_POSTGRES_MIGRATION_URL and "
+        "CHRONO_TEST_POSTGRES_RUNTIME_URL are required for the dedicated "
+        "PostgreSQL service matrix"
+    ),
 )
 class PostgresServiceTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not POSTGRES_MIGRATION_URL or not POSTGRES_RUNTIME_URL:
+            raise AssertionError(
+                "PostgreSQL service matrix requires both role-specific URLs"
+            )
+        if "CHRONO_TEST_POSTGRES_ADMIN_URL" in os.environ:
+            raise AssertionError(
+                "PostgreSQL service test process must not receive the admin URL"
+            )
+        cls.migration_url = POSTGRES_MIGRATION_URL
+        cls.runtime_url = POSTGRES_RUNTIME_URL
+
     def test_postgres_migration_cli_and_application_runtime(self):
         target = resolve_database_target(
-            database_url=POSTGRES_URL,
+            database_url=self.migration_url,
             sqlite_path="ignored.db",
         )
         self.assertEqual(target.dialect, "postgresql")
+        self.assertEqual(target.url.username, POSTGRES_MIGRATOR_ROLE)
         options = DatabaseEngineOptions(
             pool_size=3,
             max_overflow=2,
@@ -96,19 +149,35 @@ class PostgresServiceTests(unittest.TestCase):
             ).scalars().all()
         self.assertEqual(versions, list(range(1, LATEST_SCHEMA_VERSION + 1)))
 
-        self._verify_postgres_cli(first, target)
-        self._verify_migration_lock_timeout(first, target)
-        self._verify_concurrent_audit(first, second)
-        self._verify_identity_invariants(first, second)
-        self._verify_kv_invariants()
+        self._grant_runtime_privileges(first)
+        self._verify_postgres_cli(target)
+        self._verify_migration_lock_timeout(target)
         first.dispose()
         second.dispose()
+
+        runtime_target = resolve_database_target(
+            database_url=self.runtime_url,
+            sqlite_path="ignored.db",
+        )
+        self.assertEqual(runtime_target.url.username, POSTGRES_RUNTIME_ROLE)
+        self.assertEqual(runtime_target.url.host, target.url.host)
+        self.assertEqual(runtime_target.url.port, target.url.port)
+        self.assertEqual(runtime_target.url.database, target.url.database)
+        runtime_first = create_database_engine(runtime_target, options=options)
+        runtime_second = create_database_engine(runtime_target, options=options)
+        self.addCleanup(runtime_first.dispose)
+        self.addCleanup(runtime_second.dispose)
+        self.assertTrue(inspect_schema(runtime_first).is_current)
+        self._verify_role_boundaries(first=runtime_first, migration_target=target)
+        self._verify_concurrent_audit(runtime_first, runtime_second)
+        self._verify_identity_invariants(runtime_first, runtime_second)
+        self._verify_kv_invariants()
+        runtime_first.dispose()
+        runtime_second.dispose()
         self._verify_application_runtime()
 
-    def _verify_postgres_cli(self, engine, target) -> None:
-        schema_name = "chronovita_cli_matrix"
-        with engine.begin() as connection:
-            connection.exec_driver_sql("CREATE SCHEMA chronovita_cli_matrix")
+    def _verify_postgres_cli(self, target) -> None:
+        schema_name = POSTGRES_CLI_SCHEMA
         cli_url = target.url.update_query_dict(
             {"options": f"-c search_path={schema_name}"}
         ).render_as_string(hide_password=False)
@@ -136,12 +205,8 @@ class PostgresServiceTests(unittest.TestCase):
             if target.url.password:
                 self.assertNotIn(target.url.password, output)
 
-    def _verify_migration_lock_timeout(self, engine, target) -> None:
-        schema_name = "chronovita_lock_timeout_matrix"
-        with engine.begin() as connection:
-            connection.exec_driver_sql(
-                "CREATE SCHEMA chronovita_lock_timeout_matrix"
-            )
+    def _verify_migration_lock_timeout(self, target) -> None:
+        schema_name = POSTGRES_LOCK_SCHEMA
         lock_url = target.url.update_query_dict(
             {"options": f"-c search_path={schema_name}"}
         ).render_as_string(hide_password=False)
@@ -190,6 +255,233 @@ class PostgresServiceTests(unittest.TestCase):
             self.assertTrue(ensure_current_schema(lock_engine).is_current)
         finally:
             lock_engine.dispose()
+
+    def _grant_runtime_privileges(self, migration_engine) -> None:
+        with migration_engine.begin() as connection:
+            quote = connection.dialect.identifier_preparer.quote
+            schema = quote(POSTGRES_RUNTIME_SCHEMA)
+            runtime = quote(POSTGRES_RUNTIME_ROLE)
+            connection.exec_driver_sql(
+                f"REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {schema} "
+                f"FROM {runtime}"
+            )
+            connection.exec_driver_sql(
+                f"REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {schema} "
+                f"FROM {runtime}"
+            )
+            connection.exec_driver_sql(
+                f"ALTER DEFAULT PRIVILEGES IN SCHEMA {schema} "
+                f"REVOKE ALL ON TABLES FROM {runtime}"
+            )
+            connection.exec_driver_sql(
+                f"ALTER DEFAULT PRIVILEGES IN SCHEMA {schema} "
+                f"REVOKE ALL ON SEQUENCES FROM {runtime}"
+            )
+            for table_name, privileges in RUNTIME_TABLE_PRIVILEGES.items():
+                privilege_list = ", ".join(sorted(privileges))
+                connection.exec_driver_sql(
+                    f"GRANT {privilege_list} ON TABLE {quote(table_name)} "
+                    f"TO {runtime}"
+                )
+
+    def _verify_role_boundaries(self, *, first, migration_target) -> None:
+        migration_engine = create_database_engine(
+            migration_target,
+            options=DatabaseEngineOptions(
+                pool_size=1,
+                max_overflow=0,
+                pool_timeout_seconds=5,
+                pool_recycle_seconds=60,
+                connect_timeout_seconds=3,
+            ),
+        )
+        try:
+            with migration_engine.connect() as connection:
+                self._assert_role_flags(connection, POSTGRES_MIGRATOR_ROLE)
+                self.assertTrue(
+                    connection.execute(
+                        text(
+                            "SELECT has_schema_privilege("
+                            "current_user, current_schema(), 'CREATE'"
+                            ")"
+                        )
+                    ).scalar_one()
+                )
+                self.assertFalse(
+                    connection.execute(
+                        text(
+                            "SELECT has_database_privilege("
+                            "current_user, current_database(), 'CREATE'"
+                            ")"
+                        )
+                    ).scalar_one()
+                )
+                self.assertFalse(
+                    connection.execute(
+                        text(
+                            "SELECT has_database_privilege("
+                            "current_user, current_database(), 'TEMP'"
+                            ")"
+                        )
+                    ).scalar_one()
+                )
+
+            with first.connect() as connection:
+                self._assert_role_flags(connection, POSTGRES_RUNTIME_ROLE)
+                managed_tables = set(inspect(connection).get_table_names())
+                self.assertEqual(
+                    managed_tables,
+                    set(RUNTIME_TABLE_PRIVILEGES),
+                )
+                self.assertTrue(
+                    connection.execute(
+                        text(
+                            "SELECT has_schema_privilege("
+                            "current_user, current_schema(), 'USAGE'"
+                            ")"
+                        )
+                    ).scalar_one()
+                )
+                self.assertFalse(
+                    connection.execute(
+                        text(
+                            "SELECT has_schema_privilege("
+                            "current_user, current_schema(), 'CREATE'"
+                            ")"
+                        )
+                    ).scalar_one()
+                )
+                for privilege in ("CREATE", "TEMP"):
+                    self.assertFalse(
+                        connection.execute(
+                            text(
+                                "SELECT has_database_privilege("
+                                "current_user, current_database(), :privilege"
+                                ")"
+                            ),
+                            {"privilege": privilege},
+                        ).scalar_one()
+                    )
+                for table_name, expected in RUNTIME_TABLE_PRIVILEGES.items():
+                    for privilege in TABLE_PRIVILEGES:
+                        with self.subTest(
+                            table=table_name,
+                            privilege=privilege,
+                        ):
+                            actual = connection.execute(
+                                text(
+                                    "SELECT has_table_privilege("
+                                    "current_user, :table_name, :privilege"
+                                    ")"
+                                ),
+                                {
+                                    "table_name": table_name,
+                                    "privilege": privilege,
+                                },
+                            ).scalar_one()
+                            self.assertEqual(actual, privilege in expected)
+                owners = connection.execute(
+                    text(
+                        "SELECT DISTINCT pg_get_userbyid(c.relowner) "
+                        "FROM pg_class AS c "
+                        "JOIN pg_namespace AS n ON n.oid = c.relnamespace "
+                        "WHERE n.nspname = current_schema() "
+                        "AND c.relkind IN ('r', 'p', 'S')"
+                    )
+                ).scalars().all()
+                self.assertEqual(set(owners), {POSTGRES_MIGRATOR_ROLE})
+
+            denied_statements = (
+                "CREATE TABLE runtime_escape (id integer)",
+                "CREATE TABLE public.runtime_escape (id integer)",
+                "CREATE TEMP TABLE runtime_escape (id integer)",
+                "CREATE SCHEMA runtime_escape",
+                "ALTER TABLE kv ADD COLUMN runtime_escape integer",
+                "DROP TABLE kv",
+                "TRUNCATE TABLE kv",
+                f"SET ROLE {POSTGRES_MIGRATOR_ROLE}",
+                (
+                    "UPDATE chronovita_schema_migrations "
+                    "SET contract_checksum = contract_checksum "
+                    "WHERE version = 1"
+                ),
+                "UPDATE auth_audit_events SET outcome = outcome",
+                "DELETE FROM auth_audit_events",
+                "DELETE FROM kv",
+                "UPDATE game_dossiers SET data = data",
+            )
+            for statement in denied_statements:
+                with self.subTest(statement=statement):
+                    self._assert_permission_denied(first, statement)
+            self._verify_future_objects_are_not_granted(
+                migration_engine,
+                first,
+            )
+        finally:
+            migration_engine.dispose()
+
+    def _verify_future_objects_are_not_granted(
+        self,
+        migration_engine,
+        runtime_engine,
+    ) -> None:
+        table_name = "acl_future_canary"
+        sequence_name = "acl_future_canary_seq"
+        with migration_engine.begin() as connection:
+            connection.exec_driver_sql(
+                f"CREATE TABLE {table_name} (id integer)"
+            )
+            connection.exec_driver_sql(f"CREATE SEQUENCE {sequence_name}")
+        try:
+            self._assert_permission_denied(
+                runtime_engine,
+                f"SELECT * FROM {table_name}",
+            )
+            self._assert_permission_denied(
+                runtime_engine,
+                f"SELECT nextval('{sequence_name}')",
+            )
+        finally:
+            with migration_engine.begin() as connection:
+                connection.exec_driver_sql(f"DROP TABLE IF EXISTS {table_name}")
+                connection.exec_driver_sql(
+                    f"DROP SEQUENCE IF EXISTS {sequence_name}"
+                )
+
+    def _assert_permission_denied(self, engine, statement: str) -> None:
+        with engine.connect() as connection:
+            transaction = connection.begin()
+            try:
+                with self.assertRaises(DBAPIError) as raised:
+                    connection.exec_driver_sql(statement)
+                self.assertEqual(
+                    getattr(raised.exception.orig, "sqlstate", None),
+                    "42501",
+                )
+            finally:
+                transaction.rollback()
+                try:
+                    connection.exec_driver_sql("RESET ROLE")
+                    connection.rollback()
+                except BaseException:
+                    connection.invalidate()
+                    raise
+
+    def _assert_role_flags(self, connection, expected_role: str) -> None:
+        row = connection.execute(
+            text(
+                "SELECT rolname, rolsuper, rolcreatedb, rolcreaterole, "
+                "rolinherit, rolreplication, rolbypassrls "
+                "FROM pg_roles WHERE rolname = current_user"
+            )
+        ).one()
+        self.assertEqual(row.rolname, expected_role)
+        self.assertFalse(row.rolsuper)
+        self.assertFalse(row.rolcreatedb)
+        self.assertFalse(row.rolcreaterole)
+        self.assertFalse(row.rolinherit)
+        self.assertFalse(row.rolreplication)
+        self.assertFalse(row.rolbypassrls)
 
     def _verify_concurrent_audit(self, first, second) -> None:
         write_count = 32
@@ -526,7 +818,7 @@ class PostgresServiceTests(unittest.TestCase):
         )
         persistence_db.init_engine(
             sqlite_path="ignored.db",
-            database_url=POSTGRES_URL,
+            database_url=self.runtime_url,
             migration_mode="validate",
             engine_options=options,
         )
@@ -626,7 +918,7 @@ class PostgresServiceTests(unittest.TestCase):
             "CHRONO_DISABLE_DOTENV": "true",
             "CHRONO_RUNTIME_PROFILE": "local",
             "CHRONO_DEBUG": "true",
-            "CHRONO_DATABASE_URL": POSTGRES_URL,
+            "CHRONO_DATABASE_URL": self.runtime_url,
             "CHRONO_DATABASE_MIGRATION_MODE": "validate",
             "CHRONO_DATABASE_POOL_SIZE": "3",
             "CHRONO_DATABASE_MAX_OVERFLOW": "2",

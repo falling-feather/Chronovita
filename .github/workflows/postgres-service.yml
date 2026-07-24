@@ -23,18 +23,16 @@ jobs:
       postgres:
         image: postgres:16.14-alpine3.24
         env:
-          POSTGRES_USER: chronovita_test
-          POSTGRES_PASSWORD: chronovita_test_only
+          POSTGRES_USER: chronovita_test_admin
+          POSTGRES_PASSWORD: chronovita_test_admin_only
           POSTGRES_DB: chronovita_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U chronovita_test -d chronovita_test"
+          --health-cmd "pg_isready -U chronovita_test_admin -d chronovita_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 12
-    env:
-      CHRONO_TEST_POSTGRES_URL: postgresql+psycopg://chronovita_test:chronovita_test_only@127.0.0.1:5432/chronovita_test
     steps:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -50,6 +48,11 @@ jobs:
 
       - name: Install API dependencies
         run: python -m pip install --disable-pip-version-check -r apps/api/requirements.txt
+
+      - name: Provision isolated PostgreSQL roles
+        env:
+          CHRONO_TEST_POSTGRES_ADMIN_URL: postgresql+psycopg://chronovita_test_admin:chronovita_test_admin_only@127.0.0.1:5432/chronovita_test
+        run: python scripts/provision_postgres_test.py --github-env
 
       - name: Run PostgreSQL 16 service matrix
         shell: bash
