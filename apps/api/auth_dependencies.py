@@ -19,6 +19,13 @@ class AuthContext:
     source: str
 
 
+@dataclass(frozen=True)
+class LogoutContext:
+    principal: Principal | None
+    raw_token: str | None
+    source: str | None
+
+
 def require_auth_context(
     request: Request,
     authorization: Annotated[str | None, Header()] = None,
@@ -28,7 +35,7 @@ def require_auth_context(
     cookie = request.cookies.get(settings.auth_cookie_name)
     if settings.auth_mode == "legacy-local":
         candidates = [value for value in (bearer, x_admin_token) if value]
-        if len(set(candidates)) > 1:
+        if len(candidates) > 1:
             raise _authentication_error("credential_conflict", "Conflicting credentials.")
         token = candidates[0] if candidates else None
         admin_token = secret_value(settings.admin_token)
@@ -59,19 +66,93 @@ def require_auth_context(
     if x_admin_token:
         raise _authentication_error("legacy_credential_rejected", "Legacy credential rejected.")
     candidates = [value for value in (bearer, cookie) if value]
-    if len(set(candidates)) > 1:
+    if len(candidates) > 1:
         raise _authentication_error("credential_conflict", "Conflicting credentials.")
     token = candidates[0] if candidates else None
     if token is None:
         raise _authentication_error()
-    principal = get_identity().authenticate(token)
+    source = "bearer" if bearer else "cookie"
+    principal = get_identity().authenticate(token, transport=source)
     if principal is None:
         raise _authentication_error("session_expired", "Session is invalid or expired.")
     return AuthContext(
         principal=principal,
         raw_token=token,
-        source="bearer" if bearer else "cookie",
+        source=source,
     )
+
+
+def require_auth_write_context(
+    request: Request,
+    context: AuthContext = Depends(require_auth_context),
+) -> AuthContext:
+    _require_cookie_write_origin(request, context)
+    return context
+
+
+def resolve_logout_context(
+    request: Request,
+    authorization: Annotated[str | None, Header()] = None,
+    x_admin_token: Annotated[str | None, Header(alias="X-Admin-Token")] = None,
+) -> LogoutContext:
+    bearer = _bearer_token(authorization)
+    cookie = request.cookies.get(settings.auth_cookie_name)
+    if settings.auth_mode == "legacy-local":
+        candidates = [value for value in (bearer, x_admin_token) if value]
+        if len(candidates) > 1:
+            raise _authentication_error(
+                "credential_conflict",
+                "Conflicting credentials.",
+            )
+        token = candidates[0] if candidates else None
+        configured = secret_value(settings.admin_token)
+        principal = None
+        if token and configured and secrets.compare_digest(token, configured):
+            principal = Principal(
+                user_id="legacy-local-admin",
+                username=settings.admin_actor,
+                display_name=settings.admin_actor,
+                roles=("teacher", "reviewer", "admin"),
+                session_id=None,
+                auth_version=1,
+                synthetic=True,
+            )
+        return LogoutContext(
+            principal=principal,
+            raw_token=token,
+            source="legacy-local" if token else None,
+        )
+
+    if x_admin_token:
+        raise _authentication_error(
+            "legacy_credential_rejected",
+            "Legacy credential rejected.",
+        )
+    candidates = [value for value in (bearer, cookie) if value]
+    if len(candidates) > 1:
+        raise _authentication_error(
+            "credential_conflict",
+            "Conflicting credentials.",
+        )
+    token = candidates[0] if candidates else None
+    source = "bearer" if bearer else ("cookie" if cookie else None)
+    if source == "cookie":
+        _require_trusted_origin(request)
+    principal = (
+        get_identity().authenticate(token, transport=source)
+        if token and source in {"cookie", "bearer"}
+        else None
+    )
+    return LogoutContext(
+        principal=principal,
+        raw_token=token,
+        source=source,
+    )
+
+
+def require_cookie_login_origin(request: Request) -> None:
+    if settings.runtime_profile == "production":
+        _require_trusted_origin(request)
 
 
 def require_permission(permission: str) -> Callable[..., AuthContext]:
@@ -198,6 +279,10 @@ def client_fingerprint(request: Request) -> str:
 def _require_cookie_write_origin(request: Request, context: AuthContext) -> None:
     if request.method in {"GET", "HEAD", "OPTIONS"} or context.source != "cookie":
         return
+    _require_trusted_origin(request)
+
+
+def _require_trusted_origin(request: Request) -> None:
     origin = request.headers.get("Origin", "").strip()
     if not origin or origin not in settings.cors_origins:
         raise HTTPException(

@@ -29,6 +29,7 @@ from services.auth import (
     AuthServiceConfig,
     LastAdminRequired,
     Principal,
+    SessionUnavailable,
 )
 from services.auth.store import AuditWrite, AuthStore
 from services.persistence import db as persistence_db
@@ -256,6 +257,8 @@ class PostgresServiceTests(unittest.TestCase):
         config = AuthServiceConfig(
             mode="accounts",
             session_ttl_seconds=3600,
+            session_idle_timeout_seconds=900,
+            session_absolute_ttl_seconds=7200,
             bootstrap_username="ci.admin",
             bootstrap_password="CI admin password 123!",
             bootstrap_display_name="CI Admin",
@@ -355,6 +358,162 @@ class PostgresServiceTests(unittest.TestCase):
             if user.enabled and "admin" in user.roles
         ]
         self.assertEqual([user.username for user in enabled_admins], ["ci.admin"])
+
+        issued = services[0].login(
+            "ci.admin",
+            "CI admin password 123!",
+            request_id="postgres-session-login",
+            transport="bearer",
+        )
+        refresh_barrier = threading.Barrier(2)
+
+        def refresh_session(service, index: int):
+            refresh_barrier.wait(timeout=10)
+            try:
+                return service.refresh(
+                    issued.token,
+                    issued.principal,
+                    request_id=f"postgres-session-refresh-{index}",
+                    transport="bearer",
+                )
+            except SessionUnavailable:
+                return None
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            refreshed = tuple(
+                executor.map(
+                    lambda args: refresh_session(*args),
+                    ((services[0], 0), (services[1], 1)),
+                )
+            )
+        winners = [session for session in refreshed if session is not None]
+        self.assertEqual(len(winners), 1)
+        self.assertIsNone(
+            services[0].authenticate(issued.token, transport="bearer"),
+        )
+        self.assertIsNotNone(
+            services[1].authenticate(winners[0].token, transport="bearer"),
+        )
+
+        extra = services[0].login(
+            "ci.admin",
+            "CI admin password 123!",
+            request_id="postgres-session-extra",
+            transport="bearer",
+        )
+        updated, revoked_count = services[1].revoke_user_sessions(
+            root.user_id,
+            actor=winners[0].principal,
+            request_id="postgres-session-revoke-all",
+        )
+        self.assertGreaterEqual(revoked_count, 2)
+        self.assertGreater(updated.auth_version, root.auth_version)
+        for token in (winners[0].token, extra.token):
+            self.assertIsNone(
+                services[0].authenticate(token, transport="bearer"),
+            )
+
+        operator = services[0].login(
+            "ci.admin",
+            "CI admin password 123!",
+            request_id="postgres-session-operator",
+            transport="bearer",
+        )
+        target = services[0].create_user(
+            username="ci.session.target",
+            password="CI session target password 123!",
+            display_name="CI Session Target",
+            roles=("teacher",),
+            actor=operator.principal,
+            request_id="postgres-session-target-create",
+        )
+
+        def race_security_change(
+            *,
+            password: str,
+            request_id: str,
+            change,
+        ) -> None:
+            active = services[0].login(
+                target.username,
+                password,
+                request_id=f"{request_id}-login",
+                transport="bearer",
+            )
+            race_barrier = threading.Barrier(2)
+
+            def refresh():
+                race_barrier.wait(timeout=10)
+                try:
+                    return services[0].refresh(
+                        active.token,
+                        active.principal,
+                        request_id=f"{request_id}-refresh",
+                        transport="bearer",
+                    )
+                except SessionUnavailable:
+                    return None
+
+            def apply_change():
+                race_barrier.wait(timeout=10)
+                change()
+
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                refresh_future = executor.submit(refresh)
+                change_future = executor.submit(apply_change)
+                rotated = refresh_future.result(timeout=15)
+                change_future.result(timeout=15)
+
+            self.assertIsNone(
+                services[0].authenticate(active.token, transport="bearer"),
+            )
+            if rotated is not None:
+                self.assertIsNone(
+                    services[1].authenticate(
+                        rotated.token,
+                        transport="bearer",
+                    ),
+                )
+
+        race_security_change(
+            password="CI session target password 123!",
+            request_id="postgres-refresh-vs-revoke",
+            change=lambda: services[1].revoke_user_sessions(
+                target.user_id,
+                actor=operator.principal,
+                request_id="postgres-refresh-vs-revoke-change",
+            ),
+        )
+        race_security_change(
+            password="CI session target password 123!",
+            request_id="postgres-refresh-vs-disable",
+            change=lambda: services[1].update_user(
+                target.user_id,
+                display_name=None,
+                roles=None,
+                enabled=False,
+                actor=operator.principal,
+                request_id="postgres-refresh-vs-disable-change",
+            ),
+        )
+        services[0].update_user(
+            target.user_id,
+            display_name=None,
+            roles=None,
+            enabled=True,
+            actor=operator.principal,
+            request_id="postgres-session-target-reenable",
+        )
+        race_security_change(
+            password="CI session target password 123!",
+            request_id="postgres-refresh-vs-password",
+            change=lambda: services[1].reset_password(
+                target.user_id,
+                password="CI session target password 456!",
+                actor=operator.principal,
+                request_id="postgres-refresh-vs-password-change",
+            ),
+        )
         self.assertTrue(services[0].store.verify_audit_chain())
 
     def _verify_kv_invariants(self) -> None:
@@ -568,7 +727,7 @@ class PostgresServiceTests(unittest.TestCase):
     @staticmethod
     def _login(client: TestClient, *, username: str, password: str) -> str:
         response = client.post(
-            "/api/v1/auth/login",
+            "/api/v1/auth/token",
             json={"username": username, "password": password},
         )
         if response.status_code != 200:

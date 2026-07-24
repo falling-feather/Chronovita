@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 UserRole = Literal["student", "teacher", "reviewer", "admin"]
+SessionTransport = Literal["cookie", "bearer"]
 
 ROLE_ORDER: tuple[UserRole, ...] = (
     "student",
@@ -84,6 +85,8 @@ class SessionRecord(AuthModel):
 
 class IssuedSession(AuthModel):
     token: str = Field(min_length=32, max_length=256)
+    transport: SessionTransport
+    absolute_expires_at: datetime
     record: SessionRecord
     principal: Principal
 

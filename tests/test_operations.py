@@ -51,6 +51,33 @@ class RuntimeConfigurationTests(unittest.TestCase):
             {"runtime.production_single_worker_required"},
         )
 
+    def test_session_lifetimes_must_be_monotonic(self):
+        cases = (
+            (
+                {
+                    "auth_session_idle_timeout_seconds": 3601,
+                    "auth_session_ttl_seconds": 3600,
+                },
+                "runtime.session_idle_timeout_exceeds_ttl",
+            ),
+            (
+                {
+                    "auth_session_ttl_seconds": 7200,
+                    "auth_session_absolute_ttl_seconds": 7199,
+                },
+                "runtime.session_ttl_exceeds_absolute_lifetime",
+            ),
+        )
+        for overrides, expected_code in cases:
+            with self.subTest(expected_code=expected_code):
+                configured = self._production_settings(**overrides)
+                with self.assertRaises(RuntimeConfigurationError) as caught:
+                    validate_runtime_configuration(configured)
+                self.assertEqual(
+                    {issue.code for issue in caught.exception.issues},
+                    {expected_code},
+                )
+
     def test_production_profile_rejects_unsafe_settings_without_secret_values(self):
         database_secret = "database-secret-must-not-leak"
         admin_secret = "admin-secret-must-not-leak"

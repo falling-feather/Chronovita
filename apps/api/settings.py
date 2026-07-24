@@ -56,6 +56,16 @@ class Settings(BaseSettings):
     admin_actor: str = "local-admin"
     auth_mode: Literal["legacy-local", "accounts"] = "legacy-local"
     auth_session_ttl_seconds: int = Field(default=8 * 60 * 60, ge=300, le=30 * 24 * 60 * 60)
+    auth_session_idle_timeout_seconds: int = Field(
+        default=2 * 60 * 60,
+        ge=300,
+        le=30 * 24 * 60 * 60,
+    )
+    auth_session_absolute_ttl_seconds: int = Field(
+        default=7 * 24 * 60 * 60,
+        ge=300,
+        le=90 * 24 * 60 * 60,
+    )
     auth_cookie_name: str = Field(
         default="chronovita_session",
         min_length=3,

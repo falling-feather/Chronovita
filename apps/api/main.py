@@ -72,6 +72,12 @@ async def lifespan(app: FastAPI):
             AuthServiceConfig(
                 mode=settings.auth_mode,
                 session_ttl_seconds=settings.auth_session_ttl_seconds,
+                session_idle_timeout_seconds=(
+                    settings.auth_session_idle_timeout_seconds
+                ),
+                session_absolute_ttl_seconds=(
+                    settings.auth_session_absolute_ttl_seconds
+                ),
                 bootstrap_username=settings.auth_bootstrap_username,
                 bootstrap_password=secret_value(settings.auth_bootstrap_password),
                 bootstrap_display_name=settings.auth_bootstrap_display_name,
@@ -111,6 +117,11 @@ app.add_middleware(
     max_attempts=settings.auth_login_rate_limit_attempts,
     window_seconds=settings.auth_login_rate_limit_window_seconds,
     max_clients=settings.auth_login_rate_limit_max_clients,
+    trusted_cookie_origins=(
+        tuple(settings.cors_origins)
+        if settings.runtime_profile == "production"
+        else None
+    ),
 )
 app.add_middleware(
     TrustedHostMiddleware,

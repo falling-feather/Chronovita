@@ -7,6 +7,7 @@ import unittest
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -29,9 +30,15 @@ from services.auth import (
     BootstrapRequired,
     LastAdminRequired,
     Principal,
+    SessionUnavailable,
     configure_identity,
     get_identity,
     shutdown_identity,
+)
+import services.auth.service as auth_service_module
+from services.auth.service import (
+    session_token_absolute_expires_at,
+    token_digest,
 )
 from services.auth.passwords import hash_password, verify_password
 from services.persistence.schema import ensure_current_schema
@@ -46,6 +53,12 @@ class AuthApiTests(unittest.TestCase):
         self.previous = {
             "auth_mode": settings.auth_mode,
             "auth_session_ttl_seconds": settings.auth_session_ttl_seconds,
+            "auth_session_idle_timeout_seconds": (
+                settings.auth_session_idle_timeout_seconds
+            ),
+            "auth_session_absolute_ttl_seconds": (
+                settings.auth_session_absolute_ttl_seconds
+            ),
             "auth_cookie_name": settings.auth_cookie_name,
             "auth_cookie_secure": settings.auth_cookie_secure,
             "auth_bootstrap_username": settings.auth_bootstrap_username,
@@ -53,9 +66,12 @@ class AuthApiTests(unittest.TestCase):
             "auth_bootstrap_display_name": settings.auth_bootstrap_display_name,
             "admin_token": settings.admin_token,
             "admin_actor": settings.admin_actor,
+            "runtime_profile": settings.runtime_profile,
         }
         settings.auth_mode = "accounts"
         settings.auth_session_ttl_seconds = 3600
+        settings.auth_session_idle_timeout_seconds = 900
+        settings.auth_session_absolute_ttl_seconds = 7200
         settings.auth_cookie_name = "chronovita_test_session"
         settings.auth_cookie_secure = False
         settings.auth_bootstrap_username = "root.admin"
@@ -73,6 +89,12 @@ class AuthApiTests(unittest.TestCase):
                     AuthServiceConfig(
                         mode=settings.auth_mode,
                         session_ttl_seconds=settings.auth_session_ttl_seconds,
+                        session_idle_timeout_seconds=(
+                            settings.auth_session_idle_timeout_seconds
+                        ),
+                        session_absolute_ttl_seconds=(
+                            settings.auth_session_absolute_ttl_seconds
+                        ),
                         bootstrap_username=settings.auth_bootstrap_username,
                         bootstrap_password=settings.auth_bootstrap_password,
                         bootstrap_display_name=settings.auth_bootstrap_display_name,
@@ -98,9 +120,9 @@ class AuthApiTests(unittest.TestCase):
         except OSError:
             pass
 
-    def test_login_cookie_bearer_logout_and_hashed_storage(self):
+    def test_cookie_and_bearer_sessions_are_transport_bound(self):
         denied = self.client.post(
-            "/api/v1/auth/login",
+            "/api/v1/auth/token",
             json={"username": "root.admin", "password": "wrong password"},
         )
         self.assertEqual(denied.status_code, 401, denied.text)
@@ -114,22 +136,30 @@ class AuthApiTests(unittest.TestCase):
         )
         self.assertEqual(logged_in_response.status_code, 200, logged_in_response.text)
         logged_in = logged_in_response.json()
-        token = logged_in["access_token"]
+        self.assertEqual(logged_in["transport"], "cookie")
+        self.assertNotIn("access_token", logged_in)
+        self.assertNotIn("token_type", logged_in)
         self.assertEqual(logged_in["principal"]["roles"], ["admin"])
         cookie = logged_in_response.headers.get("set-cookie", "")
         self.assertIn("HttpOnly", cookie)
         self.assertIn("SameSite=lax", cookie)
         self.assertNotIn("Secure", cookie)
+        cookie_token = self.client.cookies.get(settings.auth_cookie_name)
+        self.assertTrue(cookie_token.startswith("cvs_cookie_"))
 
         cookie_me = self.client.get("/api/v1/auth/me")
         self.assertEqual(cookie_me.status_code, 200, cookie_me.text)
         self.assertEqual(cookie_me.json()["source"], "cookie")
+        self.assertEqual(cookie_me.headers["cache-control"], "no-store")
 
         with get_identity().store.engine.connect() as connection:
             stored_hashes = list(connection.execute(select(sessions_table.c.token_hash)).scalars())
         self.assertEqual(len(stored_hashes), 1)
-        self.assertNotIn(token, stored_hashes)
-        self.assertNotIn(token, self.sqlite_path.read_bytes().decode("utf-8", errors="ignore"))
+        self.assertNotIn(cookie_token, stored_hashes)
+        self.assertNotIn(
+            cookie_token,
+            self.sqlite_path.read_bytes().decode("utf-8", errors="ignore"),
+        )
 
         audit = self.client.get("/api/v1/auth/audit")
         self.assertEqual(audit.status_code, 200, audit.text)
@@ -140,12 +170,42 @@ class AuthApiTests(unittest.TestCase):
         )
         self.assertEqual(login_event["request_id"], login_request_id)
 
-        logout = self.client.post("/api/v1/auth/logout")
+        duplicate_cookie_and_bearer = self.client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {cookie_token}"},
+        )
+        self.assertEqual(
+            duplicate_cookie_and_bearer.status_code,
+            401,
+            duplicate_cookie_and_bearer.text,
+        )
+        self.assertEqual(
+            duplicate_cookie_and_bearer.json()["detail"]["code"],
+            "credential_conflict",
+        )
+        self.client.cookies.clear()
+        cookie_as_bearer = self.client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {cookie_token}"},
+        )
+        self.assertEqual(cookie_as_bearer.status_code, 401, cookie_as_bearer.text)
+        self.assertEqual(
+            cookie_as_bearer.json()["detail"]["code"],
+            "session_expired",
+        )
+        self.client.cookies.set(settings.auth_cookie_name, cookie_token)
+
+        logout = self.client.post(
+            "/api/v1/auth/logout",
+            headers={"Origin": settings.cors_origins[0]},
+        )
         self.assertEqual(logout.status_code, 204, logout.text)
+        self.assertEqual(logout.headers["cache-control"], "no-store")
         self.assertEqual(self.client.get("/api/v1/auth/me").status_code, 401)
+        self.client.cookies.clear()
 
         token = self._login("ROOT.ADMIN", "Root password 123!")["access_token"]
-        self.client.cookies.clear()
+        self.assertTrue(token.startswith("cvs_bearer_"))
         bearer_me = self.client.get(
             "/api/v1/auth/me",
             headers={"Authorization": f"Bearer {token}"},
@@ -153,8 +213,408 @@ class AuthApiTests(unittest.TestCase):
         self.assertEqual(bearer_me.status_code, 200, bearer_me.text)
         self.assertEqual(bearer_me.json()["source"], "bearer")
 
+        self.client.cookies.set(settings.auth_cookie_name, token)
+        bearer_as_cookie = self.client.get("/api/v1/auth/me")
+        self.assertEqual(bearer_as_cookie.status_code, 401, bearer_as_cookie.text)
+        self.assertEqual(
+            bearer_as_cookie.json()["detail"]["code"],
+            "session_expired",
+        )
+        self.client.cookies.clear()
+
+    def test_refresh_rotates_cookie_and_bearer_sessions(self):
+        first_bearer = self._login(
+            "root.admin",
+            "Root password 123!",
+        )["access_token"]
+        refreshed_bearer = self.client.post(
+            "/api/v1/auth/refresh",
+            headers={"Authorization": f"Bearer {first_bearer}"},
+        )
+        self.assertEqual(
+            refreshed_bearer.status_code,
+            200,
+            refreshed_bearer.text,
+        )
+        refreshed_body = refreshed_bearer.json()
+        second_bearer = refreshed_body["access_token"]
+        self.assertEqual(refreshed_body["transport"], "bearer")
+        self.assertNotEqual(first_bearer, second_bearer)
+        self.assertEqual(
+            self.client.get(
+                "/api/v1/auth/me",
+                headers={"Authorization": f"Bearer {first_bearer}"},
+            ).status_code,
+            401,
+        )
+        self.assertEqual(
+            self.client.get(
+                "/api/v1/auth/me",
+                headers={"Authorization": f"Bearer {second_bearer}"},
+            ).status_code,
+            200,
+        )
+
+        self.client.cookies.clear()
+        cookie_login = self.client.post(
+            "/api/v1/auth/login",
+            json={
+                "username": "root.admin",
+                "password": "Root password 123!",
+            },
+        )
+        self.assertEqual(cookie_login.status_code, 200, cookie_login.text)
+        first_cookie = self.client.cookies.get(settings.auth_cookie_name)
+        rejected_refresh = self.client.post("/api/v1/auth/refresh")
+        self.assertEqual(
+            rejected_refresh.status_code,
+            403,
+            rejected_refresh.text,
+        )
+        accepted_refresh = self.client.post(
+            "/api/v1/auth/refresh",
+            headers={"Origin": settings.cors_origins[0]},
+        )
+        self.assertEqual(accepted_refresh.status_code, 200, accepted_refresh.text)
+        self.assertEqual(accepted_refresh.json()["transport"], "cookie")
+        self.assertNotIn("access_token", accepted_refresh.json())
+        second_cookie = self.client.cookies.get(settings.auth_cookie_name)
+        self.assertNotEqual(first_cookie, second_cookie)
+
+        self.client.cookies.clear()
+        self.client.cookies.set(settings.auth_cookie_name, first_cookie)
+        self.assertEqual(self.client.get("/api/v1/auth/me").status_code, 401)
+        self.client.cookies.clear()
+        self.client.cookies.set(settings.auth_cookie_name, second_cookie)
+        self.assertEqual(self.client.get("/api/v1/auth/me").status_code, 200)
+
+        actions = {
+            item["action"]
+            for item in self.client.get(
+                "/api/v1/auth/audit",
+                headers={"Origin": settings.cors_origins[0]},
+            ).json()["items"]
+        }
+        self.assertIn("auth.session.refresh", actions)
+
+    def test_session_lifetimes_and_refresh_audit_are_enforced(self):
+        first_session = self._login(
+            "root.admin",
+            "Root password 123!",
+        )
+        first_token = first_session["access_token"]
+        first_absolute = datetime.fromisoformat(
+            first_session["absolute_expires_at"],
+        )
+        self.assertEqual(
+            session_token_absolute_expires_at(first_token),
+            first_absolute,
+        )
+
+        refreshed = self.client.post(
+            "/api/v1/auth/refresh",
+            headers={"Authorization": f"Bearer {first_token}"},
+        )
+        self.assertEqual(refreshed.status_code, 200, refreshed.text)
+        refreshed_expires_at = datetime.fromisoformat(
+            refreshed.json()["expires_at"],
+        )
+        self.assertEqual(
+            datetime.fromisoformat(refreshed.json()["absolute_expires_at"]),
+            first_absolute,
+        )
+        self.assertLessEqual(refreshed_expires_at, first_absolute)
+        refreshed_token = refreshed.json()["access_token"]
+        self.assertEqual(
+            session_token_absolute_expires_at(refreshed_token),
+            first_absolute,
+        )
+
+        stale_last_seen = datetime.now(timezone.utc) - timedelta(
+            seconds=settings.auth_session_idle_timeout_seconds + 1,
+        )
+        with get_identity().store.engine.begin() as connection:
+            connection.execute(
+                update(sessions_table)
+                .where(
+                    sessions_table.c.token_hash
+                    == token_digest(refreshed_token)
+                )
+                .values(last_seen_at=stale_last_seen.isoformat())
+            )
+        idle_expired = self.client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {refreshed_token}"},
+        )
+        self.assertEqual(idle_expired.status_code, 401, idle_expired.text)
+
+        rollback_token = self._login(
+            "root.admin",
+            "Root password 123!",
+        )["access_token"]
+        store = get_identity().store
+        with patch.object(
+            store,
+            "_append_audit_event",
+            side_effect=AuthStoreError("forced audit failure"),
+        ):
+            failed_refresh = self.client.post(
+                "/api/v1/auth/refresh",
+                headers={"Authorization": f"Bearer {rollback_token}"},
+            )
+        self.assertEqual(failed_refresh.status_code, 503, failed_refresh.text)
+        old_token_still_valid = self.client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {rollback_token}"},
+        )
+        self.assertEqual(
+            old_token_still_valid.status_code,
+            200,
+            old_token_still_valid.text,
+        )
+
+        config_session = self._login(
+            "root.admin",
+            "Root password 123!",
+        )
+        config_token = config_session["access_token"]
+        config_principal = get_identity().authenticate(
+            config_token,
+            transport="bearer",
+        )
+        self.assertIsNotNone(config_principal)
+        fixed_absolute = datetime.fromisoformat(
+            config_session["absolute_expires_at"],
+        )
+        near_deadline = fixed_absolute - timedelta(minutes=5)
+        with get_identity().store.engine.begin() as connection:
+            connection.execute(
+                update(sessions_table)
+                .where(
+                    sessions_table.c.token_hash
+                    == token_digest(config_token)
+                )
+                .values(
+                    expires_at=fixed_absolute.isoformat(),
+                    last_seen_at=near_deadline.isoformat(),
+                )
+            )
+
+        expanded = AuthService(
+            get_identity().store.engine,
+            AuthServiceConfig(
+                mode="accounts",
+                session_ttl_seconds=3600,
+                session_idle_timeout_seconds=900,
+                session_absolute_ttl_seconds=14400,
+            ),
+        )
+        with patch.object(
+            auth_service_module,
+            "_utc_now",
+            return_value=near_deadline,
+        ):
+            rotated = expanded.refresh(
+                config_token,
+                config_principal,
+                request_id="absolute-expanded-refresh",
+                transport="bearer",
+            )
+        self.assertEqual(rotated.absolute_expires_at, fixed_absolute)
+        self.assertEqual(rotated.record.expires_at, fixed_absolute)
+        self.assertEqual(
+            session_token_absolute_expires_at(rotated.token),
+            fixed_absolute,
+        )
+
+        reduced = AuthService(
+            get_identity().store.engine,
+            AuthServiceConfig(
+                mode="accounts",
+                session_ttl_seconds=3600,
+                session_idle_timeout_seconds=900,
+                session_absolute_ttl_seconds=3600,
+            ),
+        )
+        with patch.object(
+            auth_service_module,
+            "_utc_now",
+            return_value=near_deadline,
+        ):
+            self.assertIsNotNone(
+                reduced.authenticate(rotated.token, transport="bearer"),
+            )
+        with patch.object(
+            auth_service_module,
+            "_utc_now",
+            return_value=fixed_absolute + timedelta(seconds=1),
+        ):
+            self.assertIsNone(
+                expanded.authenticate(rotated.token, transport="bearer"),
+            )
+
+    def test_session_revoke_all_is_atomic_for_self_and_admin(self):
+        admin_token = self._login(
+            "root.admin",
+            "Root password 123!",
+        )["access_token"]
+        admin_headers = {"Authorization": f"Bearer {admin_token}"}
+        created = self.client.post(
+            "/api/v1/auth/users",
+            headers=admin_headers,
+            json={
+                "username": "student.sessions",
+                "password": "Student password 123!",
+                "display_name": "Student Sessions",
+                "roles": ["student"],
+            },
+        )
+        self.assertEqual(created.status_code, 201, created.text)
+        user_id = created.json()["user_id"]
+        first = self._login(
+            "student.sessions",
+            "Student password 123!",
+        )["access_token"]
+        second = self._login(
+            "student.sessions",
+            "Student password 123!",
+        )["access_token"]
+
+        self_revoked = self.client.post(
+            "/api/v1/auth/sessions/revoke-all",
+            headers={"Authorization": f"Bearer {first}"},
+        )
+        self.assertEqual(self_revoked.status_code, 200, self_revoked.text)
+        self.assertEqual(self_revoked.json()["revoked_sessions"], 2)
+        for token in (first, second):
+            self.assertEqual(
+                self.client.get(
+                    "/api/v1/auth/me",
+                    headers={"Authorization": f"Bearer {token}"},
+                ).status_code,
+                401,
+            )
+
+        third = self._login(
+            "student.sessions",
+            "Student password 123!",
+        )["access_token"]
+        admin_revoked = self.client.post(
+            f"/api/v1/auth/users/{user_id}/sessions/revoke",
+            headers=admin_headers,
+        )
+        self.assertEqual(admin_revoked.status_code, 200, admin_revoked.text)
+        self.assertEqual(admin_revoked.json()["revoked_sessions"], 1)
+        self.assertEqual(
+            self.client.get(
+                "/api/v1/auth/me",
+                headers={"Authorization": f"Bearer {third}"},
+            ).status_code,
+            401,
+        )
+
+        rollback_token = self._login(
+            "student.sessions",
+            "Student password 123!",
+        )["access_token"]
+        store = get_identity().store
+        with patch.object(
+            store,
+            "_append_audit_event",
+            side_effect=AuthStoreError("forced audit failure"),
+        ):
+            failed_revoke = self.client.post(
+                "/api/v1/auth/sessions/revoke-all",
+                headers={"Authorization": f"Bearer {rollback_token}"},
+            )
+        self.assertEqual(failed_revoke.status_code, 503, failed_revoke.text)
+        rollback_preserved = self.client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {rollback_token}"},
+        )
+        self.assertEqual(
+            rollback_preserved.status_code,
+            200,
+            rollback_preserved.text,
+        )
+
+    def test_logout_clears_invalid_cookie_and_cookie_login_checks_origin(self):
+        settings.runtime_profile = "production"
+        rejected = self.client.post(
+            "/api/v1/auth/login",
+            json={
+                "username": "root.admin",
+                "password": "Root password 123!",
+            },
+        )
+        self.assertEqual(rejected.status_code, 403, rejected.text)
+        accepted = self.client.post(
+            "/api/v1/auth/login",
+            headers={"Origin": settings.cors_origins[0]},
+            json={
+                "username": "root.admin",
+                "password": "Root password 123!",
+            },
+        )
+        self.assertEqual(accepted.status_code, 200, accepted.text)
+
+        self.client.cookies.clear()
+        self.client.cookies.set(
+            settings.auth_cookie_name,
+            "cvs_cookie_invalid-session-token-value",
+        )
+        logged_out = self.client.post(
+            "/api/v1/auth/logout",
+            headers={"Origin": settings.cors_origins[0]},
+        )
+        self.assertEqual(logged_out.status_code, 204, logged_out.text)
+        self.assertIn("Max-Age=0", logged_out.headers["set-cookie"])
+
+    def test_concurrent_refresh_allows_exactly_one_winner(self):
+        identity = get_identity()
+        issued = identity.login(
+            "root.admin",
+            "Root password 123!",
+            request_id="concurrent-refresh-login",
+            transport="bearer",
+        )
+        barrier = threading.Barrier(2)
+
+        def refresh(index: int):
+            barrier.wait(timeout=10)
+            try:
+                return identity.refresh(
+                    issued.token,
+                    issued.principal,
+                    request_id=f"concurrent-refresh-{index}",
+                    transport="bearer",
+                )
+            except SessionUnavailable:
+                return None
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = tuple(executor.map(refresh, range(2)))
+
+        winners = [result for result in results if result is not None]
+        self.assertEqual(len(winners), 1)
+        self.assertIsNone(
+            identity.authenticate(issued.token, transport="bearer"),
+        )
+        self.assertIsNotNone(
+            identity.authenticate(winners[0].token, transport="bearer"),
+        )
+        self.assertTrue(identity.store.verify_audit_chain())
+
     def test_user_management_permissions_and_session_revocation(self):
         admin_token = self._login("root.admin", "Root password 123!")["access_token"]
+        cookie_login = self.client.post(
+            "/api/v1/auth/login",
+            json={
+                "username": "root.admin",
+                "password": "Root password 123!",
+            },
+        )
+        self.assertEqual(cookie_login.status_code, 200, cookie_login.text)
         rejected_cookie_write = self.client.post(
             "/api/v1/auth/users",
             json={
@@ -375,11 +835,14 @@ class AuthApiTests(unittest.TestCase):
 
     def _login(self, username: str, password: str) -> dict:
         response = self.client.post(
-            "/api/v1/auth/login",
+            "/api/v1/auth/token",
             json={"username": username, "password": password},
         )
         self.assertEqual(response.status_code, 200, response.text)
-        return response.json()
+        body = response.json()
+        self.assertEqual(body["transport"], "bearer")
+        self.assertEqual(body["token_type"], "bearer")
+        return body
 
 
 class AuthPrimitiveTests(unittest.TestCase):

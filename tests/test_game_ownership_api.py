@@ -163,7 +163,14 @@ class GameOwnershipApiTests(unittest.TestCase):
         )
         self.assertEqual(forbidden_teacher.status_code, 403, forbidden_teacher.text)
 
-        self._login("student.a", "Student A password 123!")
+        cookie_login = self.client.post(
+            "/api/v1/auth/login",
+            json={
+                "username": "student.a",
+                "password": "Student A password 123!",
+            },
+        )
+        self.assertEqual(cookie_login.status_code, 200, cookie_login.text)
         cookie_request = {
             **request,
             "client_request_id": "owner-cookie-start-001",
@@ -358,7 +365,7 @@ class GameOwnershipApiTests(unittest.TestCase):
 
     def _login(self, username: str, password: str) -> str:
         response = self.client.post(
-            "/api/v1/auth/login",
+            "/api/v1/auth/token",
             json={"username": username, "password": password},
         )
         self.assertEqual(response.status_code, 200, response.text)

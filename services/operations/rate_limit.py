@@ -7,12 +7,14 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from threading import Lock
 from time import monotonic
-from typing import Callable
+from typing import Callable, Mapping
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 
 LOGIN_PATH = "/api/v1/auth/login"
+TOKEN_PATH = "/api/v1/auth/token"
+LOGIN_PATHS = frozenset((LOGIN_PATH, TOKEN_PATH))
 
 
 @dataclass(frozen=True)
@@ -154,6 +156,7 @@ class LoginRateLimitMiddleware:
         max_attempts: int,
         window_seconds: int,
         max_clients: int,
+        trusted_cookie_origins: tuple[str, ...] | None = None,
     ) -> None:
         self.app = app
         self.limiter = LoginAttemptLimiter(
@@ -161,50 +164,53 @@ class LoginRateLimitMiddleware:
             window_seconds=window_seconds,
             max_clients=max_clients,
         )
+        self.trusted_cookie_origins = (
+            frozenset(trusted_cookie_origins)
+            if trusted_cookie_origins is not None
+            else None
+        )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if not _is_login_request(scope):
             await self.app(scope, receive, send)
             return
 
-        scope.setdefault("state", {})["telemetry_route"] = LOGIN_PATH
+        scope.setdefault("state", {})["telemetry_route"] = scope["path"]
+        rejection = _login_request_rejection(
+            scope,
+            trusted_cookie_origins=self.trusted_cookie_origins,
+        )
+        if rejection is not None:
+            rejection_status, rejection_code, rejection_message = rejection
+            await _send_error(
+                send,
+                status_code=rejection_status,
+                code=rejection_code,
+                message=rejection_message,
+            )
+            return
+
         decision = self.limiter.consume(_client_key(scope))
         if decision.allowed:
             await self.app(scope, receive, send)
             return
 
-        body = json.dumps(
-            {
-                "detail": {
-                    "code": "auth_rate_limited",
-                    "message": "Too many login attempts. Try again later.",
-                }
+        await _send_error(
+            send,
+            status_code=429,
+            code="auth_rate_limited",
+            message="Too many login attempts. Try again later.",
+            extra_headers={
+                "retry-after": str(decision.retry_after_seconds),
             },
-            separators=(",", ":"),
-        ).encode("utf-8")
-        await send(
-            {
-                "type": "http.response.start",
-                "status": 429,
-                "headers": [
-                    (b"content-type", b"application/json"),
-                    (b"content-length", str(len(body)).encode("ascii")),
-                    (
-                        b"retry-after",
-                        str(decision.retry_after_seconds).encode("ascii"),
-                    ),
-                    (b"cache-control", b"no-store"),
-                ],
-            }
         )
-        await send({"type": "http.response.body", "body": body})
 
 
 def _is_login_request(scope: Scope) -> bool:
     return (
         scope["type"] == "http"
         and scope.get("method") == "POST"
-        and scope.get("path") == LOGIN_PATH
+        and scope.get("path") in LOGIN_PATHS
     )
 
 
@@ -214,11 +220,80 @@ def _client_key(scope: Scope) -> str:
     return hashlib.sha256(host.encode("utf-8")).hexdigest()
 
 
+def _login_request_rejection(
+    scope: Scope,
+    *,
+    trusted_cookie_origins: frozenset[str] | None,
+) -> tuple[int, str, str] | None:
+    content_types = _header_values(scope, b"content-type")
+    if (
+        len(content_types) != 1
+        or content_types[0].split(";", 1)[0].strip().lower()
+        != "application/json"
+    ):
+        return (
+            415,
+            "unsupported_media_type",
+            "Login requests require application/json.",
+        )
+    if scope.get("path") != LOGIN_PATH or trusted_cookie_origins is None:
+        return None
+    origins = _header_values(scope, b"origin")
+    if len(origins) != 1 or origins[0].strip() not in trusted_cookie_origins:
+        return (
+            403,
+            "csrf_origin_rejected",
+            "Cookie login requires a trusted Origin.",
+        )
+    return None
+
+
+def _header_values(scope: Scope, name: bytes) -> tuple[str, ...]:
+    return tuple(
+        value.decode("latin-1")
+        for header_name, value in scope.get("headers", ())
+        if header_name.lower() == name
+    )
+
+
+async def _send_error(
+    send: Send,
+    *,
+    status_code: int,
+    code: str,
+    message: str,
+    extra_headers: Mapping[str, str] | None = None,
+) -> None:
+    body = json.dumps(
+        {"detail": {"code": code, "message": message}},
+        separators=(",", ":"),
+    ).encode("utf-8")
+    headers = [
+        (b"content-type", b"application/json"),
+        (b"content-length", str(len(body)).encode("ascii")),
+        (b"cache-control", b"no-store"),
+    ]
+    headers.extend(
+        (name.encode("ascii"), value.encode("ascii"))
+        for name, value in (extra_headers or {}).items()
+    )
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status_code,
+            "headers": headers,
+        }
+    )
+    await send({"type": "http.response.body", "body": body})
+
+
 __all__ = [
     "ConcurrentCallLimiter",
     "LOGIN_PATH",
+    "LOGIN_PATHS",
     "LoginAttemptLimiter",
     "LoginRateLimitMiddleware",
     "RateLimitDecision",
+    "TOKEN_PATH",
     "TokenBucketLimiter",
 ]

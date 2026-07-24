@@ -5,7 +5,7 @@ import json
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Iterator
 from uuid import uuid4
 
@@ -318,7 +318,25 @@ class AuthStore:
             raise AuthStoreError("identity session write failed") from exc
         return session
 
-    def authenticate(self, token_hash: str, *, now: datetime) -> tuple[UserRecord, SessionRecord] | None:
+    def authenticate(
+        self,
+        token_hash: str,
+        *,
+        now: datetime,
+        idle_timeout_seconds: int,
+        absolute_expires_at: datetime,
+    ) -> tuple[UserRecord, SessionRecord] | None:
+        if (
+            not isinstance(idle_timeout_seconds, int)
+            or isinstance(idle_timeout_seconds, bool)
+            or idle_timeout_seconds < 1
+        ):
+            raise ValueError("idle_timeout_seconds must be positive")
+        now = _require_aware_utc(now, name="now")
+        absolute_expires_at = _require_aware_utc(
+            absolute_expires_at,
+            name="absolute_expires_at",
+        )
         try:
             with self.engine.begin() as connection:
                 row = connection.execute(
@@ -327,7 +345,16 @@ class AuthStore:
                 if row is None:
                     return None
                 session = _session_from_row(row)
-                if session.revoked_at is not None or session.expires_at <= now:
+                if (
+                    session.revoked_at is not None
+                    or session.expires_at <= now
+                    or absolute_expires_at <= now
+                    or session.created_at >= absolute_expires_at
+                    or session.expires_at > absolute_expires_at
+                    or session.last_seen_at
+                    + timedelta(seconds=idle_timeout_seconds)
+                    <= now
+                ):
                     return None
                 user_row = connection.execute(
                     select(users_table).where(users_table.c.user_id == session.user_id)
@@ -347,6 +374,127 @@ class AuthStore:
         except SQLAlchemyError as exc:
             raise AuthStoreError("identity session read failed") from exc
         return user, session
+
+    def rotate_session(
+        self,
+        session_id: str,
+        *,
+        expected_token_hash: str,
+        next_token_hash: str,
+        now: datetime,
+        idle_timeout_seconds: int,
+        extension_seconds: int,
+        absolute_expires_at: datetime,
+        audit: AuditWrite | None = None,
+    ) -> tuple[UserRecord, SessionRecord] | None:
+        if (
+            any(
+                not isinstance(value, int)
+                or isinstance(value, bool)
+                for value in (
+                    idle_timeout_seconds,
+                    extension_seconds,
+                )
+            )
+            or not 0 < idle_timeout_seconds <= extension_seconds
+        ):
+            raise ValueError("session lifetime must satisfy idle <= extension")
+        now = _require_aware_utc(now, name="now")
+        absolute_expires_at = _require_aware_utc(
+            absolute_expires_at,
+            name="absolute_expires_at",
+        )
+        try:
+            with self._session_write_transaction() as connection:
+                locator = connection.execute(
+                    select(sessions_table.c.user_id).where(
+                        sessions_table.c.session_id == session_id
+                    )
+                ).scalar_one_or_none()
+                if locator is None:
+                    return None
+                user_row = connection.execute(
+                    select(users_table)
+                    .where(users_table.c.user_id == locator)
+                    .with_for_update()
+                ).mappings().first()
+                if user_row is None:
+                    return None
+                user = _user_from_row(user_row)
+                row = connection.execute(
+                    select(sessions_table)
+                    .where(
+                        (sessions_table.c.session_id == session_id)
+                        & (sessions_table.c.user_id == locator)
+                    )
+                    .with_for_update()
+                ).mappings().first()
+                if row is None:
+                    return None
+                session = _session_from_row(row)
+                if (
+                    session.token_hash != expected_token_hash
+                    or session.revoked_at is not None
+                    or session.expires_at <= now
+                    or absolute_expires_at <= now
+                    or session.created_at >= absolute_expires_at
+                    or session.expires_at > absolute_expires_at
+                    or session.last_seen_at
+                    + timedelta(seconds=idle_timeout_seconds)
+                    <= now
+                ):
+                    return None
+                if not user.enabled or user.auth_version != session.auth_version:
+                    return None
+
+                next_expires_at = min(
+                    now + timedelta(seconds=extension_seconds),
+                    absolute_expires_at,
+                )
+                if next_expires_at <= now:
+                    return None
+                result = connection.execute(
+                    update(sessions_table)
+                    .where(
+                        (sessions_table.c.session_id == session_id)
+                        & (
+                            sessions_table.c.token_hash
+                            == expected_token_hash
+                        )
+                        & sessions_table.c.revoked_at.is_(None)
+                    )
+                    .values(
+                        token_hash=next_token_hash,
+                        expires_at=_dt_string(next_expires_at),
+                        last_seen_at=_dt_string(now),
+                    )
+                )
+                if result.rowcount != 1:
+                    return None
+                rotated = session.model_copy(
+                    update={
+                        "token_hash": next_token_hash,
+                        "expires_at": next_expires_at,
+                        "last_seen_at": now,
+                    }
+                )
+                if audit is not None:
+                    self._append_audit_event(
+                        connection,
+                        replace(
+                            audit,
+                            details={
+                                **(audit.details or {}),
+                                "expires_at": _dt_string(next_expires_at),
+                                "absolute_expires_at": _dt_string(
+                                    absolute_expires_at
+                                ),
+                            },
+                        ),
+                    )
+                return user, rotated
+        except SQLAlchemyError as exc:
+            raise AuthStoreError("identity session rotation failed") from exc
 
     def revoke_session(
         self,
@@ -377,6 +525,67 @@ class AuthStore:
         except SQLAlchemyError as exc:
             raise AuthStoreError("identity session revocation failed") from exc
         return revoked
+
+    def invalidate_user_sessions(
+        self,
+        user_id: str,
+        *,
+        now: datetime,
+        audit: AuditWrite | None = None,
+    ) -> tuple[UserRecord, int]:
+        try:
+            with self._identity_change_transaction() as connection:
+                row = connection.execute(
+                    select(users_table)
+                    .where(users_table.c.user_id == user_id)
+                    .with_for_update()
+                ).mappings().first()
+                if row is None:
+                    raise UserNotFound(f"user not found: {user_id}")
+                current = _user_from_row(row)
+                next_auth_version = current.auth_version + 1
+                connection.execute(
+                    update(users_table)
+                    .where(users_table.c.user_id == user_id)
+                    .values(
+                        auth_version=next_auth_version,
+                        updated_at=_dt_string(now),
+                    )
+                )
+                result = connection.execute(
+                    update(sessions_table)
+                    .where(
+                        (sessions_table.c.user_id == user_id)
+                        & sessions_table.c.revoked_at.is_(None)
+                    )
+                    .values(revoked_at=_dt_string(now))
+                )
+                revoked_count = max(0, int(result.rowcount or 0))
+                updated_row = connection.execute(
+                    select(users_table).where(users_table.c.user_id == user_id)
+                ).mappings().one()
+                updated = _user_from_row(updated_row)
+                if audit is not None:
+                    self._append_audit_event(
+                        connection,
+                        replace(
+                            audit,
+                            details={
+                                **(audit.details or {}),
+                                "revoked_sessions": revoked_count,
+                                "roles": list(updated.roles),
+                                "enabled": updated.enabled,
+                                "auth_version": updated.auth_version,
+                            },
+                        ),
+                    )
+                return updated, revoked_count
+        except UserNotFound:
+            raise
+        except SQLAlchemyError as exc:
+            raise AuthStoreError(
+                "identity session invalidation failed"
+            ) from exc
 
     def append_audit(
         self,
@@ -499,6 +708,24 @@ class AuthStore:
                 else:
                     raise AuthStoreError(
                         f"identity transactions do not support dialect: {dialect}"
+                    )
+                yield connection
+                connection.commit()
+            except BaseException:
+                connection.rollback()
+                raise
+
+    @contextmanager
+    def _session_write_transaction(self) -> Iterator[Connection]:
+        with self._write_lock, self.engine.connect() as connection:
+            try:
+                if connection.dialect.name == "sqlite":
+                    connection.exec_driver_sql("BEGIN IMMEDIATE")
+                elif connection.dialect.name == "postgresql":
+                    connection.begin()
+                else:
+                    raise AuthStoreError(
+                        "session transactions do not support this database"
                     )
                 yield connection
                 connection.commit()
@@ -666,6 +893,12 @@ def _dt_string(value: datetime) -> str:
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
     return value.astimezone(timezone.utc).isoformat()
+
+
+def _require_aware_utc(value: datetime, *, name: str) -> datetime:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{name} must include a timezone")
+    return value.astimezone(timezone.utc)
 
 
 def _parse_dt(value: str) -> datetime:

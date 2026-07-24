@@ -389,7 +389,7 @@ class StudentResourceOwnershipApiTests(unittest.TestCase):
 
     def _login(self, username: str, password: str) -> str:
         response = self.client.post(
-            "/api/v1/auth/login",
+            "/api/v1/auth/token",
             json={"username": username, "password": password},
         )
         self.assertEqual(response.status_code, 200, response.text)

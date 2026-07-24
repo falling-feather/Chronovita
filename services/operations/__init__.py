@@ -13,9 +13,11 @@ from .health import (
 from .rate_limit import (
     ConcurrentCallLimiter,
     LOGIN_PATH,
+    LOGIN_PATHS,
     LoginAttemptLimiter,
     LoginRateLimitMiddleware,
     RateLimitDecision,
+    TOKEN_PATH,
     TokenBucketLimiter,
 )
 from .telemetry import (
@@ -31,6 +33,7 @@ __all__ = [
     "ConcurrentCallLimiter",
     "DatabaseReadiness",
     "LOGIN_PATH",
+    "LOGIN_PATHS",
     "LoginAttemptLimiter",
     "LoginRateLimitMiddleware",
     "RateLimitDecision",
@@ -39,6 +42,8 @@ __all__ = [
     "RuntimeConfigurationIssue",
     "RuntimeReadinessError",
     "RequestTelemetryMiddleware",
+    "TOKEN_PATH",
+    "TokenBucketLimiter",
     "configure_runtime_logging",
     "current_request_id",
     "new_request_id",
@@ -46,6 +51,5 @@ __all__ = [
     "probe_database_connectivity",
     "probe_database_readiness",
     "request_id_for_state",
-    "TokenBucketLimiter",
     "validate_runtime_configuration",
 ]

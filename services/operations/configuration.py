@@ -33,6 +33,20 @@ def validate_runtime_configuration(config: Any) -> None:
     bootstrap_username = config.auth_bootstrap_username.strip()
     bootstrap_password = _secret_value(config.auth_bootstrap_password).strip()
     trusted_hosts_valid = _validate_exact_trusted_hosts(config, issues)
+    if config.auth_session_idle_timeout_seconds > config.auth_session_ttl_seconds:
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.session_idle_timeout_exceeds_ttl",
+                field="auth_session_idle_timeout_seconds",
+            )
+        )
+    if config.auth_session_ttl_seconds > config.auth_session_absolute_ttl_seconds:
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.session_ttl_exceeds_absolute_lifetime",
+                field="auth_session_absolute_ttl_seconds",
+            )
+        )
 
     if bool(bootstrap_username) != bool(bootstrap_password):
         issues.append(

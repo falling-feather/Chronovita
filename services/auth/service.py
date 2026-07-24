@@ -15,6 +15,7 @@ from .models import (
     IssuedSession,
     Principal,
     SessionRecord,
+    SessionTransport,
     UserRecord,
     UserRole,
     UserView,
@@ -32,6 +33,10 @@ from .store import (
 
 AuthMode = Literal["legacy-local", "accounts"]
 _USERNAME = re.compile(r"^[a-z0-9][a-z0-9._-]{2,63}$")
+_SESSION_TOKEN_PREFIXES: dict[SessionTransport, str] = {
+    "cookie": "cvs_cookie_",
+    "bearer": "cvs_bearer_",
+}
 
 
 class AuthError(RuntimeError):
@@ -40,6 +45,10 @@ class AuthError(RuntimeError):
 
 class InvalidCredentials(AuthError):
     code = "invalid_credentials"
+
+
+class SessionUnavailable(AuthError):
+    code = "session_expired"
 
 
 class AccountsModeRequired(AuthError):
@@ -58,9 +67,48 @@ class LastAdminRequired(AuthError):
 class AuthServiceConfig:
     mode: AuthMode
     session_ttl_seconds: int
+    session_idle_timeout_seconds: int | None = None
+    session_absolute_ttl_seconds: int | None = None
     bootstrap_username: str = ""
     bootstrap_password: str = ""
     bootstrap_display_name: str = "Chronovita Admin"
+
+    def __post_init__(self) -> None:
+        idle_timeout = self.resolved_idle_timeout_seconds
+        absolute_ttl = self.resolved_absolute_ttl_seconds
+        if (
+            any(
+                not isinstance(value, int)
+                or isinstance(value, bool)
+                or value < 1
+                for value in (
+                    idle_timeout,
+                    self.session_ttl_seconds,
+                    absolute_ttl,
+                )
+            )
+            or idle_timeout > self.session_ttl_seconds
+            or self.session_ttl_seconds > absolute_ttl
+        ):
+            raise ValueError(
+                "session lifetime must satisfy idle <= ttl <= absolute"
+            )
+
+    @property
+    def resolved_idle_timeout_seconds(self) -> int:
+        return (
+            self.session_idle_timeout_seconds
+            if self.session_idle_timeout_seconds is not None
+            else self.session_ttl_seconds
+        )
+
+    @property
+    def resolved_absolute_ttl_seconds(self) -> int:
+        return (
+            self.session_absolute_ttl_seconds
+            if self.session_absolute_ttl_seconds is not None
+            else self.session_ttl_seconds
+        )
 
 
 class AuthService:
@@ -77,6 +125,7 @@ class AuthService:
         *,
         request_id: str,
         client_fingerprint: str = "unknown",
+        transport: SessionTransport = "bearer",
     ) -> IssuedSession:
         self._require_accounts_mode()
         normalized = normalize_username(username)
@@ -94,19 +143,31 @@ class AuthService:
                 resource_id=_username_fingerprint(normalized),
                 outcome="denied",
                 request_id=request_id,
-                details={"client": client_fingerprint},
+                details={
+                    "client": client_fingerprint,
+                    "transport": transport,
+                },
             )
             raise InvalidCredentials("username or password is invalid")
 
         now = _utc_now()
-        raw_token = secrets.token_urlsafe(32)
+        absolute_expires_at = now + timedelta(
+            seconds=self.config.resolved_absolute_ttl_seconds
+        )
+        raw_token = _new_session_token(
+            transport,
+            absolute_expires_at=absolute_expires_at,
+        )
         session = SessionRecord(
             session_id=f"ses_{uuid4().hex}",
             token_hash=token_digest(raw_token),
             user_id=user.user_id,
             auth_version=user.auth_version,
             created_at=now,
-            expires_at=now + timedelta(seconds=self.config.session_ttl_seconds),
+            expires_at=min(
+                now + timedelta(seconds=self.config.session_ttl_seconds),
+                absolute_expires_at,
+            ),
             last_seen_at=now,
         )
         principal = _principal(user, session.session_id)
@@ -122,19 +183,100 @@ class AuthService:
                 resource_id=user.user_id,
                 outcome="succeeded",
                 request_id=request_id,
-                details={"client": client_fingerprint},
+                details={
+                    "client": client_fingerprint,
+                    "transport": transport,
+                    "absolute_expires_at": (
+                        absolute_expires_at.isoformat()
+                    ),
+                },
             ),
         )
-        return IssuedSession(token=raw_token, record=session, principal=principal)
+        return IssuedSession(
+            token=raw_token,
+            transport=transport,
+            absolute_expires_at=absolute_expires_at,
+            record=session,
+            principal=principal,
+        )
 
-    def authenticate(self, raw_token: str) -> Principal | None:
-        if self.config.mode != "accounts" or not raw_token:
+    def authenticate(
+        self,
+        raw_token: str,
+        *,
+        transport: SessionTransport = "bearer",
+    ) -> Principal | None:
+        absolute_expires_at = session_token_absolute_expires_at(raw_token)
+        if (
+            self.config.mode != "accounts"
+            or not raw_token
+            or session_token_transport(raw_token) != transport
+            or absolute_expires_at is None
+        ):
             return None
-        found = self.store.authenticate(token_digest(raw_token), now=_utc_now())
+        found = self.store.authenticate(
+            token_digest(raw_token),
+            now=_utc_now(),
+            idle_timeout_seconds=self.config.resolved_idle_timeout_seconds,
+            absolute_expires_at=absolute_expires_at,
+        )
         if found is None:
             return None
         user, session = found
         return _principal(user, session.session_id)
+
+    def refresh(
+        self,
+        raw_token: str,
+        principal: Principal,
+        *,
+        request_id: str,
+        transport: SessionTransport,
+    ) -> IssuedSession:
+        self._require_accounts_mode()
+        absolute_expires_at = session_token_absolute_expires_at(raw_token)
+        if (
+            principal.session_id is None
+            or not raw_token
+            or session_token_transport(raw_token) != transport
+            or absolute_expires_at is None
+        ):
+            raise SessionUnavailable("session is invalid or expired")
+        now = _utc_now()
+        next_token = _new_session_token(
+            transport,
+            absolute_expires_at=absolute_expires_at,
+        )
+        rotated = self.store.rotate_session(
+            principal.session_id,
+            expected_token_hash=token_digest(raw_token),
+            next_token_hash=token_digest(next_token),
+            now=now,
+            idle_timeout_seconds=self.config.resolved_idle_timeout_seconds,
+            extension_seconds=self.config.session_ttl_seconds,
+            absolute_expires_at=absolute_expires_at,
+            audit=AuditWrite(
+                occurred_at=now,
+                actor_user_id=principal.user_id,
+                actor_session_id=principal.session_id,
+                actor_roles=principal.roles,
+                action="auth.session.refresh",
+                resource_type="session",
+                resource_id=principal.session_id,
+                outcome="succeeded",
+                request_id=request_id,
+            ),
+        )
+        if rotated is None:
+            raise SessionUnavailable("session is invalid or expired")
+        user, session = rotated
+        return IssuedSession(
+            token=next_token,
+            transport=transport,
+            absolute_expires_at=absolute_expires_at,
+            record=session,
+            principal=_principal(user, session.session_id),
+        )
 
     def logout(self, principal: Principal, *, request_id: str) -> None:
         if principal.session_id is None:
@@ -155,6 +297,27 @@ class AuthService:
                 request_id=request_id,
             ),
         )
+
+    def revoke_user_sessions(
+        self,
+        user_id: str,
+        *,
+        actor: Principal,
+        request_id: str,
+    ) -> tuple[UserView, int]:
+        self._require_accounts_mode()
+        updated, revoked_count = self.store.invalidate_user_sessions(
+            user_id,
+            now=_utc_now(),
+            audit=self._admin_change_audit(
+                actor=actor,
+                action="auth.user.sessions_revoke",
+                resource_id=user_id,
+                request_id=request_id,
+                details={},
+            ),
+        )
+        return UserView.from_record(updated), revoked_count
 
     def create_user(
         self,
@@ -404,6 +567,58 @@ def normalize_display_name(display_name: str) -> str:
 
 def token_digest(raw_token: str) -> str:
     return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+
+
+def session_token_transport(raw_token: str) -> SessionTransport | None:
+    if not 32 <= len(raw_token) <= 256:
+        return None
+    for transport, prefix in _SESSION_TOKEN_PREFIXES.items():
+        if raw_token.startswith(prefix):
+            return transport
+    return None
+
+
+def session_token_absolute_expires_at(
+    raw_token: str,
+) -> datetime | None:
+    transport = session_token_transport(raw_token)
+    if transport is None:
+        return None
+    encoded = raw_token[len(_SESSION_TOKEN_PREFIXES[transport]):]
+    micros_text, separator, secret = encoded.partition("_")
+    if (
+        separator != "_"
+        or not 1 <= len(micros_text) <= 20
+        or not micros_text.isascii()
+        or not micros_text.isdecimal()
+        or len(secret) < 32
+    ):
+        return None
+    try:
+        return datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(
+            microseconds=int(micros_text)
+        )
+    except (OverflowError, ValueError):
+        return None
+
+
+def _new_session_token(
+    transport: SessionTransport,
+    *,
+    absolute_expires_at: datetime,
+) -> str:
+    if (
+        absolute_expires_at.tzinfo is None
+        or absolute_expires_at.utcoffset() is None
+    ):
+        raise ValueError("absolute_expires_at must include a timezone")
+    utc_deadline = absolute_expires_at.astimezone(timezone.utc)
+    epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    epoch_micros = int((utc_deadline - epoch) // timedelta(microseconds=1))
+    return (
+        f"{_SESSION_TOKEN_PREFIXES[transport]}{epoch_micros}_"
+        f"{secrets.token_urlsafe(32)}"
+    )
 
 
 def _principal(user: UserRecord, session_id: str) -> Principal:

@@ -20,6 +20,7 @@ from services.operations import (
     LoginAttemptLimiter,
     LoginRateLimitMiddleware,
     RequestTelemetryMiddleware,
+    TOKEN_PATH,
 )
 
 
@@ -55,6 +56,7 @@ class RuntimeSecurityMiddlewareTests(unittest.TestCase):
             max_attempts=2,
             window_seconds=60,
             max_clients=8,
+            trusted_cookie_origins=("https://teacher.example.test",),
         )
         app.add_middleware(
             TrustedHostMiddleware,
@@ -77,6 +79,12 @@ class RuntimeSecurityMiddlewareTests(unittest.TestCase):
             self.handled_payloads.append(payload)
             return {"accepted": True}
 
+        @app.post(TOKEN_PATH)
+        async def issue_token(request: Request):
+            payload = await request.json()
+            self.handled_payloads.append(payload)
+            return {"accepted": True}
+
         @app.post("/api/v1/other")
         async def other():
             return {"accepted": True}
@@ -84,7 +92,7 @@ class RuntimeSecurityMiddlewareTests(unittest.TestCase):
         self.client = TestClient(app)
         self.addCleanup(self.client.close)
 
-    def test_login_limit_does_not_read_credentials_and_returns_correlated_429(self):
+    def test_login_routes_share_limit_without_reading_credentials(self):
         headers = {
             "Origin": "https://teacher.example.test",
             "X-Request-ID": "login-limit-test",
@@ -99,11 +107,11 @@ class RuntimeSecurityMiddlewareTests(unittest.TestCase):
             200,
         )
         self.assertEqual(
-            self.client.post(LOGIN_PATH, json=payload, headers=headers).status_code,
+            self.client.post(TOKEN_PATH, json=payload, headers=headers).status_code,
             200,
         )
         with self.assertLogs("chronovita.access", level="INFO") as captured:
-            limited = self.client.post(LOGIN_PATH, json=payload, headers=headers)
+            limited = self.client.post(TOKEN_PATH, json=payload, headers=headers)
 
         self.assertEqual(limited.status_code, 429, limited.text)
         self.assertEqual(
@@ -124,13 +132,58 @@ class RuntimeSecurityMiddlewareTests(unittest.TestCase):
         self.assertEqual(len(self.handled_payloads), 2)
 
         event = json.loads(captured.records[-1].message)
-        self.assertEqual(event["route"], LOGIN_PATH)
+        self.assertEqual(event["route"], TOKEN_PATH)
         self.assertEqual(event["status_code"], 429)
         self.assertNotIn(payload["password"], captured.output[0])
 
     def test_non_login_route_is_not_limited(self):
         responses = [self.client.post("/api/v1/other") for _ in range(4)]
         self.assertEqual([response.status_code for response in responses], [200] * 4)
+
+    def test_invalid_cross_site_requests_do_not_consume_login_limit(self):
+        payload = '{"username":"teacher.one","password":"not-read"}'
+        for _ in range(4):
+            rejected_media = self.client.post(
+                TOKEN_PATH,
+                content=payload,
+                headers={
+                    "Content-Type": "text/plain",
+                    "Origin": "https://attacker.example.test",
+                },
+            )
+            self.assertEqual(
+                rejected_media.status_code,
+                415,
+                rejected_media.text,
+            )
+            self.assertEqual(
+                rejected_media.json()["detail"]["code"],
+                "unsupported_media_type",
+            )
+
+        rejected_origin = self.client.post(
+            LOGIN_PATH,
+            json={"username": "teacher.one", "password": "not-read"},
+            headers={"Origin": "https://attacker.example.test"},
+        )
+        self.assertEqual(rejected_origin.status_code, 403, rejected_origin.text)
+        self.assertEqual(
+            rejected_origin.json()["detail"]["code"],
+            "csrf_origin_rejected",
+        )
+
+        for _ in range(2):
+            accepted = self.client.post(
+                TOKEN_PATH,
+                json={"username": "teacher.one", "password": "valid-attempt"},
+            )
+            self.assertEqual(accepted.status_code, 200, accepted.text)
+        limited = self.client.post(
+            TOKEN_PATH,
+            json={"username": "teacher.one", "password": "third-attempt"},
+        )
+        self.assertEqual(limited.status_code, 429, limited.text)
+        self.assertEqual(len(self.handled_payloads), 2)
 
     def test_untrusted_host_is_rejected_before_login_handler(self):
         rejected = self.client.post(
