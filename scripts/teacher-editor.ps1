@@ -31,6 +31,47 @@ function Test-Command {
   return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
+function Test-SupportedPython {
+  param(
+    [string] $FilePath,
+    [string[]] $PrefixArguments = @()
+  )
+
+  & $FilePath @PrefixArguments -c `
+    "import sys; raise SystemExit(0 if (3, 11) <= sys.version_info[:2] < (3, 14) else 1)" `
+    *> $null
+  return $LASTEXITCODE -eq 0
+}
+
+function Get-SupportedPython {
+  $pythonCommand = Get-Command "python.exe" -ErrorAction SilentlyContinue
+  if (
+    $pythonCommand `
+    -and (Test-SupportedPython $pythonCommand.Source)
+  ) {
+    return [PSCustomObject] @{
+      FilePath = $pythonCommand.Source
+      PrefixArguments = @()
+      Label = "python"
+    }
+  }
+
+  $pyCommand = Get-Command "py.exe" -ErrorAction SilentlyContinue
+  if ($pyCommand) {
+    foreach ($selector in @("-3.13", "-3.12", "-3.11")) {
+      if (Test-SupportedPython $pyCommand.Source @($selector)) {
+        return [PSCustomObject] @{
+          FilePath = $pyCommand.Source
+          PrefixArguments = @($selector)
+          Label = "py $selector"
+        }
+      }
+    }
+  }
+
+  throw "Python 3.11, 3.12, or 3.13 was not found. Install a supported Python version and run this launcher again."
+}
+
 function Repair-DuplicateProcessEnvironment {
   $entries = @([System.Environment]::GetEnvironmentVariables().GetEnumerator())
   $duplicates = $entries |
@@ -285,19 +326,24 @@ function Stop-StartedProcessTree {
 
 function Ensure-PythonEnvironment {
   if (Test-Path $PythonExe) {
+    if (-not (Test-SupportedPython $PythonExe)) {
+      throw "The existing .venv does not use Python 3.11-3.13. Move or remove .venv, then run this launcher again."
+    }
     Write-Host "Python virtualenv found: $PythonExe"
     return
   }
 
   Write-Step "Preparing Python virtualenv"
 
-  if (Test-Command "py") {
-    Invoke-Checked "Creating .venv with py -3" "py" @("-3", "-m", "venv", (Quote-ProcessArgument $VenvDir))
-  } elseif (Test-Command "python") {
-    Invoke-Checked "Creating .venv with python" "python" @("-m", "venv", (Quote-ProcessArgument $VenvDir))
-  } else {
-    throw "Python was not found. Please install Python 3 and run this launcher again."
-  }
+  $pythonRuntime = Get-SupportedPython
+  $venvArguments = @($pythonRuntime.PrefixArguments) + @(
+    "-m",
+    "venv",
+    (Quote-ProcessArgument $VenvDir)
+  )
+  Invoke-Checked "Creating .venv with $($pythonRuntime.Label)" `
+    $pythonRuntime.FilePath `
+    $venvArguments
 
   if (-not (Test-Path $PythonExe)) {
     throw "Virtualenv was created, but $PythonExe was not found."
@@ -322,7 +368,14 @@ function Ensure-ApiDependencies {
   }
 
   Write-Step "Installing API dependencies"
-  Invoke-Checked "Installing apps\api requirements" $PythonExe @("-m", "pip", "install", "-r", (Quote-ProcessArgument $Requirements))
+  Invoke-Checked "Installing apps\api requirements" $PythonExe @(
+    "-m",
+    "pip",
+    "install",
+    "--disable-pip-version-check",
+    "-r",
+    (Quote-ProcessArgument $Requirements)
+  )
   Set-Content -LiteralPath $ApiDepsStamp -Value $requirementsHash -Encoding ASCII
 }
 
@@ -342,7 +395,11 @@ function Ensure-WebDependencies {
   }
 
   Write-Step "Installing web dependencies"
-  Invoke-NpmChecked "Running npm install in apps\web" @("install")
+  Invoke-NpmChecked "Running npm ci in apps\web" @(
+    "ci",
+    "--no-audit",
+    "--no-fund"
+  )
 }
 
 function Test-WebBuild {
