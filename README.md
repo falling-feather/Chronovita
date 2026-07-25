@@ -71,7 +71,7 @@
 
 Windows 教师从 [v0.9.38 Release](https://github.com/falling-feather/Chronovita/releases/tag/v0.9.38) 下载 `Chronovita-Teacher-Editor-v0.9.38-windows.zip` 并完整解压后，双击根目录的 `点我一键启动（部署）.cmd`。首次运行会自动创建本地环境、按完整哈希锁安装后端依赖、按 package lock 安装前端依赖、完成生产构建，并以生产预览服务打开 `http://127.0.0.1:5173/admin/content`；依赖安装完成后，本地编辑与预览不依赖 Google Fonts 或 GitHub。发行包不携带数据库、草稿、缓存、日志或 GitHub 凭据，ZIP 的 SHA-256 为 `e0879b2dd74d4f672feb39d6416b8bf16af2e233caa7cf2afbc02777b329a266`。当前教师包要求电脑预先安装 Python 3.11-3.13 和 Node.js 20.19+ 或 22.12+ LTS。
 
-课程历史投稿凭据由项目管理员单独发放，教师运行 `scripts/configure-content-history.cmd` 后以 Windows DPAPI 加密保存在本机；普通编辑、保存和 ZIP 导出不要求配置凭据。停止服务使用 `scripts/stop-teacher-editor.cmd`。完整说明见 [课程内容历史库运维指南](docs/07-课程内容历史库运维指南.md)。
+课程历史投稿凭据由项目管理员单独发放，教师运行 `scripts/configure-content-history.cmd` 后以 Windows DPAPI 加密保存在本机；普通编辑、保存和 ZIP 导出不要求配置凭据。当前 `class` 源码可双击根目录的 `点我一键关闭.cmd` 停止服务；原始 V0.9.38 教师包只需把这一个文件放入解压根目录即可获得同样入口，不必替换草稿、依赖或配置。未安装热更新时仍可使用 `scripts/stop-teacher-editor.cmd`。完整说明见 [课程内容历史库运维指南](docs/07-课程内容历史库运维指南.md)。
 
 ### 先决条件
 - Node.js 20.19+ 或 22.12+ LTS

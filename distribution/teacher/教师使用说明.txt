@@ -7,6 +7,7 @@ Chronovita 教师编辑器 V0.9.x 使用说明
 3. 双击根目录的“点我一键启动（部署）.cmd”。
 4. 首次启动会自动建立本地环境，按哈希锁安装后端依赖并按 package lock 安装前端依赖；所需时间取决于网络，之后会复用已验证环境。
 5. 浏览器会自动打开 http://127.0.0.1:5173/admin/content 。
+6. 编辑完成后，双击根目录的“点我一键关闭.cmd”停止本地 API 和网页服务。
 
 本包只在本机回环地址启动，不会把编辑器直接开放到局域网或互联网。
 依赖安装完成后，本地编辑和课程预览不依赖 Google Fonts 或 GitHub；提交课程历史库、打开外部视频等联网功能仍需要网络。
@@ -32,14 +33,14 @@ token 使用 Windows DPAPI 加密，只能由当前 Windows 账号在本机解�
 
 教师不需要安装 Git 或 GitHub CLI，也不需要填写仓库、分支和提交路径。
 
-若编辑器已经运行，先双击 scripts/stop-teacher-editor.cmd 停止本地服务，再重新双击根目录启动入口，使新凭据生效。
+若编辑器已经运行，先双击根目录的“点我一键关闭.cmd”停止本地服务，再重新双击根目录启动入口，使新凭据生效。
 
 四、常见问题
 
 - 提示找不到 Python：安装 Python 3.11-3.13，并在安装器中勾选加入 PATH。
 - 提示找不到 npm 或 Node 版本过低：安装 Node.js 20.19+ 或 22.12+ LTS 后重新运行。
 - 页面没有自动打开：手动访问 http://127.0.0.1:5173/admin/content。
-- 提示已有其他 Chronovita 版本运行：先双击 scripts/stop-teacher-editor.cmd，再启动当前版本。
+- 提示已有其他 Chronovita 版本运行：先双击根目录的“点我一键关闭.cmd”，再启动当前版本。
 - 投稿功能提示未启用：先运行 scripts/configure-content-history.cmd，或联系项目管理员检查 token 权限。
 - 启动失败：将 .teacher-editor-logs 文件夹中的日志发给开发组；日志不应包含 GitHub token。
 
@@ -50,3 +51,13 @@ GitHub Release 同时提供 .sha256 文件。可在 PowerShell 中运行：
 Get-FileHash -Algorithm SHA256 .\Chronovita-Teacher-Editor-v0.9.x-windows.zip
 
 结果应与同名 .sha256 文件中的 64 位校验值一致。
+
+六、V0.9.38 关闭入口热更新
+
+原始 V0.9.38 包可只补入“点我一键关闭.cmd”：
+
+1. 把该文件放到“点我一键启动（部署）.cmd”所在的解压根目录。
+2. 不要放入 scripts 文件夹，也不要覆盖 data、content、.chronovita-local 或 .venv。
+3. 双击后，它会调用旧包已有的 scripts/stop-teacher-editor.ps1；若该文件缺失，则兼容调用 scripts/stop-teacher-editor.cmd。
+
+此热更新只停止经过身份核对的 Chronovita 本地服务，不删除草稿、课程内容或本机加密凭据。
