@@ -1,0 +1,426 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/archive/v1/git-publication-record.schema.json",
+  "$comment": "Publication checkpoints preserve partial Git success for reconciliation. Records contain stable identifiers and error codes, never provider response bodies or credentials.",
+  "$defs": {
+    "CourseArchivePublishRequestV1": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "course-archive-publish-request/v1",
+          "default": "course-archive-publish-request/v1",
+          "enum": [
+            "course-archive-publish-request/v1"
+          ],
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "binding_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Binding Id",
+          "type": "string"
+        },
+        "course_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Course Id",
+          "type": "string"
+        },
+        "release_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Release Id",
+          "type": "string"
+        },
+        "expected_release_checksum": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Expected Release Checksum",
+          "type": "string"
+        },
+        "archive_id": {
+          "title": "Archive Id",
+          "type": "string"
+        },
+        "expected_archive_checksum": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Expected Archive Checksum",
+          "type": "string"
+        },
+        "mode": {
+          "default": "pull_request",
+          "enum": [
+            "pull_request",
+            "direct_commit"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "client_request_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Client Request Id",
+          "type": "string"
+        },
+        "change_summary": {
+          "default": "",
+          "maxLength": 2000,
+          "title": "Change Summary",
+          "type": "string"
+        },
+        "direct_commit_confirmed": {
+          "default": false,
+          "title": "Direct Commit Confirmed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "binding_id",
+        "course_id",
+        "release_id",
+        "expected_release_checksum",
+        "archive_id",
+        "expected_archive_checksum",
+        "client_request_id"
+      ],
+      "title": "CourseArchivePublishRequestV1",
+      "type": "object"
+    },
+    "GitPublicationIntentV1": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "git-publication-intent/v1",
+          "default": "git-publication-intent/v1",
+          "enum": [
+            "git-publication-intent/v1"
+          ],
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "publication_id": {
+          "title": "Publication Id",
+          "type": "string"
+        },
+        "operation_key": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Operation Key",
+          "type": "string"
+        },
+        "binding": {
+          "$ref": "#/$defs/GitRepositoryBindingV1"
+        },
+        "request": {
+          "$ref": "#/$defs/CourseArchivePublishRequestV1"
+        },
+        "requested_at": {
+          "format": "date-time",
+          "title": "Requested At",
+          "type": "string"
+        },
+        "requested_by": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Requested By",
+          "type": "string"
+        },
+        "checksum": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Checksum",
+          "type": "string"
+        }
+      },
+      "required": [
+        "publication_id",
+        "operation_key",
+        "binding",
+        "request",
+        "requested_at",
+        "requested_by",
+        "checksum"
+      ],
+      "title": "GitPublicationIntentV1",
+      "type": "object"
+    },
+    "GitRepositoryBindingV1": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "git-repository-binding/v1",
+          "default": "git-repository-binding/v1",
+          "enum": [
+            "git-repository-binding/v1"
+          ],
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "binding_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Binding Id",
+          "type": "string"
+        },
+        "provider": {
+          "const": "github",
+          "default": "github",
+          "enum": [
+            "github"
+          ],
+          "title": "Provider",
+          "type": "string"
+        },
+        "repository_id": {
+          "minimum": 1,
+          "title": "Repository Id",
+          "type": "integer"
+        },
+        "owner": {
+          "title": "Owner",
+          "type": "string"
+        },
+        "repository": {
+          "title": "Repository",
+          "type": "string"
+        },
+        "visibility": {
+          "const": "private",
+          "default": "private",
+          "enum": [
+            "private"
+          ],
+          "title": "Visibility",
+          "type": "string"
+        },
+        "base_branch": {
+          "default": "main",
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Base Branch",
+          "type": "string"
+        },
+        "root_prefix": {
+          "default": "courses",
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Root Prefix",
+          "type": "string"
+        },
+        "credential_kind": {
+          "default": "github_app",
+          "enum": [
+            "github_app",
+            "fine_grained_token"
+          ],
+          "title": "Credential Kind",
+          "type": "string"
+        },
+        "installation_id": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Installation Id"
+        },
+        "allowed_modes": {
+          "default": [
+            "pull_request"
+          ],
+          "items": {
+            "enum": [
+              "pull_request",
+              "direct_commit"
+            ],
+            "type": "string"
+          },
+          "title": "Allowed Modes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "binding_id",
+        "repository_id",
+        "owner",
+        "repository"
+      ],
+      "title": "GitRepositoryBindingV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "git-publication-record/v1",
+      "default": "git-publication-record/v1",
+      "enum": [
+        "git-publication-record/v1"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "intent": {
+      "$ref": "#/$defs/GitPublicationIntentV1"
+    },
+    "status": {
+      "enum": [
+        "requested",
+        "preparing",
+        "pushing",
+        "commit_created",
+        "ref_updated",
+        "pr_open",
+        "succeeded",
+        "failed_retryable",
+        "failed_terminal"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "attempt": {
+      "minimum": 0,
+      "title": "Attempt",
+      "type": "integer"
+    },
+    "revision": {
+      "minimum": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "branch_ref": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Branch Ref",
+      "type": "string"
+    },
+    "base_sha": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Base Sha"
+    },
+    "tree_sha": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tree Sha"
+    },
+    "commit_sha": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Commit Sha"
+    },
+    "pull_request_number": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pull Request Number"
+    },
+    "pull_request_url": {
+      "anyOf": [
+        {
+          "maxLength": 512,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pull Request Url"
+    },
+    "last_error_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Last Error Code"
+    },
+    "last_error_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Last Error At"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Completed At"
+    },
+    "checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Checksum",
+      "type": "string"
+    }
+  },
+  "required": [
+    "intent",
+    "status",
+    "attempt",
+    "revision",
+    "branch_ref",
+    "updated_at",
+    "checksum"
+  ],
+  "title": "GitPublicationRecordV1",
+  "type": "object"
+}

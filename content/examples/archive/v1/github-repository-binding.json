@@ -1,0 +1,17 @@
+{
+  "schema_version": "git-repository-binding/v1",
+  "binding_id": "content-history-primary",
+  "provider": "github",
+  "repository_id": 123456789,
+  "owner": "chronovita-example",
+  "repository": "chronovita-course-content",
+  "visibility": "private",
+  "base_branch": "main",
+  "root_prefix": "courses",
+  "credential_kind": "github_app",
+  "installation_id": 12345678,
+  "allowed_modes": [
+    "pull_request",
+    "direct_commit"
+  ]
+}

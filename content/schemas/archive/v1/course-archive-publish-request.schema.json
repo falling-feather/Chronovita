@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/archive/v1/course-archive-publish-request.schema.json",
+  "$comment": "Clients select a server binding_id and immutable archive identity only. Pull request mode is the default; direct commit requires explicit confirmation.",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "course-archive-publish-request/v1",
+      "default": "course-archive-publish-request/v1",
+      "enum": [
+        "course-archive-publish-request/v1"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "binding_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Binding Id",
+      "type": "string"
+    },
+    "course_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Course Id",
+      "type": "string"
+    },
+    "release_id": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Release Id",
+      "type": "string"
+    },
+    "expected_release_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected Release Checksum",
+      "type": "string"
+    },
+    "archive_id": {
+      "title": "Archive Id",
+      "type": "string"
+    },
+    "expected_archive_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected Archive Checksum",
+      "type": "string"
+    },
+    "mode": {
+      "default": "pull_request",
+      "enum": [
+        "pull_request",
+        "direct_commit"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "client_request_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Client Request Id",
+      "type": "string"
+    },
+    "change_summary": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Change Summary",
+      "type": "string"
+    },
+    "direct_commit_confirmed": {
+      "default": false,
+      "title": "Direct Commit Confirmed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "binding_id",
+    "course_id",
+    "release_id",
+    "expected_release_checksum",
+    "archive_id",
+    "expected_archive_checksum",
+    "client_request_id"
+  ],
+  "title": "CourseArchivePublishRequestV1",
+  "type": "object"
+}

@@ -14,6 +14,7 @@ REQUIRED_DOCUMENTS = (
     Path("docs/06-内容编辑建设清单.md"),
     Path("docs/adr/ADR-0015-生产身份与数据边界.md"),
     Path("docs/adr/ADR-0016-数据库版本迁移与备份恢复.md"),
+    Path("docs/adr/ADR-0017-课程内容历史库与Git发布边界.md"),
 )
 VERSIONED_DOCUMENTS = (
     Path("docs/00-项目总纲.md"),

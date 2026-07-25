@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/archive/v1/git-repository-binding.schema.json",
+  "$comment": "Bindings are immutable server configuration. Credentials, private keys and browser-provided repository overrides are intentionally absent.",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "git-repository-binding/v1",
+      "default": "git-repository-binding/v1",
+      "enum": [
+        "git-repository-binding/v1"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "binding_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Binding Id",
+      "type": "string"
+    },
+    "provider": {
+      "const": "github",
+      "default": "github",
+      "enum": [
+        "github"
+      ],
+      "title": "Provider",
+      "type": "string"
+    },
+    "repository_id": {
+      "minimum": 1,
+      "title": "Repository Id",
+      "type": "integer"
+    },
+    "owner": {
+      "title": "Owner",
+      "type": "string"
+    },
+    "repository": {
+      "title": "Repository",
+      "type": "string"
+    },
+    "visibility": {
+      "const": "private",
+      "default": "private",
+      "enum": [
+        "private"
+      ],
+      "title": "Visibility",
+      "type": "string"
+    },
+    "base_branch": {
+      "default": "main",
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Base Branch",
+      "type": "string"
+    },
+    "root_prefix": {
+      "default": "courses",
+      "maxLength": 512,
+      "minLength": 1,
+      "title": "Root Prefix",
+      "type": "string"
+    },
+    "credential_kind": {
+      "default": "github_app",
+      "enum": [
+        "github_app",
+        "fine_grained_token"
+      ],
+      "title": "Credential Kind",
+      "type": "string"
+    },
+    "installation_id": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Installation Id"
+    },
+    "allowed_modes": {
+      "default": [
+        "pull_request"
+      ],
+      "items": {
+        "enum": [
+          "pull_request",
+          "direct_commit"
+        ],
+        "type": "string"
+      },
+      "title": "Allowed Modes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "binding_id",
+    "repository_id",
+    "owner",
+    "repository"
+  ],
+  "title": "GitRepositoryBindingV1",
+  "type": "object"
+}
