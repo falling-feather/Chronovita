@@ -45,27 +45,50 @@ jobs:
       - name: Validate launcher sources
         shell: powershell
         run: |
-          $tokens = $null
-          $parseErrors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile(
-            (Resolve-Path "scripts\teacher-editor.ps1"),
-            [ref] $tokens,
-            [ref] $parseErrors
-          ) | Out-Null
-          if ($parseErrors.Count -ne 0) {
-            $parseErrors | ForEach-Object { Write-Error $_.Message }
-            throw "PowerShell launcher parsing failed."
+          foreach ($scriptFile in @(
+            "scripts\teacher-editor.ps1",
+            "scripts\stop-teacher-editor.ps1"
+          )) {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $scriptFile),
+              [ref] $tokens,
+              [ref] $parseErrors
+            ) | Out-Null
+            if ($parseErrors.Count -ne 0) {
+              $parseErrors | ForEach-Object { Write-Error $_.Message }
+              throw "PowerShell launcher parsing failed: $scriptFile"
+            }
           }
 
-          $rootLaunchers = @(
+          $expectedRootCommands = @(
+            "点我一键启动（部署）.cmd",
+            "点我一键关闭.cmd"
+          )
+          $rootCommands = @(
             Get-ChildItem -LiteralPath "." -File -Filter "*.cmd"
           )
-          if ($rootLaunchers.Count -ne 1) {
-            throw "Expected exactly one teacher-facing CMD at the repository root."
+          $rootCommandNames = @($rootCommands | ForEach-Object { $_.Name })
+          $missingRootCommands = @(
+            $expectedRootCommands |
+              Where-Object { $_ -notin $rootCommandNames }
+          )
+          $unexpectedRootCommands = @(
+            $rootCommandNames |
+              Where-Object { $_ -notin $expectedRootCommands }
+          )
+          if (
+            $missingRootCommands.Count -ne 0 `
+            -or $unexpectedRootCommands.Count -ne 0
+          ) {
+            throw "Expected the named teacher-facing start and stop CMD files at the repository root."
           }
           $cmdFiles = @(
-            $rootLaunchers[0].FullName,
-            (Resolve-Path "scripts\teacher-editor.cmd").Path
+            (Resolve-Path "点我一键启动（部署）.cmd").Path,
+            (Resolve-Path "点我一键关闭.cmd").Path,
+            (Resolve-Path "scripts\teacher-editor.cmd").Path,
+            (Resolve-Path "scripts\stop-teacher-editor.cmd").Path
           )
           foreach ($cmdFile in $cmdFiles) {
             $nonAscii = [System.IO.File]::ReadAllBytes(
@@ -79,13 +102,7 @@ jobs:
       - name: Start through the teacher-facing launcher
         shell: powershell
         run: |
-          $rootLaunchers = @(
-            Get-ChildItem -LiteralPath "." -File -Filter "*.cmd"
-          )
-          if ($rootLaunchers.Count -ne 1) {
-            throw "Expected exactly one teacher-facing CMD at the repository root."
-          }
-          & $rootLaunchers[0].FullName -SkipBrowser
+          & (Resolve-Path "点我一键启动（部署）.cmd").Path -SkipBrowser
           if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
           }
@@ -158,6 +175,27 @@ jobs:
       - name: Check launcher does not modify tracked source
         shell: powershell
         run: git diff --exit-code
+
+      - name: Stop through the teacher-facing closer
+        shell: powershell
+        run: |
+          & (Resolve-Path "点我一键关闭.cmd").Path
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          Start-Sleep -Seconds 1
+          $remaining = @(
+            8000, 5173 |
+              ForEach-Object {
+                Get-NetTCPConnection `
+                  -State Listen `
+                  -LocalPort $_ `
+                  -ErrorAction SilentlyContinue
+              }
+          )
+          if ($remaining.Count -ne 0) {
+            throw "Teacher-facing closer left editor ports active."
+          }
 
       - name: Show launcher logs on failure
         if: failure()

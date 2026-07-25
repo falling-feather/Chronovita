@@ -12,6 +12,7 @@ from scripts.build_teacher_release import (
     CREDENTIAL_POLICY,
     PACKAGE_KIND,
     REQUIRED_PACKAGE_FILES,
+    ROOT_COMMAND_FILES,
     SCHEMA_VERSION,
     TeacherPackageError,
     _scan_secret,
@@ -42,7 +43,6 @@ def _create_minimal_source_repository(repository: Path) -> str:
         for path in REQUIRED_PACKAGE_FILES
         if path != PurePosixPath("教师使用说明.txt")
     }
-    source_paths.add(PurePosixPath("launch.cmd"))
     source_paths.add(PurePosixPath("services/version.py"))
     source_paths.add(PurePosixPath("distribution/teacher/教师使用说明.txt"))
     for path in source_paths:
@@ -125,6 +125,7 @@ class TeacherReleaseTests(unittest.TestCase):
     def test_cmd_launchers_reset_inherited_powershell_module_path(self):
         for relative_path in (
             Path("点我一键启动（部署）.cmd"),
+            Path("点我一键关闭.cmd"),
             Path("scripts/teacher-editor.cmd"),
         ):
             with self.subTest(path=relative_path):
@@ -173,6 +174,7 @@ class TeacherReleaseTests(unittest.TestCase):
                 PurePosixPath("scripts/stop-teacher-editor.ps1"),
                 paths,
             )
+            self.assertTrue(ROOT_COMMAND_FILES.issubset(paths))
             self.assertFalse(
                 any(
                     part.casefold()
@@ -189,6 +191,12 @@ class TeacherReleaseTests(unittest.TestCase):
                     for part in path.parts
                 )
             )
+
+    def test_root_stopper_delegates_without_duplicating_shutdown_logic(self):
+        source = (REPO_ROOT / "点我一键关闭.cmd").read_text("ascii")
+        self.assertIn("scripts\\stop-teacher-editor.ps1", source)
+        self.assertIn("scripts\\stop-teacher-editor.cmd", source)
+        self.assertNotIn("taskkill", source.casefold())
 
     def test_secret_scan_rejects_multiple_provider_and_database_credentials(self):
         samples = (

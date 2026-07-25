@@ -42,7 +42,14 @@ SOURCE_PREFIXES = (
 )
 INSTRUCTION_SOURCE = PurePosixPath("distribution/teacher/教师使用说明.txt")
 INSTRUCTION_DESTINATION = PurePosixPath("教师使用说明.txt")
+ROOT_COMMAND_FILES = frozenset(
+    {
+        PurePosixPath("点我一键启动（部署）.cmd"),
+        PurePosixPath("点我一键关闭.cmd"),
+    }
+)
 REQUIRED_PACKAGE_FILES = {
+    *ROOT_COMMAND_FILES,
     PurePosixPath("scripts/teacher-editor.cmd"),
     PurePosixPath("scripts/teacher-editor.ps1"),
     PurePosixPath("scripts/configure-content-history.cmd"),
@@ -241,14 +248,9 @@ def _is_release_source(path: PurePosixPath) -> bool:
     return any(_is_under(path, prefix) for prefix in SOURCE_PREFIXES)
 
 
-def _destination_path(
-    source_path: PurePosixPath,
-    root_launcher: PurePosixPath,
-) -> PurePosixPath:
+def _destination_path(source_path: PurePosixPath) -> PurePosixPath:
     if source_path == INSTRUCTION_SOURCE:
         return INSTRUCTION_DESTINATION
-    if source_path == root_launcher:
-        return PurePosixPath(root_launcher.name)
     return source_path
 
 
@@ -351,20 +353,32 @@ def collect_package_files(
     tracked_entries = _tracked_entries(source_root, commit)
     tracked = tuple(path for path, _mode in tracked_entries)
     modes = {path: mode for path, mode in tracked_entries}
-    root_launchers = tuple(
+    root_commands = frozenset(
         path
         for path in tracked
         if len(path.parts) == 1 and path.suffix.casefold() == ".cmd"
     )
-    if len(root_launchers) != 1:
+    if root_commands != ROOT_COMMAND_FILES:
+        missing = ROOT_COMMAND_FILES - root_commands
+        unexpected = root_commands - ROOT_COMMAND_FILES
+        details = []
+        if missing:
+            details.append(
+                "missing " + ", ".join(sorted(path.name for path in missing))
+            )
+        if unexpected:
+            details.append(
+                "unexpected "
+                + ", ".join(sorted(path.name for path in unexpected))
+            )
         raise TeacherPackageError(
-            "expected exactly one tracked teacher-facing CMD at repository root"
+            "tracked teacher-facing root CMD set is invalid: "
+            + "; ".join(details)
         )
-    root_launcher = root_launchers[0]
     source_paths = tuple(
         path
         for path in tracked
-        if path == root_launcher or _is_release_source(path)
+        if path in ROOT_COMMAND_FILES or _is_release_source(path)
     )
     if INSTRUCTION_SOURCE not in source_paths:
         raise TeacherPackageError("teacher package instructions are not tracked")
@@ -372,7 +386,7 @@ def collect_package_files(
     files: list[PackageFile] = []
     normalized_destinations: dict[str, PurePosixPath] = {}
     for source_path in source_paths:
-        destination = _destination_path(source_path, root_launcher)
+        destination = _destination_path(source_path)
         _validate_relative_path(destination)
         collision_key = unicodedata.normalize(
             "NFKC", destination.as_posix()
@@ -695,7 +709,7 @@ def verify_teacher_release(archive_path: Path) -> dict[str, object]:
         expected_names: set[str] = {manifest_name}
         normalized_names: dict[str, str] = {}
         record_paths: list[PurePosixPath] = []
-        top_level_cmds = 0
+        top_level_cmds: set[PurePosixPath] = set()
         total_size = 0
         for record in records:
             if not isinstance(record, dict) or set(record) != FILE_RECORD_KEYS:
@@ -718,7 +732,7 @@ def verify_teacher_release(archive_path: Path) -> dict[str, object]:
             _validate_relative_path(relative)
             record_paths.append(relative)
             if len(relative.parts) == 1 and relative.suffix.casefold() == ".cmd":
-                top_level_cmds += 1
+                top_level_cmds.add(relative)
             normalized = unicodedata.normalize(
                 "NFKC", relative.as_posix()
             ).casefold()
@@ -752,9 +766,9 @@ def verify_teacher_release(archive_path: Path) -> dict[str, object]:
                 "teacher package is missing required files: "
                 + ", ".join(sorted(path.as_posix() for path in missing))
             )
-        if top_level_cmds != 1:
+        if top_level_cmds != ROOT_COMMAND_FILES:
             raise TeacherPackageError(
-                "teacher package must contain one teacher-facing root CMD"
+                "teacher package must contain the named start and stop root CMD files"
             )
         if set(archive_names) != expected_names:
             extras = sorted(set(archive_names) - expected_names)
