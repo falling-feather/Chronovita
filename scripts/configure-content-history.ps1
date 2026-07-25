@@ -1,7 +1,9 @@
 param(
   [switch] $Remove,
   [Security.SecureString] $Token,
-  [string] $CredentialRoot = ""
+  [string] $CredentialRoot = "",
+  [switch] $NonInteractive,
+  [switch] $ContinueCurrentLaunch
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,15 +25,42 @@ function Convert-SecureValueToPlainText {
   }
 }
 
+function Test-TruthyEnvironmentValue {
+  param([string] $Name)
+
+  $value = [Environment]::GetEnvironmentVariable($Name)
+  if ([string]::IsNullOrWhiteSpace($value)) {
+    return $false
+  }
+  return @("0", "false", "no", "off") -notcontains $value.Trim().ToLowerInvariant()
+}
+
+function Test-InteractiveInputAvailable {
+  if ($NonInteractive -or (Test-TruthyEnvironmentValue "CI")) {
+    return $false
+  }
+  if (-not [Environment]::UserInteractive) {
+    return $false
+  }
+  try {
+    return -not [Console]::IsInputRedirected
+  } catch {
+    return $false
+  }
+}
+
 try {
   if ($Remove) {
     Remove-Item -LiteralPath $CredentialPath -Force -ErrorAction SilentlyContinue
-    Write-Host "The local course submission credential was removed." -ForegroundColor Green
+    Write-Host "The local content submission credential was removed." -ForegroundColor Green
     return
   }
 
   if ($null -eq $Token) {
-    Write-Host "Chronovita course history submission setup"
+    if (-not (Test-InteractiveInputAvailable)) {
+      throw "No token was supplied and secure input is unavailable. Run this script interactively, or pass -Token as a SecureString."
+    }
+    Write-Host "Chronovita content history submission setup"
     Write-Host ""
     Write-Host "Paste the fine-grained GitHub token supplied by the project administrator."
     Write-Host "The token is encrypted for this Windows account and is never written as plain text."
@@ -67,8 +96,12 @@ try {
   }
 
   Write-Host ""
-  Write-Host "Course history submission is configured for this Windows account." -ForegroundColor Green
-  Write-Host "Restart the Chronovita editor before submitting a course."
+  Write-Host "Content history submission is configured for this Windows account." -ForegroundColor Green
+  if ($ContinueCurrentLaunch) {
+    Write-Host "The credential will be used by the editor starting now."
+  } else {
+    Write-Host "Restart the Chronovita editor before submitting content."
+  }
   Write-Host "No Git installation or GitHub command line is required."
 } catch {
   Write-Host ""

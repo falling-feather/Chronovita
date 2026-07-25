@@ -47,6 +47,7 @@ jobs:
         run: |
           foreach ($scriptFile in @(
             "scripts\teacher-editor.ps1",
+            "scripts\configure-content-history.ps1",
             "scripts\stop-teacher-editor.ps1"
           )) {
             $tokens = $null
@@ -111,6 +112,10 @@ jobs:
             Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "TEACHER_ROOT_STOPPER=$($rootStoppers[0].FullName)" |
             Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Run Windows launcher unit tests
+        shell: powershell
+        run: python -m unittest tests.test_teacher_launcher -v
 
       - name: Start through the teacher-facing launcher
         shell: powershell
