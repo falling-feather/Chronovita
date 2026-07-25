@@ -3,9 +3,11 @@ import sys
 import unittest
 import uuid
 import json
+from io import BytesIO
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Barrier, Thread
+from zipfile import ZipFile
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -126,6 +128,37 @@ class AdminContentApiTests(unittest.TestCase):
             {"trusted-admin"},
         )
         release_id = published.json()["release"]["release_id"]
+
+        archive_preview = self.client.post(
+            (
+                f"/api/v1/admin/content/releases/{course_id}/"
+                f"{release_id}/archive-preview"
+            ),
+            headers=self.headers,
+        )
+        self.assertEqual(archive_preview.status_code, 200, archive_preview.text)
+        self.assertEqual(
+            archive_preview.json()["archive"]["release_id"],
+            release_id,
+        )
+        self.assertEqual(
+            archive_preview.json()["archive"]["lessons"][0]["lesson_id"],
+            lesson_id,
+        )
+        archive_download = self.client.get(
+            (
+                f"/api/v1/admin/content/releases/{course_id}/"
+                f"{release_id}/archive.zip"
+            ),
+            headers=self.headers,
+        )
+        self.assertEqual(archive_download.status_code, 200, archive_download.text)
+        self.assertEqual(
+            archive_download.headers["content-type"],
+            "application/zip",
+        )
+        with ZipFile(BytesIO(archive_download.content)) as archive_zip:
+            self.assertIn("课程归档清单.json", archive_zip.namelist())
 
         public_lesson = self.client.get(
             f"/api/v1/courses/{course_id}/lessons/{lesson_id}"

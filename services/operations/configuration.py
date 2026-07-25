@@ -56,6 +56,8 @@ def validate_runtime_configuration(config: Any) -> None:
             )
         )
 
+    _validate_github_publication(config, issues)
+
     if profile == "local":
         if config.auth_mode == "legacy-local" and not config.debug:
             issues.append(
@@ -264,6 +266,47 @@ def _validate_production_deepseek(
             RuntimeConfigurationIssue(
                 code="runtime.production_llm_endpoint_untrusted",
                 field="deepseek_base_url",
+            )
+        )
+
+
+def _validate_github_publication(
+    config: Any,
+    issues: list[RuntimeConfigurationIssue],
+) -> None:
+    if not config.github_publication_enabled:
+        return
+    if not _secret_value(config.github_publication_token).strip():
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.github_publication_token_required",
+                field="github_publication_token",
+            )
+        )
+    raw_url = str(config.github_api_base_url).strip()
+    try:
+        parsed = urlsplit(raw_url)
+        _ = parsed.port
+    except ValueError:
+        parsed = None
+    if (
+        parsed is None
+        or raw_url != str(config.github_api_base_url)
+        or parsed.scheme.casefold() != "https"
+        or not parsed.hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.path not in {"", "/"}
+        or parsed.query
+        or parsed.fragment
+        or "\\" in raw_url
+        or any(character.isspace() for character in raw_url)
+        or _is_local_host(parsed.hostname)
+    ):
+        issues.append(
+            RuntimeConfigurationIssue(
+                code="runtime.github_publication_endpoint_untrusted",
+                field="github_api_base_url",
             )
         )
 

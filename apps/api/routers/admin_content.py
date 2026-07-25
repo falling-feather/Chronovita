@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Annotated, Literal, NoReturn
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
@@ -17,6 +18,13 @@ from services.content import KeywordProfilePackage, LessonContentPackage, Person
 from services.content import runtime_artifacts
 from services.content import scenario_authoring
 from services.content import workflow as content_workflow
+from services.content_history import (
+    ArchiveBuildError,
+    archive_download_filename,
+    build_course_archive,
+    build_course_archive_zip,
+)
+from services.contracts.archive_v1 import CourseArchiveManifestV1
 from services.contracts.v1 import ScenarioTemplateV1
 
 router = APIRouter()
@@ -82,6 +90,11 @@ class ReleaseResponse(ApiModel):
 
 class ReleaseListResponse(ApiModel):
     items: list[content_workflow.CourseReleaseManifestAny]
+
+
+class ArchivePreviewResponse(ApiModel):
+    archive: CourseArchiveManifestV1
+    download_url: str
 
 
 class LessonSourceRecord(ApiModel):
@@ -719,6 +732,52 @@ async def release_detail(
         _raise_content_error(exc)
 
 
+@router.post(
+    "/releases/{course_id}/{release_id}/archive-preview",
+    response_model=ArchivePreviewResponse,
+)
+async def archive_preview(
+    course_id: str,
+    release_id: str,
+    _: ContentReader,
+):
+    try:
+        archive = build_course_archive(course_id, release_id)
+        return ArchivePreviewResponse(
+            archive=archive.manifest,
+            download_url=(
+                f"/api/v1/admin/content/releases/{course_id}/{release_id}/archive.zip"
+            ),
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/releases/{course_id}/{release_id}/archive.zip")
+async def archive_download(
+    course_id: str,
+    release_id: str,
+    _: ContentReader,
+):
+    try:
+        archive = build_course_archive(course_id, release_id)
+        filename = archive_download_filename(archive.manifest)
+        return Response(
+            content=build_course_archive_zip(archive),
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": (
+                    "attachment; filename=chronovita-course-archive.zip; "
+                    f"filename*=UTF-8''{quote(filename)}"
+                ),
+                "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "private, no-store",
+            },
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
 @router.post("/releases/{course_id}/rollback", response_model=ReleaseResponse)
 async def rollback_release(
     course_id: str,
@@ -936,6 +995,9 @@ def _raise_content_error(exc: Exception) -> NoReturn:
             issue.model_dump(mode="json")
             for issue in exc.report.issues
         ]
+    if isinstance(exc, ArchiveBuildError):
+        detail["code"] = exc.code
+        raise HTTPException(status_code=503, detail=detail) from exc
     if isinstance(exc, (content_workflow.ContentNotFound, FileNotFoundError)):
         raise HTTPException(status_code=404, detail=detail) from exc
     if isinstance(exc, scenario_authoring.ScenarioDraftConflict):
