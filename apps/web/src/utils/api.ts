@@ -6,6 +6,18 @@ interface ApiValidationIssue {
   msg?: string;
 }
 
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code?: string;
+
+  constructor(status: number, message: string, code?: string) {
+    super(`${status} ${message}`);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
 function localizeValidationMessage(message: string): string {
   if (message.includes('String should match pattern')) return '只能使用英文字母、数字、点、下划线和短横线';
   if (message.includes('at least 2 characters')) return '至少需要 2 个字符';
@@ -17,9 +29,10 @@ function localizeValidationMessage(message: string): string {
 async function responseError(response: Response): Promise<Error> {
   const raw = await response.text();
   let message = raw || response.statusText;
+  let code: string | undefined;
   try {
     const parsed = JSON.parse(raw) as {
-      detail?: string | { message?: string } | ApiValidationIssue[];
+      detail?: string | { message?: string; code?: string } | ApiValidationIssue[];
     };
     if (typeof parsed.detail === 'string') {
       message = parsed.detail;
@@ -31,11 +44,12 @@ async function responseError(response: Response): Promise<Error> {
       }).join('；');
     } else if (parsed.detail?.message) {
       message = parsed.detail.message;
+      code = parsed.detail.code;
     }
   } catch {
     // Keep the raw response when an upstream proxy does not return JSON.
   }
-  return new Error(`${response.status} ${message}`);
+  return new ApiError(response.status, message, code);
 }
 
 async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -157,6 +171,91 @@ export interface CourseReleaseManifest {
   operation: 'bootstrap' | 'publish' | 'rollback'; parent_release_id?: string | null;
   restored_from_release_id?: string | null; created_at: string; created_by: string;
   note: string; items: CourseReleaseItem[]; checksum: string;
+}
+export type ArchiveFileKind =
+  | 'release-manifest'
+  | 'sealed-lesson'
+  | 'course-package'
+  | 'scenario-template'
+  | 'format-layer'
+  | 'teacher-markdown'
+  | 'preview-html';
+export interface CourseArchiveFile {
+  path: string; kind: ArchiveFileKind; media_type: string;
+  size_bytes: number; blob_sha256: string; lesson_id?: string | null;
+  artifact_id?: string | null; artifact_version?: number | null;
+  schema_version?: string | null; contract_checksum?: string | null;
+}
+export interface CourseArchiveScenario {
+  scenario_id: string; scenario_version: number;
+  scenario_checksum: string; primary: boolean;
+}
+export interface CourseArchiveLesson {
+  lesson_id: string; title: string; content_version: number;
+  source_checksum: string; course_package_id: string;
+  course_package_checksum: string; scenarios: CourseArchiveScenario[];
+  files: string[];
+}
+export interface CourseArchiveManifest {
+  schema_version: 'course-archive/v1';
+  course_id: string; course_title: string;
+  release_schema_version: string; release_id: string; release_no: number;
+  release_checksum: string; release_operation: CourseReleaseManifest['operation'];
+  release_created_at: string; release_created_by: string; release_note: string;
+  renderer: {
+    schema_version: 'archive-renderer/v1';
+    renderer_id: string; renderer_version: number; style_profile: string;
+  };
+  manifest_path: string;
+  lessons: CourseArchiveLesson[]; files: CourseArchiveFile[];
+  file_count: number; total_size_bytes: number;
+  archive_id: string; archive_checksum: string; archive_path: string;
+  manifest_checksum: string;
+}
+export type PublicationMode = 'pull_request' | 'direct_commit';
+export type PublicationStatus =
+  | 'requested'
+  | 'preparing'
+  | 'pushing'
+  | 'commit_created'
+  | 'ref_updated'
+  | 'pr_open'
+  | 'succeeded'
+  | 'failed_retryable'
+  | 'failed_terminal';
+export interface CourseArchivePublishRequest {
+  schema_version: 'course-archive-publish-request/v1';
+  binding_id: string; course_id: string; release_id: string;
+  expected_release_checksum: string; archive_id: string;
+  expected_archive_checksum: string; mode: PublicationMode;
+  client_request_id: string; change_summary: string;
+  direct_commit_confirmed: boolean;
+}
+export interface GitRepositoryBinding {
+  schema_version: 'git-repository-binding/v1';
+  binding_id: string; provider: 'github'; repository_id: number;
+  owner: string; repository: string; visibility: 'private';
+  base_branch: string; root_prefix: string;
+  credential_kind: 'github_app' | 'fine_grained_token';
+  installation_id?: number | null; allowed_modes: PublicationMode[];
+}
+export interface GitPublicationIntent {
+  schema_version: 'git-publication-intent/v1';
+  publication_id: string; operation_key: string;
+  binding: GitRepositoryBinding; request: CourseArchivePublishRequest;
+  requested_at: string; requested_by: string; checksum: string;
+}
+export interface GitPublicationRecord {
+  schema_version: 'git-publication-record/v1';
+  intent: GitPublicationIntent; status: PublicationStatus;
+  attempt: number; revision: number; branch_ref: string;
+  base_sha?: string | null; tree_sha?: string | null; commit_sha?: string | null;
+  pull_request_number?: number | null; pull_request_url?: string | null;
+  last_error_code?: string | null; last_error_at?: string | null;
+  updated_at: string; completed_at?: string | null; checksum: string;
+}
+export interface PublicationResponse {
+  publication: GitPublicationRecord; reused: boolean;
 }
 export interface WorkflowResponse {
   workflow: ContentWorkflowRecord; report?: ContentValidationReport | null;
@@ -499,6 +598,69 @@ export const api = {
     ),
   adminContentCurrentRelease: (token: string, course_id: string) =>
     adminFetch<ReleaseResponse>(token, `/admin/content/releases/${course_id}/current`),
+  adminContentArchivePreview: (
+    token: string,
+    course_id: string,
+    release_id: string,
+  ) => adminFetch<{ archive: CourseArchiveManifest; download_url: string }>(
+    token,
+    `/admin/content/releases/${encodeURIComponent(course_id)}`
+      + `/${encodeURIComponent(release_id)}/archive-preview`,
+    { method: 'POST' },
+  ),
+  adminContentArchiveFile: (
+    token: string,
+    course_id: string,
+    release_id: string,
+  ) => adminFile(
+    token,
+    `/admin/content/releases/${encodeURIComponent(course_id)}`
+      + `/${encodeURIComponent(release_id)}/archive.zip`,
+  ),
+  adminContentPublications: (
+    token: string,
+    filters?: {
+      course_id?: string;
+      release_id?: string;
+      publication_status?: PublicationStatus;
+    },
+  ) => {
+    const query = new URLSearchParams();
+    if (filters?.course_id) query.set('course_id', filters.course_id);
+    if (filters?.release_id) query.set('release_id', filters.release_id);
+    if (filters?.publication_status) {
+      query.set('publication_status', filters.publication_status);
+    }
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return adminFetch<{ items: GitPublicationRecord[] }>(
+      token,
+      `/admin/content/publications${suffix}`,
+    );
+  },
+  adminContentPublication: (token: string, publication_id: string) =>
+    adminFetch<PublicationResponse>(
+      token,
+      `/admin/content/publications/${encodeURIComponent(publication_id)}`,
+    ),
+  adminCreateContentPublication: (
+    token: string,
+    body: CourseArchivePublishRequest,
+  ) => adminFetch<PublicationResponse>(token, '/admin/content/publications', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  }),
+  adminRetryContentPublication: (
+    token: string,
+    publication_id: string,
+    expected_revision: number,
+  ) => adminFetch<PublicationResponse>(
+    token,
+    `/admin/content/publications/${encodeURIComponent(publication_id)}/retry`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ expected_revision }),
+    },
+  ),
   adminContentRollback: (
     token: string,
     course_id: string,

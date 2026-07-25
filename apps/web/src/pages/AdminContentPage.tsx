@@ -42,6 +42,7 @@ import { ADMIN_CONTENT_PREVIEW_KEY } from '../utils/adminContentStorage';
 import { parseContentBlock, parseContentMarkup, renderMarkupHtml, stripInlineMarkup } from '../utils/contentMarkup';
 import { toast } from '../utils/toast';
 import ScenarioRuleEditor from './admin/ScenarioRuleEditor';
+import ArchivePublicationPanel from './admin/ArchivePublicationPanel';
 import { runtimeScenarioKey } from './admin/scenarioRuleModel';
 
 const { TextArea } = Input;
@@ -2209,6 +2210,13 @@ export default function AdminContentPage() {
                 回滚
               </Button>
             </div>
+
+            <ArchivePublicationPanel
+              token={token}
+              courseId={editor.course_id}
+              releases={releases}
+              currentRelease={activeRelease}
+            />
           </div>
 
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -2237,7 +2245,7 @@ export default function AdminContentPage() {
           </Space>
 
           {sealedPath && (
-            <div style={{ marginBottom: 12 }}>
+            <div className="chrono-sealed-path" style={{ marginBottom: 12 }}>
               <Tag color="green">{sealedPath}</Tag>
             </div>
           )}
