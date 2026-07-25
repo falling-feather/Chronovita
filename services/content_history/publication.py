@@ -11,13 +11,15 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from services import persistence
 from services.contracts.archive_v1 import (
+    ContentAssetKind,
     CourseArchivePublishRequestV1,
     GitPublicationIntentV1,
     GitPublicationRecordV1,
     GitRepositoryBindingV1,
     PublicationMode,
+    PublicationRequestV1,
     PublicationStatus,
-    publication_branch_name,
+    publication_branch_name_for_request,
     publication_id_for_key,
     publication_operation_key,
     sign_publication_metadata,
@@ -80,6 +82,7 @@ class ContentHistoryTargetV1(_TargetModel):
     visibility: Literal["private"]
     base_branch: str
     root_prefix: str
+    asset_root_prefix: str
     default_publication_mode: PublicationMode
     allowed_publication_modes: tuple[PublicationMode, ...]
     direct_commit_requires_confirmation: Literal[True]
@@ -133,23 +136,42 @@ class PublicationStore:
     def list(
         self,
         *,
+        publication_kind: Literal["course", "asset"] | None = None,
         course_id: str | None = None,
         release_id: str | None = None,
+        asset_kind: ContentAssetKind | None = None,
+        asset_id: str | None = None,
+        asset_version: int | None = None,
         status: PublicationStatus | None = None,
     ) -> tuple[GitPublicationRecordV1, ...]:
         records = tuple(_parse_record(payload) for payload in persistence.kv_list(PUBLICATION_NAMESPACE))
+
+        def matches(record: GitPublicationRecordV1) -> bool:
+            request = record.intent.request
+            if isinstance(request, CourseArchivePublishRequestV1):
+                if publication_kind == "asset":
+                    return False
+                if asset_kind is not None or asset_id is not None or asset_version is not None:
+                    return False
+                return (
+                    (course_id is None or request.course_id == course_id)
+                    and (release_id is None or request.release_id == release_id)
+                    and (status is None or record.status == status)
+                )
+            if publication_kind == "course":
+                return False
+            if course_id is not None or release_id is not None:
+                return False
+            return (
+                (asset_kind is None or request.asset_kind == asset_kind)
+                and (asset_id is None or request.asset_id == asset_id)
+                and (asset_version is None or request.version == asset_version)
+                and (status is None or record.status == status)
+            )
+
         return tuple(
             sorted(
-                (
-                    record
-                    for record in records
-                    if (course_id is None or record.intent.request.course_id == course_id)
-                    and (
-                        release_id is None
-                        or record.intent.request.release_id == release_id
-                    )
-                    and (status is None or record.status == status)
-                ),
+                (record for record in records if matches(record)),
                 key=lambda record: (
                     record.intent.requested_at,
                     record.intent.publication_id,
@@ -196,6 +218,7 @@ def load_repository_binding(
         visibility=target.visibility,
         base_branch=target.base_branch,
         root_prefix=target.root_prefix,
+        asset_root_prefix=target.asset_root_prefix,
         credential_kind="fine_grained_token",
         allowed_modes=target.allowed_publication_modes,
     )
@@ -203,7 +226,7 @@ def load_repository_binding(
 
 def new_publication_record(
     binding: GitRepositoryBindingV1,
-    request: CourseArchivePublishRequestV1,
+    request: PublicationRequestV1,
     *,
     requested_by: str,
     requested_at: datetime | None = None,
@@ -222,11 +245,7 @@ def new_publication_record(
         )
     )
     branch_ref = (
-        publication_branch_name(
-            request.course_id,
-            request.release_id,
-            request.expected_archive_checksum,
-        )
+        publication_branch_name_for_request(request)
         if request.mode == "pull_request"
         else binding.base_branch
     )

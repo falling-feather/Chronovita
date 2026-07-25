@@ -14,6 +14,7 @@
       "visibility": "private",
       "base_branch": "main",
       "root_prefix": "courses",
+      "asset_root_prefix": "assets",
       "credential_kind": "github_app",
       "installation_id": 12345678,
       "allowed_modes": [
@@ -36,7 +37,7 @@
     },
     "requested_at": "2026-07-25T08:00:00Z",
     "requested_by": "archive-contract-fixture",
-    "checksum": "35e8eaa6ba4bac2240b2d5f1916b6d5a3852f716292d8002ce51a04139986224"
+    "checksum": "6527baa17d0a0f50ceb3f7526617552a55b10c17a0b52edf9cc3e25f36e4e7e1"
   },
   "status": "succeeded",
   "attempt": 1,
@@ -51,5 +52,5 @@
   "last_error_at": null,
   "updated_at": "2026-07-25T08:00:00Z",
   "completed_at": "2026-07-25T08:00:00Z",
-  "checksum": "329fd67a7fd86cf2d22567baa8b7b9fb8f8f03714964e11570d91509c516c0e8"
+  "checksum": "88bf47cf19305a91b54a006e6ceddb22ea73a3453153ca07bba5398dfaa6d8c6"
 }

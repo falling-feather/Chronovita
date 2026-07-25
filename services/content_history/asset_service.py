@@ -1,22 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Callable, Protocol
+from typing import Callable
 
-from services.content_history.archive import (
-    ArchiveBuildError,
-    BuiltCourseArchive,
-    build_course_archive,
+from services.content_history.asset_archive import (
+    BuiltContentAssetArchive,
+    ContentAssetArchiveBuildError,
+    ContentAssetArchiveChanged,
+    build_content_asset_archive,
 )
-from services.content_history.github import (
-    GitBranchHead,
-    GitBranchUpdate,
-    GitCommitObject,
-    GitHubGitDataError,
-    GitHubRepositoryIdentity,
-    GitPullRequest,
-)
+from services.content_history.github import GitHubGitDataError
 from services.content_history.publication import (
     PublicationConfigurationError,
     PublicationConflict,
@@ -24,12 +17,18 @@ from services.content_history.publication import (
     new_publication_record,
     publication_checkpoint,
 )
+from services.content_history.service import (
+    GitHubPublicationClient,
+    PublicationArchiveChanged,
+    PublicationRetryRejected,
+    PublicationSubmission,
+)
 from services.contracts.archive_v1 import (
-    CourseArchivePublishRequestV1,
+    ContentAssetArchivePublishRequestV1,
     GitPublicationRecordV1,
     GitRepositoryBindingV1,
     PublicationStatus,
-    repository_archive_path,
+    content_asset_repository_archive_path,
 )
 
 
@@ -44,86 +43,16 @@ _IN_PROGRESS_STATUSES = {
 }
 
 
-class GitHubPublicationClient(Protocol):
-    async def verify_repository(
-        self,
-        *,
-        refresh: bool = False,
-    ) -> GitHubRepositoryIdentity: ...
-
-    async def get_branch_head(self, branch: str) -> GitBranchHead: ...
-
-    async def get_commit(self, commit_sha: str) -> GitCommitObject: ...
-
-    async def create_blob(self, content: bytes) -> str: ...
-
-    async def create_tree(
-        self,
-        *,
-        base_tree_sha: str,
-        entries,
-    ) -> str: ...
-
-    async def create_commit(
-        self,
-        *,
-        message: str,
-        tree_sha: str,
-        parent_sha: str,
-        author_name: str,
-        author_email: str,
-        authored_at: datetime,
-    ) -> str: ...
-
-    async def create_or_update_branch(
-        self,
-        *,
-        branch: str,
-        target_sha: str,
-        expected_sha: str | None = None,
-    ) -> GitBranchUpdate: ...
-
-    async def update_branch_non_force(
-        self,
-        *,
-        branch: str,
-        target_sha: str,
-        expected_sha: str,
-    ) -> GitBranchUpdate: ...
-
-    async def create_or_find_pull_request(
-        self,
-        *,
-        head_branch: str,
-        base_branch: str,
-        title: str,
-        body: str = "",
-        draft: bool = False,
-    ) -> GitPullRequest: ...
-
-
-class PublicationArchiveChanged(PublicationConflict):
-    code = "content_publication_archive_changed"
-
-
-class PublicationRetryRejected(PublicationConflict):
-    code = "content_publication_retry_rejected"
-
-
-@dataclass(frozen=True)
-class PublicationSubmission:
-    publication: GitPublicationRecordV1
-    reused: bool
-
-
-class CoursePublicationService:
+class ContentAssetPublicationService:
     def __init__(
         self,
         *,
         binding: GitRepositoryBindingV1,
         github: GitHubPublicationClient,
         store: PublicationStore | None = None,
-        archive_builder: Callable[[str, str], BuiltCourseArchive] = build_course_archive,
+        archive_builder: Callable[..., BuiltContentAssetArchive] = (
+            build_content_asset_archive
+        ),
         stale_after_seconds: int = 600,
         clock: Callable[[], datetime] | None = None,
     ) -> None:
@@ -138,11 +67,11 @@ class CoursePublicationService:
 
     async def submit(
         self,
-        request: CourseArchivePublishRequestV1,
+        request: ContentAssetArchivePublishRequestV1,
         *,
         requested_by: str,
     ) -> PublicationSubmission:
-        archive = self.archive_builder(request.course_id, request.release_id)
+        archive = self._build_archive(request)
         self._verify_archive_request(request, archive)
         proposed = new_publication_record(
             self.binding,
@@ -152,10 +81,6 @@ class CoursePublicationService:
         )
         record, created = self.store.create_or_get(proposed)
         if not created:
-            if not self._binding_matches_course_record(record):
-                raise PublicationRetryRejected(
-                    "repository binding changed; create a new publication"
-                )
             if record.status == "requested":
                 claimed = self._claim_requested(record)
                 if claimed is not None:
@@ -182,14 +107,12 @@ class CoursePublicationService:
         expected_revision: int | None = None,
     ) -> GitPublicationRecordV1:
         record = self.store.get(publication_id)
-        if not isinstance(
-            record.intent.request,
-            CourseArchivePublishRequestV1,
-        ):
+        request = record.intent.request
+        if not isinstance(request, ContentAssetArchivePublishRequestV1):
             raise PublicationRetryRejected(
-                "publication does not describe a course archive"
+                "publication does not describe a content asset"
             )
-        if not self._binding_matches_course_record(record):
+        if record.intent.binding != self.binding:
             raise PublicationRetryRejected(
                 "repository binding changed; create a new publication"
             )
@@ -212,24 +135,36 @@ class CoursePublicationService:
         try:
             self.store.checkpoint(record, resumed)
         except PublicationConflict:
-            raise PublicationRetryRejected("publication retry lost a concurrent race") from None
+            raise PublicationRetryRejected(
+                "publication retry lost a concurrent race"
+            ) from None
         return await self._process(resumed)
-
-    def get(self, publication_id: str) -> GitPublicationRecordV1:
-        return self.store.get(publication_id)
 
     def list(
         self,
         *,
-        course_id: str | None = None,
-        release_id: str | None = None,
+        asset_kind=None,
+        asset_id: str | None = None,
+        asset_version: int | None = None,
         status: PublicationStatus | None = None,
     ) -> tuple[GitPublicationRecordV1, ...]:
         return self.store.list(
-            publication_kind="course",
-            course_id=course_id,
-            release_id=release_id,
+            publication_kind="asset",
+            asset_kind=asset_kind,
+            asset_id=asset_id,
+            asset_version=asset_version,
             status=status,
+        )
+
+    def _build_archive(
+        self,
+        request: ContentAssetArchivePublishRequestV1,
+    ) -> BuiltContentAssetArchive:
+        return self.archive_builder(
+            request.asset_kind,
+            request.asset_id,
+            request.version,
+            expected_source_checksum=request.expected_source_checksum,
         )
 
     def _claim_requested(
@@ -247,25 +182,15 @@ class CoursePublicationService:
         except PublicationConflict:
             return None
 
-    def _binding_matches_course_record(
-        self,
-        record: GitPublicationRecordV1,
-    ) -> bool:
-        existing = record.intent.binding.model_copy(
-            update={
-                "asset_root_prefix": self.binding.asset_root_prefix,
-            }
-        )
-        return existing == self.binding
-
     def _resume_checkpoint(
         self,
         record: GitPublicationRecordV1,
     ) -> GitPublicationRecordV1:
-        error_code = record.last_error_code
+        request = record.intent.request
+        assert isinstance(request, ContentAssetArchivePublishRequestV1)
         if (
-            record.intent.request.mode == "direct_commit"
-            and error_code == "github_ref_conflict"
+            request.mode == "direct_commit"
+            and record.last_error_code == "github_ref_conflict"
         ):
             return publication_checkpoint(
                 record,
@@ -301,18 +226,15 @@ class CoursePublicationService:
         self,
         record: GitPublicationRecordV1,
         *,
-        archive: BuiltCourseArchive | None = None,
+        archive: BuiltContentAssetArchive | None = None,
     ) -> GitPublicationRecordV1:
-        try:
-            request = record.intent.request
-            if not isinstance(request, CourseArchivePublishRequestV1):
-                raise PublicationRetryRejected(
-                    "publication does not describe a course archive"
-                )
-            archive = archive or self.archive_builder(
-                request.course_id,
-                request.release_id,
+        request = record.intent.request
+        if not isinstance(request, ContentAssetArchivePublishRequestV1):
+            raise PublicationRetryRejected(
+                "publication does not describe a content asset"
             )
+        try:
+            archive = archive or self._build_archive(request)
             self._verify_archive_request(request, archive)
 
             if record.status == "preparing":
@@ -340,9 +262,9 @@ class CoursePublicationService:
                 if record.tree_sha is None:
                     base_commit = await self.github.get_commit(record.base_sha)
                     blobs: dict[str, str] = {}
-                    archive_root = repository_archive_path(
+                    archive_root = content_asset_repository_archive_path(
                         self.binding,
-                        archive.manifest,
+                        archive.manifest
                     )
                     for path, raw in sorted(
                         archive.files.items(),
@@ -403,7 +325,10 @@ class CoursePublicationService:
                 pull_request = await self.github.create_or_find_pull_request(
                     head_branch=record.branch_ref,
                     base_branch=self.binding.base_branch,
-                    title=f"课程归档审核：{archive.manifest.course_title}",
+                    title=(
+                        f"{self._kind_label(request.asset_kind)}审核："
+                        f"{archive.manifest.title}"
+                    ),
                     body=self._pull_request_body(record, archive),
                 )
                 record = self._save(
@@ -427,7 +352,8 @@ class CoursePublicationService:
                 retryable=exc.retryable,
             )
         except (
-            ArchiveBuildError,
+            ContentAssetArchiveChanged,
+            ContentAssetArchiveBuildError,
             PublicationArchiveChanged,
             PublicationConfigurationError,
         ) as exc:
@@ -479,8 +405,8 @@ class CoursePublicationService:
 
     def _verify_archive_request(
         self,
-        request: CourseArchivePublishRequestV1,
-        archive: BuiltCourseArchive,
+        request: ContentAssetArchivePublishRequestV1,
+        archive: BuiltContentAssetArchive,
     ) -> None:
         manifest = archive.manifest
         if request.binding_id != self.binding.binding_id:
@@ -492,34 +418,38 @@ class CoursePublicationService:
                 "publication mode is disabled by repository policy"
             )
         if (
-            request.course_id,
-            request.release_id,
-            request.expected_release_checksum,
+            request.asset_kind,
+            request.asset_id,
+            request.version,
+            request.expected_source_checksum,
             request.archive_id,
             request.expected_archive_checksum,
         ) != (
-            manifest.course_id,
-            manifest.release_id,
-            manifest.release_checksum,
+            manifest.asset_kind,
+            manifest.asset_id,
+            manifest.version,
+            manifest.source_checksum,
             manifest.archive_id,
             manifest.archive_checksum,
         ):
             raise PublicationArchiveChanged(
-                "course archive changed after it was previewed"
+                "content asset archive changed after it was previewed"
             )
 
-    @staticmethod
+    @classmethod
     def _commit_message(
+        cls,
         record: GitPublicationRecordV1,
-        archive: BuiltCourseArchive,
+        archive: BuiltContentAssetArchive,
     ) -> str:
         request = record.intent.request
+        assert isinstance(request, ContentAssetArchivePublishRequestV1)
         summary = request.change_summary.strip()
         lines = [
-            f"课程归档：{archive.manifest.course_title}",
+            f"{cls._kind_label(request.asset_kind)}：{archive.manifest.title}",
             "",
-            f"course: {request.course_id}",
-            f"release: {request.release_id}",
+            f"asset: {request.asset_id}",
+            f"version: {request.version}",
             f"archive: {request.archive_id}",
             f"requested-by: {record.intent.requested_by}",
         ]
@@ -527,20 +457,22 @@ class CoursePublicationService:
             lines.extend(("", summary))
         return "\n".join(lines)
 
-    @staticmethod
+    @classmethod
     def _pull_request_body(
+        cls,
         record: GitPublicationRecordV1,
-        archive: BuiltCourseArchive,
+        archive: BuiltContentAssetArchive,
     ) -> str:
         request = record.intent.request
+        assert isinstance(request, ContentAssetArchivePublishRequestV1)
         summary = request.change_summary.strip() or "未填写补充说明。"
         return "\n".join(
             (
-                "## 课程归档",
+                f"## {cls._kind_label(request.asset_kind)}",
                 "",
-                f"- 课程：{archive.manifest.course_title}",
-                f"- 课程 ID：`{request.course_id}`",
-                f"- 发布版本：`{request.release_id}`",
+                f"- 标题：{archive.manifest.title}",
+                f"- 内容 ID：`{request.asset_id}`",
+                f"- 封存版本：`v{request.version:03d}`",
                 f"- 归档：`{request.archive_id}`",
                 f"- 文件数：{len(archive.files)}",
                 "",
@@ -548,9 +480,17 @@ class CoursePublicationService:
                 "",
                 summary,
                 "",
-                "> 本 Pull Request 由 Chronovita 课程内容发布服务生成。",
+                "> 本 Pull Request 由 Chronovita 内容资产发布服务生成。",
             )
         )
+
+    @staticmethod
+    def _kind_label(kind: str) -> str:
+        return {
+            "person": "人物档案",
+            "keyword": "关键词档案",
+            "scenario": "关卡规则",
+        }[kind]
 
     def _now(self) -> datetime:
         value = self.clock()
@@ -559,10 +499,4 @@ class CoursePublicationService:
         return value
 
 
-__all__ = [
-    "CoursePublicationService",
-    "GitHubPublicationClient",
-    "PublicationArchiveChanged",
-    "PublicationRetryRejected",
-    "PublicationSubmission",
-]
+__all__ = ["ContentAssetPublicationService"]

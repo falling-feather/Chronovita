@@ -3,6 +3,101 @@
   "$id": "https://chronovita.local/schemas/archive/v1/git-publication-record.schema.json",
   "$comment": "Publication checkpoints preserve partial Git success for reconciliation. Records contain stable identifiers and error codes, never provider response bodies or credentials.",
   "$defs": {
+    "ContentAssetArchivePublishRequestV1": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "content-asset-archive-publish-request/v1",
+          "default": "content-asset-archive-publish-request/v1",
+          "enum": [
+            "content-asset-archive-publish-request/v1"
+          ],
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "binding_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Binding Id",
+          "type": "string"
+        },
+        "asset_kind": {
+          "enum": [
+            "person",
+            "keyword",
+            "scenario"
+          ],
+          "title": "Asset Kind",
+          "type": "string"
+        },
+        "asset_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "expected_source_checksum": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Expected Source Checksum",
+          "type": "string"
+        },
+        "archive_id": {
+          "title": "Archive Id",
+          "type": "string"
+        },
+        "expected_archive_checksum": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Expected Archive Checksum",
+          "type": "string"
+        },
+        "mode": {
+          "default": "pull_request",
+          "enum": [
+            "pull_request",
+            "direct_commit"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "client_request_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Client Request Id",
+          "type": "string"
+        },
+        "change_summary": {
+          "default": "",
+          "maxLength": 2000,
+          "title": "Change Summary",
+          "type": "string"
+        },
+        "direct_commit_confirmed": {
+          "default": false,
+          "title": "Direct Commit Confirmed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "binding_id",
+        "asset_kind",
+        "asset_id",
+        "version",
+        "expected_source_checksum",
+        "archive_id",
+        "expected_archive_checksum",
+        "client_request_id"
+      ],
+      "title": "ContentAssetArchivePublishRequestV1",
+      "type": "object"
+    },
     "CourseArchivePublishRequestV1": {
       "additionalProperties": false,
       "properties": {
@@ -114,7 +209,22 @@
           "$ref": "#/$defs/GitRepositoryBindingV1"
         },
         "request": {
-          "$ref": "#/$defs/CourseArchivePublishRequestV1"
+          "discriminator": {
+            "mapping": {
+              "content-asset-archive-publish-request/v1": "#/$defs/ContentAssetArchivePublishRequestV1",
+              "course-archive-publish-request/v1": "#/$defs/CourseArchivePublishRequestV1"
+            },
+            "propertyName": "schema_version"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CourseArchivePublishRequestV1"
+            },
+            {
+              "$ref": "#/$defs/ContentAssetArchivePublishRequestV1"
+            }
+          ],
+          "title": "Request"
         },
         "requested_at": {
           "format": "date-time",
@@ -208,6 +318,20 @@
           "minLength": 1,
           "title": "Root Prefix",
           "type": "string"
+        },
+        "asset_root_prefix": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Asset Root Prefix"
         },
         "credential_kind": {
           "default": "github_app",

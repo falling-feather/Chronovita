@@ -231,6 +231,40 @@ class ContentHistoryServiceTests(unittest.IsolatedAsyncioTestCase):
             first.publication,
         )
 
+    async def test_legacy_course_record_without_asset_root_can_retry(self):
+        legacy_binding = self.binding.model_copy(
+            update={"asset_root_prefix": None}
+        )
+        legacy_github = _FakeGitHub(
+            legacy_binding,
+            fail_pull_once=True,
+        )
+        legacy_service = CoursePublicationService(
+            binding=legacy_binding,
+            github=legacy_github,
+            archive_builder=lambda course_id, release_id: self.archive,
+            clock=lambda: self.now,
+        )
+        first = await legacy_service.submit(
+            self.request,
+            requested_by="teacher-a",
+        )
+        self.assertEqual(first.publication.status, "failed_retryable")
+        self.assertIsNone(
+            first.publication.intent.binding.asset_root_prefix
+        )
+
+        current_github = _FakeGitHub(self.binding)
+        current_service = self._service(current_github)
+        retried = await current_service.retry(
+            first.publication.intent.publication_id,
+            expected_revision=first.publication.revision,
+        )
+
+        self.assertEqual(retried.status, "succeeded")
+        self.assertEqual(retried.attempt, 2)
+        self.assertEqual(retried.pull_request_number, 17)
+
     async def test_direct_commit_updates_base_without_creating_pull_request(self):
         github = _FakeGitHub(self.binding)
         service = self._service(github)

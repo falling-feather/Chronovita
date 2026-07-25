@@ -27,6 +27,8 @@ MAX_ARCHIVE_FILES = 128
 ARCHIVE_MANIFEST_FILENAME = "课程归档清单.json"
 ARCHIVE_RELEASE_MANIFEST_FILENAME = "课程发布清单.json"
 DEFAULT_REPOSITORY_ROOT_PREFIX = "courses"
+DEFAULT_ASSET_REPOSITORY_ROOT_PREFIX = "assets"
+ASSET_ARCHIVE_MANIFEST_FILENAME = "内容资产归档清单.json"
 
 ArchiveFileKind = Literal[
     "release-manifest",
@@ -36,6 +38,12 @@ ArchiveFileKind = Literal[
     "format-layer",
     "teacher-markdown",
     "preview-html",
+]
+ContentAssetKind = Literal["person", "keyword", "scenario"]
+ContentAssetArchiveFileKind = Literal[
+    "sealed-person",
+    "sealed-keyword",
+    "sealed-scenario",
 ]
 ArchiveMediaType = Literal[
     "application/json",
@@ -508,6 +516,128 @@ class CourseArchiveManifestV1(CourseArchivePayloadV1):
         return self
 
 
+class ContentAssetArchiveFileV1(ArchiveContractModel):
+    path: ArchivePath
+    kind: ContentAssetArchiveFileKind
+    media_type: Literal["application/json"] = "application/json"
+    size_bytes: int = Field(ge=1, le=MAX_ARCHIVE_FILE_BYTES)
+    blob_sha256: Checksum
+    schema_version: ArtifactSchemaVersion
+    contract_checksum: Checksum
+
+    @model_validator(mode="after")
+    def validate_file(self) -> "ContentAssetArchiveFileV1":
+        if not self.path.endswith(".json"):
+            raise ValueError("content asset files must use the JSON extension")
+        expected_kind = {
+            "person-profile/v1": "sealed-person",
+            "keyword-profile/v1": "sealed-keyword",
+            "scenario-template/v1": "sealed-scenario",
+        }.get(self.schema_version)
+        if self.kind != expected_kind:
+            raise ValueError(
+                "content asset file kind must match its source schema"
+            )
+        return self
+
+
+class ContentAssetArchivePayloadV1(ArchiveContractModel):
+    schema_version: Literal["content-asset-archive/v1"] = (
+        "content-asset-archive/v1"
+    )
+    asset_kind: ContentAssetKind
+    asset_id: ContractId
+    title: BoundedTitle
+    version: int = Field(ge=1)
+    source_schema_version: Literal[
+        "person-profile/v1",
+        "keyword-profile/v1",
+        "scenario-template/v1",
+    ]
+    source_checksum: Checksum
+    sealed_at: AwareDatetime
+    sealed_by: BoundedActor
+    files: tuple[ContentAssetArchiveFileV1, ...]
+    file_count: int = Field(ge=1, le=MAX_ARCHIVE_FILES)
+    total_size_bytes: int = Field(ge=1, le=MAX_ARCHIVE_TOTAL_BYTES)
+
+    @model_validator(mode="after")
+    def validate_payload(self) -> "ContentAssetArchivePayloadV1":
+        expected_schema = {
+            "person": "person-profile/v1",
+            "keyword": "keyword-profile/v1",
+            "scenario": "scenario-template/v1",
+        }[self.asset_kind]
+        if self.source_schema_version != expected_schema:
+            raise ValueError("asset kind must match source_schema_version")
+        if len(self.files) != 1 or self.file_count != 1:
+            raise ValueError("a content asset archive requires exactly one source file")
+        source = self.files[0]
+        if (
+            source.path
+            != content_asset_archive_source_path(
+                self.asset_kind,
+                self.asset_id,
+                self.title,
+            )
+            or source.schema_version != self.source_schema_version
+            or source.contract_checksum != self.source_checksum
+        ):
+            raise ValueError(
+                "content asset file identity must match the archive source"
+            )
+        if self.total_size_bytes != source.size_bytes:
+            raise ValueError("total_size_bytes must equal the source file size")
+        return self
+
+
+class ContentAssetArchiveManifestV1(ContentAssetArchivePayloadV1):
+    archive_id: str
+    archive_checksum: Checksum
+    archive_path: ArchivePath
+    manifest_checksum: Checksum
+
+    @field_validator("archive_id")
+    @classmethod
+    def validate_archive_id(cls, value: str) -> str:
+        if not _ARCHIVE_ID_PATTERN.fullmatch(value):
+            raise ValueError("invalid archive_id")
+        return value
+
+    @model_validator(mode="after")
+    def validate_archive_identity(self) -> "ContentAssetArchiveManifestV1":
+        payload = ContentAssetArchivePayloadV1.model_validate(
+            self.model_dump(
+                mode="json",
+                exclude={
+                    "archive_id",
+                    "archive_checksum",
+                    "archive_path",
+                    "manifest_checksum",
+                },
+            )
+        )
+        expected_checksum = calculate_content_asset_archive_payload_checksum(
+            payload
+        )
+        if self.archive_checksum != expected_checksum:
+            raise ValueError(
+                "archive_checksum must cover the exact asset archive payload"
+            )
+        if self.archive_id != archive_id_for_checksum(expected_checksum):
+            raise ValueError("archive_id must derive from archive_checksum")
+        if self.archive_path != content_asset_archive_relative_path(
+            self.asset_kind,
+            self.asset_id,
+            self.version,
+            self.archive_id,
+        ):
+            raise ValueError(
+                "archive_path must derive from asset identity and archive_id"
+            )
+        return self
+
+
 class GitRepositoryBindingV1(ArchiveContractModel):
     schema_version: Literal["git-repository-binding/v1"] = (
         "git-repository-binding/v1"
@@ -520,6 +650,7 @@ class GitRepositoryBindingV1(ArchiveContractModel):
     visibility: Literal["private"] = "private"
     base_branch: BranchName = "main"
     root_prefix: ArchivePath = DEFAULT_REPOSITORY_ROOT_PREFIX
+    asset_root_prefix: ArchivePath | None = None
     credential_kind: CredentialKind = "github_app"
     installation_id: int | None = Field(default=None, ge=1)
     allowed_modes: tuple[PublicationMode, ...] = ("pull_request",)
@@ -556,6 +687,14 @@ class GitRepositoryBindingV1(ArchiveContractModel):
         if self.credential_kind == "fine_grained_token" and self.installation_id is not None:
             raise ValueError(
                 "fine_grained_token bindings cannot claim a GitHub App installation"
+            )
+        if self.asset_root_prefix is not None and (
+            self.asset_root_prefix == self.root_prefix
+            or self.asset_root_prefix.startswith(f"{self.root_prefix}/")
+            or self.root_prefix.startswith(f"{self.asset_root_prefix}/")
+        ):
+            raise ValueError(
+                "course and content asset roots must not overlap"
             )
         return self
 
@@ -599,6 +738,48 @@ class CourseArchivePublishRequestV1(ArchiveContractModel):
         return self
 
 
+class ContentAssetArchivePublishRequestV1(ArchiveContractModel):
+    schema_version: Literal["content-asset-archive-publish-request/v1"] = (
+        "content-asset-archive-publish-request/v1"
+    )
+    binding_id: ContractId
+    asset_kind: ContentAssetKind
+    asset_id: ContractId
+    version: int = Field(ge=1)
+    expected_source_checksum: Checksum
+    archive_id: str
+    expected_archive_checksum: Checksum
+    mode: PublicationMode = "pull_request"
+    client_request_id: ContractId
+    change_summary: BoundedSummary = ""
+    direct_commit_confirmed: bool = False
+
+    @field_validator("archive_id")
+    @classmethod
+    def validate_archive_id(cls, value: str) -> str:
+        if not _ARCHIVE_ID_PATTERN.fullmatch(value):
+            raise ValueError("invalid archive_id")
+        return value
+
+    @model_validator(mode="after")
+    def validate_request(self) -> "ContentAssetArchivePublishRequestV1":
+        if self.archive_id != archive_id_for_checksum(
+            self.expected_archive_checksum
+        ):
+            raise ValueError("archive_id must derive from expected_archive_checksum")
+        if self.mode == "direct_commit" and not self.direct_commit_confirmed:
+            raise ValueError("direct_commit mode requires explicit confirmation")
+        if self.mode == "pull_request" and self.direct_commit_confirmed:
+            raise ValueError("pull_request mode cannot carry direct commit confirmation")
+        return self
+
+
+PublicationRequestV1 = Annotated[
+    CourseArchivePublishRequestV1 | ContentAssetArchivePublishRequestV1,
+    Field(discriminator="schema_version"),
+]
+
+
 class GitPublicationIntentV1(ArchiveContractModel):
     schema_version: Literal["git-publication-intent/v1"] = (
         "git-publication-intent/v1"
@@ -606,7 +787,7 @@ class GitPublicationIntentV1(ArchiveContractModel):
     publication_id: str
     operation_key: Checksum
     binding: GitRepositoryBindingV1
-    request: CourseArchivePublishRequestV1
+    request: PublicationRequestV1
     requested_at: AwareDatetime
     requested_by: BoundedActor
     checksum: Checksum
@@ -624,6 +805,13 @@ class GitPublicationIntentV1(ArchiveContractModel):
             raise ValueError("request binding_id must match the resolved binding")
         if self.request.mode not in self.binding.allowed_modes:
             raise ValueError("requested publication mode is disabled by the binding")
+        if (
+            isinstance(self.request, ContentAssetArchivePublishRequestV1)
+            and self.binding.asset_root_prefix is None
+        ):
+            raise ValueError(
+                "content asset publication requires an asset root binding"
+            )
         expected_key = publication_operation_key(self.binding, self.request)
         if self.operation_key != expected_key:
             raise ValueError("operation_key does not match the immutable publication input")
@@ -678,11 +866,7 @@ class GitPublicationRecordV1(ArchiveContractModel):
         request = self.intent.request
         binding = self.intent.binding
         expected_branch = (
-            publication_branch_name(
-                request.course_id,
-                request.release_id,
-                request.expected_archive_checksum,
-            )
+            publication_branch_name_for_request(request)
             if request.mode == "pull_request"
             else binding.base_branch
         )
@@ -839,6 +1023,20 @@ def repository_archive_path(
     )
 
 
+def content_asset_repository_archive_path(
+    binding: GitRepositoryBindingV1,
+    manifest: ContentAssetArchiveManifestV1,
+) -> str:
+    if binding.asset_root_prefix is None:
+        raise ValueError("content asset repository root is not configured")
+    return _validated_archive_path(
+        PurePosixPath(
+            binding.asset_root_prefix,
+            manifest.archive_path,
+        ).as_posix()
+    )
+
+
 def safe_archive_filename(title: str, fallback: str) -> str:
     checked_fallback = _contract_id(fallback)
     normalized = unicodedata.normalize("NFKC", title)
@@ -853,6 +1051,47 @@ def safe_archive_filename(title: str, fallback: str) -> str:
     ):
         candidate = f"_{candidate}"
     return _validated_archive_path(candidate)
+
+
+def content_asset_archive_source_path(
+    asset_kind: ContentAssetKind,
+    asset_id: str,
+    title: str,
+) -> str:
+    checked_asset_id = _contract_id(asset_id)
+    filename = safe_archive_filename(title, checked_asset_id)
+    suffix = {
+        "person": "人物档案",
+        "keyword": "关键词档案",
+        "scenario": "关卡规则",
+    }[asset_kind]
+    return _validated_archive_path(f"{filename}-{suffix}.json")
+
+
+def content_asset_archive_relative_path(
+    asset_kind: ContentAssetKind,
+    asset_id: str,
+    version: int,
+    archive_id: str,
+) -> str:
+    if version < 1:
+        raise ValueError("asset archive version must be at least 1")
+    if not _ARCHIVE_ID_PATTERN.fullmatch(archive_id):
+        raise ValueError("invalid archive_id")
+    plural = {
+        "person": "people",
+        "keyword": "keywords",
+        "scenario": "scenarios",
+    }[asset_kind]
+    return _validated_archive_path(
+        PurePosixPath(
+            plural,
+            _contract_id(asset_id),
+            "versions",
+            f"v{version:03d}",
+            archive_id,
+        ).as_posix()
+    )
 
 
 def lesson_archive_paths(lesson_id: str, title: str) -> dict[str, str]:
@@ -889,6 +1128,12 @@ def scenario_archive_path(
 
 
 def calculate_archive_payload_checksum(payload: CourseArchivePayloadV1) -> str:
+    return _canonical_checksum(payload.model_dump(mode="json"))
+
+
+def calculate_content_asset_archive_payload_checksum(
+    payload: ContentAssetArchivePayloadV1,
+) -> str:
     return _canonical_checksum(payload.model_dump(mode="json"))
 
 
@@ -941,6 +1186,55 @@ def verify_archive_manifest_checksum(manifest: CourseArchiveManifestV1) -> bool:
     )
 
 
+def calculate_content_asset_archive_manifest_checksum(
+    manifest: ContentAssetArchiveManifestV1,
+) -> str:
+    data = manifest.model_dump(mode="json")
+    data["manifest_checksum"] = None
+    return _canonical_checksum(data)
+
+
+def sign_content_asset_archive_manifest(
+    manifest: ContentAssetArchiveManifestV1,
+) -> ContentAssetArchiveManifestV1:
+    data = manifest.model_dump(mode="json")
+    data["manifest_checksum"] = (
+        calculate_content_asset_archive_manifest_checksum(manifest)
+    )
+    return ContentAssetArchiveManifestV1.model_validate(data)
+
+
+def parse_signed_content_asset_archive_manifest(
+    payload: object,
+) -> ContentAssetArchiveManifestV1:
+    manifest = ContentAssetArchiveManifestV1.model_validate(payload)
+    if not verify_content_asset_archive_manifest_checksum(manifest):
+        raise ValueError("content asset archive manifest checksum mismatch")
+    return manifest
+
+
+def verify_content_asset_archive_manifest_checksum(
+    manifest: ContentAssetArchiveManifestV1,
+) -> bool:
+    payload = ContentAssetArchivePayloadV1.model_validate(
+        manifest.model_dump(
+            mode="json",
+            exclude={
+                "archive_id",
+                "archive_checksum",
+                "archive_path",
+                "manifest_checksum",
+            },
+        )
+    )
+    return (
+        manifest.archive_checksum
+        == calculate_content_asset_archive_payload_checksum(payload)
+        and manifest.manifest_checksum
+        == calculate_content_asset_archive_manifest_checksum(manifest)
+    )
+
+
 def publication_branch_name(
     course_id: str,
     release_id: str,
@@ -953,25 +1247,72 @@ def publication_branch_name(
     )
 
 
+def asset_publication_branch_name(
+    asset_kind: ContentAssetKind,
+    asset_id: str,
+    version: int,
+    archive_checksum: str,
+) -> str:
+    if version < 1:
+        raise ValueError("asset version must be at least 1")
+    return _validated_branch_name(
+        "chronovita/assets/"
+        f"{asset_kind}/"
+        f"{_contract_id(asset_id)}-v{version:03d}-"
+        f"{_checksum(archive_checksum)[:12]}"
+    )
+
+
+def publication_branch_name_for_request(
+    request: PublicationRequestV1,
+) -> str:
+    if isinstance(request, CourseArchivePublishRequestV1):
+        return publication_branch_name(
+            request.course_id,
+            request.release_id,
+            request.expected_archive_checksum,
+        )
+    return asset_publication_branch_name(
+        request.asset_kind,
+        request.asset_id,
+        request.version,
+        request.expected_archive_checksum,
+    )
+
+
 def publication_operation_key(
     binding: GitRepositoryBindingV1,
-    request: CourseArchivePublishRequestV1,
+    request: PublicationRequestV1,
 ) -> str:
     if binding.binding_id != request.binding_id:
         raise ValueError("request binding_id does not match binding")
     if request.mode not in binding.allowed_modes:
         raise ValueError("publication mode is disabled by binding")
-    identity = {
-        "archive_checksum": request.expected_archive_checksum,
-        "base_branch": binding.base_branch,
-        "binding_id": binding.binding_id,
-        "course_id": request.course_id,
-        "mode": request.mode,
-        "release_checksum": request.expected_release_checksum,
-        "release_id": request.release_id,
-        "repository_id": binding.repository_id,
-        "root_prefix": binding.root_prefix,
-    }
+    if isinstance(request, CourseArchivePublishRequestV1):
+        identity = {
+            "archive_checksum": request.expected_archive_checksum,
+            "base_branch": binding.base_branch,
+            "binding_id": binding.binding_id,
+            "course_id": request.course_id,
+            "mode": request.mode,
+            "release_checksum": request.expected_release_checksum,
+            "release_id": request.release_id,
+            "repository_id": binding.repository_id,
+            "root_prefix": binding.root_prefix,
+        }
+    else:
+        identity = {
+            "archive_checksum": request.expected_archive_checksum,
+            "asset_id": request.asset_id,
+            "asset_kind": request.asset_kind,
+            "asset_version": request.version,
+            "base_branch": binding.base_branch,
+            "binding_id": binding.binding_id,
+            "mode": request.mode,
+            "repository_id": binding.repository_id,
+            "root_prefix": binding.asset_root_prefix,
+            "source_checksum": request.expected_source_checksum,
+        }
     return _canonical_checksum(identity)
 
 
@@ -985,7 +1326,16 @@ def calculate_publication_metadata_checksum(payload: BaseModel) -> str:
     if "checksum" not in data:
         raise ValueError("publication metadata does not expose checksum")
     data["checksum"] = None
+    if isinstance(payload, GitPublicationIntentV1):
+        _omit_legacy_asset_root(data["binding"])
+    elif isinstance(payload, GitPublicationRecordV1):
+        _omit_legacy_asset_root(data["intent"]["binding"])
     return _canonical_checksum(data)
+
+
+def _omit_legacy_asset_root(binding: dict[str, object]) -> None:
+    if binding.get("asset_root_prefix") is None:
+        binding.pop("asset_root_prefix", None)
 
 
 def sign_publication_metadata(
@@ -1061,6 +1411,22 @@ ARCHIVE_SCHEMA_DOCUMENTS = {
             "request mode is the default; direct commit requires explicit confirmation."
         ),
     ),
+    "content-asset-archive-manifest.schema.json": (
+        ContentAssetArchiveManifestV1,
+        "https://chronovita.local/schemas/archive/v1/content-asset-archive-manifest.schema.json",
+        (
+            "A person, keyword or scenario archive contains one exact immutable "
+            "JSON source plus signed identity, size and checksum metadata."
+        ),
+    ),
+    "content-asset-archive-publish-request.schema.json": (
+        ContentAssetArchivePublishRequestV1,
+        "https://chronovita.local/schemas/archive/v1/content-asset-archive-publish-request.schema.json",
+        (
+            "Clients select one exact sealed content asset and a server-side "
+            "repository binding. Pull requests remain the default."
+        ),
+    ),
     "git-publication-intent.schema.json": (
         GitPublicationIntentV1,
         "https://chronovita.local/schemas/archive/v1/git-publication-intent.schema.json",
@@ -1129,14 +1495,21 @@ def _truncate_portable_component(
 
 
 __all__ = [
+    "ASSET_ARCHIVE_MANIFEST_FILENAME",
     "ARCHIVE_MANIFEST_FILENAME",
     "ARCHIVE_RELEASE_MANIFEST_FILENAME",
     "ARCHIVE_SCHEMA_DOCUMENTS",
+    "DEFAULT_ASSET_REPOSITORY_ROOT_PREFIX",
     "DEFAULT_REPOSITORY_ROOT_PREFIX",
     "MAX_ARCHIVE_FILE_BYTES",
     "MAX_ARCHIVE_FILES",
     "MAX_ARCHIVE_TOTAL_BYTES",
     "ArchiveRendererV1",
+    "ContentAssetArchiveFileV1",
+    "ContentAssetArchiveManifestV1",
+    "ContentAssetArchivePayloadV1",
+    "ContentAssetArchivePublishRequestV1",
+    "ContentAssetKind",
     "CourseArchiveFileV1",
     "CourseArchiveLessonV1",
     "CourseArchiveManifestV1",
@@ -1146,16 +1519,25 @@ __all__ = [
     "GitPublicationIntentV1",
     "GitPublicationRecordV1",
     "GitRepositoryBindingV1",
+    "PublicationRequestV1",
+    "asset_publication_branch_name",
     "archive_id_for_checksum",
     "archive_relative_path",
     "calculate_archive_manifest_checksum",
     "calculate_archive_payload_checksum",
+    "calculate_content_asset_archive_manifest_checksum",
+    "calculate_content_asset_archive_payload_checksum",
     "calculate_publication_metadata_checksum",
+    "content_asset_archive_relative_path",
+    "content_asset_archive_source_path",
+    "content_asset_repository_archive_path",
     "lesson_archive_paths",
+    "parse_signed_content_asset_archive_manifest",
     "parse_signed_archive_manifest",
     "parse_signed_publication_intent",
     "parse_signed_publication_record",
     "publication_branch_name",
+    "publication_branch_name_for_request",
     "publication_id_for_key",
     "publication_operation_key",
     "repository_archive_path",
@@ -1163,7 +1545,9 @@ __all__ = [
     "scenario_archive_path",
     "schema_document",
     "sign_archive_manifest",
+    "sign_content_asset_archive_manifest",
     "sign_publication_metadata",
     "verify_archive_manifest_checksum",
+    "verify_content_asset_archive_manifest_checksum",
     "verify_publication_metadata_checksum",
 ]

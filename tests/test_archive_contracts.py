@@ -24,6 +24,7 @@ from services.contracts.archive_v1 import (
     CourseArchiveFileV1,
     CourseArchiveManifestV1,
     CourseArchivePublishRequestV1,
+    GitPublicationIntentV1,
     GitPublicationRecordV1,
     GitRepositoryBindingV1,
     archive_id_for_checksum,
@@ -32,6 +33,7 @@ from services.contracts.archive_v1 import (
     parse_signed_publication_intent,
     parse_signed_publication_record,
     publication_branch_name,
+    publication_id_for_key,
     publication_operation_key,
     repository_archive_path,
     safe_archive_filename,
@@ -193,6 +195,7 @@ class ArchiveContractTests(unittest.TestCase):
     def test_repository_binding_is_server_owned_and_secret_free(self):
         binding = build_example_repository_binding()
         self.assertEqual(binding.visibility, "private")
+        self.assertEqual(binding.asset_root_prefix, "assets")
         self.assertEqual(binding.allowed_modes, ("pull_request", "direct_commit"))
 
         raw = binding.model_dump(mode="json")
@@ -219,6 +222,11 @@ class ArchiveContractTests(unittest.TestCase):
         public_repo["visibility"] = "public"
         with self.assertRaises(ValidationError):
             GitRepositoryBindingV1.model_validate(public_repo)
+
+        overlapping_roots = binding.model_dump(mode="json")
+        overlapping_roots["asset_root_prefix"] = "courses/assets"
+        with self.assertRaisesRegex(ValidationError, "must not overlap"):
+            GitRepositoryBindingV1.model_validate(overlapping_roots)
 
     def test_publish_request_cannot_override_repository_or_skip_confirmation(self):
         request = build_dayu_publish_request()
@@ -350,6 +358,51 @@ class ArchiveContractTests(unittest.TestCase):
                 outer_resigned.model_dump(mode="json")
             )
 
+    def test_legacy_course_publication_checksums_allow_missing_asset_root(self):
+        current = build_dayu_publication_intent()
+        binding = current.binding.model_copy(
+            update={"asset_root_prefix": None}
+        )
+        operation_key = publication_operation_key(binding, current.request)
+        legacy_intent = sign_publication_metadata(
+            GitPublicationIntentV1(
+                publication_id=publication_id_for_key(operation_key),
+                operation_key=operation_key,
+                binding=binding,
+                request=current.request,
+                requested_at=current.requested_at,
+                requested_by=current.requested_by,
+                checksum="0" * 64,
+            )
+        )
+        legacy_payload = legacy_intent.model_dump(mode="json")
+        legacy_payload["binding"].pop("asset_root_prefix")
+        parsed_intent = parse_signed_publication_intent(legacy_payload)
+        self.assertIsNone(parsed_intent.binding.asset_root_prefix)
+
+        branch = publication_branch_name(
+            current.request.course_id,
+            current.request.release_id,
+            current.request.expected_archive_checksum,
+        )
+        legacy_record = sign_publication_metadata(
+            GitPublicationRecordV1(
+                intent=legacy_intent,
+                status="requested",
+                attempt=0,
+                revision=0,
+                branch_ref=branch,
+                updated_at=current.requested_at,
+                checksum="0" * 64,
+            )
+        )
+        record_payload = legacy_record.model_dump(mode="json")
+        record_payload["intent"]["binding"].pop("asset_root_prefix")
+        parsed_record = parse_signed_publication_record(record_payload)
+        self.assertIsNone(
+            parsed_record.intent.binding.asset_root_prefix
+        )
+
     def test_repository_path_combines_binding_root_exactly_once(self):
         binding = build_example_repository_binding()
         manifest, _ = build_dayu_archive_package()
@@ -393,6 +446,7 @@ class ArchiveContractTests(unittest.TestCase):
         self.assertEqual(target["visibility"], "private")
         self.assertEqual(target["base_branch"], "main")
         self.assertEqual(target["root_prefix"], "courses")
+        self.assertEqual(target["asset_root_prefix"], "assets")
         self.assertEqual(target["default_publication_mode"], "pull_request")
         self.assertEqual(
             target["allowed_publication_modes"],
@@ -429,6 +483,7 @@ class ArchiveContractTests(unittest.TestCase):
                 "visibility": target["visibility"],
                 "base_branch": target["base_branch"],
                 "root_prefix": target["root_prefix"],
+                "asset_root_prefix": target["asset_root_prefix"],
                 "credential_kind": "fine_grained_token",
                 "installation_id": None,
                 "allowed_modes": target["allowed_publication_modes"],

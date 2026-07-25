@@ -8,6 +8,7 @@
   "visibility": "private",
   "base_branch": "main",
   "root_prefix": "courses",
+  "asset_root_prefix": "assets",
   "default_publication_mode": "pull_request",
   "allowed_publication_modes": [
     "pull_request",

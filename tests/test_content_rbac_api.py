@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import inspect
+import json
 import shutil
 import sys
 import time
 import unittest
 import uuid
 from contextlib import asynccontextmanager
+from io import BytesIO
 from pathlib import Path
 from threading import Barrier, Thread
 from unittest.mock import Mock, patch
+from zipfile import ZipFile
 
 from fastapi import FastAPI, HTTPException
 from fastapi.routing import APIRoute
@@ -143,6 +146,135 @@ class ContentRbacApiTests(unittest.TestCase):
             admin_context,
             "direct_commit",
         )
+
+    def test_person_asset_can_be_saved_sealed_and_downloaded_by_role(self):
+        person = self.client.get(
+            "/api/v1/admin/content/assets/people/template",
+            headers=self.teacher_a["headers"],
+        ).json()
+        person.update(
+            {
+                "asset_id": "api-person-history",
+                "name": "API 样板人物",
+                "summary": "用于验证人物档案封存与归档下载。",
+            }
+        )
+        saved = self.client.post(
+            "/api/v1/admin/content/assets/people",
+            headers=self.teacher_a["headers"],
+            json=person,
+        )
+        self.assertEqual(saved.status_code, 200, saved.text)
+        self.assertEqual(saved.json()["item"]["status"], "draft")
+
+        denied = self.client.post(
+            "/api/v1/admin/content/assets/people/api-person-history/seal",
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(denied.status_code, 403, denied.text)
+
+        validated = self.client.post(
+            "/api/v1/admin/content/assets/people/api-person-history/validate",
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(validated.status_code, 200, validated.text)
+        self.assertTrue(validated.json()["report"]["valid"])
+
+        sealed = self.client.post(
+            "/api/v1/admin/content/assets/people/api-person-history/seal",
+            headers=self.admin["headers"],
+        )
+        self.assertEqual(sealed.status_code, 200, sealed.text)
+        sealed_body = sealed.json()
+        self.assertEqual(sealed_body["item"]["version"], 1)
+        self.assertEqual(
+            sealed_body["item"]["sealed_by"],
+            self.admin["user_id"],
+        )
+        self.assertFalse(sealed_body["idempotent"])
+
+        versions = self.client.get(
+            "/api/v1/admin/content/assets/people/api-person-history/versions",
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(versions.status_code, 200, versions.text)
+        self.assertEqual(
+            [
+                (item["version"], item["checksum"])
+                for item in versions.json()["items"]
+            ],
+            [(1, sealed_body["item"]["checksum"])],
+        )
+
+        archive_url = (
+            "/api/v1/admin/content/asset-archives/person/"
+            "api-person-history/versions/1"
+        )
+        query = {"source_checksum": sealed_body["item"]["checksum"]}
+        preview = self.client.post(
+            f"{archive_url}/preview",
+            params=query,
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(preview.status_code, 200, preview.text)
+        self.assertEqual(preview.json()["archive"]["asset_kind"], "person")
+        self.assertEqual(preview.json()["archive"]["version"], 1)
+
+        downloaded = self.client.get(
+            f"{archive_url}/archive.zip",
+            params=query,
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(downloaded.status_code, 200, downloaded.text)
+        self.assertIn(
+            "filename*=UTF-8''",
+            downloaded.headers["content-disposition"],
+        )
+        with ZipFile(BytesIO(downloaded.content)) as bundle:
+            names = bundle.namelist()
+            self.assertEqual(len(names), 2)
+            manifest_name = next(
+                name for name in names if name.endswith("归档清单.json")
+            )
+            manifest = json.loads(bundle.read(manifest_name))
+        self.assertEqual(
+            manifest["archive_checksum"],
+            preview.json()["archive"]["archive_checksum"],
+        )
+
+        missing = self.client.post(
+            (
+                "/api/v1/admin/content/asset-archives/person/"
+                "missing-person/versions/1/preview"
+            ),
+            params=query,
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(missing.status_code, 404, missing.text)
+
+        invalid_version = self.client.post(
+            (
+                "/api/v1/admin/content/asset-archives/person/"
+                "api-person-history/versions/0/preview"
+            ),
+            params=query,
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(invalid_version.status_code, 422, invalid_version.text)
+
+        invalid_checksum = self.client.post(
+            f"{archive_url}/preview",
+            params={"source_checksum": "not-a-checksum"},
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(invalid_checksum.status_code, 422, invalid_checksum.text)
+
+        changed = self.client.post(
+            f"{archive_url}/preview",
+            params={"source_checksum": "f" * 64},
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(changed.status_code, 409, changed.text)
 
     def test_role_matrix_ownership_spoofing_and_audit_chain(self):
         self._assert_every_content_route_has_the_expected_permission()
@@ -486,17 +618,45 @@ class ContentRbacApiTests(unittest.TestCase):
                     "archive-preview"
                 ),
             ): "content.read",
+            (
+                "POST",
+                (
+                    f"{prefix}/asset-archives/{{asset_kind}}/{{asset_id}}/"
+                    "versions/{version}/preview"
+                ),
+            ): "content.read",
             ("POST", f"{prefix}/publications"): "content.publish",
             (
                 "POST",
                 f"{prefix}/publications/{{publication_id}}/retry",
+            ): "content.publish",
+            ("POST", f"{prefix}/asset-publications"): "content.publish",
+            (
+                "POST",
+                f"{prefix}/asset-publications/{{publication_id}}/retry",
             ): "content.publish",
             (
                 "POST",
                 f"{prefix}/releases/{{course_id}}/rollback",
             ): "content.publish",
             ("POST", f"{prefix}/assets/people"): "content.author",
+            (
+                "POST",
+                f"{prefix}/assets/people/{{asset_id}}/validate",
+            ): "content.author",
+            (
+                "POST",
+                f"{prefix}/assets/people/{{asset_id}}/seal",
+            ): "content.publish",
             ("POST", f"{prefix}/assets/keywords"): "content.author",
+            (
+                "POST",
+                f"{prefix}/assets/keywords/{{asset_id}}/validate",
+            ): "content.author",
+            (
+                "POST",
+                f"{prefix}/assets/keywords/{{asset_id}}/seal",
+            ): "content.publish",
         }
         seen_writes: set[tuple[str, str]] = set()
         for route in admin_content.router.routes:

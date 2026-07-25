@@ -413,6 +413,18 @@ def list_scenario_drafts() -> list[ScenarioDraftRecordV1]:
 def validate_scenario_draft(
     draft: ScenarioAuthorDraftV1,
 ) -> ScenarioDraftValidationReportV1:
+    if len(draft.title.strip()) > 160:
+        return _validation_report(
+            draft,
+            valid=False,
+            issues=[
+                ScenarioDraftValidationIssueV1(
+                    path="title",
+                    code="string_too_long",
+                    message="关卡标题不能超过 160 个字符。",
+                )
+            ],
+        )
     try:
         _sealed_contract(draft, version=1, sealed_by="validation", sealed_at=_now())
     except ValidationError as exc:

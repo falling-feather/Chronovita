@@ -65,6 +65,20 @@
       "title": "Root Prefix",
       "type": "string"
     },
+    "asset_root_prefix": {
+      "anyOf": [
+        {
+          "maxLength": 512,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Asset Root Prefix"
+    },
     "credential_kind": {
       "default": "github_app",
       "enum": [

@@ -143,6 +143,7 @@ def build_example_repository_binding() -> GitRepositoryBindingV1:
         repository="chronovita-course-content",
         base_branch="main",
         root_prefix="courses",
+        asset_root_prefix="assets",
         credential_kind="github_app",
         installation_id=12345678,
         allowed_modes=("pull_request", "direct_commit"),
