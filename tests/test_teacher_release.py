@@ -108,6 +108,19 @@ class TeacherReleaseTests(unittest.TestCase):
         self.assertIn("return ,$memory.ToArray()", workflow)
         self.assertNotIn("return $memory.ToArray()", workflow)
 
+    def test_release_publication_can_complete_a_precreated_prerelease(self):
+        workflow = (
+            REPO_ROOT / ".github" / "workflows" / "teacher-release.yml"
+        ).read_text("utf-8")
+        view_index = workflow.index("gh release view")
+        upload_index = workflow.index("gh release upload")
+        edit_index = workflow.index("gh release edit")
+        create_index = workflow.index("gh release create")
+        self.assertLess(view_index, upload_index)
+        self.assertLess(upload_index, edit_index)
+        self.assertLess(edit_index, create_index)
+        self.assertIn("--clobber", workflow[upload_index:edit_index])
+
     def test_cmd_launchers_reset_inherited_powershell_module_path(self):
         for relative_path in (
             Path("点我一键启动（部署）.cmd"),

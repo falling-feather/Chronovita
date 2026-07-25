@@ -332,7 +332,7 @@ jobs:
               $memory = New-Object IO.MemoryStream
               try {
                 $stream.CopyTo($memory)
-              return ,$memory.ToArray()
+                return ,$memory.ToArray()
               } finally {
                 $memory.Dispose()
               }
@@ -465,14 +465,35 @@ jobs:
 
           当前为 V0.9.x 教师预览包，不代表生产级多用户部署已经完成。
           "@ | Set-Content -LiteralPath $notesPath -Encoding utf8
-          & gh release create $env:GITHUB_REF_NAME `
-            $env:TEACHER_ARCHIVE `
-            $env:TEACHER_CHECKSUM `
-            --repo $env:GITHUB_REPOSITORY `
-            --verify-tag `
-            --prerelease `
-            --title "Chronovita 教师编辑器 V$env:TEACHER_VERSION" `
-            --notes-file $notesPath
-          if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
+          & gh release view $env:GITHUB_REF_NAME `
+            --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            & gh release upload $env:GITHUB_REF_NAME `
+              $env:TEACHER_ARCHIVE `
+              $env:TEACHER_CHECKSUM `
+              --repo $env:GITHUB_REPOSITORY `
+              --clobber
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+            & gh release edit $env:GITHUB_REF_NAME `
+              --repo $env:GITHUB_REPOSITORY `
+              --prerelease `
+              --title "Chronovita 教师编辑器 V$env:TEACHER_VERSION" `
+              --notes-file $notesPath
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          } else {
+            & gh release create $env:GITHUB_REF_NAME `
+              $env:TEACHER_ARCHIVE `
+              $env:TEACHER_CHECKSUM `
+              --repo $env:GITHUB_REPOSITORY `
+              --verify-tag `
+              --prerelease `
+              --title "Chronovita 教师编辑器 V$env:TEACHER_VERSION" `
+              --notes-file $notesPath
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
           }
