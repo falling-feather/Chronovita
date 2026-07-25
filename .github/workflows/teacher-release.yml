@@ -198,7 +198,10 @@ jobs:
             -Token $secureToken `
             -CredentialRoot $credentialRoot
           $credentialPath = Join-Path $credentialRoot "content-history-token.dpapi"
-          $encrypted = Get-Content -LiteralPath $credentialPath -Raw
+          $encrypted = (Get-Content -LiteralPath $credentialPath -Raw).Trim()
+          if ([string]::IsNullOrWhiteSpace($encrypted)) {
+            throw "Credential helper wrote an empty DPAPI payload."
+          }
           if ($encrypted.Contains($plainToken)) {
             throw "Credential helper wrote the token as plain text."
           }
