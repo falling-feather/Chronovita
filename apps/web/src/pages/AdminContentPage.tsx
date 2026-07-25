@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, ReactNode } from 'react';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
-import { Button, Divider, Empty, Input, Segmented, Select, Space, Tag, Tooltip } from 'antd';
+import { Alert, Button, Divider, Empty, Input, Segmented, Select, Space, Tag, Tooltip } from 'antd';
 import {
   BgColorsOutlined,
   BoldOutlined,
@@ -26,6 +26,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import {
   api,
+  type ContentAssetValidationReport,
   type ContentWorkflowRecord,
   type ContentAssetRecord,
   type ContentFileRecord,
@@ -43,6 +44,7 @@ import { parseContentBlock, parseContentMarkup, renderMarkupHtml, stripInlineMar
 import { toast } from '../utils/toast';
 import ScenarioRuleEditor from './admin/ScenarioRuleEditor';
 import ArchivePublicationPanel from './admin/ArchivePublicationPanel';
+import AssetPublicationPanel from './admin/AssetPublicationPanel';
 import { runtimeScenarioKey } from './admin/scenarioRuleModel';
 
 const { TextArea } = Input;
@@ -786,11 +788,16 @@ export default function AdminContentPage() {
   const [selectedSourceLesson, setSelectedSourceLesson] = useState<string>();
   const [selectedPersonAsset, setSelectedPersonAsset] = useState<string>();
   const [selectedKeywordAsset, setSelectedKeywordAsset] = useState<string>();
+  const [personValidation, setPersonValidation] = useState<ContentAssetValidationReport | null>(null);
+  const [keywordValidation, setKeywordValidation] = useState<ContentAssetValidationReport | null>(null);
+  const [personVersions, setPersonVersions] = useState<ContentAssetRecord[]>([]);
+  const [keywordVersions, setKeywordVersions] = useState<ContentAssetRecord[]>([]);
   const [showGuide, setShowGuide] = useState(false);
   const [sealedPath, setSealedPath] = useState('');
   const [localSavedAt, setLocalSavedAt] = useState('');
   const [serverSavedAt, setServerSavedAt] = useState('');
-  const [assetSavedAt, setAssetSavedAt] = useState('');
+  const [personSavedAt, setPersonSavedAt] = useState('');
+  const [keywordSavedAt, setKeywordSavedAt] = useState('');
   const [busy, setBusy] = useState('');
   const bodyTextAreaRef = useRef<TextAreaRef | null>(null);
   const bodySelectionRef = useRef<TextSelectionRange>({ start: 0, end: 0 });
@@ -898,6 +905,30 @@ export default function AdminContentPage() {
       return null;
     }
   }, [keywordEditor]);
+  const personPublicationVersions = useMemo(
+    () => personVersions
+      .filter((item) => item.asset_id === personEditor.asset_id)
+      .map((item) => ({
+        version: item.version || 0,
+        checksum: item.checksum || '',
+        title: item.title,
+        sealedAt: item.sealed_at,
+        sealedBy: item.sealed_by,
+      })),
+    [personEditor.asset_id, personVersions],
+  );
+  const keywordPublicationVersions = useMemo(
+    () => keywordVersions
+      .filter((item) => item.asset_id === keywordEditor.asset_id)
+      .map((item) => ({
+        version: item.version || 0,
+        checksum: item.checksum || '',
+        title: item.title,
+        sealedAt: item.sealed_at,
+        sealedBy: item.sealed_by,
+      })),
+    [keywordEditor.asset_id, keywordVersions],
+  );
 
   useEffect(() => {
     setScenarioBindingMode('preserve');
@@ -931,6 +962,10 @@ export default function AdminContentPage() {
     setSourceLessons([]);
     setAssets([]);
     setRuntimeScenarios([]);
+    setPersonValidation(null);
+    setKeywordValidation(null);
+    setPersonVersions([]);
+    setKeywordVersions([]);
     setScenarioBindingMode('preserve');
     setSelectedScenarioKeys([]);
     setPrimaryScenarioKey(undefined);
@@ -987,12 +1022,14 @@ export default function AdminContentPage() {
 
   const updatePersonEditor = (patch: Partial<PersonEditorState>) => {
     setPersonEditor((current) => ({ ...current, ...patch }));
-    setAssetSavedAt('');
+    setPersonSavedAt('');
+    setPersonValidation(null);
   };
 
   const updateKeywordEditor = (patch: Partial<KeywordEditorState>) => {
     setKeywordEditor((current) => ({ ...current, ...patch }));
-    setAssetSavedAt('');
+    setKeywordSavedAt('');
+    setKeywordValidation(null);
   };
 
   const getBodyTextArea = () => bodyTextAreaRef.current?.resizableTextArea?.textArea ?? null;
@@ -1116,6 +1153,40 @@ export default function AdminContentPage() {
     } catch (err: any) {
       if (tokenRefreshSequenceRef.current === sequence) {
         toast.error(err?.message || '资料档案读取失败');
+      }
+    }
+  };
+
+  const refreshPersonVersions = async (assetId = personEditor.asset_id, silent = false) => {
+    if (!token || !assetId.trim()) {
+      setPersonVersions([]);
+      return;
+    }
+    const sequence = tokenRefreshSequenceRef.current;
+    try {
+      const res = await api.adminPersonAssetVersions(token, assetId.trim());
+      if (tokenRefreshSequenceRef.current !== sequence) return;
+      setPersonVersions(res.items);
+    } catch (err: any) {
+      if (!silent && tokenRefreshSequenceRef.current === sequence) {
+        toast.error(err?.message || '人物封存版本读取失败');
+      }
+    }
+  };
+
+  const refreshKeywordVersions = async (assetId = keywordEditor.asset_id, silent = false) => {
+    if (!token || !assetId.trim()) {
+      setKeywordVersions([]);
+      return;
+    }
+    const sequence = tokenRefreshSequenceRef.current;
+    try {
+      const res = await api.adminKeywordAssetVersions(token, assetId.trim());
+      if (tokenRefreshSequenceRef.current !== sequence) return;
+      setKeywordVersions(res.items);
+    } catch (err: any) {
+      if (!silent && tokenRefreshSequenceRef.current === sequence) {
+        toast.error(err?.message || '关键词封存版本读取失败');
       }
     }
   };
@@ -1288,6 +1359,9 @@ export default function AdminContentPage() {
       const item = await api.adminPersonTemplate(token);
       setPersonEditor(personToEditor(item));
       setSelectedPersonAsset(undefined);
+      setPersonValidation(null);
+      setPersonVersions([]);
+      setPersonSavedAt('');
       toast.success('人物模板已载入');
     } catch (err: any) {
       toast.error(err?.message || '人物模板载入失败');
@@ -1302,6 +1376,9 @@ export default function AdminContentPage() {
       const item = await api.adminKeywordTemplate(token);
       setKeywordEditor(keywordToEditor(item));
       setSelectedKeywordAsset(undefined);
+      setKeywordValidation(null);
+      setKeywordVersions([]);
+      setKeywordSavedAt('');
       toast.success('关键词模板已载入');
     } catch (err: any) {
       toast.error(err?.message || '关键词模板载入失败');
@@ -1316,7 +1393,9 @@ export default function AdminContentPage() {
     try {
       const item = await api.adminPersonAsset(token, selectedPersonAsset);
       setPersonEditor(personToEditor(item));
-      setAssetSavedAt(item.updated_at ? new Date(item.updated_at).toLocaleString() : '');
+      setPersonValidation(null);
+      setPersonSavedAt(item.updated_at ? new Date(item.updated_at).toLocaleString() : '');
+      await refreshPersonVersions(item.asset_id, true);
       toast.success('人物档案已打开');
     } catch (err: any) {
       toast.error(err?.message || '人物档案打开失败');
@@ -1331,7 +1410,9 @@ export default function AdminContentPage() {
     try {
       const item = await api.adminKeywordAsset(token, selectedKeywordAsset);
       setKeywordEditor(keywordToEditor(item));
-      setAssetSavedAt(item.updated_at ? new Date(item.updated_at).toLocaleString() : '');
+      setKeywordValidation(null);
+      setKeywordSavedAt(item.updated_at ? new Date(item.updated_at).toLocaleString() : '');
+      await refreshKeywordVersions(item.asset_id, true);
       toast.success('关键词档案已打开');
     } catch (err: any) {
       toast.error(err?.message || '关键词档案打开失败');
@@ -1492,15 +1573,29 @@ export default function AdminContentPage() {
     }
   };
 
+  const persistPersonAsset = async () => {
+    const payload = buildPersonAsset(personEditor);
+    const res = await api.adminSavePersonAsset(token, payload);
+    setPersonEditor(personToEditor(res.item));
+    setPersonValidation(null);
+    setSelectedPersonAsset(res.item.asset_id);
+    setPersonSavedAt(
+      res.item.updated_at
+        ? new Date(res.item.updated_at).toLocaleString()
+        : new Date().toLocaleString(),
+    );
+    await Promise.all([
+      refreshAssets(),
+      refreshPersonVersions(res.item.asset_id, true),
+    ]);
+    return res.item;
+  };
+
   const savePersonAsset = async () => {
     setBusy('person-save');
     try {
-      const payload = buildPersonAsset(personEditor);
-      const res = await api.adminSavePersonAsset(token, payload);
-      setPersonEditor(personToEditor(res.item));
-      setAssetSavedAt(res.item.updated_at ? new Date(res.item.updated_at).toLocaleString() : new Date().toLocaleString());
-      await refreshAssets();
-      toast.success('人物档案已保存');
+      await persistPersonAsset();
+      toast.success('人物档案草稿已保存');
     } catch (err: any) {
       toast.error(err?.message || '人物档案保存失败');
     } finally {
@@ -1508,17 +1603,145 @@ export default function AdminContentPage() {
     }
   };
 
+  const validatePersonAsset = async () => {
+    setBusy('person-validate');
+    try {
+      const saved = await persistPersonAsset();
+      const res = await api.adminValidatePersonAsset(token, saved.asset_id);
+      setPersonValidation(res.report);
+      if (res.report.valid) {
+        toast.success('人物档案校验通过');
+      } else {
+        toast.warning('人物档案仍有阻断项，请按提示补充');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || '人物档案校验失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const sealPersonAsset = async () => {
+    setBusy('person-seal');
+    try {
+      const saved = await persistPersonAsset();
+      const validation = await api.adminValidatePersonAsset(token, saved.asset_id);
+      setPersonValidation(validation.report);
+      if (!validation.report.valid) {
+        toast.warning('请先处理阻断项，再封存人物档案');
+        return;
+      }
+      const res = await api.adminSealPersonAsset(token, saved.asset_id);
+      await Promise.all([
+        refreshAssets(),
+        refreshPersonVersions(saved.asset_id),
+      ]);
+      toast.success(
+        res.idempotent
+          ? `内容未变化，继续使用封存版本 v${res.item.version}`
+          : `人物档案已封存为 v${res.item.version}`,
+      );
+    } catch (err: any) {
+      toast.error(err?.message || '人物档案封存失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const refreshPersonAssetState = async () => {
+    setBusy('person-refresh');
+    try {
+      await Promise.all([
+        refreshAssets(),
+        refreshPersonVersions(personEditor.asset_id),
+      ]);
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const persistKeywordAsset = async () => {
+    const payload = buildKeywordAsset(keywordEditor);
+    const res = await api.adminSaveKeywordAsset(token, payload);
+    setKeywordEditor(keywordToEditor(res.item));
+    setKeywordValidation(null);
+    setSelectedKeywordAsset(res.item.asset_id);
+    setKeywordSavedAt(
+      res.item.updated_at
+        ? new Date(res.item.updated_at).toLocaleString()
+        : new Date().toLocaleString(),
+    );
+    await Promise.all([
+      refreshAssets(),
+      refreshKeywordVersions(res.item.asset_id, true),
+    ]);
+    return res.item;
+  };
+
   const saveKeywordAsset = async () => {
     setBusy('keyword-save');
     try {
-      const payload = buildKeywordAsset(keywordEditor);
-      const res = await api.adminSaveKeywordAsset(token, payload);
-      setKeywordEditor(keywordToEditor(res.item));
-      setAssetSavedAt(res.item.updated_at ? new Date(res.item.updated_at).toLocaleString() : new Date().toLocaleString());
-      await refreshAssets();
-      toast.success('关键词档案已保存');
+      await persistKeywordAsset();
+      toast.success('关键词档案草稿已保存');
     } catch (err: any) {
       toast.error(err?.message || '关键词档案保存失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const validateKeywordAsset = async () => {
+    setBusy('keyword-validate');
+    try {
+      const saved = await persistKeywordAsset();
+      const res = await api.adminValidateKeywordAsset(token, saved.asset_id);
+      setKeywordValidation(res.report);
+      if (res.report.valid) {
+        toast.success('关键词档案校验通过');
+      } else {
+        toast.warning('关键词档案仍有阻断项，请按提示补充');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || '关键词档案校验失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const sealKeywordAsset = async () => {
+    setBusy('keyword-seal');
+    try {
+      const saved = await persistKeywordAsset();
+      const validation = await api.adminValidateKeywordAsset(token, saved.asset_id);
+      setKeywordValidation(validation.report);
+      if (!validation.report.valid) {
+        toast.warning('请先处理阻断项，再封存关键词档案');
+        return;
+      }
+      const res = await api.adminSealKeywordAsset(token, saved.asset_id);
+      await Promise.all([
+        refreshAssets(),
+        refreshKeywordVersions(saved.asset_id),
+      ]);
+      toast.success(
+        res.idempotent
+          ? `内容未变化，继续使用封存版本 v${res.item.version}`
+          : `关键词档案已封存为 v${res.item.version}`,
+      );
+    } catch (err: any) {
+      toast.error(err?.message || '关键词档案封存失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const refreshKeywordAssetState = async () => {
+    setBusy('keyword-refresh');
+    try {
+      await Promise.all([
+        refreshAssets(),
+        refreshKeywordVersions(keywordEditor.asset_id),
+      ]);
     } finally {
       setBusy('');
     }
@@ -1688,6 +1911,7 @@ export default function AdminContentPage() {
         <div className="chrono-course-eyeline" style={{ marginBottom: 8 }}>编辑对象</div>
         <Segmented
           value={editorMode}
+          disabled={Boolean(busy)}
           onChange={(value) => rememberEditorMode(value as EditorMode)}
           options={[
             { label: '课程内容', value: 'lesson' },
@@ -2296,8 +2520,13 @@ export default function AdminContentPage() {
       )}
 
       {editorMode === 'person' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(min(100%, 360px), 0.45fr)', gap: 16, alignItems: 'start' }}>
-          <section className="chrono-card" style={{ padding: 16 }}>
+        <div className="chrono-asset-editor-layout">
+          <fieldset
+            className="chrono-card"
+            disabled={Boolean(busy)}
+            aria-busy={Boolean(busy)}
+            style={{ border: 0, margin: 0, minWidth: 0, padding: 16 }}
+          >
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 12 }}>
               <label>
                 <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>档案 ID</div>
@@ -2347,14 +2576,16 @@ export default function AdminContentPage() {
               <div className="chrono-course-eyeline" style={{ margin: '12px 0 6px' }}>教师备注</div>
               <TextArea aria-label="人物教师备注" value={personEditor.teacher_notes} onChange={(event) => updatePersonEditor({ teacher_notes: event.target.value })} autoSize={{ minRows: 3, maxRows: 6 }} />
             </label>
-          </section>
+          </fieldset>
 
           <aside className="chrono-card" style={{ padding: 16 }}>
             <Space wrap style={{ marginBottom: 12 }}>
-              <Button icon={<FileTextOutlined />} onClick={loadPersonTemplate} loading={busy === 'person-template'}>模板</Button>
-              <Button type="primary" icon={<SaveOutlined />} onClick={savePersonAsset} loading={busy === 'person-save'}>保存档案</Button>
-              <Button icon={<DownloadOutlined />} onClick={exportCurrentPerson}>导出</Button>
-              <Button icon={<ReloadOutlined />} onClick={refreshAssets}>刷新</Button>
+              <Button disabled={Boolean(busy)} icon={<FileTextOutlined />} onClick={loadPersonTemplate} loading={busy === 'person-template'}>模板</Button>
+              <Button disabled={Boolean(busy)} type="primary" icon={<SaveOutlined />} onClick={savePersonAsset} loading={busy === 'person-save'}>保存草稿</Button>
+              <Button disabled={Boolean(busy)} icon={<SafetyCertificateOutlined />} onClick={validatePersonAsset} loading={busy === 'person-validate'}>校验</Button>
+              <Button disabled={Boolean(busy)} icon={<LockOutlined />} onClick={sealPersonAsset} loading={busy === 'person-seal'}>封存</Button>
+              <Button disabled={Boolean(busy)} icon={<DownloadOutlined />} onClick={exportCurrentPerson}>导出草稿</Button>
+              <Button disabled={Boolean(busy)} icon={<ReloadOutlined />} onClick={refreshPersonAssetState} loading={busy === 'person-refresh'}>刷新</Button>
             </Space>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <Select
@@ -2362,6 +2593,7 @@ export default function AdminContentPage() {
                 placeholder="人物档案库"
                 value={selectedPersonAsset}
                 onChange={setSelectedPersonAsset}
+                disabled={Boolean(busy)}
                 showSearch
                 optionFilterProp="label"
                 style={{ flex: 1 }}
@@ -2370,12 +2602,46 @@ export default function AdminContentPage() {
                   label: `${item.title} · ${item.asset_id}`,
                 }))}
               />
-              <Button loading={busy === 'person-load'} disabled={!selectedPersonAsset} onClick={loadPersonAsset}>打开</Button>
+              <Button
+                loading={busy === 'person-load'}
+                disabled={Boolean(busy) || !selectedPersonAsset}
+                onClick={loadPersonAsset}
+              >
+                打开
+              </Button>
             </div>
             <Space size={[6, 6]} wrap style={{ marginBottom: 12 }}>
               <Tag color="blue">{personEditor.asset_id}</Tag>
-              {assetSavedAt && <Tag color="green">已保存 {assetSavedAt}</Tag>}
+              {personSavedAt && <Tag color="green">已保存 {personSavedAt}</Tag>}
+              {personPublicationVersions.length > 0 && (
+                <Tag color="cyan">封存版本 {personPublicationVersions.length}</Tag>
+              )}
             </Space>
+            {personValidation && (
+              <Alert
+                style={{ marginBottom: 12 }}
+                type={
+                  personValidation.valid
+                    ? personValidation.issues.length > 0 ? 'warning' : 'success'
+                    : 'error'
+                }
+                showIcon
+                message={
+                  personValidation.valid
+                    ? personValidation.issues.length > 0
+                      ? `校验通过，另有 ${personValidation.issues.length} 条完善建议`
+                      : '人物档案校验通过，可以封存'
+                    : `还有 ${personValidation.issues.length} 个阻断项`
+                }
+                description={personValidation.issues.length > 0 ? (
+                  <div style={{ display: 'grid', gap: 5 }}>
+                    {personValidation.issues.map((issue, index) => (
+                      <div key={`${issue.field}-${issue.code}-${index}`}>{issue.message}</div>
+                    ))}
+                  </div>
+                ) : undefined}
+              />
+            )}
             {currentPersonAsset ? (
               <div style={{ lineHeight: 1.75 }}>
                 <strong>{currentPersonAsset.name}</strong>
@@ -2390,13 +2656,25 @@ export default function AdminContentPage() {
             ) : (
               <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="请填写人物姓名" />
             )}
+            <AssetPublicationPanel
+              token={token}
+              assetKind="person"
+              assetId={personEditor.asset_id.trim()}
+              assetTitle={personEditor.name.trim()}
+              versions={personPublicationVersions}
+            />
           </aside>
         </div>
       )}
 
       {editorMode === 'keyword' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(min(100%, 360px), 0.45fr)', gap: 16, alignItems: 'start' }}>
-          <section className="chrono-card" style={{ padding: 16 }}>
+        <div className="chrono-asset-editor-layout">
+          <fieldset
+            className="chrono-card"
+            disabled={Boolean(busy)}
+            aria-busy={Boolean(busy)}
+            style={{ border: 0, margin: 0, minWidth: 0, padding: 16 }}
+          >
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 12 }}>
               <label>
                 <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>档案 ID</div>
@@ -2446,14 +2724,16 @@ export default function AdminContentPage() {
               <div className="chrono-course-eyeline" style={{ margin: '12px 0 6px' }}>教师备注</div>
               <TextArea aria-label="关键词教师备注" value={keywordEditor.teacher_notes} onChange={(event) => updateKeywordEditor({ teacher_notes: event.target.value })} autoSize={{ minRows: 3, maxRows: 6 }} />
             </label>
-          </section>
+          </fieldset>
 
           <aside className="chrono-card" style={{ padding: 16 }}>
             <Space wrap style={{ marginBottom: 12 }}>
-              <Button icon={<FileTextOutlined />} onClick={loadKeywordTemplate} loading={busy === 'keyword-template'}>模板</Button>
-              <Button type="primary" icon={<SaveOutlined />} onClick={saveKeywordAsset} loading={busy === 'keyword-save'}>保存档案</Button>
-              <Button icon={<DownloadOutlined />} onClick={exportCurrentKeyword}>导出</Button>
-              <Button icon={<ReloadOutlined />} onClick={refreshAssets}>刷新</Button>
+              <Button disabled={Boolean(busy)} icon={<FileTextOutlined />} onClick={loadKeywordTemplate} loading={busy === 'keyword-template'}>模板</Button>
+              <Button disabled={Boolean(busy)} type="primary" icon={<SaveOutlined />} onClick={saveKeywordAsset} loading={busy === 'keyword-save'}>保存草稿</Button>
+              <Button disabled={Boolean(busy)} icon={<SafetyCertificateOutlined />} onClick={validateKeywordAsset} loading={busy === 'keyword-validate'}>校验</Button>
+              <Button disabled={Boolean(busy)} icon={<LockOutlined />} onClick={sealKeywordAsset} loading={busy === 'keyword-seal'}>封存</Button>
+              <Button disabled={Boolean(busy)} icon={<DownloadOutlined />} onClick={exportCurrentKeyword}>导出草稿</Button>
+              <Button disabled={Boolean(busy)} icon={<ReloadOutlined />} onClick={refreshKeywordAssetState} loading={busy === 'keyword-refresh'}>刷新</Button>
             </Space>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <Select
@@ -2461,6 +2741,7 @@ export default function AdminContentPage() {
                 placeholder="关键词档案库"
                 value={selectedKeywordAsset}
                 onChange={setSelectedKeywordAsset}
+                disabled={Boolean(busy)}
                 showSearch
                 optionFilterProp="label"
                 style={{ flex: 1 }}
@@ -2469,12 +2750,46 @@ export default function AdminContentPage() {
                   label: `${item.title} · ${item.asset_id}`,
                 }))}
               />
-              <Button loading={busy === 'keyword-load'} disabled={!selectedKeywordAsset} onClick={loadKeywordAsset}>打开</Button>
+              <Button
+                loading={busy === 'keyword-load'}
+                disabled={Boolean(busy) || !selectedKeywordAsset}
+                onClick={loadKeywordAsset}
+              >
+                打开
+              </Button>
             </div>
             <Space size={[6, 6]} wrap style={{ marginBottom: 12 }}>
               <Tag color="blue">{keywordEditor.asset_id}</Tag>
-              {assetSavedAt && <Tag color="green">已保存 {assetSavedAt}</Tag>}
+              {keywordSavedAt && <Tag color="green">已保存 {keywordSavedAt}</Tag>}
+              {keywordPublicationVersions.length > 0 && (
+                <Tag color="cyan">封存版本 {keywordPublicationVersions.length}</Tag>
+              )}
             </Space>
+            {keywordValidation && (
+              <Alert
+                style={{ marginBottom: 12 }}
+                type={
+                  keywordValidation.valid
+                    ? keywordValidation.issues.length > 0 ? 'warning' : 'success'
+                    : 'error'
+                }
+                showIcon
+                message={
+                  keywordValidation.valid
+                    ? keywordValidation.issues.length > 0
+                      ? `校验通过，另有 ${keywordValidation.issues.length} 条完善建议`
+                      : '关键词档案校验通过，可以封存'
+                    : `还有 ${keywordValidation.issues.length} 个阻断项`
+                }
+                description={keywordValidation.issues.length > 0 ? (
+                  <div style={{ display: 'grid', gap: 5 }}>
+                    {keywordValidation.issues.map((issue, index) => (
+                      <div key={`${issue.field}-${issue.code}-${index}`}>{issue.message}</div>
+                    ))}
+                  </div>
+                ) : undefined}
+              />
+            )}
             {currentKeywordAsset ? (
               <div style={{ lineHeight: 1.75 }}>
                 <strong>{currentKeywordAsset.word}</strong>
@@ -2489,6 +2804,13 @@ export default function AdminContentPage() {
             ) : (
               <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="请填写关键词和解释" />
             )}
+            <AssetPublicationPanel
+              token={token}
+              assetKind="keyword"
+              assetId={keywordEditor.asset_id.trim()}
+              assetTitle={keywordEditor.word.trim()}
+              versions={keywordPublicationVersions}
+            />
           </aside>
         </div>
       )}

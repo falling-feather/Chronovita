@@ -212,6 +212,25 @@ export interface CourseArchiveManifest {
   archive_id: string; archive_checksum: string; archive_path: string;
   manifest_checksum: string;
 }
+export type ContentAssetKind = 'person' | 'keyword' | 'scenario';
+export type ContentAssetArchiveFileKind =
+  | 'sealed-person'
+  | 'sealed-keyword'
+  | 'sealed-scenario';
+export interface ContentAssetArchiveFile {
+  path: string; kind: ContentAssetArchiveFileKind;
+  media_type: 'application/json'; size_bytes: number;
+  blob_sha256: string; schema_version: string; contract_checksum: string;
+}
+export interface ContentAssetArchiveManifest {
+  schema_version: 'content-asset-archive/v1';
+  asset_kind: ContentAssetKind; asset_id: string; title: string; version: number;
+  source_schema_version: 'person-profile/v1' | 'keyword-profile/v1' | 'scenario-template/v1';
+  source_checksum: string; sealed_at: string; sealed_by: string;
+  files: ContentAssetArchiveFile[]; file_count: number; total_size_bytes: number;
+  archive_id: string; archive_checksum: string; archive_path: string;
+  manifest_checksum: string;
+}
 export type PublicationMode = 'pull_request' | 'direct_commit';
 export type PublicationStatus =
   | 'requested'
@@ -231,11 +250,19 @@ export interface CourseArchivePublishRequest {
   client_request_id: string; change_summary: string;
   direct_commit_confirmed: boolean;
 }
+export interface ContentAssetArchivePublishRequest {
+  schema_version: 'content-asset-archive-publish-request/v1';
+  binding_id: string; asset_kind: ContentAssetKind; asset_id: string;
+  version: number; expected_source_checksum: string; archive_id: string;
+  expected_archive_checksum: string; mode: PublicationMode;
+  client_request_id: string; change_summary: string;
+  direct_commit_confirmed: boolean;
+}
 export interface GitRepositoryBinding {
   schema_version: 'git-repository-binding/v1';
   binding_id: string; provider: 'github'; repository_id: number;
   owner: string; repository: string; visibility: 'private';
-  base_branch: string; root_prefix: string;
+  base_branch: string; root_prefix: string; asset_root_prefix?: string | null;
   credential_kind: 'github_app' | 'fine_grained_token';
   installation_id?: number | null; allowed_modes: PublicationMode[];
 }
@@ -254,8 +281,26 @@ export interface GitPublicationRecord {
   last_error_code?: string | null; last_error_at?: string | null;
   updated_at: string; completed_at?: string | null; checksum: string;
 }
+export interface AssetGitPublicationIntent {
+  schema_version: 'git-publication-intent/v1';
+  publication_id: string; operation_key: string;
+  binding: GitRepositoryBinding; request: ContentAssetArchivePublishRequest;
+  requested_at: string; requested_by: string; checksum: string;
+}
+export interface AssetGitPublicationRecord {
+  schema_version: 'git-publication-record/v1';
+  intent: AssetGitPublicationIntent; status: PublicationStatus;
+  attempt: number; revision: number; branch_ref: string;
+  base_sha?: string | null; tree_sha?: string | null; commit_sha?: string | null;
+  pull_request_number?: number | null; pull_request_url?: string | null;
+  last_error_code?: string | null; last_error_at?: string | null;
+  updated_at: string; completed_at?: string | null; checksum: string;
+}
 export interface PublicationResponse {
   publication: GitPublicationRecord; reused: boolean;
+}
+export interface AssetPublicationResponse {
+  publication: AssetGitPublicationRecord; reused: boolean;
 }
 export interface WorkflowResponse {
   workflow: ContentWorkflowRecord; report?: ContentValidationReport | null;
@@ -268,17 +313,34 @@ export interface LessonSourceRecord {
   lesson_no: string; era_id: string; era: string; source: string;
 }
 export interface ContentAssetRecord {
-  asset_id: string; title: string; kind: 'person' | 'keyword'; path: string; updated_at?: string | null;
+  asset_id: string; title: string; kind: 'person' | 'keyword'; path: string;
+  status: 'draft' | 'sealed'; version: number;
+  updated_at?: string | null; sealed_at?: string | null;
+  sealed_by?: string | null; checksum?: string | null;
+}
+export interface ContentAssetValidationIssue {
+  code: string; severity: 'error' | 'warning'; field: string; message: string;
+}
+export interface ContentAssetValidationReport {
+  schema_version: 'content-asset-validation/v1';
+  kind: 'person' | 'keyword'; asset_id: string; valid: boolean;
+  issues: ContentAssetValidationIssue[]; validated_at: string;
 }
 export interface PersonProfilePackage {
+  schema_version?: 'person-profile/v1';
   asset_id: string; name: string; role?: string; era?: string; summary?: string; persona?: string;
   boundaries?: string[]; keywords?: string[]; related_lessons?: string[]; source_refs?: SourceRef[];
-  teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number; updated_at?: string | null;
+  teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number;
+  created_at?: string | null; updated_at?: string | null;
+  sealed_at?: string | null; sealed_by?: string | null; checksum?: string | null;
 }
 export interface KeywordProfilePackage {
+  schema_version?: 'keyword-profile/v1';
   asset_id: string; word: string; pinyin?: string; gloss?: string; era?: string; category?: string;
   examples?: string[]; related_people?: string[]; related_lessons?: string[]; source_refs?: SourceRef[];
-  teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number; updated_at?: string | null;
+  teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number;
+  created_at?: string | null; updated_at?: string | null;
+  sealed_at?: string | null; sealed_by?: string | null; checksum?: string | null;
 }
 export type ScenarioType = 'crisis_governance' | 'institutional_reform' | 'council';
 export type ScenarioConditionKind = 'state' | 'turn' | 'npc';
@@ -673,14 +735,139 @@ export const api = {
     adminFetch<{ items: ContentAssetRecord[] }>(token, `/admin/content/assets${kind ? `?kind=${kind}` : ''}`),
   adminPersonTemplate: (token: string) => adminFetch<PersonProfilePackage>(token, '/admin/content/assets/people/template'),
   adminPersonAsset: (token: string, asset_id: string) =>
-    adminFetch<PersonProfilePackage>(token, `/admin/content/assets/people/${asset_id}`),
+    adminFetch<PersonProfilePackage>(token, `/admin/content/assets/people/${encodeURIComponent(asset_id)}`),
   adminSavePersonAsset: (token: string, body: PersonProfilePackage) =>
     adminFetch<{ item: PersonProfilePackage }>(token, '/admin/content/assets/people', { method: 'POST', body: JSON.stringify(body) }),
+  adminValidatePersonAsset: (token: string, asset_id: string) =>
+    adminFetch<{ report: ContentAssetValidationReport }>(
+      token,
+      `/admin/content/assets/people/${encodeURIComponent(asset_id)}/validate`,
+      { method: 'POST' },
+    ),
+  adminSealPersonAsset: (token: string, asset_id: string) =>
+    adminFetch<{
+      item: PersonProfilePackage; record: ContentAssetRecord; idempotent: boolean;
+    }>(
+      token,
+      `/admin/content/assets/people/${encodeURIComponent(asset_id)}/seal`,
+      { method: 'POST' },
+    ),
+  adminPersonAssetVersions: (token: string, asset_id: string) =>
+    adminFetch<{ items: ContentAssetRecord[] }>(
+      token,
+      `/admin/content/assets/people/${encodeURIComponent(asset_id)}/versions`,
+    ),
+  adminPersonAssetVersion: (token: string, asset_id: string, version: number) =>
+    adminFetch<PersonProfilePackage>(
+      token,
+      `/admin/content/assets/people/${encodeURIComponent(asset_id)}/versions/${version}`,
+    ),
   adminKeywordTemplate: (token: string) => adminFetch<KeywordProfilePackage>(token, '/admin/content/assets/keywords/template'),
   adminKeywordAsset: (token: string, asset_id: string) =>
-    adminFetch<KeywordProfilePackage>(token, `/admin/content/assets/keywords/${asset_id}`),
+    adminFetch<KeywordProfilePackage>(token, `/admin/content/assets/keywords/${encodeURIComponent(asset_id)}`),
   adminSaveKeywordAsset: (token: string, body: KeywordProfilePackage) =>
     adminFetch<{ item: KeywordProfilePackage }>(token, '/admin/content/assets/keywords', { method: 'POST', body: JSON.stringify(body) }),
+  adminValidateKeywordAsset: (token: string, asset_id: string) =>
+    adminFetch<{ report: ContentAssetValidationReport }>(
+      token,
+      `/admin/content/assets/keywords/${encodeURIComponent(asset_id)}/validate`,
+      { method: 'POST' },
+    ),
+  adminSealKeywordAsset: (token: string, asset_id: string) =>
+    adminFetch<{
+      item: KeywordProfilePackage; record: ContentAssetRecord; idempotent: boolean;
+    }>(
+      token,
+      `/admin/content/assets/keywords/${encodeURIComponent(asset_id)}/seal`,
+      { method: 'POST' },
+    ),
+  adminKeywordAssetVersions: (token: string, asset_id: string) =>
+    adminFetch<{ items: ContentAssetRecord[] }>(
+      token,
+      `/admin/content/assets/keywords/${encodeURIComponent(asset_id)}/versions`,
+    ),
+  adminKeywordAssetVersion: (token: string, asset_id: string, version: number) =>
+    adminFetch<KeywordProfilePackage>(
+      token,
+      `/admin/content/assets/keywords/${encodeURIComponent(asset_id)}/versions/${version}`,
+    ),
+  adminContentAssetArchivePreview: (
+    token: string,
+    asset_kind: ContentAssetKind,
+    asset_id: string,
+    version: number,
+    source_checksum: string,
+  ) => {
+    const query = new URLSearchParams({ source_checksum });
+    return adminFetch<{ archive: ContentAssetArchiveManifest; download_url: string }>(
+      token,
+      `/admin/content/asset-archives/${asset_kind}/${encodeURIComponent(asset_id)}`
+        + `/versions/${version}/preview?${query.toString()}`,
+      { method: 'POST' },
+    );
+  },
+  adminContentAssetArchiveFile: (
+    token: string,
+    asset_kind: ContentAssetKind,
+    asset_id: string,
+    version: number,
+    source_checksum: string,
+  ) => {
+    const query = new URLSearchParams({ source_checksum });
+    return adminFile(
+      token,
+      `/admin/content/asset-archives/${asset_kind}/${encodeURIComponent(asset_id)}`
+        + `/versions/${version}/archive.zip?${query.toString()}`,
+    );
+  },
+  adminContentAssetPublications: (
+    token: string,
+    filters?: {
+      asset_kind?: ContentAssetKind;
+      asset_id?: string;
+      asset_version?: number;
+      publication_status?: PublicationStatus;
+    },
+  ) => {
+    const query = new URLSearchParams();
+    if (filters?.asset_kind) query.set('asset_kind', filters.asset_kind);
+    if (filters?.asset_id) query.set('asset_id', filters.asset_id);
+    if (filters?.asset_version !== undefined) {
+      query.set('asset_version', String(filters.asset_version));
+    }
+    if (filters?.publication_status) {
+      query.set('publication_status', filters.publication_status);
+    }
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return adminFetch<{ items: AssetGitPublicationRecord[] }>(
+      token,
+      `/admin/content/asset-publications${suffix}`,
+    );
+  },
+  adminContentAssetPublication: (token: string, publication_id: string) =>
+    adminFetch<AssetPublicationResponse>(
+      token,
+      `/admin/content/asset-publications/${encodeURIComponent(publication_id)}`,
+    ),
+  adminCreateContentAssetPublication: (
+    token: string,
+    body: ContentAssetArchivePublishRequest,
+  ) => adminFetch<AssetPublicationResponse>(token, '/admin/content/asset-publications', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  }),
+  adminRetryContentAssetPublication: (
+    token: string,
+    publication_id: string,
+    expected_revision: number,
+  ) => adminFetch<AssetPublicationResponse>(
+    token,
+    `/admin/content/asset-publications/${encodeURIComponent(publication_id)}/retry`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ expected_revision }),
+    },
+  ),
   adminScenarioTemplate: (token: string) =>
     adminFetch<ScenarioAuthorDraft>(token, '/admin/content/scenario-drafts/template'),
   adminScenarioDrafts: (token: string) =>
