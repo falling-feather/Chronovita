@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - houduan
+      - class
   workflow_dispatch:
 
 permissions:

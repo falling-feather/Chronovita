@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - houduan
+      - class
   workflow_dispatch:
 
 permissions:
@@ -135,7 +136,7 @@ jobs:
               "--no-first-run",
               "--no-default-browser-check",
               "--user-data-dir=$profile",
-              "--virtual-time-budget=8000",
+              "--virtual-time-budget=30000",
               "--dump-dom",
               "http://127.0.0.1:5173/admin/content"
             ) `

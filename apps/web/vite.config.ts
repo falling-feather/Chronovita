@@ -5,6 +5,13 @@ import path from 'node:path';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const apiTarget = env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000';
+  const proxy = {
+    '/api': apiTarget,
+    '/ws': {
+      target: apiTarget.replace(/^http/, 'ws'),
+      ws: true,
+    },
+  };
 
   return {
     plugins: [react()],
@@ -15,13 +22,13 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 5173,
-      proxy: {
-        '/api': apiTarget,
-        '/ws': {
-          target: apiTarget.replace(/^http/, 'ws'),
-          ws: true,
-        },
-      },
+      strictPort: true,
+      proxy,
+    },
+    preview: {
+      port: 5173,
+      strictPort: true,
+      proxy,
     },
   };
 });

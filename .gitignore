@@ -71,3 +71,6 @@ uploads/
 
 apps/web/.vite/
 *.tsbuildinfo
+
+# Teacher package local credentials
+.chronovita-local/
