@@ -38,6 +38,10 @@ class PublicationConfigurationError(PublicationError):
     code = "content_publication_configuration_invalid"
 
 
+class PublicationDisabled(PublicationConfigurationError):
+    code = "content_publication_disabled"
+
+
 class PublicationNotFound(PublicationError):
     code = "content_publication_not_found"
 
@@ -83,6 +87,7 @@ class ContentHistoryTargetV1(_TargetModel):
     activation: TargetActivation
     contract_source: dict[str, object]
     remote_baseline: dict[str, object]
+    publication_acceptance: dict[str, object] | None = None
 
 
 class PublicationStore:

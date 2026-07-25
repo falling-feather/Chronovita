@@ -21,8 +21,8 @@
   },
   "activation": {
     "repository_ready": true,
-    "runtime_publication_enabled": false,
-    "reason": "BE-006 has not connected server-side credentials or the GitHub API yet."
+    "runtime_publication_enabled": true,
+    "reason": "BE-006 is connected; effective publication remains opt-in through CHRONO_GITHUB_PUBLICATION_ENABLED and a server-side credential."
   },
   "contract_source": {
     "repository": "falling-feather/Chronovita",
@@ -33,5 +33,13 @@
     "commit": "559974aa66c2c48400d57a0b8f289744dbb641bb",
     "validation_workflow": "Validate Chronovita content",
     "validation_run_id": 30146239852
+  },
+  "publication_acceptance": {
+    "pull_request": 2,
+    "pull_request_url": "https://github.com/falling-feather/Chronovita-Course-Content/pull/2",
+    "source_commit": "57dfb202c3f153a413b11e4c0a43973bdd04cf15",
+    "merge_commit": "8c4b203138187ef802323c45e421161cd97ad86d",
+    "pull_request_validation_run_id": 30147300184,
+    "main_validation_run_id": 30147312831
   }
 }

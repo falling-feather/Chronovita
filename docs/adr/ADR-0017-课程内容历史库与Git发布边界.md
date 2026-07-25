@@ -52,7 +52,7 @@ Chronovita 已能把课程草稿审校、封存，并以 `CourseReleaseManifestV
 
 `GitRepositoryBindingV1` 使用稳定 `binding_id`、GitHub 数字 `repository_id`、安装 ID、私有可见性、基准分支、根前缀和允许模式固定目标。浏览器发布请求只能提交 `binding_id` 和精确归档身份，不能提交 owner、repository、branch、path、token 或私钥。
 
-V0.9.28 已按本决策建立 `falling-feather/Chronovita-Course-Content`，数字仓库 ID 为 `1311692460`，默认分支 `main`，归档根目录 `courses/`。内容库治理头 `559974a` 包含无密钥策略、Schema、清单/文件校验器和 GitHub Actions；源码仓库通过 `infra/content-history-target.json` 记录同一身份，并保持 `runtime_publication_enabled=false`，直到 BE-006 接通服务端凭据和真实 API。仓库状态与维护步骤见 [07-课程内容历史库运维指南](../07-课程内容历史库运维指南.md)。
+V0.9.28 已按本决策建立 `falling-feather/Chronovita-Course-Content`，数字仓库 ID 为 `1311692460`，默认分支 `main`，归档根目录 `courses/`。内容库治理头 `559974a` 包含无密钥策略、Schema、清单/文件校验器和 GitHub Actions。V0.9.30 的 BE-006 已接通服务端 token 模式与 GitHub Git Data API，真实 PR #2 和合并后 main 校验通过；源码目标配置因此记录 `runtime_publication_enabled=true`，但应用环境开关仍默认关闭，GitHub App 仍未注册。仓库状态与维护步骤见 [07-课程内容历史库运维指南](../07-课程内容历史库运维指南.md)。
 
 生产优先使用 GitHub App installation token。App 只安装到课程历史仓库，申请 `Contents: write`；启用 PR 模式时再申请 `Pull requests: write`。GitHub 官方说明 installation token 可进一步限制到指定仓库和权限，并在一小时后失效；服务端按需生成，不持久化临时 token。细粒度 PAT 只保留为受控过渡模式，仍必须放在后端 `SecretStr` 或秘密管理系统，不能进入浏览器、本地教师包、日志、审计正文或归档。
 

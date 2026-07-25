@@ -9,7 +9,7 @@ import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 from threading import Barrier, Thread
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
@@ -24,6 +24,7 @@ from routers import admin_content, auth as auth_router
 from settings import settings
 from services import content, persistence
 from services.content import workflow as content_workflow
+from services.contracts.archive_examples import build_dayu_publish_request
 from services.auth import (
     AuthServiceConfig,
     configure_identity,
@@ -302,6 +303,31 @@ class ContentRbacApiTests(unittest.TestCase):
         self.assertIsNone(content.get_draft(payload["lesson_id"]))
         self.assertIsNone(content_workflow.get_workflow(payload["lesson_id"]))
 
+        publication_factory = Mock()
+        with (
+            patch.object(
+                get_identity().store,
+                "append_audit",
+                side_effect=AuthStoreError("forced publication audit outage"),
+            ),
+            patch.object(
+                admin_content,
+                "_new_publication_service",
+                publication_factory,
+            ),
+        ):
+            publication = self.client.post(
+                "/api/v1/admin/content/publications",
+                headers=self.admin["headers"],
+                json=build_dayu_publish_request().model_dump(mode="json"),
+            )
+        self.assertEqual(publication.status_code, 503, publication.text)
+        self.assertEqual(
+            publication.json()["detail"]["code"],
+            "auth_storage_unavailable",
+        )
+        publication_factory.assert_not_called()
+
     def test_concurrent_first_save_assigns_one_author(self):
         payload = self._lesson_payload("rbac-owner-race", "C-rbac-race")
         start = Barrier(2)
@@ -415,6 +441,18 @@ class ContentRbacApiTests(unittest.TestCase):
             (
                 "POST",
                 f"{prefix}/releases/{{course_id}}/bootstrap-legacy",
+            ): "content.publish",
+            (
+                "POST",
+                (
+                    f"{prefix}/releases/{{course_id}}/{{release_id}}/"
+                    "archive-preview"
+                ),
+            ): "content.read",
+            ("POST", f"{prefix}/publications"): "content.publish",
+            (
+                "POST",
+                f"{prefix}/publications/{{publication_id}}/retry",
             ): "content.publish",
             (
                 "POST",

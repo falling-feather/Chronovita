@@ -383,7 +383,7 @@ class ArchiveContractTests(unittest.TestCase):
             with self.subTest(fragment=fragment):
                 self.assertNotIn(fragment, serialized)
 
-    def test_real_content_history_target_is_private_explicit_and_inactive(self):
+    def test_real_content_history_target_is_private_explicit_and_accepted(self):
         target = _read_json(CONTENT_HISTORY_TARGET)
         self.assertEqual(target["schema_version"], "content-history-target/v1")
         self.assertEqual(target["binding_id"], "content-history-primary")
@@ -400,7 +400,24 @@ class ArchiveContractTests(unittest.TestCase):
         )
         self.assertTrue(target["direct_commit_requires_confirmation"])
         self.assertTrue(target["activation"]["repository_ready"])
-        self.assertFalse(target["activation"]["runtime_publication_enabled"])
+        self.assertTrue(target["activation"]["runtime_publication_enabled"])
+        self.assertEqual(target["publication_acceptance"]["pull_request"], 2)
+        self.assertRegex(
+            target["publication_acceptance"]["source_commit"],
+            r"^[0-9a-f]{40}$",
+        )
+        self.assertRegex(
+            target["publication_acceptance"]["merge_commit"],
+            r"^[0-9a-f]{40}$",
+        )
+        self.assertGreater(
+            target["publication_acceptance"]["pull_request_validation_run_id"],
+            0,
+        )
+        self.assertGreater(
+            target["publication_acceptance"]["main_validation_run_id"],
+            0,
+        )
 
         binding = GitRepositoryBindingV1.model_validate(
             {

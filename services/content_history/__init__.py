@@ -9,6 +9,7 @@ from .publication import (
     ContentHistoryTargetV1,
     PublicationConfigurationError,
     PublicationConflict,
+    PublicationDisabled,
     PublicationError,
     PublicationNotFound,
     PublicationStore,
@@ -16,6 +17,12 @@ from .publication import (
     load_repository_binding,
     new_publication_record,
     publication_checkpoint,
+)
+from .service import (
+    CoursePublicationService,
+    PublicationArchiveChanged,
+    PublicationRetryRejected,
+    PublicationSubmission,
 )
 
 __all__ = [
@@ -27,6 +34,7 @@ __all__ = [
     "ContentHistoryTargetV1",
     "PublicationConfigurationError",
     "PublicationConflict",
+    "PublicationDisabled",
     "PublicationError",
     "PublicationNotFound",
     "PublicationStore",
@@ -34,4 +42,8 @@ __all__ = [
     "load_repository_binding",
     "new_publication_record",
     "publication_checkpoint",
+    "CoursePublicationService",
+    "PublicationArchiveChanged",
+    "PublicationRetryRejected",
+    "PublicationSubmission",
 ]

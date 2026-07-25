@@ -7,6 +7,7 @@ from io import BytesIO
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Barrier, Thread
+from unittest.mock import AsyncMock, Mock, patch
 from zipfile import ZipFile
 
 from fastapi import FastAPI
@@ -19,7 +20,14 @@ if str(API_ROOT) not in sys.path:
 
 from routers import admin_content, courses as courses_router
 from settings import settings
-from services import content
+from services import content, persistence
+from services.content_history import (
+    PublicationStore,
+    PublicationSubmission,
+    load_repository_binding,
+    new_publication_record,
+)
+from services.contracts.archive_v1 import CourseArchivePublishRequestV1
 from services.contracts.v1 import (
     ScenarioTemplateV1,
     calculate_contract_checksum,
@@ -27,13 +35,31 @@ from services.contracts.v1 import (
 )
 
 
+class _PublicationClientContext:
+    def __init__(self):
+        self.is_closed = False
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, traceback):
+        await self.aclose()
+
+    async def aclose(self):
+        self.is_closed = True
+
+
 class AdminContentApiTests(unittest.TestCase):
     def setUp(self):
         self.tmp_root = Path.cwd() / ".tmp-admin-content-api-tests" / uuid.uuid4().hex
         self.tmp_root.mkdir(parents=True)
         content.configure(self.tmp_root)
+        persistence.close_engine()
+        persistence.init_engine(str(self.tmp_root / "admin-content.db"))
         self.previous_token = settings.admin_token
         self.previous_actor = settings.admin_actor
+        self.previous_github_enabled = settings.github_publication_enabled
+        self.previous_github_token = settings.github_publication_token
         settings.admin_token = "test-admin-token"
         settings.admin_actor = "trusted-admin"
         app = FastAPI()
@@ -46,12 +72,132 @@ class AdminContentApiTests(unittest.TestCase):
         self.client.close()
         settings.admin_token = self.previous_token
         settings.admin_actor = self.previous_actor
+        settings.github_publication_enabled = self.previous_github_enabled
+        settings.github_publication_token = self.previous_github_token
+        persistence.close_engine()
         shutil.rmtree(self.tmp_root, ignore_errors=True)
         try:
             self.tmp_root.parent.rmdir()
         except OSError:
             pass
         content.configure()
+
+    def test_archive_publication_defaults_disabled_and_persists_safe_response(self):
+        payload = self._payload()
+        lesson_id = payload["lesson_id"]
+        course_id = payload["course_id"]
+        self.assertEqual(
+            self.client.post(
+                "/api/v1/admin/content/drafts",
+                headers=self.headers,
+                json=payload,
+            ).status_code,
+            200,
+        )
+        steps = (
+            (f"/drafts/{lesson_id}/validate", {"actor": "author"}),
+            (f"/drafts/{lesson_id}/submit-review", {"actor": "author"}),
+            (
+                f"/drafts/{lesson_id}/review",
+                {"actor": "reviewer", "decision": "approve"},
+            ),
+            (f"/drafts/{lesson_id}/seal", {"sealed_by": "reviewer"}),
+            (
+                f"/sealed/{lesson_id}/versions/1/publish",
+                {"actor": "publisher"},
+            ),
+        )
+        release = None
+        for path, body in steps:
+            response = self.client.post(
+                f"/api/v1/admin/content{path}",
+                headers=self.headers,
+                json=body,
+            )
+            self.assertEqual(response.status_code, 200, response.text)
+            if "release" in response.json():
+                release = response.json()["release"]
+        self.assertIsNotNone(release)
+        release_id = release["release_id"]
+        preview = self.client.post(
+            (
+                f"/api/v1/admin/content/releases/{course_id}/"
+                f"{release_id}/archive-preview"
+            ),
+            headers=self.headers,
+        ).json()["archive"]
+        publication_payload = {
+            "binding_id": "content-history-primary",
+            "course_id": course_id,
+            "release_id": release_id,
+            "expected_release_checksum": release["checksum"],
+            "archive_id": preview["archive_id"],
+            "expected_archive_checksum": preview["archive_checksum"],
+            "mode": "pull_request",
+            "client_request_id": "api-publication-request-001",
+            "change_summary": "提交教师 API 集成测试归档。",
+        }
+
+        disabled = self.client.post(
+            "/api/v1/admin/content/publications",
+            headers=self.headers,
+            json=publication_payload,
+        )
+        self.assertEqual(disabled.status_code, 503, disabled.text)
+        self.assertEqual(
+            disabled.json()["detail"]["code"],
+            "content_publication_disabled",
+        )
+
+        binding = load_repository_binding("infra/content-history-target.json")
+        request_model = CourseArchivePublishRequestV1.model_validate(
+            publication_payload
+        )
+        record = new_publication_record(
+            binding,
+            request_model,
+            requested_by="trusted-admin",
+            requested_at=datetime(2026, 7, 25, 14, 0, tzinfo=timezone.utc),
+        )
+        PublicationStore().create_or_get(record)
+        service = Mock()
+        service.submit = AsyncMock(
+            return_value=PublicationSubmission(
+                publication=record,
+                reused=False,
+            )
+        )
+        client = _PublicationClientContext()
+        settings.github_publication_enabled = True
+        settings.github_publication_token = "server-side-test-token"
+        with patch(
+            "routers.admin_content._new_publication_service",
+            return_value=(service, client),
+        ):
+            submitted = self.client.post(
+                "/api/v1/admin/content/publications",
+                headers=self.headers,
+                json=publication_payload,
+            )
+
+        self.assertEqual(submitted.status_code, 202, submitted.text)
+        publication_id = submitted.json()["publication"]["intent"]["publication_id"]
+        self.assertFalse(submitted.json()["reused"])
+        self.assertTrue(client.is_closed)
+        listed = self.client.get(
+            f"/api/v1/admin/content/publications?course_id={course_id}",
+            headers=self.headers,
+        )
+        self.assertEqual(listed.status_code, 200, listed.text)
+        self.assertEqual(
+            listed.json()["items"][0]["intent"]["publication_id"],
+            publication_id,
+        )
+        detail = self.client.get(
+            f"/api/v1/admin/content/publications/{publication_id}",
+            headers=self.headers,
+        )
+        self.assertEqual(detail.status_code, 200, detail.text)
 
     def test_auth_and_full_publication_api(self):
         payload = self._payload()

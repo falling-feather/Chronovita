@@ -12,6 +12,7 @@ from auth_dependencies import (
     require_permission,
     trusted_actor,
 )
+from settings import secret_value, settings
 from services import content
 from services import courses as courses_data
 from services.content import KeywordProfilePackage, LessonContentPackage, PersonProfilePackage
@@ -20,11 +21,27 @@ from services.content import scenario_authoring
 from services.content import workflow as content_workflow
 from services.content_history import (
     ArchiveBuildError,
+    CoursePublicationService,
+    PublicationArchiveChanged,
+    PublicationConfigurationError,
+    PublicationConflict,
+    PublicationDisabled,
+    PublicationNotFound,
+    PublicationRetryRejected,
+    PublicationStore,
+    PublicationStoreError,
     archive_download_filename,
     build_course_archive,
     build_course_archive_zip,
+    load_repository_binding,
 )
-from services.contracts.archive_v1 import CourseArchiveManifestV1
+from services.content_history.github import GitHubGitDataClient
+from services.contracts.archive_v1 import (
+    CourseArchiveManifestV1,
+    CourseArchivePublishRequestV1,
+    GitPublicationRecordV1,
+    PublicationStatus,
+)
 from services.contracts.v1 import ScenarioTemplateV1
 
 router = APIRouter()
@@ -97,6 +114,19 @@ class ArchivePreviewResponse(ApiModel):
     download_url: str
 
 
+class PublicationResponse(ApiModel):
+    publication: GitPublicationRecordV1
+    reused: bool = False
+
+
+class PublicationListResponse(ApiModel):
+    items: list[GitPublicationRecordV1]
+
+
+class PublicationRetryRequest(ApiModel):
+    expected_revision: int | None = Field(default=None, ge=0)
+
+
 class LessonSourceRecord(ApiModel):
     lesson_id: str
     course_id: str
@@ -140,6 +170,12 @@ async def overview(context: ContentReader):
                 "POST /api/v1/admin/content/scenario-drafts/{scenario_id}/seal",
                 "POST /api/v1/admin/content/sealed/{lesson_id}/versions/{version}/publish",
                 "POST /api/v1/admin/content/releases/{course_id}/bootstrap-legacy",
+                "POST /api/v1/admin/content/releases/{course_id}/{release_id}/archive-preview",
+                "GET /api/v1/admin/content/releases/{course_id}/{release_id}/archive.zip",
+                "POST /api/v1/admin/content/publications",
+                "GET /api/v1/admin/content/publications",
+                "GET /api/v1/admin/content/publications/{publication_id}",
+                "POST /api/v1/admin/content/publications/{publication_id}/retry",
                 "POST /api/v1/admin/content/releases/{course_id}/rollback",
                 "GET /api/v1/admin/content/assets",
                 "POST /api/v1/admin/content/assets/people",
@@ -778,6 +814,127 @@ async def archive_download(
         _raise_content_error(exc)
 
 
+@router.post(
+    "/publications",
+    response_model=PublicationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def create_publication(
+    payload: CourseArchivePublishRequestV1,
+    request: Request,
+    context: ContentPublisher,
+):
+    client: GitHubGitDataClient | None = None
+    try:
+        _require_direct_commit_admin(context, payload.mode)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.archive.publication.authorize",
+            resource_type="course-archive",
+            resource_id=payload.archive_id,
+            details={
+                "binding_id": payload.binding_id,
+                "course_id": payload.course_id,
+                "release_id": payload.release_id,
+                "mode": payload.mode,
+            },
+        )
+        service, client = _new_publication_service()
+        async with client:
+            submitted = await service.submit(
+                payload,
+                requested_by=trusted_actor(context),
+            )
+        return PublicationResponse(
+            publication=submitted.publication,
+            reused=submitted.reused,
+        )
+    except Exception as exc:
+        if client is not None and not client.is_closed:
+            await client.aclose()
+        _raise_content_error(exc)
+
+
+@router.get("/publications", response_model=PublicationListResponse)
+async def publications(
+    _: ContentReader,
+    course_id: str | None = None,
+    release_id: str | None = None,
+    publication_status: PublicationStatus | None = None,
+):
+    try:
+        return PublicationListResponse(
+            items=list(
+                PublicationStore().list(
+                    course_id=course_id,
+                    release_id=release_id,
+                    status=publication_status,
+                )
+            )
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get(
+    "/publications/{publication_id}",
+    response_model=PublicationResponse,
+)
+async def publication_detail(
+    publication_id: str,
+    _: ContentReader,
+):
+    try:
+        return PublicationResponse(
+            publication=PublicationStore().get(publication_id),
+            reused=True,
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/publications/{publication_id}/retry",
+    response_model=PublicationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def retry_publication(
+    publication_id: str,
+    payload: PublicationRetryRequest,
+    request: Request,
+    context: ContentPublisher,
+):
+    client: GitHubGitDataClient | None = None
+    try:
+        existing = PublicationStore().get(publication_id)
+        _require_direct_commit_admin(context, existing.intent.request.mode)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.archive.publication.retry.authorize",
+            resource_type="course-publication",
+            resource_id=publication_id,
+            details={
+                "expected_revision": payload.expected_revision,
+                "mode": existing.intent.request.mode,
+            },
+        )
+        service, client = _new_publication_service()
+        async with client:
+            publication = await service.retry(
+                publication_id,
+                expected_revision=payload.expected_revision,
+            )
+        return PublicationResponse(publication=publication, reused=True)
+    except Exception as exc:
+        if client is not None and not client.is_closed:
+            await client.aclose()
+        _raise_content_error(exc)
+
+
 @router.post("/releases/{course_id}/rollback", response_model=ReleaseResponse)
 async def rollback_release(
     course_id: str,
@@ -914,6 +1071,46 @@ def _audit_content_write(
     )
 
 
+def _new_publication_service() -> tuple[CoursePublicationService, GitHubGitDataClient]:
+    if not settings.github_publication_enabled:
+        raise PublicationDisabled("GitHub publication is not enabled")
+    token = secret_value(settings.github_publication_token)
+    if not token:
+        raise PublicationConfigurationError(
+            "GitHub publication credential is not configured"
+        )
+    binding = load_repository_binding(settings.content_history_target_path)
+    client = GitHubGitDataClient(
+        token=token,
+        repository_id=binding.repository_id,
+        full_name=binding.full_name,
+        api_base_url=settings.github_api_base_url,
+        timeout_seconds=settings.github_timeout_seconds,
+    )
+    return (
+        CoursePublicationService(
+            binding=binding,
+            github=client,
+            stale_after_seconds=settings.github_publication_stale_seconds,
+        ),
+        client,
+    )
+
+
+def _require_direct_commit_admin(
+    context: AuthContext,
+    mode: Literal["pull_request", "direct_commit"],
+) -> None:
+    if mode == "direct_commit" and "admin" not in context.principal.roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "admin_role_required",
+                "message": "Direct publication requires an administrator.",
+            },
+        )
+
+
 def _require_lesson_author(
     context: AuthContext,
     lesson_id: str,
@@ -997,6 +1194,26 @@ def _raise_content_error(exc: Exception) -> NoReturn:
         ]
     if isinstance(exc, ArchiveBuildError):
         detail["code"] = exc.code
+        raise HTTPException(status_code=503, detail=detail) from exc
+    if isinstance(exc, PublicationNotFound):
+        raise HTTPException(status_code=404, detail=detail) from exc
+    if isinstance(
+        exc,
+        (
+            PublicationArchiveChanged,
+            PublicationConflict,
+            PublicationRetryRejected,
+        ),
+    ):
+        raise HTTPException(status_code=409, detail=detail) from exc
+    if isinstance(
+        exc,
+        (
+            PublicationConfigurationError,
+            PublicationDisabled,
+            PublicationStoreError,
+        ),
+    ):
         raise HTTPException(status_code=503, detail=detail) from exc
     if isinstance(exc, (content_workflow.ContentNotFound, FileNotFoundError)):
         raise HTTPException(status_code=404, detail=detail) from exc
