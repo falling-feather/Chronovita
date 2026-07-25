@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前版本 **V0.9.36**；`class` 分支已接通确定性课程归档、GitHub PR 后端链路、教师发布界面和无密钥 Windows 教师包，并完成完整历史扫描、DPAPI、跨 PowerShell 启动与运行中日志扫描兼容修复。首个 GitHub Release 尚待新标签流水线验收，最终整链审查由 V0.9.37 收口。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前版本 **V0.9.37**；`class` 分支已接通确定性课程归档、GitHub PR 后端链路、教师发布界面和无密钥 Windows 教师包，并完成完整历史扫描、DPAPI、跨 PowerShell 启动与运行中日志扫描兼容修复。首个 GitHub Release 尚待新标签流水线验收，最终整链审查由 V0.9.38 收口。
 
 [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](docs/00-项目总纲.md) · [开发者文档](docs/01-开发者文档.md) · [项目规划](docs/02-项目规划与设计总纲.md) · [开发历史](docs/05-发布历史与归档.md)
 
@@ -69,7 +69,7 @@
 
 ### 教师一键启动
 
-Windows 教师下载 GitHub Release ZIP 并完整解压后，双击根目录的 `点我一键启动（部署）.cmd`。首次运行会自动创建本地环境、按完整哈希锁安装后端依赖、按 package lock 安装前端依赖、完成生产构建，并以生产预览服务打开 `http://127.0.0.1:5173/admin/content`；依赖安装完成后，本地编辑与预览不依赖 Google Fonts 或 GitHub。发行包不携带数据库、草稿、缓存、日志或 GitHub 凭据。首个 V0.9.36 Release 仍处于流水线验收阶段，当前教师包要求电脑预先安装 Python 3.11-3.13 和 Node.js 20.19+ 或 22.12+ LTS。
+Windows 教师下载 GitHub Release ZIP 并完整解压后，双击根目录的 `点我一键启动（部署）.cmd`。首次运行会自动创建本地环境、按完整哈希锁安装后端依赖、按 package lock 安装前端依赖、完成生产构建，并以生产预览服务打开 `http://127.0.0.1:5173/admin/content`；依赖安装完成后，本地编辑与预览不依赖 Google Fonts 或 GitHub。发行包不携带数据库、草稿、缓存、日志或 GitHub 凭据。首个 V0.9.37 Release 仍处于流水线验收阶段，当前教师包要求电脑预先安装 Python 3.11-3.13 和 Node.js 20.19+ 或 22.12+ LTS。
 
 课程历史投稿凭据由项目管理员单独发放，教师运行 `scripts/configure-content-history.cmd` 后以 Windows DPAPI 加密保存在本机；普通编辑、保存和 ZIP 导出不要求配置凭据。停止服务使用 `scripts/stop-teacher-editor.cmd`。完整说明见 [课程内容历史库运维指南](docs/07-课程内容历史库运维指南.md)。
 

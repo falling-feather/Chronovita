@@ -332,7 +332,7 @@ jobs:
               $memory = New-Object IO.MemoryStream
               try {
                 $stream.CopyTo($memory)
-                return $memory.ToArray()
+              return ,$memory.ToArray()
               } finally {
                 $memory.Dispose()
               }

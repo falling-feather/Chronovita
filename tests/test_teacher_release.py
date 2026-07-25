@@ -101,6 +101,13 @@ def _write_minimal_forged_package(
 
 
 class TeacherReleaseTests(unittest.TestCase):
+    def test_release_shared_reader_preserves_empty_byte_arrays(self):
+        workflow = (
+            REPO_ROOT / ".github" / "workflows" / "teacher-release.yml"
+        ).read_text("utf-8")
+        self.assertIn("return ,$memory.ToArray()", workflow)
+        self.assertNotIn("return $memory.ToArray()", workflow)
+
     def test_cmd_launchers_reset_inherited_powershell_module_path(self):
         for relative_path in (
             Path("点我一键启动（部署）.cmd"),
