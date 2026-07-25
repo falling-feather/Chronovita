@@ -958,13 +958,15 @@ def _validate_api_base_url(value: str) -> str:
     parsed = httpx.URL(value)
     if (
         parsed.scheme != "https"
-        or not parsed.host
+        or parsed.host != "api.github.com"
+        or parsed.port is not None
         or parsed.userinfo
+        or parsed.path not in {"", "/"}
         or parsed.query
         or parsed.fragment
     ):
         raise ValueError("invalid API base URL")
-    return str(parsed).rstrip("/")
+    return "https://api.github.com"
 
 
 def _validate_sha(value: str) -> str:

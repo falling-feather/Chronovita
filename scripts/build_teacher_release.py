@@ -121,6 +121,26 @@ SECRET_PATTERNS = (
     ("github classic token", re.compile(rb"gh[pousr]_[A-Za-z0-9]{20,}")),
     ("github fine-grained token", re.compile(rb"github_pat_[A-Za-z0-9_]{20,}")),
     ("aws access key", re.compile(rb"AKIA[0-9A-Z]{16}")),
+    ("OpenAI-style API key", re.compile(rb"\bsk-[A-Za-z0-9_-]{20,}\b")),
+    ("Google API key", re.compile(rb"\bAIza[0-9A-Za-z_-]{35}\b")),
+    ("Slack token", re.compile(rb"\bxox[baprs]-[A-Za-z0-9-]{10,}\b")),
+    ("Stripe live secret", re.compile(rb"\bsk_live_[0-9A-Za-z]{16,}\b")),
+    (
+        "database credential URL",
+        re.compile(
+            rb"\b(?:postgres(?:ql)?|mysql|mariadb|mongodb(?:\+srv)?|redis)"
+            rb"://[^/\s:@]+:[^/\s@]+@",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "assigned secret",
+        re.compile(
+            rb"\b(?:api[_-]?key|access[_-]?token|client[_-]?secret|password)"
+            rb"\s*[:=]\s*[\"'][A-Za-z0-9_./+=-]{20,}",
+            re.IGNORECASE,
+        ),
+    ),
     (
         "private key",
         re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),

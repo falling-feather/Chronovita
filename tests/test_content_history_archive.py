@@ -1,8 +1,10 @@
 import json
+import os
 import shutil
 import unittest
 import uuid
 from pathlib import Path
+from unittest.mock import patch
 from zipfile import ZipFile
 
 from services import content
@@ -12,6 +14,7 @@ from services.content_history.archive import (
     ArchiveBuildError,
     _format_layer,
     _preview_html,
+    _read_content_relative_bytes,
     archive_download_filename,
     build_course_archive,
     build_course_archive_zip,
@@ -129,6 +132,42 @@ class ContentHistoryArchiveTests(unittest.TestCase):
                 self.release.course_id,
                 self.release.release_id,
             )
+
+    def test_parent_symlink_cannot_escape_the_content_root(self):
+        outside = self.tmp_root.parent / f"{self.tmp_root.name}-outside"
+        outside.mkdir()
+        (outside / "payload.json").write_text(
+            '{"secret":"outside"}',
+            encoding="utf-8",
+        )
+        linked = self.tmp_root / "linked-parent"
+        try:
+            linked.symlink_to(outside, target_is_directory=True)
+        except OSError as exc:
+            shutil.rmtree(outside, ignore_errors=True)
+            self.skipTest(f"directory symlinks are unavailable: {exc}")
+
+        try:
+            with self.assertRaisesRegex(
+                ArchiveBuildError,
+                "symlink|reparse|cannot read",
+            ):
+                _read_content_relative_bytes("linked-parent/payload.json")
+        finally:
+            linked.unlink(missing_ok=True)
+            shutil.rmtree(outside, ignore_errors=True)
+
+    @unittest.skipUnless(os.name == "nt", "Windows handle-path guard")
+    def test_windows_opened_handle_must_resolve_inside_the_content_root(self):
+        source_path = self.release.items[0].source_path
+        with patch(
+            "services.content_history.archive._windows_final_path",
+            return_value=self.tmp_root.parent / "outside.json",
+        ), self.assertRaisesRegex(
+            ArchiveBuildError,
+            "escaped through a reparse point",
+        ):
+            _read_content_relative_bytes(source_path)
 
     def test_renderer_preserves_teacher_markup_as_format_and_html(self):
         marked = self.sealed.model_copy(

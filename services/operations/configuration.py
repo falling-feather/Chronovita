@@ -301,7 +301,8 @@ def _validate_github_publication(
         or parsed.fragment
         or "\\" in raw_url
         or any(character.isspace() for character in raw_url)
-        or _is_local_host(parsed.hostname)
+        or parsed.hostname.casefold() != "api.github.com"
+        or parsed.port is not None
     ):
         issues.append(
             RuntimeConfigurationIssue(

@@ -22,7 +22,7 @@ from services.content_history.github import (
 TOKEN = "github_pat_test-only-super-secret"
 REPOSITORY_ID = 1311692460
 FULL_NAME = "falling-feather/Chronovita-Course-Content"
-API_BASE_URL = "https://api.github.test"
+API_BASE_URL = "https://api.github.com"
 BASE_COMMIT_SHA = "1" * 40
 BASE_TREE_SHA = "2" * 40
 BLOB_SHA = "3" * 40
@@ -68,6 +68,23 @@ def pull_request_payload(number, head_branch, base_branch):
 
 
 class GitHubGitDataClientTests(unittest.IsolatedAsyncioTestCase):
+    async def test_client_rejects_untrusted_https_api_host_before_sending_token(self):
+        with self.assertRaises(GitHubGitDataError) as caught:
+            GitHubGitDataClient(
+                token=TOKEN,
+                repository_id=REPOSITORY_ID,
+                full_name=FULL_NAME,
+                api_base_url="https://collector.example",
+                transport=httpx.MockTransport(
+                    lambda request: self.fail("network request must not be sent")
+                ),
+            )
+
+        self.assertEqual(
+            caught.exception.code,
+            GitHubErrorCode.INVALID_CONFIGURATION,
+        )
+
     async def test_full_git_data_sequence_and_payloads(self):
         publication_branch = "content/C-001/rel-001"
         requests = []

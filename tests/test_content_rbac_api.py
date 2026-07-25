@@ -11,7 +11,7 @@ from pathlib import Path
 from threading import Barrier, Thread
 from unittest.mock import Mock, patch
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 
@@ -21,12 +21,14 @@ if str(API_ROOT) not in sys.path:
     sys.path.insert(0, str(API_ROOT))
 
 from routers import admin_content, auth as auth_router
+from auth_dependencies import AuthContext
 from settings import settings
 from services import content, persistence
 from services.content import workflow as content_workflow
 from services.contracts.archive_examples import build_dayu_publish_request
 from services.auth import (
     AuthServiceConfig,
+    Principal,
     configure_identity,
     get_identity,
     shutdown_identity,
@@ -106,6 +108,41 @@ class ContentRbacApiTests(unittest.TestCase):
             self.tmp_root.parent.rmdir()
         except OSError:
             pass
+
+    def test_direct_publication_requires_an_explicit_admin_role(self):
+        reviewer_context = AuthContext(
+            principal=Principal(
+                user_id="reviewer",
+                username="reviewer.a",
+                display_name="Reviewer",
+                roles=("reviewer",),
+                auth_version=1,
+            ),
+            raw_token=None,
+            source="bearer",
+        )
+        with self.assertRaises(HTTPException) as caught:
+            admin_content._require_direct_commit_admin(
+                reviewer_context,
+                "direct_commit",
+            )
+        self.assertEqual(caught.exception.status_code, 403)
+        self.assertEqual(
+            caught.exception.detail["code"],
+            "admin_role_required",
+        )
+
+        admin_context = reviewer_context.__class__(
+            principal=reviewer_context.principal.model_copy(
+                update={"roles": ("admin",)}
+            ),
+            raw_token=None,
+            source="bearer",
+        )
+        admin_content._require_direct_commit_admin(
+            admin_context,
+            "direct_commit",
+        )
 
     def test_role_matrix_ownership_spoofing_and_audit_chain(self):
         self._assert_every_content_route_has_the_expected_permission()

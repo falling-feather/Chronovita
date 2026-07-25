@@ -465,46 +465,168 @@ def _read_content_bytes(path: Path) -> bytes:
         relative = target.relative_to(root)
     except ValueError as exc:
         raise ArchiveBuildError("archive source escaped the content root") from exc
+    if not relative.parts:
+        raise ArchiveBuildError("archive source is not a regular file")
+    if os.name == "nt":
+        return _read_content_bytes_windows(root, relative, target)
+    return _read_content_bytes_posix(root, relative, target)
 
-    current = root
-    for part in (".", *relative.parts):
-        current = current if part == "." else current / part
-        try:
-            path_stat = os.lstat(current)
-        except OSError as exc:
-            raise ArchiveBuildError(f"cannot inspect archive source: {target}") from exc
-        if stat_module.S_ISLNK(path_stat.st_mode):
-            raise ArchiveBuildError(f"archive source cannot be a symlink: {target}")
 
+def _read_content_bytes_posix(
+    root: Path,
+    relative: Path,
+    target: Path,
+) -> bytes:
+    no_follow = getattr(os, "O_NOFOLLOW", None)
+    directory_flag = getattr(os, "O_DIRECTORY", None)
+    if (
+        no_follow is None
+        or directory_flag is None
+        or os.open not in os.supports_dir_fd
+    ):
+        raise ArchiveBuildError(
+            "platform cannot safely open archive sources without following links"
+        )
+
+    close_on_exec = getattr(os, "O_CLOEXEC", 0)
+    directory_flags = os.O_RDONLY | directory_flag | no_follow | close_on_exec
+    file_flags = os.O_RDONLY | no_follow | close_on_exec
+    parent_fd: int | None = None
     try:
-        with target.open("rb") as handle:
+        parent_fd = os.open(root, directory_flags)
+        for part in relative.parts[:-1]:
+            child_fd = os.open(part, directory_flags, dir_fd=parent_fd)
+            os.close(parent_fd)
+            parent_fd = child_fd
+
+        file_name = relative.parts[-1]
+        file_fd = os.open(file_name, file_flags, dir_fd=parent_fd)
+        with os.fdopen(file_fd, "rb", closefd=True) as handle:
             opened_stat = os.fstat(handle.fileno())
-            if not stat_module.S_ISREG(opened_stat.st_mode):
-                raise ArchiveBuildError(
-                    f"archive source is not a regular file: {target}"
-                )
-            if opened_stat.st_size > MAX_ARCHIVE_FILE_BYTES:
-                raise ArchiveBuildError(
-                    f"archive source exceeds {MAX_ARCHIVE_FILE_BYTES} bytes: {target}"
-                )
-            raw = handle.read(MAX_ARCHIVE_FILE_BYTES + 1)
-            current_stat = os.lstat(target)
-            if (
-                stat_module.S_ISLNK(current_stat.st_mode)
-                or not os.path.samestat(opened_stat, current_stat)
-            ):
+            raw = _read_opened_archive_source(handle, opened_stat, target)
+            current_stat = os.stat(
+                file_name,
+                dir_fd=parent_fd,
+                follow_symlinks=False,
+            )
+            if not os.path.samestat(opened_stat, current_stat):
                 raise ArchiveBuildError(
                     f"archive source changed while being verified: {target}"
                 )
+            return raw
     except ArchiveBuildError:
         raise
     except OSError as exc:
         raise ArchiveBuildError(f"cannot read archive source: {target}") from exc
+    finally:
+        if parent_fd is not None:
+            os.close(parent_fd)
+
+
+def _read_content_bytes_windows(
+    root: Path,
+    relative: Path,
+    target: Path,
+) -> bytes:
+    components = [root]
+    current = root
+    for part in relative.parts:
+        current /= part
+        components.append(current)
+
+    try:
+        snapshots = tuple(os.lstat(component) for component in components)
+        if any(_is_windows_reparse_point(item) for item in snapshots):
+            raise ArchiveBuildError(
+                f"archive source cannot traverse a reparse point: {target}"
+            )
+
+        flags = (
+            os.O_RDONLY
+            | getattr(os, "O_BINARY", 0)
+            | getattr(os, "O_NOINHERIT", 0)
+        )
+        file_fd = os.open(target, flags)
+        with os.fdopen(file_fd, "rb", closefd=True) as handle:
+            opened_stat = os.fstat(handle.fileno())
+            opened_path = _windows_final_path(handle.fileno())
+            expected_path = root.resolve(strict=True).joinpath(*relative.parts)
+            if os.path.normcase(os.path.normpath(str(opened_path))) != os.path.normcase(
+                os.path.normpath(str(expected_path))
+            ):
+                raise ArchiveBuildError(
+                    f"archive source escaped through a reparse point: {target}"
+                )
+            raw = _read_opened_archive_source(handle, opened_stat, target)
+            current_stats = tuple(os.lstat(component) for component in components)
+            if any(
+                _is_windows_reparse_point(current)
+                or not os.path.samestat(previous, current)
+                for previous, current in zip(snapshots, current_stats, strict=True)
+            ):
+                raise ArchiveBuildError(
+                    f"archive source changed while being verified: {target}"
+                )
+            return raw
+    except ArchiveBuildError:
+        raise
+    except OSError as exc:
+        raise ArchiveBuildError(f"cannot read archive source: {target}") from exc
+
+
+def _read_opened_archive_source(handle, opened_stat, target: Path) -> bytes:
+    if not stat_module.S_ISREG(opened_stat.st_mode):
+        raise ArchiveBuildError(f"archive source is not a regular file: {target}")
+    if opened_stat.st_size > MAX_ARCHIVE_FILE_BYTES:
+        raise ArchiveBuildError(
+            f"archive source exceeds {MAX_ARCHIVE_FILE_BYTES} bytes: {target}"
+        )
+    raw = handle.read(MAX_ARCHIVE_FILE_BYTES + 1)
     if len(raw) > MAX_ARCHIVE_FILE_BYTES:
         raise ArchiveBuildError(
             f"archive source exceeds {MAX_ARCHIVE_FILE_BYTES} bytes: {target}"
         )
     return raw
+
+
+def _is_windows_reparse_point(path_stat) -> bool:
+    reparse_attribute = getattr(
+        stat_module,
+        "FILE_ATTRIBUTE_REPARSE_POINT",
+        0x400,
+    )
+    return stat_module.S_ISLNK(path_stat.st_mode) or bool(
+        getattr(path_stat, "st_file_attributes", 0) & reparse_attribute
+    )
+
+
+def _windows_final_path(file_descriptor: int) -> Path:
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes
+
+    get_final_path = ctypes.windll.kernel32.GetFinalPathNameByHandleW
+    get_final_path.argtypes = (
+        wintypes.HANDLE,
+        wintypes.LPWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+    )
+    get_final_path.restype = wintypes.DWORD
+    handle = wintypes.HANDLE(msvcrt.get_osfhandle(file_descriptor))
+    required = get_final_path(handle, None, 0, 0)
+    if required == 0:
+        raise ctypes.WinError(ctypes.get_last_error())
+    buffer = ctypes.create_unicode_buffer(required + 1)
+    written = get_final_path(handle, buffer, len(buffer), 0)
+    if written == 0 or written >= len(buffer):
+        raise ctypes.WinError(ctypes.get_last_error())
+    value = buffer.value
+    if value.startswith("\\\\?\\UNC\\"):
+        value = "\\\\" + value[8:]
+    elif value.startswith("\\\\?\\"):
+        value = value[4:]
+    return Path(value)
 
 
 def _parse_json_model(raw: bytes, model: type[BaseModel], label: str):

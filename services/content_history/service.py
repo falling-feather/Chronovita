@@ -178,6 +178,10 @@ class CoursePublicationService:
         expected_revision: int | None = None,
     ) -> GitPublicationRecordV1:
         record = self.store.get(publication_id)
+        if record.intent.binding != self.binding:
+            raise PublicationRetryRejected(
+                "repository binding changed; create a new publication"
+            )
         if expected_revision is not None and record.revision != expected_revision:
             raise PublicationRetryRejected("publication revision changed")
         if record.status in {"succeeded", "failed_terminal"}:

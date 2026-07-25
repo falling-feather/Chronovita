@@ -14,6 +14,7 @@ from scripts.build_teacher_release import (
     REQUIRED_PACKAGE_FILES,
     SCHEMA_VERSION,
     TeacherPackageError,
+    _scan_secret,
     build_teacher_release,
     verify_teacher_release,
 )
@@ -188,6 +189,20 @@ class TeacherReleaseTests(unittest.TestCase):
                     for part in path.parts
                 )
             )
+
+    def test_secret_scan_rejects_multiple_provider_and_database_credentials(self):
+        samples = (
+            b"sk-" + b"proj-" + b"abcdefghijklmnopqrstuvwxyz0123456789",
+            b"xox" + b"b-" + b"123456789012-abcdefghijklmnopqrstuvwxyz",
+            b"AI" + b"za" + (b"A" * 35),
+            b"postgresql://" + b"teacher:correct-horse-battery-staple@db/chronovita",
+            b"client_" + b'secret = "abcdefghijklmnopqrstuvwxyz012345"',
+        )
+        for sample in samples:
+            with self.subTest(sample=sample[:16]), self.assertRaises(
+                TeacherPackageError
+            ):
+                _scan_secret(PurePosixPath("apps/api/config.py"), sample)
 
     def test_verifier_rejects_unregistered_local_state(self):
         with tempfile.TemporaryDirectory() as output_dir:

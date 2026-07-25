@@ -199,6 +199,38 @@ class ContentHistoryServiceTests(unittest.IsolatedAsyncioTestCase):
             2,
         )
 
+    async def test_retry_rejects_repository_binding_drift_without_network_calls(self):
+        github = _FakeGitHub(self.binding, fail_pull_once=True)
+        service = self._service(github)
+        first = await service.submit(self.request, requested_by="teacher-a")
+        self.assertEqual(first.publication.status, "failed_retryable")
+
+        changed_binding = self.binding.model_copy(
+            update={"repository_id": self.binding.repository_id + 1}
+        )
+        changed_github = _FakeGitHub(changed_binding)
+        changed_service = CoursePublicationService(
+            binding=changed_binding,
+            github=changed_github,
+            archive_builder=lambda course_id, release_id: self.archive,
+            clock=lambda: self.now,
+        )
+
+        with self.assertRaisesRegex(
+            PublicationRetryRejected,
+            "repository binding changed",
+        ):
+            await changed_service.retry(
+                first.publication.intent.publication_id,
+                expected_revision=first.publication.revision,
+            )
+
+        self.assertEqual(changed_github.calls, [])
+        self.assertEqual(
+            PublicationStore().get(first.publication.intent.publication_id),
+            first.publication,
+        )
+
     async def test_direct_commit_updates_base_without_creating_pull_request(self):
         github = _FakeGitHub(self.binding)
         service = self._service(github)

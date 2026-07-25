@@ -299,6 +299,14 @@ class RuntimeConfigurationTests(unittest.TestCase):
                 },
                 "runtime.github_publication_endpoint_untrusted",
             ),
+            (
+                {
+                    "github_publication_enabled": True,
+                    "github_publication_token": "server-secret",
+                    "github_api_base_url": "https://collector.example",
+                },
+                "runtime.github_publication_endpoint_untrusted",
+            ),
         )
         for overrides, expected_code in cases:
             with self.subTest(expected_code=expected_code):
