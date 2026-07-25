@@ -1,0 +1,470 @@
+{
+  "schema_version": "game-session/v1",
+  "session_id": "session-dayu-demo-001",
+  "user_id": "student-demo",
+  "course_id": "C-early-civilization",
+  "lesson_id": "dayu-flood-control",
+  "scenario_id": "scenario-dayu-flood-control",
+  "scenario_version": 1,
+  "course_content_version": 1,
+  "course_checksum": "e128e00b4ad604763bd522be2eca639b3fa00aae878c6dc8a570865350eb6789",
+  "scenario_checksum": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
+  "engine_version": "rules-v1.0.0",
+  "ai_evidence_version": 0,
+  "random_seed": "dayu-demo-seed",
+  "status": "completed",
+  "revision": 6,
+  "current_turn": 5,
+  "current_state": {
+    "flood_risk": 35.0,
+    "public_support": 75.0,
+    "food": 55.0,
+    "labor": 56.0,
+    "tribal_trust": 70.0,
+    "engineering_knowledge": 70.0
+  },
+  "current_node_id": null,
+  "npc_states": [
+    {
+      "person_id": "person-yu",
+      "attitude": 20.0,
+      "trust": 25.0,
+      "known_fact_refs": [],
+      "last_basis_refs": [
+        "fact-flood-method"
+      ],
+      "flags": {},
+      "updated_turn": 0
+    },
+    {
+      "person_id": "person-people-representative",
+      "attitude": 0.0,
+      "trust": 0.0,
+      "known_fact_refs": [],
+      "last_basis_refs": [],
+      "flags": {},
+      "updated_turn": 0
+    },
+    {
+      "person_id": "person-tribe-leader",
+      "attitude": 20.0,
+      "trust": 15.0,
+      "known_fact_refs": [
+        "fact-cooperation"
+      ],
+      "last_basis_refs": [
+        "fact-cooperation"
+      ],
+      "flags": {},
+      "updated_turn": 2
+    },
+    {
+      "person_id": "person-artisan",
+      "attitude": 0.0,
+      "trust": 0.0,
+      "known_fact_refs": [],
+      "last_basis_refs": [],
+      "flags": {},
+      "updated_turn": 0
+    }
+  ],
+  "turns": [
+    {
+      "turn_id": "turn-dayu-001",
+      "session_id": "session-dayu-demo-001",
+      "client_action_id": "client-action-dayu-001",
+      "turn_no": 1,
+      "status": "applied",
+      "raw_input": "先勘察地势和河道",
+      "action_source": "fixed",
+      "classified_action_id": "survey-terrain",
+      "classification_confidence": 1.0,
+      "state_before": {
+        "flood_risk": 70.0,
+        "public_support": 55.0,
+        "food": 70.0,
+        "labor": 70.0,
+        "tribal_trust": 45.0,
+        "engineering_knowledge": 35.0
+      },
+      "state_after": {
+        "flood_risk": 75.0,
+        "public_support": 55.0,
+        "food": 70.0,
+        "labor": 70.0,
+        "tribal_trust": 45.0,
+        "engineering_knowledge": 50.0
+      },
+      "state_changes": [
+        {
+          "variable_id": "flood_risk",
+          "before": 70.0,
+          "after": 75.0,
+          "delta": 5.0
+        },
+        {
+          "variable_id": "engineering_knowledge",
+          "before": 35.0,
+          "after": 50.0,
+          "delta": 15.0
+        }
+      ],
+      "npc_changes": [],
+      "triggered_event_ids": [],
+      "fact_refs": [
+        "fact-flood-method"
+      ],
+      "narrative": "工程认知提升，但勘察期间水患仍在发展。",
+      "narrative_source": "rules",
+      "narrative_model": "",
+      "narrative_metadata": {},
+      "classification_evidence": null,
+      "narrative_evidence": null,
+      "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
+      "created_at": "2026-07-14T02:05:00Z"
+    },
+    {
+      "turn_id": "turn-dayu-002",
+      "session_id": "session-dayu-demo-001",
+      "client_action_id": "client-action-dayu-002",
+      "turn_no": 2,
+      "status": "applied",
+      "raw_input": "向各部族解释疏导计划",
+      "action_source": "fixed",
+      "classified_action_id": "explain-plan",
+      "classification_confidence": 1.0,
+      "state_before": {
+        "flood_risk": 75.0,
+        "public_support": 55.0,
+        "food": 70.0,
+        "labor": 70.0,
+        "tribal_trust": 45.0,
+        "engineering_knowledge": 50.0
+      },
+      "state_after": {
+        "flood_risk": 75.0,
+        "public_support": 65.0,
+        "food": 70.0,
+        "labor": 70.0,
+        "tribal_trust": 60.0,
+        "engineering_knowledge": 50.0
+      },
+      "state_changes": [
+        {
+          "variable_id": "public_support",
+          "before": 55.0,
+          "after": 65.0,
+          "delta": 10.0
+        },
+        {
+          "variable_id": "tribal_trust",
+          "before": 45.0,
+          "after": 60.0,
+          "delta": 15.0
+        }
+      ],
+      "npc_changes": [
+        {
+          "person_id": "person-tribe-leader",
+          "attitude_before": 0.0,
+          "attitude_after": 20.0,
+          "trust_before": 0.0,
+          "trust_after": 15.0,
+          "revealed_fact_refs": [
+            "fact-cooperation"
+          ]
+        }
+      ],
+      "triggered_event_ids": [],
+      "fact_refs": [
+        "fact-cooperation"
+      ],
+      "narrative": "解释延缓工程，但提高了协作意愿。",
+      "narrative_source": "rules",
+      "narrative_model": "",
+      "narrative_metadata": {},
+      "classification_evidence": null,
+      "narrative_evidence": null,
+      "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
+      "created_at": "2026-07-14T02:10:00Z"
+    },
+    {
+      "turn_id": "turn-dayu-003",
+      "session_id": "session-dayu-demo-001",
+      "client_action_id": "client-action-dayu-003",
+      "turn_no": 3,
+      "status": "applied",
+      "raw_input": "按勘察结果开挖疏导线",
+      "action_source": "fixed",
+      "classified_action_id": "open-channels",
+      "classification_confidence": 1.0,
+      "state_before": {
+        "flood_risk": 75.0,
+        "public_support": 65.0,
+        "food": 70.0,
+        "labor": 70.0,
+        "tribal_trust": 60.0,
+        "engineering_knowledge": 50.0
+      },
+      "state_after": {
+        "flood_risk": 60.0,
+        "public_support": 65.0,
+        "food": 70.0,
+        "labor": 58.0,
+        "tribal_trust": 60.0,
+        "engineering_knowledge": 60.0
+      },
+      "state_changes": [
+        {
+          "variable_id": "flood_risk",
+          "before": 75.0,
+          "after": 60.0,
+          "delta": -15.0
+        },
+        {
+          "variable_id": "labor",
+          "before": 70.0,
+          "after": 58.0,
+          "delta": -12.0
+        },
+        {
+          "variable_id": "engineering_knowledge",
+          "before": 50.0,
+          "after": 60.0,
+          "delta": 10.0
+        }
+      ],
+      "npc_changes": [],
+      "triggered_event_ids": [
+        "event-heavy-rain"
+      ],
+      "fact_refs": [
+        "fact-flood-method",
+        "fact-public-mobilization"
+      ],
+      "narrative": "疏导降低水患，但消耗劳力。\n\n【教师待审】暴雨使水患再次上升。",
+      "narrative_source": "rules",
+      "narrative_model": "",
+      "narrative_metadata": {},
+      "classification_evidence": null,
+      "narrative_evidence": null,
+      "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
+      "created_at": "2026-07-14T02:15:00Z"
+    },
+    {
+      "turn_id": "turn-dayu-004",
+      "session_id": "session-dayu-demo-001",
+      "client_action_id": "client-action-dayu-004",
+      "turn_no": 4,
+      "status": "applied",
+      "raw_input": "分配粮食，保障参与工程的民众",
+      "action_source": "fixed",
+      "classified_action_id": "allocate-food",
+      "classification_confidence": 1.0,
+      "state_before": {
+        "flood_risk": 60.0,
+        "public_support": 65.0,
+        "food": 70.0,
+        "labor": 58.0,
+        "tribal_trust": 60.0,
+        "engineering_knowledge": 60.0
+      },
+      "state_after": {
+        "flood_risk": 60.0,
+        "public_support": 75.0,
+        "food": 55.0,
+        "labor": 68.0,
+        "tribal_trust": 70.0,
+        "engineering_knowledge": 60.0
+      },
+      "state_changes": [
+        {
+          "variable_id": "public_support",
+          "before": 65.0,
+          "after": 75.0,
+          "delta": 10.0
+        },
+        {
+          "variable_id": "food",
+          "before": 70.0,
+          "after": 55.0,
+          "delta": -15.0
+        },
+        {
+          "variable_id": "labor",
+          "before": 58.0,
+          "after": 68.0,
+          "delta": 10.0
+        },
+        {
+          "variable_id": "tribal_trust",
+          "before": 60.0,
+          "after": 70.0,
+          "delta": 10.0
+        }
+      ],
+      "npc_changes": [],
+      "triggered_event_ids": [
+        "event-cooperation"
+      ],
+      "fact_refs": [
+        "fact-public-mobilization",
+        "fact-cooperation"
+      ],
+      "narrative": "粮食储备下降，但民心与协作基础得到恢复。\n\n协作关系转化为可用劳力。",
+      "narrative_source": "rules",
+      "narrative_model": "",
+      "narrative_metadata": {},
+      "classification_evidence": null,
+      "narrative_evidence": null,
+      "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
+      "created_at": "2026-07-14T02:20:00Z"
+    },
+    {
+      "turn_id": "turn-dayu-005",
+      "session_id": "session-dayu-demo-001",
+      "client_action_id": "client-action-dayu-005",
+      "turn_no": 5,
+      "status": "applied",
+      "raw_input": "扩大已经见效的疏导工程",
+      "action_source": "fixed",
+      "classified_action_id": "open-channels",
+      "classification_confidence": 1.0,
+      "state_before": {
+        "flood_risk": 60.0,
+        "public_support": 75.0,
+        "food": 55.0,
+        "labor": 68.0,
+        "tribal_trust": 70.0,
+        "engineering_knowledge": 60.0
+      },
+      "state_after": {
+        "flood_risk": 35.0,
+        "public_support": 75.0,
+        "food": 55.0,
+        "labor": 56.0,
+        "tribal_trust": 70.0,
+        "engineering_knowledge": 70.0
+      },
+      "state_changes": [
+        {
+          "variable_id": "flood_risk",
+          "before": 60.0,
+          "after": 35.0,
+          "delta": -25.0
+        },
+        {
+          "variable_id": "labor",
+          "before": 68.0,
+          "after": 56.0,
+          "delta": -12.0
+        },
+        {
+          "variable_id": "engineering_knowledge",
+          "before": 60.0,
+          "after": 70.0,
+          "delta": 10.0
+        }
+      ],
+      "npc_changes": [],
+      "triggered_event_ids": [],
+      "fact_refs": [
+        "fact-flood-method",
+        "fact-public-mobilization",
+        "fact-cooperation"
+      ],
+      "narrative": "疏导降低水患，但消耗劳力。\n\n你以勘察、疏导和协作逐步控制水患。",
+      "narrative_source": "rules",
+      "narrative_model": "",
+      "narrative_metadata": {},
+      "classification_evidence": null,
+      "narrative_evidence": null,
+      "ruleset_hash": "c35aed9454005e91aa335f754d50c6a94785d49afdf6886f38a5a4e2f8e64911",
+      "created_at": "2026-07-14T02:25:00Z"
+    }
+  ],
+  "triggered_event_ids": [
+    "event-heavy-rain",
+    "event-cooperation"
+  ],
+  "available_action_ids": [],
+  "available_choices": [],
+  "summary": "你以勘察、疏导和协作逐步控制水患。",
+  "flags": {
+    "success_candidate": true
+  },
+  "narrative_flags": {
+    "legacy_demo_flag": "untrusted-narrative-metadata"
+  },
+  "observed_entities": [
+    {
+      "entity_id": "entity-heavy-rain",
+      "name": "暴雨",
+      "kind": "event",
+      "description": "第三回合触发的规则事件。",
+      "first_seen_turn": 3
+    }
+  ],
+  "history": [
+    {
+      "role": "system",
+      "text": "【教师待审】暴雨季将至，各部族正在等待你的第一项治水安排。",
+      "turn_no": 0
+    },
+    {
+      "role": "player",
+      "text": "先勘察地势和河道",
+      "turn_no": 1
+    },
+    {
+      "role": "narrator",
+      "text": "工程认知提升，但勘察期间水患仍在发展。",
+      "turn_no": 1
+    },
+    {
+      "role": "player",
+      "text": "向各部族解释疏导计划",
+      "turn_no": 2
+    },
+    {
+      "role": "narrator",
+      "text": "解释延缓工程，但提高了协作意愿。",
+      "turn_no": 2
+    },
+    {
+      "role": "player",
+      "text": "按勘察结果开挖疏导线",
+      "turn_no": 3
+    },
+    {
+      "role": "narrator",
+      "text": "疏导降低水患，但消耗劳力。\n\n【教师待审】暴雨使水患再次上升。",
+      "turn_no": 3
+    },
+    {
+      "role": "player",
+      "text": "分配粮食，保障参与工程的民众",
+      "turn_no": 4
+    },
+    {
+      "role": "narrator",
+      "text": "粮食储备下降，但民心与协作基础得到恢复。\n\n协作关系转化为可用劳力。",
+      "turn_no": 4
+    },
+    {
+      "role": "player",
+      "text": "扩大已经见效的疏导工程",
+      "turn_no": 5
+    },
+    {
+      "role": "narrator",
+      "text": "疏导降低水患，但消耗劳力。\n\n你以勘察、疏导和协作逐步控制水患。",
+      "turn_no": 5
+    }
+  ],
+  "ending_id": "ending-water-controlled",
+  "dossier_id": "dossier-dayu-demo-001",
+  "started_at": "2026-07-14T02:00:00Z",
+  "updated_at": "2026-07-14T02:25:00Z",
+  "ended_at": "2026-07-14T02:25:00Z"
+}

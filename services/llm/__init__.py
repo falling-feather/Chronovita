@@ -1,8 +1,4 @@
-"""LLM 适配层 · v0.2.0
-
-提供统一的异步流式入口，支持 DeepSeek（OpenAI 兼容）与 mock。
-按 ADR-0011 落地：异常一律回落到 mock，对外不抛。
-"""
+"""LLM adapters for legacy streaming and strict structured completion."""
 from __future__ import annotations
 
 import asyncio
@@ -11,10 +7,20 @@ from typing import AsyncIterator, Iterable
 
 import httpx
 
-from settings import settings
+from settings import secret_value, settings
+
+from .adapter import StructuredLLMAdapter, complete_json
+from .contracts import (
+    LLMFailureCode,
+    LLMMessage,
+    StructuredCompletion,
+    StructuredCompletionInfo,
+    StructuredLLMError,
+)
 
 
 Message = dict  # {"role": "system|user|assistant", "content": str}
+_STREAM_FALLBACK_NOTICE = "（模型服务暂不可用，已切换离线回答。）\n"
 
 
 async def _mock_stream(messages: Iterable[Message]) -> AsyncIterator[str]:
@@ -35,7 +41,8 @@ async def _mock_stream(messages: Iterable[Message]) -> AsyncIterator[str]:
 
 
 async def _deepseek_stream(messages: list[Message], *, model: str | None = None) -> AsyncIterator[str]:
-    if not settings.deepseek_api_key:
+    api_key = secret_value(settings.deepseek_api_key)
+    if not api_key:
         async for c in _mock_stream(messages):
             yield c
         return
@@ -43,7 +50,7 @@ async def _deepseek_stream(messages: list[Message], *, model: str | None = None)
     use_model = model or settings.deepseek_model
     url = f"{settings.deepseek_base_url.rstrip('/')}/chat/completions"
     headers = {
-        "Authorization": f"Bearer {settings.deepseek_api_key}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     payload: dict = {
@@ -60,9 +67,12 @@ async def _deepseek_stream(messages: list[Message], *, model: str | None = None)
         async with httpx.AsyncClient(timeout=60.0) as client:
             async with client.stream("POST", url, headers=headers, json=payload) as resp:
                 if resp.status_code >= 400:
-                    body = await resp.aread()
-                    yield f"\n[LLM 错误 {resp.status_code}] {body.decode('utf-8', 'replace')[:200]}"
+                    await resp.aread()
+                    yield _STREAM_FALLBACK_NOTICE
+                    async for c in _mock_stream(messages):
+                        yield c
                     return
+                emitted = False
                 async for line in resp.aiter_lines():
                     if not line or not line.startswith("data:"):
                         continue
@@ -73,11 +83,17 @@ async def _deepseek_stream(messages: list[Message], *, model: str | None = None)
                         chunk = json.loads(data)
                         delta = chunk["choices"][0]["delta"].get("content")
                         if delta:
+                            emitted = True
                             yield delta
                     except Exception:
                         continue
-    except Exception as e:  # 网络/超时 → 回落 mock
-        yield f"\n[LLM 异常，已回落 mock] {type(e).__name__}: {e}\n"
+                if emitted:
+                    return
+                yield _STREAM_FALLBACK_NOTICE
+                async for c in _mock_stream(messages):
+                    yield c
+    except Exception:  # Legacy callers always receive a stable offline fallback.
+        yield _STREAM_FALLBACK_NOTICE
         async for c in _mock_stream(messages):
             yield c
 
@@ -99,6 +115,19 @@ async def stream_chat(
 
 def current_provider_label(model: str | None = None) -> str:
     p = (settings.llm_provider or "mock").lower()
-    if p == "deepseek" and settings.deepseek_api_key:
+    if p == "deepseek" and secret_value(settings.deepseek_api_key):
         return f"deepseek · {model or settings.deepseek_model}"
     return "mock（离线）"
+
+
+__all__ = [
+    "LLMFailureCode",
+    "LLMMessage",
+    "StructuredCompletion",
+    "StructuredCompletionInfo",
+    "StructuredLLMAdapter",
+    "StructuredLLMError",
+    "complete_json",
+    "current_provider_label",
+    "stream_chat",
+]

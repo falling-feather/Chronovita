@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Tabs, Spin } from 'antd';
 import { api, type Lesson } from '../../utils/api';
 import LessonWatch from './LessonWatch';
 import LessonAsk from './LessonAsk';
 import LessonPractice from './LessonPractice';
-import LessonCreate from './LessonCreate';
+
+const LessonCreate = lazy(() => import('./LessonCreate'));
 
 const LAYERS = [
   { key: 'watch',    label: '看 · 沉浸叙事' },
@@ -33,15 +34,32 @@ export default function LessonPage() {
     api.progressTouch({ lesson_id: lessonId, layer: layer as any }).catch(() => {});
   }, [lessonId, layer]);
 
+  const openLayer = useCallback((nextLayer: string) => {
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set('layer', nextLayer);
+      return next;
+    }, { replace: true });
+  }, [setParams]);
+
   const items = useMemo(() => LAYERS.map((l) => ({
     key: l.key,
     label: l.label,
     children: !lesson ? null :
       l.key === 'watch'    ? <LessonWatch lesson={lesson} /> :
-      l.key === 'practice' ? <LessonPractice lesson={lesson} /> :
+      l.key === 'practice' ? <LessonPractice lesson={lesson} onOpenDossier={() => openLayer('create')} /> :
       l.key === 'ask'      ? <LessonAsk lesson={lesson} /> :
-                              <LessonCreate lesson={lesson} />,
-  })), [lesson]);
+                              (
+                                <Suspense fallback={<div className="chrono-create-loading"><Spin /></div>}>
+                                  <LessonCreate
+                                    key={lesson.id}
+                                    lesson={lesson}
+                                    active={layer === 'create'}
+                                    onOpenPractice={() => openLayer('practice')}
+                                  />
+                                </Suspense>
+                              ),
+  })), [layer, lesson, openLayer]);
 
   if (loading || !lesson) return <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div>;
 
@@ -55,11 +73,7 @@ export default function LessonPage() {
       <Tabs
         size="large"
         activeKey={layer}
-        onChange={(k) => {
-          const next = new URLSearchParams(params);
-          next.set('layer', k);
-          setParams(next, { replace: true });
-        }}
+        onChange={openLayer}
         items={items}
       />
     </div>

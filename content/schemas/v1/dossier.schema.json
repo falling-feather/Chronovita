@@ -1,0 +1,433 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/v1/dossier.schema.json",
+  "$comment": "Lifecycle conditions are represented here when JSON Schema can express them. Cross-object references, checksums and replay invariants require the services.contracts RuntimeBundleV1 semantic validator.",
+  "$defs": {
+    "DossierChoiceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "turn_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Turn Id",
+          "type": "string"
+        },
+        "turn_no": {
+          "minimum": 1,
+          "title": "Turn No",
+          "type": "integer"
+        },
+        "action_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "choice": {
+          "minLength": 1,
+          "title": "Choice",
+          "type": "string"
+        },
+        "consequence": {
+          "default": "",
+          "title": "Consequence",
+          "type": "string"
+        }
+      },
+      "required": [
+        "turn_id",
+        "turn_no",
+        "action_id",
+        "choice"
+      ],
+      "title": "DossierChoiceV1",
+      "type": "object"
+    },
+    "KnowledgeEdgeV1": {
+      "additionalProperties": false,
+      "properties": {
+        "edge_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Edge Id",
+          "type": "string"
+        },
+        "source_node_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Source Node Id",
+          "type": "string"
+        },
+        "target_node_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Target Node Id",
+          "type": "string"
+        },
+        "relation": {
+          "minLength": 1,
+          "title": "Relation",
+          "type": "string"
+        },
+        "explanation": {
+          "default": "",
+          "title": "Explanation",
+          "type": "string"
+        },
+        "source_ref_ids": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Source Ref Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "edge_id",
+        "source_node_id",
+        "target_node_id",
+        "relation"
+      ],
+      "title": "KnowledgeEdgeV1",
+      "type": "object"
+    },
+    "KnowledgeNodeV1": {
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Node Id",
+          "type": "string"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "person",
+            "event",
+            "place",
+            "concept",
+            "cause",
+            "consequence"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "summary": {
+          "default": "",
+          "title": "Summary",
+          "type": "string"
+        },
+        "source_ref_ids": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Source Ref Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "node_id",
+        "label",
+        "kind"
+      ],
+      "title": "KnowledgeNodeV1",
+      "type": "object"
+    },
+    "StateSnapshotV1": {
+      "additionalProperties": false,
+      "properties": {
+        "turn_no": {
+          "minimum": 0,
+          "title": "Turn No",
+          "type": "integer"
+        },
+        "state": {
+          "patternProperties": {
+            "^[A-Za-z0-9][A-Za-z0-9._-]+$": {
+              "type": "number"
+            }
+          },
+          "title": "State",
+          "type": "object"
+        }
+      },
+      "required": [
+        "turn_no",
+        "state"
+      ],
+      "title": "StateSnapshotV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "dossier/v1",
+      "default": "dossier/v1",
+      "enum": [
+        "dossier/v1"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "dossier_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Dossier Id",
+      "type": "string"
+    },
+    "session_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Session Id",
+      "type": "string"
+    },
+    "user_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "User Id",
+      "type": "string"
+    },
+    "course_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Course Id",
+      "type": "string"
+    },
+    "lesson_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Lesson Id",
+      "type": "string"
+    },
+    "scenario_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "course_content_version": {
+      "minimum": 1,
+      "title": "Course Content Version",
+      "type": "integer"
+    },
+    "scenario_version": {
+      "minimum": 1,
+      "title": "Scenario Version",
+      "type": "integer"
+    },
+    "course_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Course Checksum",
+      "type": "string"
+    },
+    "scenario_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scenario Checksum",
+      "type": "string"
+    },
+    "status": {
+      "default": "draft",
+      "enum": [
+        "draft",
+        "final"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "ending_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Ending Id",
+      "type": "string"
+    },
+    "strategy_summary": {
+      "default": "",
+      "title": "Strategy Summary",
+      "type": "string"
+    },
+    "key_choices": {
+      "items": {
+        "$ref": "#/$defs/DossierChoiceV1"
+      },
+      "title": "Key Choices",
+      "type": "array"
+    },
+    "state_trajectory": {
+      "items": {
+        "$ref": "#/$defs/StateSnapshotV1"
+      },
+      "title": "State Trajectory",
+      "type": "array"
+    },
+    "major_costs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Major Costs",
+      "type": "array"
+    },
+    "historical_explanation": {
+      "default": "",
+      "title": "Historical Explanation",
+      "type": "string"
+    },
+    "knowledge_nodes": {
+      "items": {
+        "$ref": "#/$defs/KnowledgeNodeV1"
+      },
+      "title": "Knowledge Nodes",
+      "type": "array"
+    },
+    "knowledge_edges": {
+      "items": {
+        "$ref": "#/$defs/KnowledgeEdgeV1"
+      },
+      "title": "Knowledge Edges",
+      "type": "array"
+    },
+    "follow_up_questions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Follow Up Questions",
+      "type": "array"
+    },
+    "reflection_notes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reflection Notes",
+      "type": "array"
+    },
+    "fact_refs": {
+      "items": {
+        "maxLength": 64,
+        "minLength": 2,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+        "type": "string"
+      },
+      "title": "Fact Refs",
+      "type": "array"
+    },
+    "source_ref_ids": {
+      "items": {
+        "maxLength": 64,
+        "minLength": 2,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+        "type": "string"
+      },
+      "title": "Source Ref Ids",
+      "type": "array"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "checksum": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Checksum"
+    }
+  },
+  "required": [
+    "dossier_id",
+    "session_id",
+    "user_id",
+    "course_id",
+    "lesson_id",
+    "scenario_id",
+    "course_content_version",
+    "scenario_version",
+    "course_checksum",
+    "scenario_checksum",
+    "title",
+    "ending_id",
+    "generated_at",
+    "status"
+  ],
+  "title": "DossierV1",
+  "type": "object",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "draft"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "checksum": {
+            "const": null
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "final"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "checksum"
+        ],
+        "properties": {
+          "checksum": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  ]
+}

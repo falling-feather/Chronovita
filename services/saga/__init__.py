@@ -11,17 +11,50 @@
 """
 from __future__ import annotations
 
+import copy
 import json
 import re
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import AsyncIterator
+from threading import RLock
+from typing import Annotated, AsyncIterator
 
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from services import llm
 
 
 # ---------- 课程级 Saga 模板（先秦第 1 课 5 节） ----------
+
+_SAGA_MAX_STEPS = 7
+_SagaFlagValue = Annotated[str, Field(max_length=200)] | int | bool
+
+
+class _SagaMetaEntity(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=80)
+    type: str = Field(min_length=1, max_length=32)
+    desc: str = Field(default="", max_length=300)
+
+
+class _SagaMetaEnvelope(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    choices: list[
+        Annotated[str, Field(min_length=1, max_length=100)]
+    ] = Field(default_factory=list, max_length=4)
+    summary_delta: str = Field(default="", max_length=200)
+    entities_delta: list[_SagaMetaEntity] = Field(
+        default_factory=list,
+        max_length=16,
+    )
+    flags_delta: dict[
+        Annotated[str, Field(min_length=1, max_length=64)],
+        _SagaFlagValue,
+    ] = Field(default_factory=dict, max_length=32)
+    ended: bool = False
+
 
 @dataclass
 class SagaTemplate:
@@ -1568,10 +1601,25 @@ SAGA_TEMPLATES: dict[str, SagaTemplate] = {
 
 # ---------- Saga 运行时状态 ----------
 
+class SagaBusyError(RuntimeError):
+    pass
+
+
+class SagaCapacityError(RuntimeError):
+    def __init__(self, scope: str) -> None:
+        super().__init__(scope)
+        self.scope = scope
+
+
+class SagaEndedError(RuntimeError):
+    pass
+
+
 @dataclass
 class SagaState:
     saga_id: str
     lesson_id: str
+    owner_user_id: str
     template: SagaTemplate
     history: list[dict] = field(default_factory=list)  # {role, text}
     summary: str = ""
@@ -1581,9 +1629,11 @@ class SagaState:
     step: int = 0
     ended: bool = False
     created_at: float = field(default_factory=time.time)
+    last_accessed_at: float = field(default_factory=time.monotonic)
+    in_progress: bool = False
 
     def public(self) -> dict:
-        return {
+        return copy.deepcopy({
             "saga_id": self.saga_id,
             "lesson_id": self.lesson_id,
             "title": self.template.title,
@@ -1597,10 +1647,11 @@ class SagaState:
             "step": self.step,
             "ended": self.ended,
             "keywords": self.template.keywords,
-        }
+        })
 
 
 _SAGAS: dict[str, SagaState] = {}
+_SAGAS_LOCK = RLock()
 
 
 def list_templates() -> list[dict]:
@@ -1611,25 +1662,149 @@ def list_templates() -> list[dict]:
     ]
 
 
-def start(lesson_id: str) -> SagaState | None:
+def start(
+    lesson_id: str,
+    *,
+    owner_user_id: str,
+    ttl_seconds: int,
+    max_active_per_owner: int,
+    max_active_global: int,
+) -> SagaState | None:
     tpl = SAGA_TEMPLATES.get(lesson_id)
     if not tpl:
         return None
-    sid = uuid.uuid4().hex[:12]
-    state = SagaState(
-        saga_id=sid,
-        lesson_id=lesson_id,
-        template=tpl,
-        history=[{"role": "narrator", "text": tpl.opening}],
-        choices=list(tpl.initial_choices),
-        step=0,
+    if not owner_user_id:
+        raise ValueError("owner_user_id is required")
+    _validate_policy(
+        ttl_seconds=ttl_seconds,
+        max_active_per_owner=max_active_per_owner,
+        max_active_global=max_active_global,
     )
-    _SAGAS[sid] = state
-    return state
+    now = time.monotonic()
+    created_at = time.time()
+    with _SAGAS_LOCK:
+        _purge_expired(now=now, ttl_seconds=ttl_seconds)
+        owner_retained = sum(
+            1
+            for state in _SAGAS.values()
+            if state.owner_user_id == owner_user_id
+        )
+        if owner_retained >= max_active_per_owner:
+            raise SagaCapacityError("owner")
+        if len(_SAGAS) >= max_active_global:
+            raise SagaCapacityError("global")
+
+        sid = uuid.uuid4().hex[:12]
+        while sid in _SAGAS:
+            sid = uuid.uuid4().hex[:12]
+        state = SagaState(
+            saga_id=sid,
+            lesson_id=lesson_id,
+            owner_user_id=owner_user_id,
+            template=tpl,
+            history=[{"role": "narrator", "text": tpl.opening}],
+            choices=list(tpl.initial_choices),
+            step=0,
+            created_at=created_at,
+            last_accessed_at=now,
+        )
+        _SAGAS[sid] = state
+        return state
 
 
-def get(saga_id: str) -> SagaState | None:
-    return _SAGAS.get(saga_id)
+def get(
+    saga_id: str,
+    *,
+    owner_user_id: str,
+    ttl_seconds: int,
+) -> SagaState | None:
+    now = time.monotonic()
+    with _SAGAS_LOCK:
+        _purge_expired(now=now, ttl_seconds=ttl_seconds)
+        state = _SAGAS.get(saga_id)
+        if state is None or state.owner_user_id != owner_user_id:
+            return None
+        if not state.ended:
+            state.last_accessed_at = now
+        return state
+
+
+def get_public(
+    saga_id: str,
+    *,
+    owner_user_id: str,
+    ttl_seconds: int,
+) -> dict | None:
+    state = get(
+        saga_id,
+        owner_user_id=owner_user_id,
+        ttl_seconds=ttl_seconds,
+    )
+    if state is None:
+        return None
+    with _SAGAS_LOCK:
+        current = _SAGAS.get(saga_id)
+        if current is not state or current.owner_user_id != owner_user_id:
+            return None
+        return current.public()
+
+
+def begin_act(
+    saga_id: str,
+    *,
+    owner_user_id: str,
+    ttl_seconds: int,
+) -> SagaState | None:
+    now = time.monotonic()
+    with _SAGAS_LOCK:
+        _purge_expired(now=now, ttl_seconds=ttl_seconds)
+        state = _SAGAS.get(saga_id)
+        if state is None or state.owner_user_id != owner_user_id:
+            return None
+        if state.ended:
+            raise SagaEndedError
+        if state.in_progress:
+            raise SagaBusyError
+        state.in_progress = True
+        state.last_accessed_at = now
+        return state
+
+
+def release_act(state: SagaState) -> None:
+    with _SAGAS_LOCK:
+        current = _SAGAS.get(state.saga_id)
+        if current is state:
+            current.in_progress = False
+            current.last_accessed_at = time.monotonic()
+
+
+def clear_states() -> None:
+    with _SAGAS_LOCK:
+        _SAGAS.clear()
+
+
+def _validate_policy(
+    *,
+    ttl_seconds: int,
+    max_active_per_owner: int,
+    max_active_global: int,
+) -> None:
+    if ttl_seconds < 1:
+        raise ValueError("ttl_seconds must be positive")
+    if max_active_per_owner < 1:
+        raise ValueError("max_active_per_owner must be positive")
+    if max_active_global < 1:
+        raise ValueError("max_active_global must be positive")
+
+
+def _purge_expired(*, now: float, ttl_seconds: int) -> None:
+    expired = [
+        saga_id
+        for saga_id, state in _SAGAS.items()
+        if not state.in_progress and now - state.last_accessed_at >= ttl_seconds
+    ]
+    for saga_id in expired:
+        _SAGAS.pop(saga_id, None)
 
 
 # ---------- LLM Prompt 装配 ----------
@@ -1720,6 +1895,17 @@ def _build_messages(state: SagaState, player_action: str) -> list[dict]:
 _META_RE = re.compile(r"\[META\]\s*(\{.*\})\s*$", re.DOTALL)
 
 
+def _reject_duplicate_meta_keys(
+    pairs: list[tuple[str, object]],
+) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate saga META key: {key}")
+        result[key] = value
+    return result
+
+
 def _parse_meta(full_text: str) -> tuple[str, dict]:
     """从完整 LLM 输出里切出正文与 meta JSON。"""
     m = _META_RE.search(full_text)
@@ -1727,9 +1913,13 @@ def _parse_meta(full_text: str) -> tuple[str, dict]:
         return full_text.strip(), {}
     narrative = full_text[: m.start()].rstrip()
     try:
-        meta = json.loads(m.group(1))
-    except Exception:
-        meta = {}
+        decoded = json.loads(
+            m.group(1),
+            object_pairs_hook=_reject_duplicate_meta_keys,
+        )
+        meta = _SagaMetaEnvelope.model_validate(decoded).model_dump()
+    except (json.JSONDecodeError, TypeError, ValueError, ValidationError):
+        return narrative, {}
     return narrative, meta
 
 
@@ -1769,57 +1959,113 @@ def _apply_meta(state: SagaState, narrative: str, meta: dict) -> None:
     if meta.get("ended"):
         state.ended = True
     state.step += 1
+    if state.step >= _SAGA_MAX_STEPS:
+        state.ended = True
+        state.choices = []
 
 
 # ---------- 流式接口 ----------
 
-async def act_stream(saga_id: str, player_action: str) -> AsyncIterator[str]:
+async def act_stream(
+    state: SagaState,
+    player_action: str,
+    *,
+    max_response_chars: int,
+) -> AsyncIterator[str]:
     """SSE 风格：逐段产出叙事文本（不含 [META] 行）；末尾产出一行 `[META]{...json...}`。"""
-    state = _SAGAS.get(saga_id)
-    if not state:
-        yield "[ERR]saga 不存在"
-        return
-    if state.ended:
-        yield "[ERR]剧情已结束"
-        return
+    if max_response_chars < 1:
+        raise ValueError("max_response_chars must be positive")
+    player_entry = {"role": "player", "text": player_action}
+    committed = False
+    try:
+        with _SAGAS_LOCK:
+            current = _SAGAS.get(state.saga_id)
+            if current is not state or not current.in_progress:
+                raise RuntimeError("saga action lease is not active")
+            current.history.append(player_entry)
 
-    # 先把玩家行动入历史（用于持久态展示）
-    state.history.append({"role": "player", "text": player_action})
+        messages = _build_messages(state, player_action)
+        buffer = ""
+        sent_until = 0  # 已发送给前端的字符位置（避免把 [META] 提前透传）
 
-    messages = _build_messages(state, player_action)
-    buffer = ""
-    sent_until = 0  # 已发送给前端的字符位置（避免把 [META] 提前透传）
+        async for chunk in llm.stream_chat(messages):
+            buffer += chunk
+            if len(buffer) > max_response_chars:
+                raise RuntimeError("saga LLM output exceeded the limit")
+            # 检测 [META] 是否已开始出现
+            meta_pos = buffer.find("[META]")
+            if meta_pos >= 0:
+                # 把 [META] 之前还没发的内容发出去
+                if sent_until < meta_pos:
+                    yield buffer[sent_until:meta_pos]
+                    sent_until = meta_pos
+                # 等流结束再处理 meta
+                continue
+            # 还没出现 [META]，可以安全往外吐到 buffer 末尾「之前 6 个字符」
+            # （留缓冲避免「[ME」被截断）
+            safe_end = max(sent_until, len(buffer) - 6)
+            if safe_end > sent_until:
+                yield buffer[sent_until:safe_end]
+                sent_until = safe_end
 
-    async for chunk in llm.stream_chat(messages):
-        buffer += chunk
-        # 检测 [META] 是否已开始出现
-        meta_pos = buffer.find("[META]")
-        if meta_pos >= 0:
-            # 把 [META] 之前还没发的内容发出去
-            if sent_until < meta_pos:
-                yield buffer[sent_until:meta_pos]
-                sent_until = meta_pos
-            # 等流结束再处理 meta
-            continue
-        # 还没出现 [META]，可以安全往外吐到 buffer 末尾「之前 6 个字符」
-        # （留缓冲避免「[ME」被截断）
-        safe_end = max(sent_until, len(buffer) - 6)
-        if safe_end > sent_until:
-            yield buffer[sent_until:safe_end]
-            sent_until = safe_end
+        # 流结束，把残余 narrative 部分吐完
+        narrative, meta = _parse_meta(buffer)
+        if len(narrative) > sent_until:
+            yield narrative[sent_until:]
 
-    # 流结束，把残余 narrative 部分吐完
-    narrative, meta = _parse_meta(buffer)
-    if len(narrative) > sent_until:
-        yield narrative[sent_until:]
+        with _SAGAS_LOCK:
+            current = _SAGAS.get(state.saga_id)
+            if current is not state or not current.in_progress:
+                raise RuntimeError("saga action lease was lost")
+            before_apply = {
+                "history": list(current.history),
+                "summary": current.summary,
+                "flags": dict(current.flags),
+                "entities": copy.deepcopy(current.entities),
+                "choices": list(current.choices),
+                "step": current.step,
+                "ended": current.ended,
+            }
+            try:
+                _apply_meta(current, narrative, meta)
+                current.last_accessed_at = time.monotonic()
+                result_meta = copy.deepcopy({
+                    "choices": list(current.choices),
+                    "entities": list(current.entities.values()),
+                    "summary": current.summary,
+                    "flags": dict(current.flags),
+                    "step": current.step,
+                    "ended": current.ended,
+                })
+                result_envelope = "\n\n[META]" + json.dumps(
+                    result_meta,
+                    ensure_ascii=False,
+                )
+                if len(result_envelope) > max_response_chars:
+                    raise RuntimeError(
+                        "saga public state exceeded the output limit"
+                    )
+            except BaseException:
+                current.history = before_apply["history"]
+                current.summary = before_apply["summary"]
+                current.flags = before_apply["flags"]
+                current.entities = before_apply["entities"]
+                current.choices = before_apply["choices"]
+                current.step = before_apply["step"]
+                current.ended = before_apply["ended"]
+                raise
+            committed = True
 
-    _apply_meta(state, narrative, meta)
-    # 最后输出一个 META 信封给前端
-    yield "\n\n[META]" + json.dumps({
-        "choices": state.choices,
-        "entities": list(state.entities.values()),
-        "summary": state.summary,
-        "flags": state.flags,
-        "step": state.step,
-        "ended": state.ended,
-    }, ensure_ascii=False)
+        # 最后输出一个 META 信封给前端
+        yield result_envelope
+    finally:
+        with _SAGAS_LOCK:
+            current = _SAGAS.get(state.saga_id)
+            if (
+                not committed
+                and current is state
+                and current.history
+                and current.history[-1] is player_entry
+            ):
+                current.history.pop()
+        release_act(state)

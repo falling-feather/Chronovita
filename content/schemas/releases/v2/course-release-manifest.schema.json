@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/releases/v2/course-release-manifest.schema.json",
+  "$comment": "Pydantic semantic validation additionally enforces content-addressed paths, cross-descriptor identities, ordering, primary scenario membership and release lineage.",
+  "$defs": {
+    "CourseReleaseItemV2": {
+      "additionalProperties": false,
+      "properties": {
+        "lesson_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Lesson Id",
+          "type": "string"
+        },
+        "course_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Course Id",
+          "type": "string"
+        },
+        "content_version": {
+          "minimum": 1,
+          "title": "Content Version",
+          "type": "integer"
+        },
+        "source_path": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Source Path",
+          "type": "string"
+        },
+        "source_checksum": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Checksum",
+          "type": "string"
+        },
+        "course_package": {
+          "$ref": "#/$defs/RuntimeArtifactDescriptorV1"
+        },
+        "scenarios": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RuntimeArtifactDescriptorV1"
+          },
+          "title": "Scenarios",
+          "type": "array"
+        },
+        "primary_scenario_id": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 2,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Primary Scenario Id"
+        },
+        "audience": {
+          "const": "published",
+          "default": "published",
+          "enum": [
+            "published"
+          ],
+          "title": "Audience",
+          "type": "string"
+        }
+      },
+      "required": [
+        "lesson_id",
+        "course_id",
+        "content_version",
+        "source_path",
+        "source_checksum",
+        "course_package"
+      ],
+      "title": "CourseReleaseItemV2",
+      "type": "object"
+    },
+    "RuntimeArtifactDescriptorV1": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "course-package",
+            "scenario-template"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "enum": [
+            "course-package/v1",
+            "scenario-template/v1"
+          ],
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "course_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Course Id",
+          "type": "string"
+        },
+        "lesson_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Lesson Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "checksum": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Checksum",
+          "type": "string"
+        },
+        "path": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "schema_version",
+        "artifact_id",
+        "course_id",
+        "lesson_id",
+        "version",
+        "checksum",
+        "path"
+      ],
+      "title": "RuntimeArtifactDescriptorV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "course-release/v2",
+      "default": "course-release/v2",
+      "enum": [
+        "course-release/v2"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "release_id": {
+      "minLength": 1,
+      "title": "Release Id",
+      "type": "string"
+    },
+    "release_no": {
+      "minimum": 1,
+      "title": "Release No",
+      "type": "integer"
+    },
+    "course_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Course Id",
+      "type": "string"
+    },
+    "operation": {
+      "enum": [
+        "bootstrap",
+        "publish",
+        "rollback"
+      ],
+      "title": "Operation",
+      "type": "string"
+    },
+    "parent_release_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Release Id"
+    },
+    "restored_from_release_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Restored From Release Id"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "created_by": {
+      "minLength": 1,
+      "title": "Created By",
+      "type": "string"
+    },
+    "note": {
+      "default": "",
+      "title": "Note",
+      "type": "string"
+    },
+    "items": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/CourseReleaseItemV2"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Checksum",
+      "type": "string"
+    }
+  },
+  "required": [
+    "release_id",
+    "release_no",
+    "course_id",
+    "operation",
+    "created_at",
+    "created_by",
+    "checksum"
+  ],
+  "title": "CourseReleaseManifestV2",
+  "type": "object"
+}

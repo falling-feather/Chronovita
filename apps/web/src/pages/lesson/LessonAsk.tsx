@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Input, Radio, Tag, Spin, Select, Tooltip } from 'antd';
-import { SendOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Input, Radio, Tag, Spin, Select, Tooltip, Modal, Form } from 'antd';
+import { SendOutlined, ReloadOutlined, UserAddOutlined } from '@ant-design/icons';
 import type { Lesson } from '../../utils/api';
 import { api, streamAsk } from '../../utils/api';
+import { loadJSON, saveJSON } from '../../utils/storage';
 
 interface Msg { role: 'user' | 'assistant'; content: string }
+interface CustomPeer { name: string; intro: string }
 
 const DEFAULT_PEERS = ['孔子', '司马迁', '李白', '苏轼', '王安石'];
+const CUSTOM_PEERS_KEY = 'custom_peers';
+const CUSTOM_PEERS_LIMIT = 5;
+const CUSTOM_PEER_SENTINEL = '__custom__';
 
 function buildGreeting(persona: 'expert' | 'peer', lesson: Lesson, peer: string): string {
   if (persona === 'expert') {
@@ -17,11 +22,22 @@ function buildGreeting(persona: 'expert' | 'peer', lesson: Lesson, peer: string)
 
 export default function LessonAsk({ lesson }: { lesson: Lesson }) {
   const [persona, setPersona] = useState<'expert' | 'peer'>('expert');
-  const peerCandidates = useMemo(() => {
+  const lessonFigures = useMemo(() => {
     const pool = (lesson.figures || []).filter(Boolean);
     return pool.length > 0 ? pool : DEFAULT_PEERS;
   }, [lesson.figures]);
+  const [customPeers, setCustomPeers] = useState<CustomPeer[]>(() => loadJSON<CustomPeer[]>(CUSTOM_PEERS_KEY, []));
+  const peerCandidates = useMemo(() => {
+    // 课程内置在前，自定义在后，按 name 去重
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const n of lessonFigures) { if (n && !seen.has(n)) { seen.add(n); out.push(n); } }
+    for (const c of customPeers) { if (c.name && !seen.has(c.name)) { seen.add(c.name); out.push(c.name); } }
+    return out;
+  }, [lessonFigures, customPeers]);
   const [peerCharacter, setPeerCharacter] = useState<string>(peerCandidates[0]);
+  const [customModalOpen, setCustomModalOpen] = useState(false);
+  const [customForm] = Form.useForm<CustomPeer>();
   const [era, setEra] = useState<string>('');
   const [history, setHistory] = useState<Msg[]>([
     { role: 'assistant', content: buildGreeting('expert', lesson, peerCandidates[0]) },
@@ -31,6 +47,14 @@ export default function LessonAsk({ lesson }: { lesson: Lesson }) {
   const [llmInfo, setLlmInfo] = useState<{ provider: string; ask_provider?: string }>({ provider: '' });
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // 若课程切换后当前 peerCharacter 不在候选里，回退到第一个
+  useEffect(() => {
+    if (!peerCandidates.includes(peerCharacter) && peerCandidates.length > 0) {
+      setPeerCharacter(peerCandidates[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [peerCandidates.join('|')]);
+
   useEffect(() => {
     api.course(lesson.course_id).then((c) => setEra(c.summary.era_id)).catch(() => {});
   }, [lesson.course_id]);
@@ -39,6 +63,11 @@ export default function LessonAsk({ lesson }: { lesson: Lesson }) {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [history, loading]);
+
+  const currentPeerIntro = useMemo(() => {
+    const hit = customPeers.find((c) => c.name === peerCharacter);
+    return hit?.intro || '';
+  }, [customPeers, peerCharacter]);
 
   const resetGreeting = (p: 'expert' | 'peer', peer: string) => {
     setHistory([{ role: 'assistant', content: buildGreeting(p, lesson, peer) }]);
@@ -50,8 +79,38 @@ export default function LessonAsk({ lesson }: { lesson: Lesson }) {
   };
 
   const onPeerChange = (name: string) => {
+    if (name === CUSTOM_PEER_SENTINEL) {
+      customForm.resetFields();
+      setCustomModalOpen(true);
+      return;
+    }
     setPeerCharacter(name);
     if (persona === 'peer') resetGreeting('peer', name);
+  };
+
+  const submitCustomPeer = async () => {
+    try {
+      const values = await customForm.validateFields();
+      const name = values.name.trim();
+      const intro = (values.intro || '').trim();
+      if (!name) return;
+      // 去重 + 限额：内置不可覆盖；自定义同名替换
+      if (lessonFigures.includes(name)) {
+        // 已是内置，直接选中
+        setCustomModalOpen(false);
+        setPeerCharacter(name);
+        if (persona === 'peer') resetGreeting('peer', name);
+        return;
+      }
+      const next = [{ name, intro }, ...customPeers.filter((c) => c.name !== name)].slice(0, CUSTOM_PEERS_LIMIT);
+      setCustomPeers(next);
+      saveJSON(CUSTOM_PEERS_KEY, next);
+      setCustomModalOpen(false);
+      setPeerCharacter(name);
+      if (persona === 'peer') resetGreeting('peer', name);
+    } catch {
+      /* 校验未通过 */
+    }
   };
 
   const send = async () => {
@@ -69,6 +128,7 @@ export default function LessonAsk({ lesson }: { lesson: Lesson }) {
           lesson_id: lesson.id,
           lesson_title: lesson.title,
           peer_character: persona === 'peer' ? peerCharacter : undefined,
+          peer_intro: persona === 'peer' ? currentPeerIntro || undefined : undefined,
           era: era || undefined,
           history: history.slice(-6),
         },
@@ -115,9 +175,15 @@ export default function LessonAsk({ lesson }: { lesson: Lesson }) {
               <Select
                 size="small"
                 value={peerCharacter}
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 160 }}
                 onChange={onPeerChange}
-                options={peerCandidates.map((n) => ({ label: n, value: n }))}
+                options={[
+                  { label: '课程内置', options: lessonFigures.map((n) => ({ label: n, value: n })) },
+                  ...(customPeers.length > 0
+                    ? [{ label: '我的自定义', options: customPeers.map((c) => ({ label: c.name, value: c.name })) }]
+                    : []),
+                  { label: ' ', options: [{ label: <span><UserAddOutlined /> 自定义对象…</span>, value: CUSTOM_PEER_SENTINEL }] },
+                ]}
               />
             )}
             <Tooltip title="清空当前对话">
@@ -168,6 +234,36 @@ export default function LessonAsk({ lesson }: { lesson: Lesson }) {
           </div>
         )}
       </div>
+
+      <Modal
+        open={customModalOpen}
+        title="自定义同窗对象"
+        okText="开始对话"
+        cancelText="取消"
+        onCancel={() => setCustomModalOpen(false)}
+        onOk={submitCustomPeer}
+        destroyOnClose
+      >
+        <Form form={customForm} layout="vertical" preserve={false}>
+          <Form.Item
+            name="name"
+            label="人物姓名"
+            rules={[{ required: true, message: '请输入历史人物姓名' }, { max: 16, message: '姓名过长' }]}
+          >
+            <Input placeholder="如：周公旦 / 范仲淹" autoFocus />
+          </Form.Item>
+          <Form.Item
+            name="intro"
+            label="一句话简介（可选，帮助锁定身份与时代）"
+            rules={[{ max: 80, message: '简介请控制在 80 字内' }]}
+          >
+            <Input.TextArea rows={2} placeholder="如：西周初年摄政的政治家，制礼作乐者" />
+          </Form.Item>
+          <div style={{ fontSize: 11, color: 'var(--text-mute)' }}>
+            自定义条目仅保存在本地浏览器，常用 {CUSTOM_PEERS_LIMIT} 个；与课程内置同名时直接选用内置。
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 }

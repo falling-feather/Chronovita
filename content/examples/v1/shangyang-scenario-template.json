@@ -1,0 +1,721 @@
+{
+  "schema_version": "scenario-template/v1",
+  "scenario_id": "scenario-shangyang-institutional-reform",
+  "scenario_version": 1,
+  "status": "sealed",
+  "engine_family": "rules_v1",
+  "course_id": "C-warring-states-reform",
+  "lesson_id": "shangyang-institutional-reform",
+  "title": "【教师待审/技术占位】商鞅变法节点式制度改革关卡",
+  "scenario_type": "institutional_reform",
+  "student_role": "【教师待审/技术占位】制度方案记录与规则验证者，不承担历史裁判或教师职责",
+  "objective": "【教师待审/技术占位】沿节点比较制度方案的规则后果，并在六回合上限内验证多结局判定。",
+  "opening": "【教师待审/技术占位】制度方案等待讨论；人物立场、史实叙述和数值均为待教师审定的技术占位。",
+  "max_turns": 6,
+  "variables": [
+    {
+      "variable_id": "law_clarity",
+      "label": "【教师待审/技术占位】制度清晰度",
+      "description": "【教师待审/技术占位】仅供规则引擎测试的数值。",
+      "initial": 30.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "reform_support",
+      "label": "【教师待审/技术占位】改革支持度",
+      "description": "【教师待审/技术占位】仅供规则引擎测试的数值。",
+      "initial": 50.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "noble_resistance",
+      "label": "【教师待审/技术占位】旧贵族阻力",
+      "description": "【教师待审/技术占位】仅供规则引擎测试的抽象数值。",
+      "initial": 45.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "administrative_capacity",
+      "label": "【教师待审/技术占位】行政执行能力",
+      "description": "【教师待审/技术占位】仅供规则引擎测试的数值。",
+      "initial": 35.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "public_order",
+      "label": "【教师待审/技术占位】社会秩序",
+      "description": "【教师待审/技术占位】仅供规则引擎测试的抽象数值。",
+      "initial": 60.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    }
+  ],
+  "npcs": [
+    {
+      "person_id": "person-shangyang",
+      "display_name": "【教师待审/技术占位】商鞅",
+      "role": "【教师待审/技术占位】制度改革提议者角色占位",
+      "persona": "【教师待审/技术占位】仅用于规则反馈，不作为历史人物还原。",
+      "boundaries": [
+        "【教师待审/技术占位】台词和立场不得作为史料或正式教学结论。"
+      ],
+      "initial_attitude": 20.0,
+      "initial_trust": 25.0,
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-merit-incentives",
+        "fact-local-administration"
+      ]
+    },
+    {
+      "person_id": "person-qin-ruler",
+      "display_name": "【教师待审/技术占位】秦国君主角色",
+      "role": "【教师待审/技术占位】改革授权角色占位",
+      "persona": "【教师待审/技术占位】仅用于测试授权信任条件。",
+      "boundaries": [
+        "【教师待审/技术占位】具体身份、动机和对话等待教师审定。"
+      ],
+      "initial_attitude": 15.0,
+      "initial_trust": 20.0,
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-local-administration"
+      ]
+    },
+    {
+      "person_id": "person-old-nobility",
+      "display_name": "【教师待审/技术占位】旧贵族代表角色",
+      "role": "【教师待审/技术占位】制度阻力角色占位",
+      "persona": "【教师待审/技术占位】仅用于测试态度与信任变化。",
+      "boundaries": [
+        "【教师待审/技术占位】抽象角色不代表真实群体的完整立场。"
+      ],
+      "initial_attitude": -10.0,
+      "initial_trust": -15.0,
+      "fact_refs": [
+        "fact-merit-incentives"
+      ]
+    },
+    {
+      "person_id": "person-local-official",
+      "display_name": "【教师待审/技术占位】地方执行者角色",
+      "role": "【教师待审/技术占位】制度执行角色占位",
+      "persona": "【教师待审/技术占位】仅用于测试行政执行条件。",
+      "boundaries": [
+        "【教师待审/技术占位】行政职责与制度细节等待教师审定。"
+      ],
+      "initial_attitude": 0.0,
+      "initial_trust": 10.0,
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-local-administration"
+      ]
+    }
+  ],
+  "action_rules": [
+    {
+      "action_id": "consult-court",
+      "label": "【教师待审/技术占位】征询改革意见",
+      "description": "【教师待审/技术占位】验证 NPC 信任变化及事实揭示效果。",
+      "aliases": [],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "reform_support",
+          "operation": "add",
+          "value": 5.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-qin-ruler",
+          "attitude_delta": 10.0,
+          "trust_delta": 10.0,
+          "reveal_fact_refs": [
+            "fact-rule-publication"
+          ]
+        }
+      ],
+      "feedback": "【教师待审/技术占位】规则模型提高支持度和授权角色信任。",
+      "fact_refs": [
+        "fact-rule-publication"
+      ],
+      "next_node_id": "node-policy-design"
+    },
+    {
+      "action_id": "announce-principles",
+      "label": "【教师待审/技术占位】公布制度原则",
+      "description": "【教师待审/技术占位】验证 state set 效果及阻力反馈。",
+      "aliases": [],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "law_clarity",
+          "operation": "set",
+          "value": 55.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "noble_resistance",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-old-nobility",
+          "attitude_delta": -10.0,
+          "trust_delta": -5.0,
+          "reveal_fact_refs": [
+            "fact-merit-incentives"
+          ]
+        }
+      ],
+      "feedback": "【教师待审/技术占位】规则模型将制度清晰度设为固定值，并提高阻力。",
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-merit-incentives"
+      ],
+      "next_node_id": "node-policy-design"
+    },
+    {
+      "action_id": "standardize-rules",
+      "label": "【教师待审/技术占位】统一规则文本",
+      "description": "【教师待审/技术占位】验证 NPC trust 条件与 state set 效果。",
+      "aliases": [],
+      "available_when": [
+        {
+          "kind": "npc",
+          "person_id": "person-local-official",
+          "field": "trust",
+          "operator": "gte",
+          "value": 10.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "law_clarity",
+          "operation": "set",
+          "value": 75.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "administrative_capacity",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-local-official",
+          "attitude_delta": 0.0,
+          "trust_delta": 10.0,
+          "reveal_fact_refs": [
+            "fact-local-administration"
+          ]
+        }
+      ],
+      "feedback": "【教师待审/技术占位】规则模型提高制度清晰度、执行能力与执行者信任。",
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-local-administration"
+      ],
+      "next_node_id": "node-local-implementation"
+    },
+    {
+      "action_id": "prepare-local-offices",
+      "label": "【教师待审/技术占位】准备地方执行节点",
+      "description": "【教师待审/技术占位】验证行政能力与 NPC 效果。",
+      "aliases": [],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "administrative_capacity",
+          "operation": "add",
+          "value": 20.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "reform_support",
+          "operation": "add",
+          "value": -5.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-local-official",
+          "attitude_delta": 10.0,
+          "trust_delta": 15.0,
+          "reveal_fact_refs": [
+            "fact-local-administration"
+          ]
+        }
+      ],
+      "feedback": "【教师待审/技术占位】规则模型以短期支持度代价换取执行能力。",
+      "fact_refs": [
+        "fact-local-administration"
+      ],
+      "next_node_id": "node-local-implementation"
+    },
+    {
+      "action_id": "apply-merit-system",
+      "label": "【教师待审/技术占位】应用激励规则",
+      "description": "【教师待审/技术占位】验证制度清晰度条件、支持度与阻力变化。",
+      "aliases": [],
+      "available_when": [
+        {
+          "kind": "state",
+          "variable_id": "law_clarity",
+          "operator": "gte",
+          "value": 50.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "reform_support",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "noble_resistance",
+          "operation": "add",
+          "value": 15.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-old-nobility",
+          "attitude_delta": -20.0,
+          "trust_delta": -10.0,
+          "reveal_fact_refs": [
+            "fact-merit-incentives"
+          ]
+        }
+      ],
+      "feedback": "【教师待审/技术占位】规则模型同时提高支持度与旧贵族阻力。",
+      "fact_refs": [
+        "fact-merit-incentives"
+      ],
+      "next_node_id": "node-policy-evaluation"
+    },
+    {
+      "action_id": "phase-rollout",
+      "label": "【教师待审/技术占位】分阶段执行",
+      "description": "【教师待审/技术占位】验证较缓和的执行路径。",
+      "aliases": [],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "administrative_capacity",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "public_order",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "noble_resistance",
+          "operation": "add",
+          "value": -5.0
+        }
+      ],
+      "feedback": "【教师待审/技术占位】规则模型提高执行能力和秩序，并降低部分阻力。",
+      "fact_refs": [
+        "fact-local-administration"
+      ],
+      "next_node_id": "node-policy-evaluation"
+    },
+    {
+      "action_id": "consolidate-rules",
+      "label": "【教师待审/技术占位】确认制度方案",
+      "description": "【教师待审/技术占位】验证 NPC 条件与成功终点节点。",
+      "aliases": [],
+      "available_when": [
+        {
+          "kind": "npc",
+          "person_id": "person-local-official",
+          "field": "trust",
+          "operator": "gte",
+          "value": 10.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "law_clarity",
+          "operation": "set",
+          "value": 85.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "administrative_capacity",
+          "operation": "add",
+          "value": 10.0
+        }
+      ],
+      "feedback": "【教师待审/技术占位】规则模型进入制度确认终点，历史评价仍待教师审定。",
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-local-administration"
+      ],
+      "next_node_id": "node-reform-recorded"
+    },
+    {
+      "action_id": "pause-and-review",
+      "label": "【教师待审/技术占位】暂缓并复核",
+      "description": "【教师待审/技术占位】验证复核终点节点与固定状态值。",
+      "aliases": [],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "law_clarity",
+          "operation": "set",
+          "value": 45.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "reform_support",
+          "operation": "add",
+          "value": 5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "noble_resistance",
+          "operation": "add",
+          "value": -10.0
+        }
+      ],
+      "feedback": "【教师待审/技术占位】规则模型进入待复核终点，不生成教学结论。",
+      "fact_refs": [
+        "fact-rule-publication"
+      ],
+      "next_node_id": "node-review-pending"
+    },
+    {
+      "action_id": "force-rapid-rollout",
+      "label": "【教师待审/技术占位】强行快速推行",
+      "description": "【教师待审/技术占位】验证阻力超限结局与规则事件叠加。",
+      "aliases": [],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "noble_resistance",
+          "operation": "add",
+          "value": 40.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "public_order",
+          "operation": "add",
+          "value": -20.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-old-nobility",
+          "attitude_delta": -30.0,
+          "trust_delta": -15.0,
+          "reveal_fact_refs": [
+            "fact-merit-incentives"
+          ]
+        }
+      ],
+      "feedback": "【教师待审/技术占位】规则模型将阻力推至失败阈值，不输出历史归因。",
+      "fact_refs": [
+        "fact-merit-incentives"
+      ],
+      "next_node_id": "node-policy-evaluation"
+    },
+    {
+      "action_id": "continue-deliberation",
+      "label": "【教师待审/技术占位】继续评估",
+      "description": "【教师待审/技术占位】验证评估节点自循环与回合上限兜底。",
+      "aliases": [],
+      "available_when": [],
+      "effects": [],
+      "feedback": "【教师待审/技术占位】规则模型保留当前状态并进入下一回合评估。",
+      "fact_refs": [
+        "fact-rule-publication"
+      ],
+      "next_node_id": "node-policy-evaluation"
+    }
+  ],
+  "event_rules": [
+    {
+      "event_id": "event-implementation-friction",
+      "title": "【教师待审/技术占位】执行阻力事件",
+      "match": "any",
+      "trigger": [
+        {
+          "kind": "state",
+          "variable_id": "noble_resistance",
+          "operator": "gte",
+          "value": 65.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-old-nobility",
+          "field": "attitude",
+          "operator": "lte",
+          "value": -30.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "public_order",
+          "operation": "add",
+          "value": -15.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-local-official",
+          "attitude_delta": 0.0,
+          "trust_delta": -5.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "narrative": "【教师待审/技术占位】任一阻力条件满足即触发技术事件；叙述与历史解释等待教师审定。",
+      "once": true,
+      "priority": 10,
+      "fact_refs": [
+        "fact-merit-incentives",
+        "fact-local-administration"
+      ]
+    }
+  ],
+  "ending_rules": [
+    {
+      "ending_id": "ending-reform-recorded",
+      "title": "【教师待审/技术占位】制度方案形成",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "operator": "gte",
+          "value": 3
+        },
+        {
+          "kind": "state",
+          "variable_id": "law_clarity",
+          "operator": "gte",
+          "value": 75.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "administrative_capacity",
+          "operator": "gte",
+          "value": 55.0
+        }
+      ],
+      "summary": "【教师待审/技术占位】规则层记录制度方案形成，不代表历史评价或教学结论。",
+      "historical_explanation": "【教师待审/技术占位】正式历史解释须由教师依据教材与审校资料撰写。",
+      "major_costs": [
+        "【教师待审/技术占位】数值代价仅用于规则验证。",
+        "【教师待审/技术占位】人物态度变化不代表真实历史群体立场。"
+      ],
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ],
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-merit-incentives",
+        "fact-local-administration"
+      ],
+      "priority": 10
+    },
+    {
+      "ending_id": "ending-reform-backlash",
+      "title": "【教师待审/技术占位】改革阻力超限",
+      "match": "any",
+      "conditions": [
+        {
+          "kind": "state",
+          "variable_id": "noble_resistance",
+          "operator": "gte",
+          "value": 85.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "public_order",
+          "operator": "lte",
+          "value": 30.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-old-nobility",
+          "field": "attitude",
+          "operator": "lte",
+          "value": -60.0
+        }
+      ],
+      "summary": "【教师待审/技术占位】任一失败阈值满足时结束规则流程，不承担历史归因。",
+      "historical_explanation": "【教师待审/技术占位】失败阈值和解释均为技术占位，须由教师审核。",
+      "major_costs": [
+        "【教师待审/技术占位】仅记录规则状态越界，不作教学评价。"
+      ],
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ],
+      "fact_refs": [
+        "fact-rule-publication",
+        "fact-merit-incentives",
+        "fact-local-administration"
+      ],
+      "priority": 20
+    },
+    {
+      "ending_id": "ending-review-pending",
+      "title": "【教师待审/技术占位】方案待复核",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "operator": "gte",
+          "value": 3
+        },
+        {
+          "kind": "state",
+          "variable_id": "law_clarity",
+          "operator": "lte",
+          "value": 50.0
+        }
+      ],
+      "summary": "【教师待审/技术占位】规则流程停在待复核节点，不输出正式结论。",
+      "historical_explanation": "【教师待审/技术占位】后续教学处理与历史解释由教师决定。",
+      "major_costs": [],
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ],
+      "fact_refs": [
+        "fact-rule-publication"
+      ],
+      "priority": 30
+    },
+    {
+      "ending_id": "ending-max-turns-fallback",
+      "title": "【教师待审/技术占位】回合上限兜底",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "operator": "gte",
+          "value": 6
+        }
+      ],
+      "summary": "【教师待审/技术占位】达到 max_turns 后结束技术流程，不输出教学结论。",
+      "historical_explanation": "【教师待审/技术占位】该结局仅为规则引擎兜底，与历史判断无关。",
+      "major_costs": [],
+      "source_ref_ids": [
+        "source-shangyang-placeholder"
+      ],
+      "fact_refs": [],
+      "priority": 1000
+    }
+  ],
+  "start_node_id": "node-court-deliberation",
+  "nodes": [
+    {
+      "node_id": "node-court-deliberation",
+      "title": "【教师待审/技术占位】方案讨论节点",
+      "narration": "【教师待审/技术占位】仅验证起始节点和分支动作。",
+      "action_ids": [
+        "consult-court",
+        "announce-principles"
+      ],
+      "ending_id": null
+    },
+    {
+      "node_id": "node-policy-design",
+      "title": "【教师待审/技术占位】制度设计节点",
+      "narration": "【教师待审/技术占位】仅验证 NPC 条件和 state set 效果。",
+      "action_ids": [
+        "standardize-rules",
+        "prepare-local-offices"
+      ],
+      "ending_id": null
+    },
+    {
+      "node_id": "node-local-implementation",
+      "title": "【教师待审/技术占位】地方执行节点",
+      "narration": "【教师待审/技术占位】仅验证不同执行路径的状态变化。",
+      "action_ids": [
+        "apply-merit-system",
+        "phase-rollout"
+      ],
+      "ending_id": null
+    },
+    {
+      "node_id": "node-policy-evaluation",
+      "title": "【教师待审/技术占位】方案评估节点",
+      "narration": "【教师待审/技术占位】仅验证多个终点节点的流转。",
+      "action_ids": [
+        "consolidate-rules",
+        "pause-and-review",
+        "force-rapid-rollout",
+        "continue-deliberation"
+      ],
+      "ending_id": null
+    },
+    {
+      "node_id": "node-reform-recorded",
+      "title": "【教师待审/技术占位】制度方案形成终点",
+      "narration": "【教师待审/技术占位】终点文本不构成历史结论。",
+      "action_ids": [],
+      "ending_id": "ending-reform-recorded"
+    },
+    {
+      "node_id": "node-review-pending",
+      "title": "【教师待审/技术占位】方案待复核终点",
+      "narration": "【教师待审/技术占位】终点文本等待教师审核。",
+      "action_ids": [],
+      "ending_id": "ending-review-pending"
+    }
+  ],
+  "fact_refs": [
+    "fact-rule-publication",
+    "fact-merit-incentives",
+    "fact-local-administration"
+  ],
+  "source_ref_ids": [
+    "source-shangyang-placeholder"
+  ],
+  "dossier_template": {
+    "title_template": "【教师待审/技术占位】《{scenario_title}技术卷宗》",
+    "reflection_questions": [
+      "【教师待审/技术占位】哪条规则使用了固定值设置，产生了什么模型后果？",
+      "【教师待审/技术占位】NPC 条件与事件条件如何改变可用动作和状态？"
+    ],
+    "knowledge_node_kinds": [
+      "cause",
+      "consequence",
+      "concept"
+    ]
+  },
+  "created_at": "2026-07-13T02:00:00Z",
+  "updated_at": "2026-07-14T02:00:00Z",
+  "sealed_at": "2026-07-14T02:00:00Z",
+  "sealed_by": "fixture-builder",
+  "checksum": "889a1bd7b788a2c51565631fb2b29b8b5712d82c3239da80304d9a449586fd81",
+  "compatibility": {
+    "kind": "native-v1",
+    "source_id": "",
+    "source_version": "",
+    "source_checksum": null,
+    "notes": "",
+    "unresolved_refs": [],
+    "legacy_materials": [],
+    "legacy_id_map": {}
+  }
+}

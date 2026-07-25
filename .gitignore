@@ -70,4 +70,4 @@ uploads/
 .minio/
 
 apps/web/.vite/
-
+*.tsbuildinfo

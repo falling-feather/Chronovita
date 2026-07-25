@@ -1,0 +1,395 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Button, Input, Progress, Spin, Tag, Tooltip } from 'antd';
+import {
+  EditOutlined,
+  FileDoneOutlined,
+  HistoryOutlined,
+  ReloadOutlined,
+  SafetyCertificateOutlined,
+  SendOutlined,
+} from '@ant-design/icons';
+import type {
+  GameScenarioSummary,
+  GameSession,
+  Lesson,
+  LessonScenarioRef,
+} from '../../utils/api';
+import { api } from '../../utils/api';
+import {
+  assertScenarioIdentity,
+  assertSessionIdentity,
+  buildGameBinding,
+  persistPendingGameReference,
+  readStoredGameReference,
+  type GameBinding,
+  type StoredGameReference,
+} from './gameSessionReference';
+
+interface FreeInputNotice {
+  kind: 'clarification_required' | 'rejected' | 'provider_unavailable';
+  message: string;
+}
+
+export function PublishedGamePractice({
+  lesson,
+  scenario,
+  onOpenDossier,
+}: {
+  lesson: Lesson;
+  scenario: LessonScenarioRef;
+  onOpenDossier?: () => void;
+}) {
+  const binding = useMemo(
+    () => buildGameBinding(lesson, scenario),
+    [lesson, scenario],
+  );
+
+  if (!binding) {
+    return (
+      <Alert
+        type="error"
+        showIcon
+        message="互动关卡发布信息不完整"
+        description="当前课时与关卡版本无法完成一致性校验，请联系课程管理员重新发布。"
+      />
+    );
+  }
+  return (
+    <PinnedGamePlayer
+      key={binding.identity}
+      lesson={lesson}
+      binding={binding}
+      onOpenDossier={onOpenDossier}
+    />
+  );
+}
+
+function PinnedGamePlayer({
+  lesson,
+  binding,
+  onOpenDossier,
+}: {
+  lesson: Lesson;
+  binding: GameBinding;
+  onOpenDossier?: () => void;
+}) {
+  const [scenario, setScenario] = useState<GameScenarioSummary | null>(null);
+  const [session, setSession] = useState<GameSession | null>(null);
+  const [booting, setBooting] = useState(true);
+  const [actingMode, setActingMode] = useState<'fixed' | 'free' | null>(null);
+  const [freeInput, setFreeInput] = useState('');
+  const [freeInputNotice, setFreeInputNotice] = useState<FreeInputNotice | null>(null);
+  const [error, setError] = useState('');
+  const [resumed, setResumed] = useState(false);
+  const requestGeneration = useRef(0);
+  const stageRef = useRef<HTMLDivElement>(null);
+
+  const openSession = useCallback(async (fresh = false) => {
+    const generation = requestGeneration.current + 1;
+    requestGeneration.current = generation;
+    setBooting(true);
+    setError('');
+    if (fresh) {
+      setFreeInput('');
+      setFreeInputNotice(null);
+    }
+
+    const stored = fresh ? null : readStoredGameReference(binding);
+
+    try {
+      const clientRequestId = stored?.client_request_id || createRequestId('start');
+      const pending: StoredGameReference = {
+        schema_version: 'game-session-ref/v1',
+        identity: binding.identity,
+        client_request_id: clientRequestId,
+      };
+      if (!stored) persistPendingGameReference(binding, pending);
+      const started = await api.gameStart({
+        scenario_id: binding.scenario.scenario_id,
+        client_request_id: clientRequestId,
+        release_pin: binding.pin,
+      });
+      assertScenarioIdentity(started.scenario, binding);
+      assertSessionIdentity(started.session, binding);
+      if (stored?.session_id && started.session.session_id !== stored.session_id) {
+        throw new Error('服务器恢复的学习记录与浏览器保存的会话不一致。');
+      }
+      if (requestGeneration.current !== generation) return;
+      persistPendingGameReference(binding, {
+        ...pending,
+        session_id: started.session.session_id,
+        scenario: started.scenario,
+      });
+      setScenario(started.scenario);
+      setSession(started.session);
+      setResumed(Boolean(stored?.session_id));
+    } catch (openError) {
+      if (requestGeneration.current !== generation) return;
+      setError(errorMessage(openError));
+    } finally {
+      if (requestGeneration.current === generation) setBooting(false);
+    }
+  }, [binding]);
+
+  useEffect(() => {
+    void openSession();
+    return () => { requestGeneration.current += 1; };
+  }, [openSession]);
+
+  useEffect(() => {
+    if (stageRef.current) stageRef.current.scrollTop = stageRef.current.scrollHeight;
+  }, [session?.history.length]);
+
+  const acting = actingMode !== null;
+
+  const restoreSession = async (sessionId: string) => {
+    try {
+      const restored = await api.gameSession(sessionId);
+      assertSessionIdentity(restored, binding);
+      setSession(restored);
+    } catch {
+      // Keep the last verified session visible when refresh also fails.
+    }
+  };
+
+  const chooseAction = async (actionId: string) => {
+    if (!session || session.status !== 'active' || acting) return;
+    setActingMode('fixed');
+    setError('');
+    setFreeInputNotice(null);
+    try {
+      const result = await api.gameTurn(session.session_id, {
+        client_action_id: createRequestId('turn'),
+        action_id: actionId,
+        expected_revision: session.revision,
+      });
+      assertSessionIdentity(result.session, binding);
+      setSession(result.session);
+    } catch (actionError) {
+      await restoreSession(session.session_id);
+      setError(errorMessage(actionError));
+    } finally {
+      setActingMode(null);
+    }
+  };
+
+  const submitFreeInput = async () => {
+    const rawInput = freeInput.trim();
+    if (!session || session.status !== 'active' || acting || !rawInput) return;
+    setActingMode('free');
+    setError('');
+    setFreeInputNotice(null);
+    try {
+      const response = await api.gameFreeInput(session.session_id, {
+        client_action_id: createRequestId('turn'),
+        raw_input: rawInput,
+        expected_revision: session.revision,
+      });
+      if (response.kind === 'advanced') {
+        if (!response.result) throw new Error('服务器没有返回已完成的回合。');
+        assertSessionIdentity(response.result.session, binding);
+        setSession(response.result.session);
+        setFreeInput('');
+      } else {
+        setFreeInputNotice({ kind: response.kind, message: response.message });
+      }
+    } catch (actionError) {
+      await restoreSession(session.session_id);
+      setError(errorMessage(actionError));
+    } finally {
+      setActingMode(null);
+    }
+  };
+
+  if (booting && !session) {
+    return (
+      <div className="chrono-game-loading">
+        <div>
+          <Spin />
+          <span>正在载入历史现场...</span>
+        </div>
+      </div>
+    );
+  }
+  if (!session || !scenario) {
+    return (
+      <Alert
+        type="error"
+        showIcon
+        message="互动关卡暂时无法载入"
+        description={error || '未能建立经过版本校验的学习会话。'}
+        action={<Button onClick={() => void openSession()}>重试</Button>}
+      />
+    );
+  }
+
+  const progress = Math.min(100, Math.round((session.current_turn / scenario.max_turns) * 100));
+  const choices = session.available_action_ids.map((actionId, index) => ({
+    actionId,
+    label: session.available_choices[index] || actionId,
+  }));
+  const terminal = session.status !== 'active';
+
+  return (
+    <div className="chrono-game-layout">
+      <section className="chrono-game-main" aria-label="历史抉择关卡">
+        <header className="chrono-game-header">
+          <div className="chrono-game-heading">
+            <Tag color="gold" icon={<HistoryOutlined />}>历史抉择</Tag>
+            <h2>{scenario.title}</h2>
+            <span>{lesson.era || lesson.unit}</span>
+          </div>
+          <Tooltip title="开始一段新的关卡记录">
+            <Button
+              icon={<ReloadOutlined />}
+              loading={booting}
+              disabled={acting}
+              onClick={() => void openSession(true)}
+            >
+              重新开始
+            </Button>
+          </Tooltip>
+        </header>
+
+        <div className="chrono-game-objective">
+          <span>你的身份</span>
+          <strong>{scenario.student_role}</strong>
+          <p>{scenario.objective}</p>
+        </div>
+
+        <div ref={stageRef} className="chrono-game-history" aria-live="polite">
+          {session.history.map((message, index) => (
+            <div
+              className={`chrono-game-message chrono-game-message-${message.role}`}
+              key={`${message.turn_no}-${message.role}-${index}`}
+            >
+              {message.role === 'player' ? <span>我的行动</span> : null}
+              <p>{message.text}</p>
+            </div>
+          ))}
+          {acting ? (
+            <div className="chrono-game-thinking">
+              <Spin size="small" />
+              {actingMode === 'free' ? '正在理解并推演...' : '规则正在推演...'}
+            </div>
+          ) : null}
+        </div>
+
+        {error ? <Alert type="warning" showIcon message={error} closable onClose={() => setError('')} /> : null}
+
+        {terminal ? (
+          <Alert
+            type={session.status === 'completed' ? 'success' : 'warning'}
+            showIcon
+            message={session.status === 'completed' ? '本次推演已完成' : '本次推演已结束'}
+            description={session.summary}
+            action={session.status === 'completed' && session.dossier_id && onOpenDossier ? (
+              <Button type="primary" icon={<FileDoneOutlined />} onClick={onOpenDossier}>
+                整理卷宗
+              </Button>
+            ) : undefined}
+          />
+        ) : (
+          <div className="chrono-game-action-panel">
+            <div className="chrono-game-actions">
+              {choices.map((choice, index) => (
+                <Button
+                  key={choice.actionId}
+                  disabled={acting}
+                  onClick={() => void chooseAction(choice.actionId)}
+                >
+                  <span>{index + 1}</span>
+                  {choice.label}
+                </Button>
+              ))}
+            </div>
+            <form
+              className="chrono-game-free-input"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submitFreeInput();
+              }}
+            >
+              <label htmlFor="chrono-game-free-action">
+                <EditOutlined />
+                自拟行动
+              </label>
+              <div>
+                <Input.TextArea
+                  id="chrono-game-free-action"
+                  aria-label="自拟历史行动"
+                  autoSize={{ minRows: 1, maxRows: 3 }}
+                  disabled={acting}
+                  maxLength={400}
+                  placeholder="写下你想采取的行动"
+                  showCount
+                  value={freeInput}
+                  onChange={(event) => setFreeInput(event.target.value)}
+                  onPressEnter={(event) => {
+                    if (!event.shiftKey) {
+                      event.preventDefault();
+                      void submitFreeInput();
+                    }
+                  }}
+                />
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  icon={<SendOutlined />}
+                  loading={actingMode === 'free'}
+                  disabled={acting || !freeInput.trim()}
+                >
+                  提交
+                </Button>
+              </div>
+            </form>
+            {freeInputNotice ? (
+              <Alert
+                className="chrono-game-free-notice"
+                type={freeInputNotice.kind === 'clarification_required' ? 'info' : 'warning'}
+                showIcon
+                closable
+                message={freeInputNotice.message}
+                onClose={() => setFreeInputNotice(null)}
+              />
+            ) : null}
+          </div>
+        )}
+      </section>
+
+      <aside className="chrono-game-aside">
+        <div className="chrono-game-progress">
+          <div>
+            <span>推演进度</span>
+            <strong>{session.current_turn} / {scenario.max_turns}</strong>
+          </div>
+          <Progress percent={progress} showInfo={false} strokeColor="#9C2F2F" />
+        </div>
+        <div className="chrono-game-status">
+          <SafetyCertificateOutlined />
+          <div>
+            <strong>{resumed ? '已恢复学习记录' : '学习记录已保存'}</strong>
+            <span>发布 #{scenario.release_no}</span>
+          </div>
+        </div>
+        <div className="chrono-game-keywords">
+          <h3>本课关键词</h3>
+          <div>
+            {lesson.keywords.map((keyword) => <Tag key={keyword.word}>{keyword.word}</Tag>)}
+          </div>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function createRequestId(kind: 'start' | 'turn'): string {
+  const randomPart = typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return `web-${kind}-${randomPart}`;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message.replace(/^\d{3}\s+/, '') : '请求失败，请稍后重试。';
+}

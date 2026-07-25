@@ -3,6 +3,7 @@ import { Alert, Button, Input, Spin, Tag, Tooltip } from 'antd';
 import { ReloadOutlined, SendOutlined, ReadOutlined } from '@ant-design/icons';
 import type { Lesson, SagaState, SagaEntity } from '../../utils/api';
 import { api, streamSagaAct } from '../../utils/api';
+import { PublishedGamePractice } from './GamePractice';
 
 const SAGA_LESSON_IDS = new Set([
   // 先秦 · 通史
@@ -44,7 +45,35 @@ interface Paragraph {
   visible?: number;
 }
 
-export default function LessonPractice({ lesson }: { lesson: Lesson }) {
+export default function LessonPractice({
+  lesson,
+  onOpenDossier,
+}: {
+  lesson: Lesson;
+  onOpenDossier?: () => void;
+}) {
+  const primaryScenario = lesson.scenario_refs?.find(
+    (scenario) => scenario.primary && scenario.scenario_id === lesson.primary_scenario_id,
+  );
+  if (primaryScenario) {
+    return (
+      <PublishedGamePractice
+        lesson={lesson}
+        scenario={primaryScenario}
+        onOpenDossier={onOpenDossier}
+      />
+    );
+  }
+  if (lesson.release_id) {
+    return (
+      <Alert
+        type="info"
+        showIcon
+        message="本课时尚未发布互动关卡"
+        description="课文内容可以正常学习，互动推演将在教师完成关卡发布后开放。"
+      />
+    );
+  }
   const hasSaga = SAGA_LESSON_IDS.has(lesson.id);
   if (!hasSaga) return <FallbackSandbox lesson={lesson} />;
   return <SagaPlayer lesson={lesson} />;
