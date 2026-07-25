@@ -1,23 +1,21 @@
 # Chronovita 开发文档 · Development Specification
 
-> 工程级单一信源。任何与本文冲突的实现均视为缺陷。当前版本 **V0.7.4**。
+> **归档兼容入口**：本文是 V0.7.4 时期的工程快照，不再是当前单一信源。当前项目入口见 [docs/00-项目总纲.md](docs/00-项目总纲.md)，已实现技术事实见 [docs/01-开发者文档.md](docs/01-开发者文档.md)，任务与版本见 [docs/02-项目规划与设计总纲.md](docs/02-项目规划与设计总纲.md)。
 
 ---
 
-## 1. 文档分级
+## 1. 当前文档入口
 
-| 层级 | 文档 | 受众 | 更新频率 |
+| 职责 | 当前权威文档 | 说明 |
 | --- | --- | --- | --- |
-| 顶层 | [README.md](README.md) | 所有人 | 每个中版本 |
-| 顶层 | [Roadmap.md](Roadmap.md) | 项目管理 / 教师 | 每次提交 |
-| 顶层 | Development_Spec.md（本文） | 全体研发 | 每次中版本递增 |
-| 规划 | [docs/Planning.md](docs/Planning.md) | 项目管理 / 研发 | 每轮迭代 |
-| 交接 | [docs/Handoff-v0.7.0.md](docs/Handoff-v0.7.0.md) | 接手智能体 | 每个版本节点 |
-| 交接（旧） | [docs/Handoff-v0.1.0.md](docs/Handoff-v0.1.0.md) | 仅历史参考 | 冻结 |
-| 决策记录 | docs/adr/ADR-XXXX.md | 架构师 | 每次架构决策 |
-| UI 待补 | [docs/UI-Backlog.md](docs/UI-Backlog.md) | 美术 / 前端 | 每周 |
-| 地图设计 | [docs/Map-Design.md](docs/Map-Design.md) | 前端 | 随地图迭代 |
-| 接口契约 | apps/api（FastAPI 自动生成 OpenAPI） | 前后端联调 | 每次接口变更 |
+| 宏观入口 | [docs/00-项目总纲.md](docs/00-项目总纲.md) | 项目定位、版本、分支和文档地图 |
+| 当前实现 | [docs/01-开发者文档.md](docs/01-开发者文档.md) | 架构、模块、接口、运行和维护 |
+| 未来规划 | [docs/02-项目规划与设计总纲.md](docs/02-项目规划与设计总纲.md) | 任务、认领、版本和验收的唯一原件 |
+| 开发历史 | [docs/05-发布历史与归档.md](docs/05-发布历史与归档.md) | 兼容期的提交与版本历史唯一原件 |
+| 决策记录 | `docs/adr/ADR-XXXX.md` | 已确认架构决策 |
+| 接口契约 | `apps/api` 生成的 OpenAPI | 前后端联调 |
+
+以下第 2 节起保留 V0.7.4 时期的原始快照，仅用于理解早期演进，不应用来覆盖当前权威文档。
 
 ## 2. 系统总体架构
 

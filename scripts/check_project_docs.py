@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 REQUIRED_DOCUMENTS = (
+    Path("docs/00-项目总纲.md"),
     Path("docs/01-开发者文档.md"),
     Path("docs/02-项目规划与设计总纲.md"),
     Path("docs/03-内容设计工作手册.md"),
@@ -14,7 +15,24 @@ REQUIRED_DOCUMENTS = (
     Path("docs/adr/ADR-0015-生产身份与数据边界.md"),
     Path("docs/adr/ADR-0016-数据库版本迁移与备份恢复.md"),
 )
-REQUIRED_PLAN_IDS = ("OPS-001", "QA-001", "SEC-001")
+VERSIONED_DOCUMENTS = (
+    Path("docs/00-项目总纲.md"),
+    Path("docs/01-开发者文档.md"),
+    Path("docs/02-项目规划与设计总纲.md"),
+    Path("docs/05-发布历史与归档.md"),
+)
+REQUIRED_PLAN_IDS = (
+    "OPS-001",
+    "QA-001",
+    "SEC-001",
+    "DOC-002",
+    "ARCH-004",
+    "OPS-002",
+    "BE-006",
+    "FE-004",
+    "QA-002",
+)
+REQUIRED_BRANCH_ROLES = ("`main`", "`houduan`", "`class`", "`qianduan`", "`backup/v*`")
 
 
 def validate_project_docs(project_root: Path) -> list[str]:
@@ -48,7 +66,7 @@ def validate_project_docs(project_root: Path) -> list[str]:
         return errors
 
     marker = f"V{version_match.group(1)}"
-    for relative_path in REQUIRED_DOCUMENTS[:2] + (REQUIRED_DOCUMENTS[3],):
+    for relative_path in VERSIONED_DOCUMENTS:
         text = documents.get(relative_path)
         if text is not None and marker not in "\n".join(text.splitlines()[:12]):
             errors.append(
@@ -64,6 +82,13 @@ def validate_project_docs(project_root: Path) -> list[str]:
     for plan_id in REQUIRED_PLAN_IDS:
         if project_plan and plan_id not in project_plan:
             errors.append(f"project plan is missing required task id: {plan_id}")
+
+    project_overview = documents.get(Path("docs/00-项目总纲.md"), "")
+    for branch_name in REQUIRED_BRANCH_ROLES:
+        if project_overview and branch_name not in project_overview:
+            errors.append(
+                f"project overview is missing branch responsibility: {branch_name}"
+            )
     return errors
 
 

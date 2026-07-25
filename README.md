@@ -1,8 +1,8 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学的 AI 实践平台。当前版本 **V0.7.4**：14 朝代 48 节教材级正文 + 全朝代 saga 互动剧本 + DeepSeek v4-pro 跨时对话（同窗支持自定义对象）+ 知识画板 AI 扩充（已接入学习进度持久化与画板自动保存）。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前版本 **V0.9.26**；运行能力继承已合入 `main` 的 V0.9.25，当前在 `class` 分支建设独立课程历史库、自动打包和教师友好的 GitHub 发布流程。
 
-[远端仓库](https://github.com/falling-feather/Chronovita) · [开发文档](Development_Spec.md) · [研发路线](Roadmap.md) · [规划](docs/Planning.md)
+[远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](docs/00-项目总纲.md) · [开发者文档](docs/01-开发者文档.md) · [项目规划](docs/02-项目规划与设计总纲.md) · [开发历史](docs/05-发布历史与归档.md)
 
 ## 一句话定位
 
@@ -24,8 +24,8 @@
 
 ## 技术栈
 
-- 前竲：React 18 + Vite 5 + TypeScript 5 + Ant Design 5 + React Router 6 + React Flow 11 + Zustand
-- 后竲：Python 3.11/3.12 + FastAPI + Pydantic v2 + SQLAlchemy 2.0 + SQLite（开发）
+- 前端：React 18 + Vite 5 + TypeScript 5 + Ant Design 5 + React Router 6 + React Flow 11 + Zustand
+- 后端：Python 3.11-3.13 + FastAPI + Pydantic v2 + SQLAlchemy 2.0 + SQLite（本地）/ PostgreSQL（生产边界）
 - LLM：DeepSeek v4-flash（saga 流式叙事） + DeepSeek v4-pro（「问」跨时对话，准确度优先） + mock 回落
 - 包管理：pnpm 9 / Node 20 LTS / venv
 - 设计：Pencil（`assets/design/*.pen`）
@@ -49,7 +49,7 @@
 ├── infra/                    docker-compose 与基础设施
 ├── assets/design/            Pencil 设计稿（.pen）
 ├── muban/                    可复用页面 / 区块模板
-├── docs/                     ADR 与设计决策、规划文档
+├── docs/                     项目总纲、开发者文档、规划、历史、内容规范与 ADR
 ├── UI/                       美术绘制的 UI 视觉稿
 └── todo/                     立项申报书与初始引导
 ```
@@ -93,7 +93,7 @@ pnpm dev
 
 - 提交信息：`V大.中.小 中文提交信息`，例如 `V0.7.0 「问」板块接入 deepseek-v4-pro`
 - 中版本递增时同步创建 `backup/v0.X.0` 分支作为历史可查点
-- 详见 [Development_Spec.md](Development_Spec.md) §5 与 [docs/Planning.md](docs/Planning.md) 末尾所附版本节奏
+- 详见 [项目总纲第 6 节](docs/00-项目总纲.md#6-版本与任务规则) 与 [项目规划](docs/02-项目规划与设计总纲.md)
 
 ## 许可
 

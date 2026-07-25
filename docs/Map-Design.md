@@ -24,7 +24,7 @@
 - **viewBox**：`0 0 1000 720`（4:3 偏宽，便于横向铺开"东海岸"）
 - **所有几何（轮廓/河流/都城/路径）共享同一坐标系**，单位为像素
 - 经纬度 → 像素：当前为手摇校准（未做正式投影），覆盖范围约 73°E—135°E、18°N—54°N
-- **添加新都城/路径时**，对照 [CHINA_OUTLINE](apps/web/src/pages/courses/eraMap.ts) 的关键拐点取舍位置
+- **添加新都城/路径时**，对照 [CHINA_OUTLINE](../apps/web/src/pages/courses/eraMap.ts) 的关键拐点取舍位置
 
 ---
 
@@ -136,7 +136,7 @@ URL 状态完全可分享，刷新后保持。
 
 ## 8. 数据更新约定
 
-- 增加新时代：在 `ERA_OVERLAYS` 末尾追加，并在 [EraTimeline.tsx](apps/web/src/pages/courses/EraTimeline.tsx) 的 stops 列表中保持 6 段以内（超出需重做时间轴布局）
+- 增加新时代：在 `ERA_OVERLAYS` 末尾追加，并在 [EraTimeline.tsx](../apps/web/src/pages/courses/EraTimeline.tsx) 的 stops 列表中保持 6 段以内（超出需重做时间轴布局）
 - 城市坐标必须落在 `CHINA_OUTLINE` 内，肉眼校验即可
 - tracks geometry 用 `M ... C ... C ...` 连续 cubic 写法，便于 dash flow 均匀
 - 修改 `CHINA_OUTLINE` 时务必复核所有现有城市 / tracks 是否仍在合理位置
