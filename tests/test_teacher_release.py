@@ -102,6 +102,12 @@ def _write_minimal_forged_package(
 
 
 class TeacherReleaseTests(unittest.TestCase):
+    def test_windows_launcher_workflow_stays_ascii_for_powershell_51(self):
+        workflow = (
+            REPO_ROOT / ".github" / "workflows" / "windows-launcher.yml"
+        ).read_text("utf-8")
+        self.assertTrue(workflow.isascii())
+
     def test_release_shared_reader_preserves_empty_byte_arrays(self):
         workflow = (
             REPO_ROOT / ".github" / "workflows" / "teacher-release.yml"

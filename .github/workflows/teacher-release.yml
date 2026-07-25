@@ -161,27 +161,36 @@ jobs:
             throw "Teacher ZIP contains forbidden local state: $($forbidden[0].FullName)"
           }
 
-          $expectedRootCommands = @(
-            "点我一键启动（部署）.cmd",
-            "点我一键关闭.cmd"
-          )
           $rootCommands = @(
             Get-ChildItem -LiteralPath $packageRoot -File -Filter "*.cmd"
           )
-          $rootCommandNames = @($rootCommands | ForEach-Object { $_.Name })
-          $missingRootCommands = @(
-            $expectedRootCommands |
-              Where-Object { $_ -notin $rootCommandNames }
+          if ($rootCommands.Count -ne 2) {
+            throw "Teacher ZIP must contain exactly two root CMD files."
+          }
+          $rootLaunchers = @(
+            $rootCommands |
+              Where-Object {
+                [IO.File]::ReadAllText(
+                  $_.FullName,
+                  [Text.Encoding]::ASCII
+                ).Contains("scripts\teacher-editor.ps1")
+              }
           )
-          $unexpectedRootCommands = @(
-            $rootCommandNames |
-              Where-Object { $_ -notin $expectedRootCommands }
+          $rootStoppers = @(
+            $rootCommands |
+              Where-Object {
+                [IO.File]::ReadAllText(
+                  $_.FullName,
+                  [Text.Encoding]::ASCII
+                ).Contains("scripts\stop-teacher-editor.ps1")
+              }
           )
           if (
-            $missingRootCommands.Count -ne 0 `
-            -or $unexpectedRootCommands.Count -ne 0
+            $rootLaunchers.Count -ne 1 `
+            -or $rootStoppers.Count -ne 1 `
+            -or $rootLaunchers[0].FullName -eq $rootStoppers[0].FullName
           ) {
-            throw "Teacher ZIP must contain the named start and stop root CMD files."
+            throw "Teacher ZIP root start and stop CMD files are invalid."
           }
           foreach ($cmdFile in @(Get-ChildItem -LiteralPath $packageRoot -File -Recurse -Filter "*.cmd")) {
             $nonAscii = [IO.File]::ReadAllBytes($cmdFile.FullName) |
@@ -204,8 +213,8 @@ jobs:
             }
           }
           "TEACHER_PACKAGE_ROOT=$packageRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "TEACHER_ROOT_LAUNCHER=$(Join-Path $packageRoot '点我一键启动（部署）.cmd')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "TEACHER_ROOT_STOPPER=$(Join-Path $packageRoot '点我一键关闭.cmd')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEACHER_ROOT_LAUNCHER=$($rootLaunchers[0].FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEACHER_ROOT_STOPPER=$($rootStoppers[0].FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Verify encrypted credential helper
         shell: powershell
