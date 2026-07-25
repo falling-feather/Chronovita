@@ -12,6 +12,7 @@ REQUIRED_DOCUMENTS = (
     Path("docs/03-内容设计工作手册.md"),
     Path("docs/05-发布历史与归档.md"),
     Path("docs/06-内容编辑建设清单.md"),
+    Path("docs/07-课程内容历史库运维指南.md"),
     Path("docs/adr/ADR-0015-生产身份与数据边界.md"),
     Path("docs/adr/ADR-0016-数据库版本迁移与备份恢复.md"),
     Path("docs/adr/ADR-0017-课程内容历史库与Git发布边界.md"),
@@ -31,6 +32,7 @@ REQUIRED_PLAN_IDS = (
     "OPS-002",
     "BE-006",
     "FE-004",
+    "OPS-003",
     "QA-002",
 )
 REQUIRED_BRANCH_ROLES = ("`main`", "`houduan`", "`class`", "`qianduan`", "`backup/v*`")

@@ -46,6 +46,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "archive" / "v1"
 EXAMPLE_DIR = REPO_ROOT / "content" / "examples" / "archive" / "v1"
 PACKAGE_DIR = EXAMPLE_DIR / ARCHIVE_EXAMPLE_PACKAGE_DIRECTORY
+CONTENT_HISTORY_TARGET = REPO_ROOT / "infra" / "content-history-target.json"
 
 
 class ArchiveContractTests(unittest.TestCase):
@@ -379,6 +380,53 @@ class ArchiveContractTests(unittest.TestCase):
             "utf-8"
         ).casefold()
         for fragment in forbidden_fragments:
+            with self.subTest(fragment=fragment):
+                self.assertNotIn(fragment, serialized)
+
+    def test_real_content_history_target_is_private_explicit_and_inactive(self):
+        target = _read_json(CONTENT_HISTORY_TARGET)
+        self.assertEqual(target["schema_version"], "content-history-target/v1")
+        self.assertEqual(target["binding_id"], "content-history-primary")
+        self.assertEqual(target["repository_id"], 1311692460)
+        self.assertEqual(target["owner"], "falling-feather")
+        self.assertEqual(target["repository"], "Chronovita-Course-Content")
+        self.assertEqual(target["visibility"], "private")
+        self.assertEqual(target["base_branch"], "main")
+        self.assertEqual(target["root_prefix"], "courses")
+        self.assertEqual(target["default_publication_mode"], "pull_request")
+        self.assertEqual(
+            target["allowed_publication_modes"],
+            ["pull_request", "direct_commit"],
+        )
+        self.assertTrue(target["direct_commit_requires_confirmation"])
+        self.assertTrue(target["activation"]["repository_ready"])
+        self.assertFalse(target["activation"]["runtime_publication_enabled"])
+
+        binding = GitRepositoryBindingV1.model_validate(
+            {
+                "binding_id": target["binding_id"],
+                "provider": target["provider"],
+                "repository_id": target["repository_id"],
+                "owner": target["owner"],
+                "repository": target["repository"],
+                "visibility": target["visibility"],
+                "base_branch": target["base_branch"],
+                "root_prefix": target["root_prefix"],
+                "credential_kind": "fine_grained_token",
+                "installation_id": None,
+                "allowed_modes": target["allowed_publication_modes"],
+            }
+        )
+        self.assertEqual(binding.full_name, "falling-feather/Chronovita-Course-Content")
+
+        serialized = json.dumps(target, ensure_ascii=False).casefold()
+        for fragment in (
+            "gh" + "p_",
+            "github_" + "pat_",
+            "private_key",
+            "client_secret",
+            "access_token",
+        ):
             with self.subTest(fragment=fragment):
                 self.assertNotIn(fragment, serialized)
 
