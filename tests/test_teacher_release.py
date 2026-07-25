@@ -101,6 +101,19 @@ def _write_minimal_forged_package(
 
 
 class TeacherReleaseTests(unittest.TestCase):
+    def test_cmd_launchers_reset_inherited_powershell_module_path(self):
+        for relative_path in (
+            Path("点我一键启动（部署）.cmd"),
+            Path("scripts/teacher-editor.cmd"),
+        ):
+            with self.subTest(path=relative_path):
+                source = (REPO_ROOT / relative_path).read_text("ascii")
+                reset_index = source.index('set "PSModulePath="')
+                powershell_index = source.index(
+                    "powershell -NoProfile -ExecutionPolicy Bypass"
+                )
+                self.assertLess(reset_index, powershell_index)
+
     def test_build_is_deterministic_and_excludes_mutable_or_secret_state(self):
         with tempfile.TemporaryDirectory() as first_dir, tempfile.TemporaryDirectory() as second_dir:
             first = build_teacher_release(

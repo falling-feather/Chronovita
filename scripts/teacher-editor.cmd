@@ -1,6 +1,7 @@
 @echo off
 setlocal
 set "SCRIPT_DIR=%~dp0"
+set "PSModulePath="
 powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%teacher-editor.ps1" %*
 set "EXIT_CODE=%ERRORLEVEL%"
 echo.

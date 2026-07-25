@@ -18,6 +18,7 @@ if not exist "%LAUNCHER%" (
   exit /b 1
 )
 
+set "PSModulePath="
 powershell -NoProfile -ExecutionPolicy Bypass -File "%LAUNCHER%" %*
 set "EXIT_CODE=%ERRORLEVEL%"
 echo.
