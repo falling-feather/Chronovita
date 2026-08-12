@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.0**；V0.9.41 课堂内容与教师发布基线已通过 [PR #3](https://github.com/falling-feather/Chronovita/pull/3) 合入 `main`，`main` 已启用必经 PR、讨论解决、禁止删除/强推及四路质量检查规则。V0.10 在 `codex/v0.10-classroom` 独立分支建设“大禹治水”和“商鞅变法”双旗舰本地课堂，不宣称公网或多学校生产部署已经完成。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.1**；V0.9.41 课堂内容与教师发布基线已通过 [PR #3](https://github.com/falling-feather/Chronovita/pull/3) 合入 `main`，`main` 已启用必经 PR、讨论解决、禁止删除/强推及四路质量检查规则。V0.10 已冻结证据、展示、RAG 回答与 `course-release/v3` 契约，后续仍在 `codex/v0.10-classroom` 建设双旗舰内容和课堂运行链，不宣称公网或多学校生产部署已经完成。
 
 [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](docs/00-项目总纲.md) · [开发者文档](docs/01-开发者文档.md) · [项目规划](docs/02-项目规划与设计总纲.md) · [开发历史](docs/05-发布历史与归档.md)
 
@@ -26,7 +26,7 @@
 
 - 前端：React 18 + Vite 8 + TypeScript 5 + Ant Design 5 + React Router 7 + React Flow 11 + Zustand
 - 后端：Python 3.11-3.13 + FastAPI + Pydantic v2 + SQLAlchemy 2.0 + SQLite（本地）/ PostgreSQL（生产边界）
-- LLM：DeepSeek/OpenAI 兼容在线模型 + 确定性规则回退；V0.10 规划使用 SQLite FTS5 与本地 BGE 的课程内证据检索
+- LLM：DeepSeek/OpenAI 兼容在线模型 + 确定性规则回退；V0.10.1 已冻结课程内 RAG 请求/回答与证据引用契约，SQLite FTS5 与本地 BGE 检索实现仍属后续任务
 - 包管理：npm + package lock / Node.js LTS / Python venv
 - 设计：Pencil（`assets/design/*.pen`）
 - 基础设施：Docker Compose（中长期接入 Postgres / Redis / 向量库）

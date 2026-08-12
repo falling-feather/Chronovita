@@ -22,6 +22,11 @@ from services.contracts.v1 import Checksum, ContractId, NonEmptyText
 ReleaseOperation = Literal["bootstrap", "publish", "rollback"]
 ArtifactKind = Literal["course-package", "scenario-template"]
 ArtifactSchema = Literal["course-package/v1", "scenario-template/v1"]
+SupplementArtifactKind = Literal["evidence-corpus", "lesson-presentation"]
+SupplementArtifactSchema = Literal[
+    "evidence-corpus/v1",
+    "lesson-presentation/v1",
+]
 _RELEASE_ID_PATTERN = re.compile(r"^rel-[0-9a-f]{10}-\d{4,}$")
 _PATH_TEXT = Annotated[
     str,
@@ -155,6 +160,73 @@ class RuntimeArtifactDescriptorV1(ReleaseContractModel):
         return self
 
 
+def supplement_artifact_path(
+    *,
+    kind: SupplementArtifactKind,
+    artifact_id: str,
+    course_id: str,
+    lesson_id: str,
+    version: int,
+    checksum: str,
+) -> str:
+    artifact_id = _contract_id(artifact_id)
+    course_id = _contract_id(course_id)
+    lesson_id = _contract_id(lesson_id)
+    if version < 1:
+        raise ValueError("supplement artifact version must be at least 1")
+    if not re.fullmatch(r"[0-9a-f]{64}", checksum):
+        raise ValueError("supplement artifact checksum must be lowercase SHA-256")
+    segment = {
+        "evidence-corpus": "evidence",
+        "lesson-presentation": "presentations",
+    }[kind]
+    return PurePosixPath(
+        "runtime",
+        "v1",
+        segment,
+        course_id,
+        lesson_id,
+        artifact_id,
+        f"v{version:03d}-{checksum}.json",
+    ).as_posix()
+
+
+class ReleaseSupplementDescriptorV1(ReleaseContractModel):
+    kind: SupplementArtifactKind
+    schema_version: SupplementArtifactSchema
+    artifact_id: ContractId
+    course_id: ContractId
+    lesson_id: ContractId
+    version: int = Field(ge=1)
+    checksum: Checksum
+    path: _PATH_TEXT
+
+    @model_validator(mode="after")
+    def validate_descriptor(self) -> "ReleaseSupplementDescriptorV1":
+        expected_schema = {
+            "evidence-corpus": "evidence-corpus/v1",
+            "lesson-presentation": "lesson-presentation/v1",
+        }[self.kind]
+        if self.schema_version != expected_schema:
+            raise ValueError(
+                f"{self.kind} descriptors require schema_version={expected_schema}"
+            )
+        expected_path = supplement_artifact_path(
+            kind=self.kind,
+            artifact_id=self.artifact_id,
+            course_id=self.course_id,
+            lesson_id=self.lesson_id,
+            version=self.version,
+            checksum=self.checksum,
+        )
+        if self.path != expected_path:
+            raise ValueError(
+                "supplement artifact path must be canonical and content-addressed: "
+                f"{expected_path}"
+            )
+        return self
+
+
 class CourseReleaseItemV2(ReleaseContractModel):
     lesson_id: ContractId
     course_id: ContractId
@@ -239,8 +311,96 @@ class CourseReleaseManifestV2(ReleaseContractModel):
         return self
 
 
+class CourseReleaseItemV3(ReleaseContractModel):
+    lesson_id: ContractId
+    course_id: ContractId
+    content_version: int = Field(ge=1)
+    source_path: _PATH_TEXT
+    source_checksum: Checksum
+    course_package: RuntimeArtifactDescriptorV1
+    scenarios: tuple[RuntimeArtifactDescriptorV1, ...] = ()
+    primary_scenario_id: ContractId | None = None
+    evidence_corpus: ReleaseSupplementDescriptorV1
+    lesson_presentation: ReleaseSupplementDescriptorV1
+    audience: Literal["published"] = "published"
+
+    @model_validator(mode="after")
+    def validate_release_binding(self) -> "CourseReleaseItemV3":
+        CourseReleaseItemV2(
+            lesson_id=self.lesson_id,
+            course_id=self.course_id,
+            content_version=self.content_version,
+            source_path=self.source_path,
+            source_checksum=self.source_checksum,
+            course_package=self.course_package,
+            scenarios=self.scenarios,
+            primary_scenario_id=self.primary_scenario_id,
+        )
+        for descriptor, kind in (
+            (self.evidence_corpus, "evidence-corpus"),
+            (self.lesson_presentation, "lesson-presentation"),
+        ):
+            if descriptor.kind != kind:
+                raise ValueError(f"{kind} binding must use a {kind} descriptor")
+            if (descriptor.course_id, descriptor.lesson_id) != (
+                self.course_id,
+                self.lesson_id,
+            ):
+                raise ValueError(f"{kind} descriptor identity must match release item")
+        return self
+
+
+class CourseReleaseManifestV3(ReleaseContractModel):
+    schema_version: Literal["course-release/v3"] = "course-release/v3"
+    release_id: NonEmptyText
+    release_no: int = Field(ge=1)
+    course_id: ContractId
+    operation: ReleaseOperation
+    parent_release_id: str | None = None
+    restored_from_release_id: str | None = None
+    created_at: AwareDatetime
+    created_by: NonEmptyText
+    note: str = ""
+    items: tuple[CourseReleaseItemV3, ...] = ()
+    checksum: Checksum
+
+    @model_validator(mode="after")
+    def validate_manifest(self) -> "CourseReleaseManifestV3":
+        _validate_manifest_identity(self)
+        lesson_ids = [item.lesson_id for item in self.items]
+        if lesson_ids != sorted(set(lesson_ids)):
+            raise ValueError("release items must be unique and sorted by lesson_id")
+        if any(item.course_id != self.course_id for item in self.items):
+            raise ValueError("every release item must belong to manifest.course_id")
+        descriptors = [
+            descriptor
+            for item in self.items
+            for descriptor in (
+                item.course_package,
+                *item.scenarios,
+                item.evidence_corpus,
+                item.lesson_presentation,
+            )
+        ]
+        paths = [item.path.casefold() for item in descriptors]
+        if len(paths) != len(set(paths)):
+            raise ValueError("release artifact paths must be unique within a release")
+        scenario_ids = [
+            scenario.artifact_id for item in self.items for scenario in item.scenarios
+        ]
+        if len(scenario_ids) != len(set(scenario_ids)):
+            raise ValueError("scenario_id must be unique within a course release")
+        evidence_ids = [item.evidence_corpus.artifact_id for item in self.items]
+        presentation_ids = [item.lesson_presentation.artifact_id for item in self.items]
+        if len(evidence_ids) != len(set(evidence_ids)):
+            raise ValueError("evidence corpus identity must be unique within a release")
+        if len(presentation_ids) != len(set(presentation_ids)):
+            raise ValueError("lesson presentation identity must be unique within a release")
+        return self
+
+
 class ActiveReleasePointerV1(ReleaseContractModel):
-    """The V1 pointer remains the single commit point for V1 and V2 manifests."""
+    """The V1 pointer remains the single commit point for V1-V3 manifests."""
 
     schema_version: Literal["course-release-pointer/v1"] = (
         "course-release-pointer/v1"
@@ -280,7 +440,7 @@ class ActiveReleasePointerV1(ReleaseContractModel):
 
 
 CourseReleaseManifestAny = Annotated[
-    CourseReleaseManifestV1 | CourseReleaseManifestV2,
+    CourseReleaseManifestV1 | CourseReleaseManifestV2 | CourseReleaseManifestV3,
     Field(discriminator="schema_version"),
 ]
 COURSE_RELEASE_MANIFEST_ADAPTER = TypeAdapter(CourseReleaseManifestAny)
@@ -340,8 +500,29 @@ RELEASE_SCHEMA_DOCUMENTS = {
 }
 
 
+def release_v3_schema_document() -> dict:
+    generated = CourseReleaseManifestV3.model_json_schema(
+        ref_template="#/$defs/{model}"
+    )
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://chronovita.local/schemas/releases/v3/course-release-manifest.schema.json",
+        "$comment": (
+            "Pydantic semantic validation additionally enforces content-addressed paths, "
+            "cross-descriptor identities, ordering, primary scenario membership, mandatory "
+            "evidence/presentation bindings and release lineage."
+        ),
+        **generated,
+    }
+
+
+RELEASE_V3_SCHEMA_DOCUMENTS = {
+    "course-release-manifest.schema.json": release_v3_schema_document,
+}
+
+
 def _validate_manifest_identity(
-    manifest: CourseReleaseManifestV1 | CourseReleaseManifestV2,
+    manifest: CourseReleaseManifestV1 | CourseReleaseManifestV2 | CourseReleaseManifestV3,
 ) -> None:
     if not _RELEASE_ID_PATTERN.fullmatch(manifest.release_id):
         raise ValueError("invalid release_id")
@@ -372,16 +553,22 @@ __all__ = [
     "COURSE_RELEASE_MANIFEST_ADAPTER",
     "CourseReleaseItemV1",
     "CourseReleaseItemV2",
+    "CourseReleaseItemV3",
     "CourseReleaseManifestAny",
     "CourseReleaseManifestV1",
     "CourseReleaseManifestV2",
+    "CourseReleaseManifestV3",
     "RELEASE_SCHEMA_DOCUMENTS",
+    "RELEASE_V3_SCHEMA_DOCUMENTS",
+    "ReleaseSupplementDescriptorV1",
     "RuntimeArtifactDescriptorV1",
     "calculate_release_metadata_checksum",
     "parse_course_release_manifest",
     "parse_signed_course_release_manifest",
     "release_schema_document",
+    "release_v3_schema_document",
     "runtime_artifact_path",
+    "supplement_artifact_path",
     "sign_release_metadata",
     "verify_release_metadata_checksum",
 ]

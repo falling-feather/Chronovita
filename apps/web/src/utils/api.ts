@@ -453,6 +453,14 @@ export interface GameScenarioSummary {
   scenario_id: string; scenario_version: number; scenario_checksum: string;
   course_id: string; lesson_id: string; title: string; scenario_type: string;
   student_role: string; objective: string; max_turns: number;
+  variables: Array<{
+    variable_id: string; label: string; description: string;
+    initial: number; minimum: number; maximum: number;
+  }>;
+  npcs: Array<{
+    person_id: string; display_name: string; role: string;
+    initial_attitude: number; initial_trust: number;
+  }>;
   audience: 'development' | 'published';
   release_id: string | null; release_no: number | null; release_checksum: string | null;
 }

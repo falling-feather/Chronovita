@@ -77,6 +77,39 @@ class GameApiTests(unittest.TestCase):
             {item["audience"] for item in listed.json()["items"]},
             {"development"},
         )
+        dayu_summary = next(
+            item
+            for item in listed.json()["items"]
+            if item["scenario_id"] == "scenario-dayu-flood-control"
+        )
+        self.assertGreaterEqual(len(dayu_summary["variables"]), 1)
+        self.assertGreaterEqual(len(dayu_summary["npcs"]), 1)
+        self.assertEqual(
+            {
+                "variable_id",
+                "label",
+                "description",
+                "initial",
+                "minimum",
+                "maximum",
+            },
+            set(dayu_summary["variables"][0]),
+        )
+        self.assertEqual(
+            {
+                "person_id",
+                "display_name",
+                "role",
+                "initial_attitude",
+                "initial_trust",
+            },
+            set(dayu_summary["npcs"][0]),
+        )
+        self.assertNotIn("actions", dayu_summary)
+        self.assertNotIn("events", dayu_summary)
+        self.assertNotIn("endings", dayu_summary)
+        self.assertNotIn("persona", dayu_summary["npcs"][0])
+        self.assertNotIn("fact_refs", dayu_summary["npcs"][0])
 
         started = self.client.post(
             "/api/v1/practice/game/sessions",

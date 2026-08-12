@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/evidence/v1/rag-answer.schema.json",
+  "$comment": "Pydantic semantic validation additionally enforces stable ordering, cross-source references, classroom media boundaries and citation grounding.",
+  "$defs": {
+    "RagCitationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "citation_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Citation Id",
+          "type": "string"
+        },
+        "passage_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Passage Id",
+          "type": "string"
+        },
+        "source_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_title": {
+          "minLength": 1,
+          "title": "Source Title",
+          "type": "string"
+        },
+        "locator": {
+          "default": "",
+          "title": "Locator",
+          "type": "string"
+        },
+        "excerpt": {
+          "minLength": 1,
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "relevance": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Relevance",
+          "type": "number"
+        },
+        "certainty": {
+          "enum": [
+            "consensus",
+            "interpretation",
+            "legend",
+            "disputed"
+          ],
+          "title": "Certainty",
+          "type": "string"
+        }
+      },
+      "required": [
+        "citation_id",
+        "passage_id",
+        "source_id",
+        "source_title",
+        "excerpt",
+        "relevance",
+        "certainty"
+      ],
+      "title": "RagCitationV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "rag-answer/v1",
+      "default": "rag-answer/v1",
+      "enum": [
+        "rag-answer/v1"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "answer_source": {
+      "enum": [
+        "model",
+        "extractive",
+        "insufficient_evidence"
+      ],
+      "title": "Answer Source",
+      "type": "string"
+    },
+    "body": {
+      "minLength": 1,
+      "title": "Body",
+      "type": "string"
+    },
+    "persona_mode": {
+      "enum": [
+        "expert",
+        "person"
+      ],
+      "title": "Persona Mode",
+      "type": "string"
+    },
+    "person_id": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Person Id"
+    },
+    "role_disclaimer": {
+      "anyOf": [
+        {
+          "const": "角色化教学表达，不是史料原话。",
+          "enum": [
+            "角色化教学表达，不是史料原话。"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Role Disclaimer"
+    },
+    "citations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/RagCitationV1"
+      },
+      "title": "Citations",
+      "type": "array"
+    },
+    "retrieved_passage_ids": {
+      "default": [],
+      "items": {
+        "maxLength": 64,
+        "minLength": 2,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+        "type": "string"
+      },
+      "title": "Retrieved Passage Ids",
+      "type": "array"
+    },
+    "course_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Course Id",
+      "type": "string"
+    },
+    "lesson_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Lesson Id",
+      "type": "string"
+    },
+    "release_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Release Id",
+      "type": "string"
+    },
+    "release_no": {
+      "minimum": 1,
+      "title": "Release No",
+      "type": "integer"
+    },
+    "release_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Release Checksum",
+      "type": "string"
+    },
+    "evidence_corpus_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Evidence Corpus Id",
+      "type": "string"
+    },
+    "evidence_version": {
+      "minimum": 1,
+      "title": "Evidence Version",
+      "type": "integer"
+    },
+    "evidence_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evidence Checksum",
+      "type": "string"
+    },
+    "uncertainty": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Uncertainty",
+      "type": "string"
+    }
+  },
+  "required": [
+    "answer_source",
+    "body",
+    "persona_mode",
+    "course_id",
+    "lesson_id",
+    "release_id",
+    "release_no",
+    "release_checksum",
+    "evidence_corpus_id",
+    "evidence_version",
+    "evidence_checksum",
+    "uncertainty"
+  ],
+  "title": "RagAnswerV1",
+  "type": "object"
+}
