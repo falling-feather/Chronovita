@@ -117,9 +117,9 @@ class EvidenceContractTests(unittest.TestCase):
                     "consult": 7,
                     "dossier": 10,
                 },
-                video_path="media/lessons/L101/dayu.mp4",
-                poster_path="media/lessons/L101/dayu.webp",
-                transcript_path="media/lessons/L101/dayu.md",
+                video_path="media/lessons/L101/v001/dayu.mp4",
+                poster_path="media/lessons/L101/v001/dayu.webp",
+                transcript_path="media/lessons/L101/v001/dayu.md",
                 video_duration_seconds=54,
                 video_sha256="1" * 64,
                 poster_sha256="2" * 64,
@@ -137,7 +137,7 @@ class EvidenceContractTests(unittest.TestCase):
             LessonPresentationV1.model_validate(raw)
 
         raw = presentation.model_dump(mode="json")
-        raw["poster_path"] = "media/lessons/L103/dayu.webp"
+        raw["poster_path"] = "media/lessons/L103/v001/dayu.webp"
         with self.assertRaisesRegex(ValidationError, "media/lessons/L101"):
             LessonPresentationV1.model_validate(raw)
 

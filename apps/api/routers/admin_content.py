@@ -17,6 +17,7 @@ from services import content
 from services import courses as courses_data
 from services.content import KeywordProfilePackage, LessonContentPackage, PersonProfilePackage
 from services.content import runtime_artifacts
+from services.content import evidence_workflow
 from services.content import scenario_authoring
 from services.content import workflow as content_workflow
 from services.content_history import (
@@ -54,6 +55,7 @@ from services.contracts.archive_v1 import (
     PublicationStatus,
 )
 from services.contracts.v1 import ScenarioTemplateV1
+from services.contracts.evidence_v1 import LessonPresentationV1
 
 router = APIRouter()
 
@@ -104,6 +106,17 @@ class PublishRequest(ActorRequest):
             "provide an explicit list to replace them."
         ),
     )
+    evidence: content_workflow.EvidenceReleaseSelection | None = None
+    presentation: content_workflow.PresentationReleaseSelection | None = None
+
+
+class EvidenceReviewRequest(ActorRequest):
+    decision: Literal["approve", "changes_requested"]
+
+
+class EvidenceWorkflowResponse(ApiModel):
+    workflow: evidence_workflow.EvidenceWorkflowRecordV1
+    report: evidence_workflow.EvidenceValidationReportV1 | None = None
 
 
 class WorkflowResponse(ApiModel):
@@ -173,6 +186,16 @@ async def overview(context: ContentReader):
                 "POST /api/v1/admin/content/drafts/{lesson_id}/submit-review",
                 "POST /api/v1/admin/content/drafts/{lesson_id}/review",
                 "POST /api/v1/admin/content/drafts/{lesson_id}/seal",
+                "GET /api/v1/admin/content/evidence-drafts",
+                "POST /api/v1/admin/content/evidence-drafts",
+                "PUT /api/v1/admin/content/evidence-drafts/{corpus_id}",
+                "POST /api/v1/admin/content/evidence-drafts/{corpus_id}/validate",
+                "POST /api/v1/admin/content/evidence-drafts/{corpus_id}/submit-review",
+                "POST /api/v1/admin/content/evidence-drafts/{corpus_id}/review",
+                "POST /api/v1/admin/content/evidence-drafts/{corpus_id}/seal",
+                "GET /api/v1/admin/content/runtime-evidence",
+                "POST /api/v1/admin/content/lesson-presentations",
+                "GET /api/v1/admin/content/lesson-presentations",
                 "GET /api/v1/admin/content/runtime-scenarios",
                 "GET /api/v1/admin/content/runtime-scenarios/{scenario_id}/versions/{scenario_version}",
                 "GET /api/v1/admin/content/runtime-scenarios/{scenario_id}/versions/{scenario_version}/file",
@@ -458,6 +481,285 @@ async def sealed(_: ContentReader):
         _raise_content_error(exc)
 
 
+@router.get("/evidence-drafts")
+async def evidence_drafts(_: ContentReader):
+    try:
+        return {
+            "items": [
+                item.model_dump(mode="json")
+                for item in evidence_workflow.list_evidence_drafts()
+            ]
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/evidence-drafts/{corpus_id}")
+async def evidence_draft_detail(corpus_id: str, _: ContentReader):
+    try:
+        item = evidence_workflow.get_evidence_draft(corpus_id)
+        if item is None:
+            raise evidence_workflow.EvidenceDraftNotFound(
+                f"Evidence draft not found: {corpus_id}"
+            )
+        record = evidence_workflow.get_evidence_workflow(corpus_id)
+        return {
+            "item": item.model_dump(mode="json"),
+            "workflow": record.model_dump(mode="json") if record else None,
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/evidence-drafts")
+async def save_evidence_draft(
+    payload: evidence_workflow.EvidenceCorpusDraftV1,
+    request: Request,
+    context: ContentAuthor,
+):
+    try:
+        with content_workflow.workflow_write_lock():
+            _require_evidence_author(
+                context,
+                payload.corpus_id,
+                allow_missing=True,
+            )
+            _audit_content_write(
+                request,
+                context,
+                permission="content.author",
+                action="content.evidence_draft.save.authorize",
+                resource_type="evidence-draft",
+                resource_id=payload.corpus_id,
+            )
+            item, record = evidence_workflow.save_evidence_draft(
+                payload,
+                saved_by=trusted_actor(context),
+            )
+        return {
+            "item": item.model_dump(mode="json"),
+            "workflow": record.model_dump(mode="json"),
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.put("/evidence-drafts/{corpus_id}")
+async def update_evidence_draft(
+    corpus_id: str,
+    payload: evidence_workflow.EvidenceCorpusDraftV1,
+    request: Request,
+    context: ContentAuthor,
+):
+    if payload.corpus_id != corpus_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Path corpus_id must match payload.corpus_id.",
+        )
+    try:
+        with content_workflow.workflow_write_lock():
+            _require_evidence_author(context, corpus_id)
+            _audit_content_write(
+                request,
+                context,
+                permission="content.author",
+                action="content.evidence_draft.save.authorize",
+                resource_type="evidence-draft",
+                resource_id=corpus_id,
+            )
+            item, record = evidence_workflow.save_evidence_draft(
+                payload,
+                saved_by=trusted_actor(context),
+            )
+        return {
+            "item": item.model_dump(mode="json"),
+            "workflow": record.model_dump(mode="json"),
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/evidence-drafts/{corpus_id}/validate",
+    response_model=EvidenceWorkflowResponse,
+)
+async def validate_evidence_draft(
+    corpus_id: str,
+    request: Request,
+    context: ContentAuthor,
+):
+    try:
+        _require_evidence_author(context, corpus_id)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.author",
+            action="content.evidence_draft.validate.authorize",
+            resource_type="evidence-draft",
+            resource_id=corpus_id,
+        )
+        record, report = evidence_workflow.validate_evidence_draft(
+            corpus_id,
+            actor=trusted_actor(context),
+        )
+        return EvidenceWorkflowResponse(workflow=record, report=report)
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/evidence-drafts/{corpus_id}/submit-review",
+    response_model=EvidenceWorkflowResponse,
+)
+async def submit_evidence_review(
+    corpus_id: str,
+    request: Request,
+    context: ContentAuthor,
+    req: ActorRequest | None = None,
+):
+    try:
+        _require_evidence_author(context, corpus_id)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.author",
+            action="content.evidence_draft.submit_review.authorize",
+            resource_type="evidence-draft",
+            resource_id=corpus_id,
+        )
+        record = evidence_workflow.submit_evidence_for_review(
+            corpus_id,
+            actor=trusted_actor(context),
+            note=(req.note if req else ""),
+        )
+        return EvidenceWorkflowResponse(
+            workflow=record,
+            report=record.validation,
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/evidence-drafts/{corpus_id}/review",
+    response_model=EvidenceWorkflowResponse,
+)
+async def review_evidence_draft(
+    corpus_id: str,
+    req: EvidenceReviewRequest,
+    request: Request,
+    context: ContentReviewer,
+):
+    try:
+        _require_independent_evidence_reviewer(context, corpus_id)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.review",
+            action=(
+                "content.evidence_draft.approve.authorize"
+                if req.decision == "approve"
+                else "content.evidence_draft.request_changes.authorize"
+            ),
+            resource_type="evidence-draft",
+            resource_id=corpus_id,
+            details={"decision": req.decision},
+        )
+        record = evidence_workflow.review_evidence_draft(
+            corpus_id,
+            actor=trusted_actor(context),
+            decision=req.decision,
+            note=req.note,
+        )
+        return EvidenceWorkflowResponse(
+            workflow=record,
+            report=record.validation,
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/evidence-drafts/{corpus_id}/seal")
+async def seal_evidence_draft(
+    corpus_id: str,
+    request: Request,
+    context: ContentPublisher,
+):
+    try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.evidence_draft.seal.authorize",
+            resource_type="evidence-draft",
+            resource_id=corpus_id,
+        )
+        corpus, record, workflow_record, idempotent = (
+            evidence_workflow.seal_approved_evidence(
+                corpus_id,
+                actor=trusted_actor(context),
+            )
+        )
+        return {
+            "item": corpus.model_dump(mode="json"),
+            "record": record.model_dump(mode="json"),
+            "workflow": workflow_record.model_dump(mode="json"),
+            "idempotent": idempotent,
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/runtime-evidence")
+async def runtime_evidence(_: ContentReader):
+    try:
+        return {
+            "items": [
+                item.model_dump(mode="json")
+                for item in runtime_artifacts.list_staged_evidence()
+            ]
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/lesson-presentations")
+async def lesson_presentations(_: ContentReader):
+    try:
+        return {
+            "items": [
+                item.model_dump(mode="json")
+                for item in runtime_artifacts.list_staged_presentations()
+            ]
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/lesson-presentations")
+async def stage_lesson_presentation(
+    payload: LessonPresentationV1,
+    request: Request,
+    context: ContentPublisher,
+):
+    try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.lesson_presentation.seal.authorize",
+            resource_type="lesson-presentation",
+            resource_id=payload.presentation_id,
+        )
+        record = runtime_artifacts.stage_lesson_presentation(
+            payload,
+            sealed_by=trusted_actor(context),
+        )
+        return {"record": record.model_dump(mode="json")}
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
 @router.get("/runtime-scenarios")
 async def runtime_scenarios(_: ContentReader):
     try:
@@ -724,6 +1026,8 @@ async def publish_version(
             actor=trusted_actor(context),
             note=(req.note if req else ""),
             scenario_selections=(req.scenarios if req else None),
+            evidence_selection=(req.evidence if req else None),
+            presentation_selection=(req.presentation if req else None),
         )
         return ReleaseResponse(release=release, workflow=workflow)
     except Exception as exc:
@@ -1627,6 +1931,48 @@ def _require_scenario_author(
         _raise_ownership_error("scenario draft")
 
 
+def _require_evidence_author(
+    context: AuthContext,
+    corpus_id: str,
+    *,
+    allow_missing: bool = False,
+) -> None:
+    if "admin" in context.principal.roles:
+        return
+    draft = evidence_workflow.get_evidence_draft(corpus_id)
+    if draft is None:
+        if allow_missing:
+            return
+        raise evidence_workflow.EvidenceDraftNotFound(
+            f"Evidence draft not found: {corpus_id}"
+        )
+    if draft.created_by != trusted_actor(context):
+        _raise_ownership_error("evidence draft")
+
+
+def _require_independent_evidence_reviewer(
+    context: AuthContext,
+    corpus_id: str,
+) -> None:
+    record = evidence_workflow.get_evidence_workflow(corpus_id)
+    if record is None:
+        raise evidence_workflow.EvidenceDraftNotFound(
+            f"Evidence workflow not found: {corpus_id}"
+        )
+    actor = trusted_actor(context)
+    if any(
+        event.action == "save" and event.actor == actor
+        for event in record.history
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "self_review_forbidden",
+                "message": "An evidence author cannot review the same draft.",
+            },
+        )
+
+
 def _raise_ownership_error(resource: str) -> NoReturn:
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -1656,6 +2002,11 @@ def _raise_content_error(exc: Exception) -> NoReturn:
             issue.model_dump(mode="json")
             for issue in exc.report.issues
         ]
+    if isinstance(exc, evidence_workflow.EvidenceValidationFailed) and exc.report is not None:
+        detail["issues"] = [
+            issue.model_dump(mode="json")
+            for issue in exc.report.issues
+        ]
     if isinstance(exc, ContentAssetArchiveChanged):
         raise HTTPException(status_code=409, detail=detail) from exc
     if isinstance(exc, ArchiveBuildError):
@@ -1681,7 +2032,14 @@ def _raise_content_error(exc: Exception) -> NoReturn:
         ),
     ):
         raise HTTPException(status_code=503, detail=detail) from exc
-    if isinstance(exc, (content_workflow.ContentNotFound, FileNotFoundError)):
+    if isinstance(
+        exc,
+        (
+            content_workflow.ContentNotFound,
+            evidence_workflow.EvidenceDraftNotFound,
+            FileNotFoundError,
+        ),
+    ):
         raise HTTPException(status_code=404, detail=detail) from exc
     if isinstance(exc, scenario_authoring.ScenarioDraftConflict):
         raise HTTPException(status_code=409, detail=detail) from exc
@@ -1690,11 +2048,20 @@ def _raise_content_error(exc: Exception) -> NoReturn:
         (
             content_workflow.ContentConflict,
             content_workflow.InvalidTransition,
+            evidence_workflow.EvidenceDraftConflict,
+            evidence_workflow.EvidenceInvalidTransition,
             FileExistsError,
         ),
     ):
         raise HTTPException(status_code=409, detail=detail) from exc
-    if isinstance(exc, (content_workflow.ContentValidationFailed, ValueError)):
+    if isinstance(
+        exc,
+        (
+            content_workflow.ContentValidationFailed,
+            evidence_workflow.EvidenceValidationFailed,
+            ValueError,
+        ),
+    ):
         raise HTTPException(status_code=422, detail=detail) from exc
     if isinstance(exc, (content.ContentIntegrityError, OSError)):
         detail["code"] = "content_integrity_error"

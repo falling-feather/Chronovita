@@ -162,6 +162,22 @@ class LessonPresentationV1(EvidenceContractModel):
             (self.transcript_path, ".md"),
         ):
             _require_release_asset_path(path, self.lesson_id, suffix)
+        expected_root = (
+            f"media/lessons/{self.lesson_id}/"
+            f"v{self.presentation_version:03d}/"
+        )
+        if any(
+            not path.startswith(expected_root)
+            for path in (
+                self.video_path,
+                self.poster_path,
+                self.transcript_path,
+            )
+        ):
+            raise ValueError(
+                "presentation assets must stay inside their immutable version root: "
+                f"{expected_root}"
+            )
         return self
 
 

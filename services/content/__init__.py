@@ -76,6 +76,26 @@ def runtime_scenario_dir() -> Path:
     return runtime_dir() / "scenarios"
 
 
+def runtime_evidence_dir() -> Path:
+    return runtime_dir() / "evidence"
+
+
+def runtime_presentation_dir() -> Path:
+    return runtime_dir() / "presentations"
+
+
+def evidence_draft_dir() -> Path:
+    return _CONTENT_ROOT / "evidence" / "drafts"
+
+
+def evidence_workflow_dir() -> Path:
+    return _CONTENT_ROOT / "evidence" / "workflows"
+
+
+def lesson_media_dir() -> Path:
+    return _CONTENT_ROOT / "media" / "lessons"
+
+
 def scenario_draft_dir() -> Path:
     return _CONTENT_ROOT / "scenario-drafts"
 
@@ -108,6 +128,11 @@ def ensure_content_dirs() -> None:
     package_dir().mkdir(parents=True, exist_ok=True)
     runtime_course_package_dir().mkdir(parents=True, exist_ok=True)
     runtime_scenario_dir().mkdir(parents=True, exist_ok=True)
+    runtime_evidence_dir().mkdir(parents=True, exist_ok=True)
+    runtime_presentation_dir().mkdir(parents=True, exist_ok=True)
+    evidence_draft_dir().mkdir(parents=True, exist_ok=True)
+    evidence_workflow_dir().mkdir(parents=True, exist_ok=True)
+    lesson_media_dir().mkdir(parents=True, exist_ok=True)
     scenario_draft_dir().mkdir(parents=True, exist_ok=True)
     people_asset_dir().mkdir(parents=True, exist_ok=True)
     keyword_asset_dir().mkdir(parents=True, exist_ok=True)
