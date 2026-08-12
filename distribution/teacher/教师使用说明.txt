@@ -1,0 +1,66 @@
+Chronovita 教师编辑器 V0.9.x 使用说明
+
+一、开始使用
+
+1. 将下载的 ZIP 完整解压到自己有写入权限的文件夹，不要直接在压缩包里运行。
+2. 电脑需要安装 Python 3.11、3.12 或 3.13，以及 Node.js 20.19+ 或 22.12+ LTS。
+3. 双击根目录的“点我一键启动（部署）.cmd”。
+4. 首次启动若尚未保存投稿密钥，启动器会直接提示粘贴管理员发放的 GitHub token；输入不会回显，保存后不再重复询问。
+5. 首次启动会自动建立本地环境，按哈希锁安装后端依赖并按 package lock 安装前端依赖；所需时间取决于网络。
+6. 后续启动会自检密钥、.venv 和 node_modules。密钥与依赖锁均未变化且环境有效时会直接复用，不会重复配置或安装。
+7. 浏览器会自动打开 http://127.0.0.1:5173/admin/content 。
+8. 编辑完成后，双击根目录的“点我一键关闭.cmd”停止本地 API 和网页服务。
+
+本包只在本机回环地址启动，不会把编辑器直接开放到局域网或互联网。
+依赖安装完成后，本地编辑和课程预览不依赖 Google Fonts 或 GitHub；提交内容历史库、打开外部视频等联网功能仍需要网络。
+
+二、保存与导出
+
+- “保存草稿”会把内容保存到解压目录的 content/drafts。
+- “导出文件包”用于保存教师稿、格式层、预览和结构化内容。
+- 正式发布后的“课程历史留档”可以预览、下载完整课程归档。
+- data、content、.teacher-editor-logs 和 .chronovita-local 是本机运行数据，更新软件前请先备份需要保留的内容。
+
+三、提交到课程历史库
+
+发行包不预置任何 GitHub 密钥。需要投稿时：
+
+1. 向 Chronovita 项目管理员领取仅授权内容私有仓库的细粒度 token。
+2. 第一次双击“点我一键启动（部署）.cmd”时，在安全提示后粘贴 token，输入过程不会回显。
+3. 启动器会使用 Windows DPAPI 加密保存 token，并在以后启动时自动加载，不再重复询问。
+4. 在课程、人物、关键词或关卡的“内容历史留存”中预览文件包，再点击“提交内容审核”。
+
+token 使用 Windows DPAPI 加密，只能由当前 Windows 账号在本机解密；明文不会写入日志、环境文件、课程包、Git 仓库或发行 ZIP。更换电脑或 Windows 账号时需要重新配置。运行 scripts/configure-content-history.cmd 可以主动替换凭据，运行 scripts/configure-content-history.cmd -Remove 可以移除凭据。
+
+教师不需要安装 Git 或 GitHub CLI，也不需要填写仓库、分支和提交路径。
+
+若编辑器已经运行，先双击根目录的“点我一键关闭.cmd”停止本地服务，再重新双击根目录启动入口，使新凭据生效。
+
+四、常见问题
+
+- 提示找不到 Python：安装 Python 3.11-3.13，并在安装器中勾选加入 PATH。
+- 提示找不到 npm 或 Node 版本过低：安装 Node.js 20.19+ 或 22.12+ LTS 后重新运行。
+- 页面没有自动打开：手动访问 http://127.0.0.1:5173/admin/content。
+- 提示已有其他 Chronovita 版本运行：先双击根目录的“点我一键关闭.cmd”，再启动当前版本。
+- 投稿功能提示未启用：重新运行 scripts/configure-content-history.cmd，或联系项目管理员检查 token 权限。
+- 提示本机投稿凭据无法解密：凭据可能损坏或来自其他 Windows 账号；按启动器提示重新输入，或先运行 scripts/configure-content-history.cmd -Remove 再启动。
+- 仅需离线编辑：可从终端运行 scripts\teacher-editor.cmd -SkipCredentialSetup。自动化检查使用 scripts\teacher-editor.cmd -SkipBrowser -SkipCredentialSetup，不等待密钥输入或 CMD 按键。
+- 启动失败：将 .teacher-editor-logs 文件夹中的日志发给开发组；日志不应包含 GitHub token。
+
+五、校验下载包
+
+GitHub Release 同时提供 .sha256 文件。可在 PowerShell 中运行：
+
+Get-FileHash -Algorithm SHA256 .\Chronovita-Teacher-Editor-v0.9.x-windows.zip
+
+结果应与同名 .sha256 文件中的 64 位校验值一致。
+
+六、V0.9.38 关闭入口热更新
+
+原始 V0.9.38 包可只补入“点我一键关闭.cmd”：
+
+1. 把该文件放到“点我一键启动（部署）.cmd”所在的解压根目录。
+2. 不要放入 scripts 文件夹，也不要覆盖 data、content、.chronovita-local 或 .venv。
+3. 双击后，它会调用旧包已有的 scripts/stop-teacher-editor.ps1；若该文件缺失，则兼容调用 scripts/stop-teacher-editor.cmd。
+
+此热更新只停止经过身份核对的 Chronovita 本地服务，不删除草稿、课程内容或本机加密凭据。

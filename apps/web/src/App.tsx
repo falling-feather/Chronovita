@@ -126,7 +126,7 @@ export default function App() {
           </Routes>
         </Content>
         <Footer style={{ textAlign: 'center', color: 'var(--text-disabled)', fontSize: 12, background: 'var(--bg-page)' }}>
-          历史未来课堂 · Chronovita · V0.7.5 · 踏勘遗址 · 进入抉择 · 召见人物 · 整理卷宗
+          历史未来课堂 · Chronovita · V0.9.41 · 踏勘遗址 · 进入抉择 · 召见人物 · 整理卷宗
         </Footer>
       </Layout>
     </AntdApp>

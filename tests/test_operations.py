@@ -260,17 +260,64 @@ class RuntimeConfigurationTests(unittest.TestCase):
             "admin-token-must-not-leak",
             "bootstrap-password-must-not-leak",
             "model-key-must-not-leak",
+            "github-token-must-not-leak",
         )
         configured = Settings(
             admin_token=secrets[0],
             auth_bootstrap_password=secrets[1],
             deepseek_api_key=secrets[2],
+            github_publication_token=secrets[3],
             _env_file=None,
         )
 
         rendered = repr(configured)
         for secret in secrets:
             self.assertNotIn(secret, rendered)
+
+    def test_github_publication_requires_server_secret_and_trusted_https_api(self):
+        cases = (
+            (
+                {
+                    "github_publication_enabled": True,
+                    "github_publication_token": "",
+                },
+                "runtime.github_publication_token_required",
+            ),
+            (
+                {
+                    "github_publication_enabled": True,
+                    "github_publication_token": "server-secret",
+                    "github_api_base_url": "http://api.github.com",
+                },
+                "runtime.github_publication_endpoint_untrusted",
+            ),
+            (
+                {
+                    "github_publication_enabled": True,
+                    "github_publication_token": "server-secret",
+                    "github_api_base_url": "https://127.0.0.1",
+                },
+                "runtime.github_publication_endpoint_untrusted",
+            ),
+            (
+                {
+                    "github_publication_enabled": True,
+                    "github_publication_token": "server-secret",
+                    "github_api_base_url": "https://collector.example",
+                },
+                "runtime.github_publication_endpoint_untrusted",
+            ),
+        )
+        for overrides, expected_code in cases:
+            with self.subTest(expected_code=expected_code):
+                configured = Settings(**overrides, _env_file=None)
+                with self.assertRaises(RuntimeConfigurationError) as caught:
+                    validate_runtime_configuration(configured)
+                self.assertIn(
+                    expected_code,
+                    {issue.code for issue in caught.exception.issues},
+                )
+                self.assertNotIn("server-secret", str(caught.exception))
 
     def test_dotenv_can_be_disabled_for_the_isolated_local_launcher(self):
         with patch.dict(

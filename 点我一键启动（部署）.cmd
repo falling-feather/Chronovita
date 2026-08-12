@@ -3,6 +3,8 @@ setlocal
 
 set "ROOT_DIR=%~dp0"
 set "LAUNCHER=%ROOT_DIR%scripts\teacher-editor.ps1"
+set "SKIP_PAUSE="
+for %%A in (%*) do if /I "%%~A"=="-SkipBrowser" set "SKIP_PAUSE=1"
 
 echo Chronovita teacher editor launcher
 echo.
@@ -14,10 +16,11 @@ if not exist "%LAUNCHER%" (
   echo Cannot find "%LAUNCHER%".
   echo Please keep this file in the Chronovita project root.
   echo.
-  pause
+  if not defined CI if not defined SKIP_PAUSE pause
   exit /b 1
 )
 
+set "PSModulePath="
 powershell -NoProfile -ExecutionPolicy Bypass -File "%LAUNCHER%" %*
 set "EXIT_CODE=%ERRORLEVEL%"
 echo.
@@ -30,5 +33,6 @@ if not "%EXIT_CODE%"=="0" (
   echo.
 )
 if defined CI exit /b %EXIT_CODE%
+if defined SKIP_PAUSE exit /b %EXIT_CODE%
 pause
 exit /b %EXIT_CODE%

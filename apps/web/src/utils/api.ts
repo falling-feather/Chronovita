@@ -6,6 +6,18 @@ interface ApiValidationIssue {
   msg?: string;
 }
 
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code?: string;
+
+  constructor(status: number, message: string, code?: string) {
+    super(`${status} ${message}`);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
 function localizeValidationMessage(message: string): string {
   if (message.includes('String should match pattern')) return '只能使用英文字母、数字、点、下划线和短横线';
   if (message.includes('at least 2 characters')) return '至少需要 2 个字符';
@@ -17,9 +29,10 @@ function localizeValidationMessage(message: string): string {
 async function responseError(response: Response): Promise<Error> {
   const raw = await response.text();
   let message = raw || response.statusText;
+  let code: string | undefined;
   try {
     const parsed = JSON.parse(raw) as {
-      detail?: string | { message?: string } | ApiValidationIssue[];
+      detail?: string | { message?: string; code?: string } | ApiValidationIssue[];
     };
     if (typeof parsed.detail === 'string') {
       message = parsed.detail;
@@ -31,11 +44,12 @@ async function responseError(response: Response): Promise<Error> {
       }).join('；');
     } else if (parsed.detail?.message) {
       message = parsed.detail.message;
+      code = parsed.detail.code;
     }
   } catch {
     // Keep the raw response when an upstream proxy does not return JSON.
   }
-  return new Error(`${response.status} ${message}`);
+  return new ApiError(response.status, message, code);
 }
 
 async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -158,6 +172,136 @@ export interface CourseReleaseManifest {
   restored_from_release_id?: string | null; created_at: string; created_by: string;
   note: string; items: CourseReleaseItem[]; checksum: string;
 }
+export type ArchiveFileKind =
+  | 'release-manifest'
+  | 'sealed-lesson'
+  | 'course-package'
+  | 'scenario-template'
+  | 'format-layer'
+  | 'teacher-markdown'
+  | 'preview-html';
+export interface CourseArchiveFile {
+  path: string; kind: ArchiveFileKind; media_type: string;
+  size_bytes: number; blob_sha256: string; lesson_id?: string | null;
+  artifact_id?: string | null; artifact_version?: number | null;
+  schema_version?: string | null; contract_checksum?: string | null;
+}
+export interface CourseArchiveScenario {
+  scenario_id: string; scenario_version: number;
+  scenario_checksum: string; primary: boolean;
+}
+export interface CourseArchiveLesson {
+  lesson_id: string; title: string; content_version: number;
+  source_checksum: string; course_package_id: string;
+  course_package_checksum: string; scenarios: CourseArchiveScenario[];
+  files: string[];
+}
+export interface CourseArchiveManifest {
+  schema_version: 'course-archive/v1';
+  course_id: string; course_title: string;
+  release_schema_version: string; release_id: string; release_no: number;
+  release_checksum: string; release_operation: CourseReleaseManifest['operation'];
+  release_created_at: string; release_created_by: string; release_note: string;
+  renderer: {
+    schema_version: 'archive-renderer/v1';
+    renderer_id: string; renderer_version: number; style_profile: string;
+  };
+  manifest_path: string;
+  lessons: CourseArchiveLesson[]; files: CourseArchiveFile[];
+  file_count: number; total_size_bytes: number;
+  archive_id: string; archive_checksum: string; archive_path: string;
+  manifest_checksum: string;
+}
+export type ContentAssetKind = 'person' | 'keyword' | 'scenario';
+export type ContentAssetArchiveFileKind =
+  | 'sealed-person'
+  | 'sealed-keyword'
+  | 'sealed-scenario';
+export interface ContentAssetArchiveFile {
+  path: string; kind: ContentAssetArchiveFileKind;
+  media_type: 'application/json'; size_bytes: number;
+  blob_sha256: string; schema_version: string; contract_checksum: string;
+}
+export interface ContentAssetArchiveManifest {
+  schema_version: 'content-asset-archive/v1';
+  asset_kind: ContentAssetKind; asset_id: string; title: string; version: number;
+  source_schema_version: 'person-profile/v1' | 'keyword-profile/v1' | 'scenario-template/v1';
+  source_checksum: string; sealed_at: string; sealed_by: string;
+  files: ContentAssetArchiveFile[]; file_count: number; total_size_bytes: number;
+  archive_id: string; archive_checksum: string; archive_path: string;
+  manifest_checksum: string;
+}
+export type PublicationMode = 'pull_request' | 'direct_commit';
+export type PublicationStatus =
+  | 'requested'
+  | 'preparing'
+  | 'pushing'
+  | 'commit_created'
+  | 'ref_updated'
+  | 'pr_open'
+  | 'succeeded'
+  | 'failed_retryable'
+  | 'failed_terminal';
+export interface CourseArchivePublishRequest {
+  schema_version: 'course-archive-publish-request/v1';
+  binding_id: string; course_id: string; release_id: string;
+  expected_release_checksum: string; archive_id: string;
+  expected_archive_checksum: string; mode: PublicationMode;
+  client_request_id: string; change_summary: string;
+  direct_commit_confirmed: boolean;
+}
+export interface ContentAssetArchivePublishRequest {
+  schema_version: 'content-asset-archive-publish-request/v1';
+  binding_id: string; asset_kind: ContentAssetKind; asset_id: string;
+  version: number; expected_source_checksum: string; archive_id: string;
+  expected_archive_checksum: string; mode: PublicationMode;
+  client_request_id: string; change_summary: string;
+  direct_commit_confirmed: boolean;
+}
+export interface GitRepositoryBinding {
+  schema_version: 'git-repository-binding/v1';
+  binding_id: string; provider: 'github'; repository_id: number;
+  owner: string; repository: string; visibility: 'private';
+  base_branch: string; root_prefix: string; asset_root_prefix?: string | null;
+  credential_kind: 'github_app' | 'fine_grained_token';
+  installation_id?: number | null; allowed_modes: PublicationMode[];
+}
+export interface GitPublicationIntent {
+  schema_version: 'git-publication-intent/v1';
+  publication_id: string; operation_key: string;
+  binding: GitRepositoryBinding; request: CourseArchivePublishRequest;
+  requested_at: string; requested_by: string; checksum: string;
+}
+export interface GitPublicationRecord {
+  schema_version: 'git-publication-record/v1';
+  intent: GitPublicationIntent; status: PublicationStatus;
+  attempt: number; revision: number; branch_ref: string;
+  base_sha?: string | null; tree_sha?: string | null; commit_sha?: string | null;
+  pull_request_number?: number | null; pull_request_url?: string | null;
+  last_error_code?: string | null; last_error_at?: string | null;
+  updated_at: string; completed_at?: string | null; checksum: string;
+}
+export interface AssetGitPublicationIntent {
+  schema_version: 'git-publication-intent/v1';
+  publication_id: string; operation_key: string;
+  binding: GitRepositoryBinding; request: ContentAssetArchivePublishRequest;
+  requested_at: string; requested_by: string; checksum: string;
+}
+export interface AssetGitPublicationRecord {
+  schema_version: 'git-publication-record/v1';
+  intent: AssetGitPublicationIntent; status: PublicationStatus;
+  attempt: number; revision: number; branch_ref: string;
+  base_sha?: string | null; tree_sha?: string | null; commit_sha?: string | null;
+  pull_request_number?: number | null; pull_request_url?: string | null;
+  last_error_code?: string | null; last_error_at?: string | null;
+  updated_at: string; completed_at?: string | null; checksum: string;
+}
+export interface PublicationResponse {
+  publication: GitPublicationRecord; reused: boolean;
+}
+export interface AssetPublicationResponse {
+  publication: AssetGitPublicationRecord; reused: boolean;
+}
 export interface WorkflowResponse {
   workflow: ContentWorkflowRecord; report?: ContentValidationReport | null;
 }
@@ -169,17 +313,34 @@ export interface LessonSourceRecord {
   lesson_no: string; era_id: string; era: string; source: string;
 }
 export interface ContentAssetRecord {
-  asset_id: string; title: string; kind: 'person' | 'keyword'; path: string; updated_at?: string | null;
+  asset_id: string; title: string; kind: 'person' | 'keyword'; path: string;
+  status: 'draft' | 'sealed'; version: number;
+  updated_at?: string | null; sealed_at?: string | null;
+  sealed_by?: string | null; checksum?: string | null;
+}
+export interface ContentAssetValidationIssue {
+  code: string; severity: 'error' | 'warning'; field: string; message: string;
+}
+export interface ContentAssetValidationReport {
+  schema_version: 'content-asset-validation/v1';
+  kind: 'person' | 'keyword'; asset_id: string; valid: boolean;
+  issues: ContentAssetValidationIssue[]; validated_at: string;
 }
 export interface PersonProfilePackage {
+  schema_version?: 'person-profile/v1';
   asset_id: string; name: string; role?: string; era?: string; summary?: string; persona?: string;
   boundaries?: string[]; keywords?: string[]; related_lessons?: string[]; source_refs?: SourceRef[];
-  teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number; updated_at?: string | null;
+  teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number;
+  created_at?: string | null; updated_at?: string | null;
+  sealed_at?: string | null; sealed_by?: string | null; checksum?: string | null;
 }
 export interface KeywordProfilePackage {
+  schema_version?: 'keyword-profile/v1';
   asset_id: string; word: string; pinyin?: string; gloss?: string; era?: string; category?: string;
   examples?: string[]; related_people?: string[]; related_lessons?: string[]; source_refs?: SourceRef[];
-  teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number; updated_at?: string | null;
+  teacher_notes?: string; status?: 'draft' | 'sealed'; version?: number;
+  created_at?: string | null; updated_at?: string | null;
+  sealed_at?: string | null; sealed_by?: string | null; checksum?: string | null;
 }
 export type ScenarioType = 'crisis_governance' | 'institutional_reform' | 'council';
 export type ScenarioConditionKind = 'state' | 'turn' | 'npc';
@@ -499,6 +660,69 @@ export const api = {
     ),
   adminContentCurrentRelease: (token: string, course_id: string) =>
     adminFetch<ReleaseResponse>(token, `/admin/content/releases/${course_id}/current`),
+  adminContentArchivePreview: (
+    token: string,
+    course_id: string,
+    release_id: string,
+  ) => adminFetch<{ archive: CourseArchiveManifest; download_url: string }>(
+    token,
+    `/admin/content/releases/${encodeURIComponent(course_id)}`
+      + `/${encodeURIComponent(release_id)}/archive-preview`,
+    { method: 'POST' },
+  ),
+  adminContentArchiveFile: (
+    token: string,
+    course_id: string,
+    release_id: string,
+  ) => adminFile(
+    token,
+    `/admin/content/releases/${encodeURIComponent(course_id)}`
+      + `/${encodeURIComponent(release_id)}/archive.zip`,
+  ),
+  adminContentPublications: (
+    token: string,
+    filters?: {
+      course_id?: string;
+      release_id?: string;
+      publication_status?: PublicationStatus;
+    },
+  ) => {
+    const query = new URLSearchParams();
+    if (filters?.course_id) query.set('course_id', filters.course_id);
+    if (filters?.release_id) query.set('release_id', filters.release_id);
+    if (filters?.publication_status) {
+      query.set('publication_status', filters.publication_status);
+    }
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return adminFetch<{ items: GitPublicationRecord[] }>(
+      token,
+      `/admin/content/publications${suffix}`,
+    );
+  },
+  adminContentPublication: (token: string, publication_id: string) =>
+    adminFetch<PublicationResponse>(
+      token,
+      `/admin/content/publications/${encodeURIComponent(publication_id)}`,
+    ),
+  adminCreateContentPublication: (
+    token: string,
+    body: CourseArchivePublishRequest,
+  ) => adminFetch<PublicationResponse>(token, '/admin/content/publications', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  }),
+  adminRetryContentPublication: (
+    token: string,
+    publication_id: string,
+    expected_revision: number,
+  ) => adminFetch<PublicationResponse>(
+    token,
+    `/admin/content/publications/${encodeURIComponent(publication_id)}/retry`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ expected_revision }),
+    },
+  ),
   adminContentRollback: (
     token: string,
     course_id: string,
@@ -511,14 +735,139 @@ export const api = {
     adminFetch<{ items: ContentAssetRecord[] }>(token, `/admin/content/assets${kind ? `?kind=${kind}` : ''}`),
   adminPersonTemplate: (token: string) => adminFetch<PersonProfilePackage>(token, '/admin/content/assets/people/template'),
   adminPersonAsset: (token: string, asset_id: string) =>
-    adminFetch<PersonProfilePackage>(token, `/admin/content/assets/people/${asset_id}`),
+    adminFetch<PersonProfilePackage>(token, `/admin/content/assets/people/${encodeURIComponent(asset_id)}`),
   adminSavePersonAsset: (token: string, body: PersonProfilePackage) =>
     adminFetch<{ item: PersonProfilePackage }>(token, '/admin/content/assets/people', { method: 'POST', body: JSON.stringify(body) }),
+  adminValidatePersonAsset: (token: string, asset_id: string) =>
+    adminFetch<{ report: ContentAssetValidationReport }>(
+      token,
+      `/admin/content/assets/people/${encodeURIComponent(asset_id)}/validate`,
+      { method: 'POST' },
+    ),
+  adminSealPersonAsset: (token: string, asset_id: string) =>
+    adminFetch<{
+      item: PersonProfilePackage; record: ContentAssetRecord; idempotent: boolean;
+    }>(
+      token,
+      `/admin/content/assets/people/${encodeURIComponent(asset_id)}/seal`,
+      { method: 'POST' },
+    ),
+  adminPersonAssetVersions: (token: string, asset_id: string) =>
+    adminFetch<{ items: ContentAssetRecord[] }>(
+      token,
+      `/admin/content/assets/people/${encodeURIComponent(asset_id)}/versions`,
+    ),
+  adminPersonAssetVersion: (token: string, asset_id: string, version: number) =>
+    adminFetch<PersonProfilePackage>(
+      token,
+      `/admin/content/assets/people/${encodeURIComponent(asset_id)}/versions/${version}`,
+    ),
   adminKeywordTemplate: (token: string) => adminFetch<KeywordProfilePackage>(token, '/admin/content/assets/keywords/template'),
   adminKeywordAsset: (token: string, asset_id: string) =>
-    adminFetch<KeywordProfilePackage>(token, `/admin/content/assets/keywords/${asset_id}`),
+    adminFetch<KeywordProfilePackage>(token, `/admin/content/assets/keywords/${encodeURIComponent(asset_id)}`),
   adminSaveKeywordAsset: (token: string, body: KeywordProfilePackage) =>
     adminFetch<{ item: KeywordProfilePackage }>(token, '/admin/content/assets/keywords', { method: 'POST', body: JSON.stringify(body) }),
+  adminValidateKeywordAsset: (token: string, asset_id: string) =>
+    adminFetch<{ report: ContentAssetValidationReport }>(
+      token,
+      `/admin/content/assets/keywords/${encodeURIComponent(asset_id)}/validate`,
+      { method: 'POST' },
+    ),
+  adminSealKeywordAsset: (token: string, asset_id: string) =>
+    adminFetch<{
+      item: KeywordProfilePackage; record: ContentAssetRecord; idempotent: boolean;
+    }>(
+      token,
+      `/admin/content/assets/keywords/${encodeURIComponent(asset_id)}/seal`,
+      { method: 'POST' },
+    ),
+  adminKeywordAssetVersions: (token: string, asset_id: string) =>
+    adminFetch<{ items: ContentAssetRecord[] }>(
+      token,
+      `/admin/content/assets/keywords/${encodeURIComponent(asset_id)}/versions`,
+    ),
+  adminKeywordAssetVersion: (token: string, asset_id: string, version: number) =>
+    adminFetch<KeywordProfilePackage>(
+      token,
+      `/admin/content/assets/keywords/${encodeURIComponent(asset_id)}/versions/${version}`,
+    ),
+  adminContentAssetArchivePreview: (
+    token: string,
+    asset_kind: ContentAssetKind,
+    asset_id: string,
+    version: number,
+    source_checksum: string,
+  ) => {
+    const query = new URLSearchParams({ source_checksum });
+    return adminFetch<{ archive: ContentAssetArchiveManifest; download_url: string }>(
+      token,
+      `/admin/content/asset-archives/${asset_kind}/${encodeURIComponent(asset_id)}`
+        + `/versions/${version}/preview?${query.toString()}`,
+      { method: 'POST' },
+    );
+  },
+  adminContentAssetArchiveFile: (
+    token: string,
+    asset_kind: ContentAssetKind,
+    asset_id: string,
+    version: number,
+    source_checksum: string,
+  ) => {
+    const query = new URLSearchParams({ source_checksum });
+    return adminFile(
+      token,
+      `/admin/content/asset-archives/${asset_kind}/${encodeURIComponent(asset_id)}`
+        + `/versions/${version}/archive.zip?${query.toString()}`,
+    );
+  },
+  adminContentAssetPublications: (
+    token: string,
+    filters?: {
+      asset_kind?: ContentAssetKind;
+      asset_id?: string;
+      asset_version?: number;
+      publication_status?: PublicationStatus;
+    },
+  ) => {
+    const query = new URLSearchParams();
+    if (filters?.asset_kind) query.set('asset_kind', filters.asset_kind);
+    if (filters?.asset_id) query.set('asset_id', filters.asset_id);
+    if (filters?.asset_version !== undefined) {
+      query.set('asset_version', String(filters.asset_version));
+    }
+    if (filters?.publication_status) {
+      query.set('publication_status', filters.publication_status);
+    }
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return adminFetch<{ items: AssetGitPublicationRecord[] }>(
+      token,
+      `/admin/content/asset-publications${suffix}`,
+    );
+  },
+  adminContentAssetPublication: (token: string, publication_id: string) =>
+    adminFetch<AssetPublicationResponse>(
+      token,
+      `/admin/content/asset-publications/${encodeURIComponent(publication_id)}`,
+    ),
+  adminCreateContentAssetPublication: (
+    token: string,
+    body: ContentAssetArchivePublishRequest,
+  ) => adminFetch<AssetPublicationResponse>(token, '/admin/content/asset-publications', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  }),
+  adminRetryContentAssetPublication: (
+    token: string,
+    publication_id: string,
+    expected_revision: number,
+  ) => adminFetch<AssetPublicationResponse>(
+    token,
+    `/admin/content/asset-publications/${encodeURIComponent(publication_id)}/retry`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ expected_revision }),
+    },
+  ),
   adminScenarioTemplate: (token: string) =>
     adminFetch<ScenarioAuthorDraft>(token, '/admin/content/scenario-drafts/template'),
   adminScenarioDrafts: (token: string) =>

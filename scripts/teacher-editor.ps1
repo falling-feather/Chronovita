@@ -1,4 +1,7 @@
-param([switch] $SkipBrowser)
+param(
+  [switch] $SkipBrowser,
+  [switch] $SkipCredentialSetup
+)
 
 $ErrorActionPreference = "Stop"
 
@@ -10,15 +13,22 @@ $WebPort = 5173
 $EditorUrl = "http://$WebHost`:$WebPort/admin/content"
 $ApiDir = Join-Path $Root "apps\api"
 $WebDir = Join-Path $Root "apps\web"
-$Requirements = Join-Path $ApiDir "requirements.txt"
+$Requirements = Join-Path $ApiDir "requirements.lock"
+$WebPackage = Join-Path $WebDir "package.json"
+$WebPackageLock = Join-Path $WebDir "package-lock.json"
+$VersionFile = Join-Path $Root "services\version.py"
 $VenvDir = Join-Path $Root ".venv"
 $PythonExe = Join-Path $VenvDir "Scripts\python.exe"
 $ApiDepsStamp = Join-Path $VenvDir ".chronovita-api-requirements.sha256"
+$WebDepsStamp = Join-Path $WebDir "node_modules\.chronovita-web-dependencies.sha256"
 $LogDir = Join-Path $Root ".teacher-editor-logs"
 $ApiOutLog = Join-Path $LogDir "api.out.log"
 $ApiErrLog = Join-Path $LogDir "api.err.log"
 $WebOutLog = Join-Path $LogDir "web.out.log"
 $WebErrLog = Join-Path $LogDir "web.err.log"
+$CredentialDir = Join-Path $Root ".chronovita-local"
+$PublicationCredentialPath = Join-Path $CredentialDir "content-history-token.dpapi"
+$CredentialSetupScript = Join-Path $PSScriptRoot "configure-content-history.ps1"
 
 function Write-Step {
   param([string] $Message)
@@ -31,16 +41,70 @@ function Test-Command {
   return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
+function Test-TruthyEnvironmentValue {
+  param([string] $Name)
+
+  $value = [Environment]::GetEnvironmentVariable($Name)
+  if ([string]::IsNullOrWhiteSpace($value)) {
+    return $false
+  }
+  return @("0", "false", "no", "off") -notcontains $value.Trim().ToLowerInvariant()
+}
+
+function Test-InteractiveCredentialSetupAllowed {
+  if ($SkipCredentialSetup -or $SkipBrowser) {
+    return $false
+  }
+  if (Test-TruthyEnvironmentValue "CI") {
+    return $false
+  }
+  if (-not [Environment]::UserInteractive) {
+    return $false
+  }
+  try {
+    if ([Console]::IsInputRedirected) {
+      return $false
+    }
+  } catch {
+    return $false
+  }
+  return $true
+}
+
+function Get-ExpectedAppVersion {
+  if (-not (Test-Path -LiteralPath $VersionFile -PathType Leaf)) {
+    throw "Application version file was not found: $VersionFile"
+  }
+  $source = Get-Content -LiteralPath $VersionFile -Raw
+  $match = [regex]::Match(
+    $source,
+    '(?m)^APP_VERSION\s*=\s*"(?<version>[0-9]+\.[0-9]+\.[0-9]+)"\s*$'
+  )
+  if (-not $match.Success) {
+    throw "Application version could not be read from: $VersionFile"
+  }
+  return $match.Groups["version"].Value
+}
+
 function Test-SupportedPython {
   param(
     [string] $FilePath,
     [string[]] $PrefixArguments = @()
   )
 
-  & $FilePath @PrefixArguments -c `
-    "import sys; raise SystemExit(0 if (3, 11) <= sys.version_info[:2] < (3, 14) else 1)" `
-    *> $null
-  return $LASTEXITCODE -eq 0
+  $previousErrorActionPreference = $ErrorActionPreference
+  try {
+    # Windows PowerShell 5.1 can promote py.exe's missing-runtime stderr to a
+    # terminating NativeCommandError while probing the next explicit version.
+    $ErrorActionPreference = "Continue"
+    & $FilePath @PrefixArguments -c `
+      "import sys; raise SystemExit(0 if (3, 11) <= sys.version_info[:2] < (3, 14) else 1)" `
+      *> $null
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+  }
+  return $exitCode -eq 0
 }
 
 function Get-SupportedPython {
@@ -70,6 +134,22 @@ function Get-SupportedPython {
   }
 
   throw "Python 3.11, 3.12, or 3.13 was not found. Install a supported Python version and run this launcher again."
+}
+
+function Test-SupportedNode {
+  param([string] $FilePath)
+
+  $previousErrorActionPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = "Continue"
+    & $FilePath -e `
+      "const [major, minor] = process.versions.node.split('.').map(Number); process.exit((major === 20 && minor >= 19) || (major === 22 && minor >= 12) || major > 22 ? 0 : 1)" `
+      *> $null
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+  }
+  return $exitCode -eq 0
 }
 
 function Repair-DuplicateProcessEnvironment {
@@ -103,6 +183,112 @@ function Repair-DuplicateProcessEnvironment {
 function Quote-ProcessArgument {
   param([string] $Value)
   return '"' + $Value + '"'
+}
+
+function Convert-SecureValueToPlainText {
+  param([Security.SecureString] $Value)
+
+  $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($Value)
+  try {
+    return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
+  } finally {
+    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
+  }
+}
+
+function Import-LocalContentHistoryCredential {
+  param([string] $CredentialPath = $PublicationCredentialPath)
+
+  if (-not (Test-Path -LiteralPath $CredentialPath -PathType Leaf)) {
+    throw "The encrypted credential file was not found: $CredentialPath"
+  }
+
+  try {
+    $encrypted = (Get-Content -LiteralPath $CredentialPath -Raw).Trim()
+    if ([string]::IsNullOrWhiteSpace($encrypted) -or $encrypted.Length -gt 16384) {
+      throw "The encrypted credential file is empty or too large."
+    }
+    $secureToken = ConvertTo-SecureString $encrypted
+    $plainToken = Convert-SecureValueToPlainText $secureToken
+    try {
+      if (
+        [string]::IsNullOrWhiteSpace($plainToken) `
+        -or $plainToken.Length -lt 20 `
+        -or $plainToken.Length -gt 512 `
+        -or $plainToken -notmatch '^[\x21-\x7E]+$'
+      ) {
+        throw "The decrypted credential is invalid."
+      }
+      $env:CHRONO_GITHUB_PUBLICATION_TOKEN = $plainToken
+      $env:CHRONO_GITHUB_PUBLICATION_ENABLED = "true"
+    } finally {
+      $plainToken = $null
+    }
+    Write-Host "Content history submission credential loaded for the API process." -ForegroundColor Green
+  } catch {
+    Clear-TransientContentHistoryCredential
+    throw "The local course submission credential could not be decrypted. It may be damaged or belong to another Windows account."
+  }
+}
+
+function Clear-TransientContentHistoryCredential {
+  [System.Environment]::SetEnvironmentVariable(
+    "CHRONO_GITHUB_PUBLICATION_TOKEN",
+    $null,
+    [System.EnvironmentVariableTarget]::Process
+  )
+  [System.Environment]::SetEnvironmentVariable(
+    "CHRONO_GITHUB_PUBLICATION_ENABLED",
+    $null,
+    [System.EnvironmentVariableTarget]::Process
+  )
+}
+
+function Invoke-ContentHistoryCredentialSetup {
+  param([string] $CredentialRoot = $CredentialDir)
+
+  if (-not (Test-Path -LiteralPath $CredentialSetupScript -PathType Leaf)) {
+    throw "Credential setup script was not found: $CredentialSetupScript"
+  }
+  & $CredentialSetupScript -CredentialRoot $CredentialRoot -ContinueCurrentLaunch
+}
+
+function Initialize-LocalContentHistoryCredential {
+  param(
+    [string] $CredentialRoot = $CredentialDir,
+    [string] $CredentialPath = $PublicationCredentialPath,
+    [bool] $AllowInteractiveSetup = $false
+  )
+
+  if (-not (Test-Path -LiteralPath $CredentialPath)) {
+    if (-not $AllowInteractiveSetup) {
+      Write-Host "Content history credential setup was skipped for this non-interactive launch."
+      Write-Host "To enable submission later, run scripts\configure-content-history.cmd."
+      return
+    }
+
+    Write-Step "First-time content history credential setup"
+    Invoke-ContentHistoryCredentialSetup -CredentialRoot $CredentialRoot
+    Import-LocalContentHistoryCredential -CredentialPath $CredentialPath
+    return
+  }
+
+  try {
+    Import-LocalContentHistoryCredential -CredentialPath $CredentialPath
+    return
+  } catch {
+    Clear-TransientContentHistoryCredential
+    Write-Warning $_.Exception.Message
+    Write-Host "Replace it with scripts\configure-content-history.cmd, or remove it with scripts\configure-content-history.cmd -Remove."
+    if (-not $AllowInteractiveSetup) {
+      Write-Warning "GitHub submission is disabled for this launch; local editing and ZIP export remain available."
+      return
+    }
+  }
+
+  Write-Step "Replacing unreadable content history credential"
+  Invoke-ContentHistoryCredentialSetup -CredentialRoot $CredentialRoot
+  Import-LocalContentHistoryCredential -CredentialPath $CredentialPath
 }
 
 function Set-LocalRuntimeEnvironment {
@@ -227,8 +413,11 @@ function Open-ExistingEditor {
   if ($health.status -ne "alive" -or $web.StatusCode -ne 200 -or $web.Content -notmatch "Chronovita") {
     throw "Ports $ApiPort and $WebPort are occupied by services that are not a healthy Chronovita editor."
   }
+  if ([string]$health.version -ne $ExpectedAppVersion) {
+    throw "A different Chronovita version is already using ports $ApiPort/$WebPort. Stop it before starting V$ExpectedAppVersion."
+  }
 
-  Write-Host "Chronovita is already running. Opening the existing editor." -ForegroundColor Green
+  Write-Host "Chronovita V$ExpectedAppVersion is already running. Opening the existing editor." -ForegroundColor Green
   if (-not $SkipBrowser) {
     Start-Process $EditorUrl
   }
@@ -350,47 +539,109 @@ function Ensure-PythonEnvironment {
   }
 }
 
-function Ensure-ApiDependencies {
-  if (-not (Test-Path $Requirements)) {
-    throw "API requirements file was not found: $Requirements"
+function Get-DependencyFingerprint {
+  param([string[]] $InputPaths)
+
+  $hashes = @()
+  foreach ($inputPath in $InputPaths) {
+    if (-not (Test-Path -LiteralPath $inputPath -PathType Leaf)) {
+      throw "Dependency input file was not found: $inputPath"
+    }
+    $hashes += (Get-FileHash -LiteralPath $inputPath -Algorithm SHA256).Hash
+  }
+  return $hashes -join ":"
+}
+
+function Test-DependencyInstallCurrent {
+  param(
+    [string[]] $InputPaths,
+    [string] $StampPath,
+    [string[]] $RequiredPaths = @()
+  )
+
+  if (-not (Test-Path -LiteralPath $StampPath -PathType Leaf)) {
+    return $false
+  }
+  foreach ($requiredPath in $RequiredPaths) {
+    if (-not (Test-Path -LiteralPath $requiredPath)) {
+      return $false
+    }
   }
 
-  $requirementsHash = (Get-FileHash -LiteralPath $Requirements -Algorithm SHA256).Hash
-  if (Test-Path $ApiDepsStamp) {
-    $installedHash = (Get-Content -LiteralPath $ApiDepsStamp -Raw).Trim()
-    if ($installedHash -eq $requirementsHash) {
-      & $PythonExe -c "import fastapi, uvicorn, pydantic_settings"
-      if ($LASTEXITCODE -eq 0) {
-        Write-Host "API dependencies found: $ApiDepsStamp"
-        return
-      }
+  $expected = Get-DependencyFingerprint -InputPaths $InputPaths
+  $installed = (Get-Content -LiteralPath $StampPath -Raw).Trim()
+  return $installed.Equals($expected, [StringComparison]::OrdinalIgnoreCase)
+}
+
+function Set-DependencyInstallStamp {
+  param(
+    [string[]] $InputPaths,
+    [string] $StampPath
+  )
+
+  $fingerprint = Get-DependencyFingerprint -InputPaths $InputPaths
+  Set-Content -LiteralPath $StampPath -Value $fingerprint -Encoding ASCII
+}
+
+function Ensure-ApiDependencies {
+  if (-not (Test-Path $Requirements)) {
+    throw "API dependency lock file was not found: $Requirements"
+  }
+
+  if (
+    Test-DependencyInstallCurrent `
+      -InputPaths @($Requirements) `
+      -StampPath $ApiDepsStamp `
+      -RequiredPaths @($PythonExe)
+  ) {
+    & $PythonExe -c "import fastapi, uvicorn, pydantic_settings"
+    if ($LASTEXITCODE -eq 0) {
+      Write-Host "API dependencies are current; reusing .venv."
+      return
     }
   }
 
   Write-Step "Installing API dependencies"
-  Invoke-Checked "Installing apps\api requirements" $PythonExe @(
+  Invoke-Checked "Installing hash-locked apps\api requirements" $PythonExe @(
     "-m",
     "pip",
     "install",
     "--disable-pip-version-check",
+    "--require-hashes",
     "-r",
     (Quote-ProcessArgument $Requirements)
   )
-  Set-Content -LiteralPath $ApiDepsStamp -Value $requirementsHash -Encoding ASCII
+  Set-DependencyInstallStamp -InputPaths @($Requirements) -StampPath $ApiDepsStamp
 }
 
 function Ensure-WebDependencies {
-  if (-not (Test-Path (Join-Path $WebDir "package.json"))) {
-    throw "Web package.json was not found: $WebDir"
+  foreach ($dependencyInput in @($WebPackage, $WebPackageLock)) {
+    if (-not (Test-Path -LiteralPath $dependencyInput -PathType Leaf)) {
+      throw "Web dependency file was not found: $dependencyInput"
+    }
   }
 
   if (-not (Test-Command "npm")) {
-    throw "npm was not found. Please install Node.js LTS and run this launcher again."
+    throw "npm was not found. Please install Node.js 20.19+ or 22.12+ and run this launcher again."
   }
 
-  $viteBin = Join-Path $WebDir "node_modules\.bin\vite.cmd"
-  if (Test-Path $viteBin) {
-    Write-Host "Web dependencies found: apps\web\node_modules"
+  $nodeCommand = Get-Command "node.exe" -ErrorAction SilentlyContinue
+  if (-not $nodeCommand -or -not (Test-SupportedNode $nodeCommand.Source)) {
+    throw "Node.js 20.19+ or 22.12+ is required. Install a supported Node.js LTS version and run this launcher again."
+  }
+
+  $requiredWebPaths = @(
+    (Join-Path $WebDir "node_modules\.bin\vite.cmd"),
+    (Join-Path $WebDir "node_modules\react\package.json"),
+    (Join-Path $WebDir "node_modules\typescript\bin\tsc")
+  )
+  if (
+    Test-DependencyInstallCurrent `
+      -InputPaths @($WebPackage, $WebPackageLock) `
+      -StampPath $WebDepsStamp `
+      -RequiredPaths $requiredWebPaths
+  ) {
+    Write-Host "Web dependencies are current; reusing apps\web\node_modules."
     return
   }
 
@@ -400,6 +651,14 @@ function Ensure-WebDependencies {
     "--no-audit",
     "--no-fund"
   )
+  foreach ($requiredWebPath in $requiredWebPaths) {
+    if (-not (Test-Path -LiteralPath $requiredWebPath)) {
+      throw "npm ci completed, but a required web dependency is missing: $requiredWebPath"
+    }
+  }
+  Set-DependencyInstallStamp `
+    -InputPaths @($WebPackage, $WebPackageLock) `
+    -StampPath $WebDepsStamp
 }
 
 function Test-WebBuild {
@@ -431,7 +690,7 @@ function Start-Web {
 
   Write-Step "Starting web editor"
   $process = Start-Process -FilePath "cmd.exe" `
-    -ArgumentList @("/c", "npm run dev -- --host $WebHost --port $WebPort") `
+    -ArgumentList @("/c", "npm run preview -- --host $WebHost --port $WebPort --strictPort") `
     -WorkingDirectory $WebDir `
     -WindowStyle Hidden `
     -RedirectStandardOutput $WebOutLog `
@@ -441,8 +700,13 @@ function Start-Web {
   return $process
 }
 
+if ($MyInvocation.InvocationName -eq ".") {
+  return
+}
+
 $apiProcess = $null
 $webProcess = $null
+$ExpectedAppVersion = Get-ExpectedAppVersion
 
 try {
   New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
@@ -458,12 +722,15 @@ try {
 
   Set-LocalRuntimeEnvironment
 
+  Initialize-LocalContentHistoryCredential `
+    -AllowInteractiveSetup:(Test-InteractiveCredentialSetupAllowed)
   Ensure-PythonEnvironment
   Ensure-ApiDependencies
   Ensure-WebDependencies
   Test-WebBuild
 
   $apiProcess = Start-Api
+  Clear-TransientContentHistoryCredential
   $webProcess = Start-Web
 
   Wait-LocalPort "API" $ApiHost $ApiPort $apiProcess $ApiErrLog

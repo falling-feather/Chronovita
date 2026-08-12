@@ -7,7 +7,7 @@ import uuid
 from pathlib import Path
 from typing import Iterable
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from services import content as content_data
 from services.contracts.release_v2 import (
@@ -52,6 +52,8 @@ def stage_scenario(
 
     if scenario.status != "sealed" or not verify_contract_checksum(scenario):
         raise ValueError("scenario must be sealed and checksum-valid")
+    if len(scenario.title) > 160:
+        raise ValueError("scenario title cannot exceed 160 characters")
     if sealed_by is not None:
         payload = scenario.model_dump(mode="json")
         payload["sealed_by"] = sealed_by
@@ -204,8 +206,17 @@ def load_staged_scenario_bytes(
     target = content_data.content_root() / Path(descriptor.path)
     raw = _read_immutable_bytes(target)
     try:
-        scenario = ScenarioTemplateV1.model_validate_json(raw)
-    except ValueError as exc:
+        payload = json.loads(
+            raw.decode("utf-8"),
+            object_pairs_hook=_reject_duplicate_json_keys,
+        )
+        scenario = ScenarioTemplateV1.model_validate(payload)
+    except (
+        UnicodeError,
+        json.JSONDecodeError,
+        ValidationError,
+        ValueError,
+    ) as exc:
         raise RuntimeArtifactError(
             f"cannot read runtime artifact: {target}"
         ) from exc
@@ -369,6 +380,17 @@ def _read_contract(path: Path, model: type[BaseModel]):
         return load_contract_file(path, model)
     except ScenarioFileError as exc:
         raise RuntimeArtifactError(f"cannot read runtime artifact: {path}") from exc
+
+
+def _reject_duplicate_json_keys(
+    pairs: list[tuple[str, object]],
+) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
 
 
 def _write_immutable_json(path: Path, payload: BaseModel) -> None:

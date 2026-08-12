@@ -52,6 +52,16 @@ class Settings(BaseSettings):
         le=300,
     )
     content_root: str = "content"
+    content_history_target_path: str = "infra/content-history-target.json"
+    github_publication_enabled: bool = False
+    github_publication_token: SecretStr = SecretStr("")
+    github_api_base_url: str = "https://api.github.com"
+    github_timeout_seconds: float = Field(default=20.0, ge=2.0, le=120.0)
+    github_publication_stale_seconds: int = Field(
+        default=10 * 60,
+        ge=60,
+        le=24 * 60 * 60,
+    )
     admin_token: SecretStr = SecretStr("")
     admin_actor: str = "local-admin"
     auth_mode: Literal["legacy-local", "accounts"] = "legacy-local"

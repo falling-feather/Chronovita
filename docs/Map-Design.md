@@ -1,5 +1,11 @@
 # 课程中心地图入场页 · 设计文档
 
+> **专项定位**：本文保留课程中心地图的设计与实现映射，不承担当前任务、版本或全局前端状态。当前实现以 [01-开发者文档](01-开发者文档.md) 为准，后续任务以 [02-项目规划与设计总纲](02-项目规划与设计总纲.md) 为准。
+>
+> **最后一次更新时间**：2026-07-25
+>
+> **更新者**：文档专项组 / 前端组
+
 > 路径：`apps/web/src/pages/CoursesPage.tsx` + `apps/web/src/pages/courses/`
 > 首发：v0.2.2 — v0.2.6
 > 目标：以"中国版图 + 时间轴"作为课程中心入场媒介，让用户在 5 秒内理解"时代变换"，并通过点击都城进入相应课程。
@@ -24,7 +30,7 @@
 - **viewBox**：`0 0 1000 720`（4:3 偏宽，便于横向铺开"东海岸"）
 - **所有几何（轮廓/河流/都城/路径）共享同一坐标系**，单位为像素
 - 经纬度 → 像素：当前为手摇校准（未做正式投影），覆盖范围约 73°E—135°E、18°N—54°N
-- **添加新都城/路径时**，对照 [CHINA_OUTLINE](apps/web/src/pages/courses/eraMap.ts) 的关键拐点取舍位置
+- **添加新都城/路径时**，对照 [CHINA_OUTLINE](../apps/web/src/pages/courses/eraMap.ts) 的关键拐点取舍位置
 
 ---
 
@@ -136,7 +142,7 @@ URL 状态完全可分享，刷新后保持。
 
 ## 8. 数据更新约定
 
-- 增加新时代：在 `ERA_OVERLAYS` 末尾追加，并在 [EraTimeline.tsx](apps/web/src/pages/courses/EraTimeline.tsx) 的 stops 列表中保持 6 段以内（超出需重做时间轴布局）
+- 增加新时代：在 `ERA_OVERLAYS` 末尾追加，并在 [EraTimeline.tsx](../apps/web/src/pages/courses/EraTimeline.tsx) 的 stops 列表中保持 6 段以内（超出需重做时间轴布局）
 - 城市坐标必须落在 `CHINA_OUTLINE` 内，肉眼校验即可
 - tracks geometry 用 `M ... C ... C ...` 连续 cubic 写法，便于 dash flow 均匀
 - 修改 `CHINA_OUTLINE` 时务必复核所有现有城市 / tracks 是否仍在合理位置

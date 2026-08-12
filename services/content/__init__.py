@@ -8,9 +8,11 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import RLock
-from typing import Literal
+from typing import Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from services.contracts.archive_v1 import MAX_ARCHIVE_FILE_BYTES
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _CONTENT_ROOT = _REPO_ROOT / "content"
@@ -90,6 +92,14 @@ def keyword_asset_dir() -> Path:
     return assets_dir() / "keywords"
 
 
+def sealed_people_asset_dir() -> Path:
+    return people_asset_dir() / "sealed"
+
+
+def sealed_keyword_asset_dir() -> Path:
+    return keyword_asset_dir() / "sealed"
+
+
 def ensure_content_dirs() -> None:
     draft_dir().mkdir(parents=True, exist_ok=True)
     sealed_dir().mkdir(parents=True, exist_ok=True)
@@ -101,6 +111,8 @@ def ensure_content_dirs() -> None:
     scenario_draft_dir().mkdir(parents=True, exist_ok=True)
     people_asset_dir().mkdir(parents=True, exist_ok=True)
     keyword_asset_dir().mkdir(parents=True, exist_ok=True)
+    sealed_people_asset_dir().mkdir(parents=True, exist_ok=True)
+    sealed_keyword_asset_dir().mkdir(parents=True, exist_ok=True)
 
 
 class KeywordCard(ContentModel):
@@ -243,12 +255,36 @@ class ContentAssetRecord(ContentModel):
     title: str
     kind: Literal["person", "keyword"]
     path: str
+    status: Literal["draft", "sealed"] = "draft"
+    version: int = 0
     updated_at: datetime | None = None
+    sealed_at: datetime | None = None
+    sealed_by: str | None = None
+    checksum: str | None = None
+
+
+class ContentAssetValidationIssue(ContentModel):
+    code: str
+    severity: Literal["error", "warning"]
+    field: str
+    message: str
+
+
+class ContentAssetValidationReport(ContentModel):
+    schema_version: Literal["content-asset-validation/v1"] = (
+        "content-asset-validation/v1"
+    )
+    kind: Literal["person", "keyword"]
+    asset_id: str
+    valid: bool
+    issues: list[ContentAssetValidationIssue] = Field(default_factory=list)
+    validated_at: datetime
 
 
 class PersonProfilePackage(ContentModel):
+    schema_version: Literal["person-profile/v1"] = "person-profile/v1"
     asset_id: str
-    name: str
+    name: str = Field(max_length=160)
     role: str = ""
     era: str = ""
     summary: str = ""
@@ -259,8 +295,12 @@ class PersonProfilePackage(ContentModel):
     source_refs: list[SourceRef] = Field(default_factory=list)
     teacher_notes: str = ""
     status: Literal["draft", "sealed"] = "draft"
-    version: int = 0
+    version: int = Field(default=0, ge=0)
+    created_at: datetime | None = None
     updated_at: datetime | None = None
+    sealed_at: datetime | None = None
+    sealed_by: str | None = None
+    checksum: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("asset_id")
     @classmethod
@@ -269,10 +309,16 @@ class PersonProfilePackage(ContentModel):
             raise ValueError("Use 2-64 characters: letters, numbers, dot, underscore or dash.")
         return value
 
+    @model_validator(mode="after")
+    def _validate_lifecycle(self) -> "PersonProfilePackage":
+        _validate_asset_lifecycle(self)
+        return self
+
 
 class KeywordProfilePackage(ContentModel):
+    schema_version: Literal["keyword-profile/v1"] = "keyword-profile/v1"
     asset_id: str
-    word: str
+    word: str = Field(max_length=160)
     pinyin: str = ""
     gloss: str = ""
     era: str = ""
@@ -283,8 +329,12 @@ class KeywordProfilePackage(ContentModel):
     source_refs: list[SourceRef] = Field(default_factory=list)
     teacher_notes: str = ""
     status: Literal["draft", "sealed"] = "draft"
-    version: int = 0
+    version: int = Field(default=0, ge=0)
+    created_at: datetime | None = None
     updated_at: datetime | None = None
+    sealed_at: datetime | None = None
+    sealed_by: str | None = None
+    checksum: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("asset_id")
     @classmethod
@@ -292,6 +342,11 @@ class KeywordProfilePackage(ContentModel):
         if not _ID_PATTERN.fullmatch(value):
             raise ValueError("Use 2-64 characters: letters, numbers, dot, underscore or dash.")
         return value
+
+    @model_validator(mode="after")
+    def _validate_lifecycle(self) -> "KeywordProfilePackage":
+        _validate_asset_lifecycle(self)
+        return self
 
 
 def content_template() -> LessonContentPackage:
@@ -476,11 +531,98 @@ def get_person_profile(asset_id: str) -> PersonProfilePackage | None:
 def save_person_profile(payload: PersonProfilePackage) -> PersonProfilePackage:
     ensure_content_dirs()
     data = payload.model_copy(deep=True)
-    data.updated_at = _now()
+    now = _now()
+    existing = get_person_profile(data.asset_id)
+    data.status = "draft"
+    data.version = 0
+    data.created_at = existing.created_at if existing else (data.created_at or now)
+    data.updated_at = now
+    data.sealed_at = None
+    data.sealed_by = None
+    data.checksum = None
     data = PersonProfilePackage.model_validate(data.model_dump(mode="json"))
     with _WRITE_LOCK:
         _write_asset_json(_person_path(data.asset_id), data)
     return data
+
+
+def validate_person_profile(
+    asset_id: str,
+) -> ContentAssetValidationReport:
+    asset = get_person_profile(asset_id)
+    if asset is None:
+        raise FileNotFoundError(f"Person profile not found: {asset_id}")
+    issues: list[ContentAssetValidationIssue] = []
+    _required_text_issue(issues, "name", asset.name, "人物姓名不能为空。")
+    _required_text_issue(issues, "summary", asset.summary, "请填写面向学生的人物摘要。")
+    _required_text_issue(issues, "persona", asset.persona, "请填写人物 persona。")
+    if not _non_empty_values(asset.boundaries):
+        issues.append(
+            ContentAssetValidationIssue(
+                code="person_boundaries_required",
+                severity="error",
+                field="boundaries",
+                message="至少填写一条人物史实边界。",
+            )
+        )
+    if not _valid_source_refs(asset.source_refs):
+        issues.append(
+            ContentAssetValidationIssue(
+                code="source_refs_required",
+                severity="error",
+                field="source_refs",
+                message="至少填写一条包含标题和来源的参考资料。",
+            )
+        )
+    return _asset_validation_report("person", asset.asset_id, issues)
+
+
+def seal_person_profile(
+    asset_id: str,
+    *,
+    sealed_by: str,
+) -> tuple[PersonProfilePackage, Path, bool]:
+    with _WRITE_LOCK:
+        report = validate_person_profile(asset_id)
+        if not report.valid:
+            raise ValueError("Person profile validation failed.")
+        draft = get_person_profile(asset_id)
+        if draft is None:
+            raise FileNotFoundError(f"Person profile not found: {asset_id}")
+        existing = _latest_sealed_person(asset_id)
+        if existing is not None and _asset_fingerprint(existing) == _asset_fingerprint(draft):
+            existing_path = _sealed_person_path(asset_id, existing.version)
+            _require_archivable_asset_file_size(existing_path)
+            return existing, existing_path, True
+        now = _now()
+        version = (existing.version + 1) if existing else 1
+        sealed = draft.model_copy(deep=True)
+        sealed.status = "sealed"
+        sealed.version = version
+        sealed.updated_at = now
+        sealed.sealed_at = now
+        sealed.sealed_by = sealed_by
+        sealed.checksum = None
+        sealed.checksum = package_checksum(sealed)
+        sealed = PersonProfilePackage.model_validate(sealed.model_dump(mode="json"))
+        _require_archivable_asset_size(sealed)
+        path = _sealed_person_path(asset_id, version)
+        _write_asset_json(path, sealed, overwrite=False)
+        return sealed, path, False
+
+
+def list_sealed_people(asset_id: str | None = None) -> list[ContentAssetRecord]:
+    return _list_sealed_assets("person", asset_id)
+
+
+def get_sealed_person_profile(
+    asset_id: str,
+    version: int,
+) -> PersonProfilePackage:
+    path = _sealed_person_path(asset_id, version)
+    asset = _read_sealed_person(path)
+    _verify_sealed_person_path(asset, path)
+    return asset
 
 
 def get_keyword_profile(asset_id: str) -> KeywordProfilePackage | None:
@@ -495,15 +637,118 @@ def get_keyword_profile(asset_id: str) -> KeywordProfilePackage | None:
 def save_keyword_profile(payload: KeywordProfilePackage) -> KeywordProfilePackage:
     ensure_content_dirs()
     data = payload.model_copy(deep=True)
-    data.updated_at = _now()
+    now = _now()
+    existing = get_keyword_profile(data.asset_id)
+    data.status = "draft"
+    data.version = 0
+    data.created_at = existing.created_at if existing else (data.created_at or now)
+    data.updated_at = now
+    data.sealed_at = None
+    data.sealed_by = None
+    data.checksum = None
     data = KeywordProfilePackage.model_validate(data.model_dump(mode="json"))
     with _WRITE_LOCK:
         _write_asset_json(_keyword_path(data.asset_id), data)
     return data
 
 
+def validate_keyword_profile(
+    asset_id: str,
+) -> ContentAssetValidationReport:
+    asset = get_keyword_profile(asset_id)
+    if asset is None:
+        raise FileNotFoundError(f"Keyword profile not found: {asset_id}")
+    issues: list[ContentAssetValidationIssue] = []
+    _required_text_issue(issues, "word", asset.word, "关键词不能为空。")
+    _required_text_issue(issues, "gloss", asset.gloss, "请填写面向学生的关键词解释。")
+    if not _non_empty_values(asset.examples):
+        issues.append(
+            ContentAssetValidationIssue(
+                code="keyword_examples_required",
+                severity="error",
+                field="examples",
+                message="至少填写一条课堂用法。",
+            )
+        )
+    if not _valid_source_refs(asset.source_refs):
+        issues.append(
+            ContentAssetValidationIssue(
+                code="source_refs_required",
+                severity="error",
+                field="source_refs",
+                message="至少填写一条包含标题和来源的参考资料。",
+            )
+        )
+    return _asset_validation_report("keyword", asset.asset_id, issues)
+
+
+def seal_keyword_profile(
+    asset_id: str,
+    *,
+    sealed_by: str,
+) -> tuple[KeywordProfilePackage, Path, bool]:
+    with _WRITE_LOCK:
+        report = validate_keyword_profile(asset_id)
+        if not report.valid:
+            raise ValueError("Keyword profile validation failed.")
+        draft = get_keyword_profile(asset_id)
+        if draft is None:
+            raise FileNotFoundError(f"Keyword profile not found: {asset_id}")
+        existing = _latest_sealed_keyword(asset_id)
+        if existing is not None and _asset_fingerprint(existing) == _asset_fingerprint(draft):
+            existing_path = _sealed_keyword_path(asset_id, existing.version)
+            _require_archivable_asset_file_size(existing_path)
+            return existing, existing_path, True
+        now = _now()
+        version = (existing.version + 1) if existing else 1
+        sealed = draft.model_copy(deep=True)
+        sealed.status = "sealed"
+        sealed.version = version
+        sealed.updated_at = now
+        sealed.sealed_at = now
+        sealed.sealed_by = sealed_by
+        sealed.checksum = None
+        sealed.checksum = package_checksum(sealed)
+        sealed = KeywordProfilePackage.model_validate(
+            sealed.model_dump(mode="json")
+        )
+        _require_archivable_asset_size(sealed)
+        path = _sealed_keyword_path(asset_id, version)
+        _write_asset_json(path, sealed, overwrite=False)
+        return sealed, path, False
+
+
+def list_sealed_keywords(asset_id: str | None = None) -> list[ContentAssetRecord]:
+    return _list_sealed_assets("keyword", asset_id)
+
+
+def get_sealed_keyword_profile(
+    asset_id: str,
+    version: int,
+) -> KeywordProfilePackage:
+    path = _sealed_keyword_path(asset_id, version)
+    asset = _read_sealed_keyword(path)
+    _verify_sealed_keyword_path(asset, path)
+    return asset
+
+
 def record_for_package(pkg: LessonContentPackage, path: Path) -> ContentFileRecord:
     return _record_from_package(pkg, path)
+
+
+def record_for_asset(
+    asset: PersonProfilePackage | KeywordProfilePackage,
+    path: Path,
+    *,
+    kind: Literal["person", "keyword"],
+) -> ContentAssetRecord:
+    if kind == "person":
+        if not isinstance(asset, PersonProfilePackage):
+            raise TypeError("person records require PersonProfilePackage")
+        return _person_record(asset, path)
+    if not isinstance(asset, KeywordProfilePackage):
+        raise TypeError("keyword records require KeywordProfilePackage")
+    return _keyword_record(asset, path)
 
 
 def load_sealed_packages(latest_only: bool = True) -> list[LessonContentPackage]:
@@ -570,6 +815,18 @@ def _keyword_path(asset_id: str) -> Path:
     return keyword_asset_dir() / f"{asset_id}.json"
 
 
+def _sealed_person_path(asset_id: str, version: int) -> Path:
+    if not _ID_PATTERN.fullmatch(asset_id) or version < 1:
+        raise ValueError("Invalid sealed person identity")
+    return sealed_people_asset_dir() / f"{asset_id}-v{version:03d}.json"
+
+
+def _sealed_keyword_path(asset_id: str, version: int) -> Path:
+    if not _ID_PATTERN.fullmatch(asset_id) or version < 1:
+        raise ValueError("Invalid sealed keyword identity")
+    return sealed_keyword_asset_dir() / f"{asset_id}-v{version:03d}.json"
+
+
 def _next_version(lesson_id: str) -> int:
     versions: list[int] = []
     for path in sealed_dir().glob(f"{lesson_id}-v*.json"):
@@ -607,14 +864,40 @@ def _verify_sealed_path(package: LessonContentPackage, path: Path) -> None:
 
 def _verify_person_path(asset: PersonProfilePackage, path: Path) -> None:
     expected = people_asset_dir().resolve() / f"{asset.asset_id}.json"
-    if path.resolve() != expected:
+    if path.resolve() != expected or asset.status != "draft":
         raise ContentIntegrityError(f"Person profile path identity mismatch: {path}")
 
 
 def _verify_keyword_path(asset: KeywordProfilePackage, path: Path) -> None:
     expected = keyword_asset_dir().resolve() / f"{asset.asset_id}.json"
-    if path.resolve() != expected:
+    if path.resolve() != expected or asset.status != "draft":
         raise ContentIntegrityError(f"Keyword profile path identity mismatch: {path}")
+
+
+def _verify_sealed_person_path(asset: PersonProfilePackage, path: Path) -> None:
+    expected = _sealed_person_path(asset.asset_id, asset.version).resolve()
+    if (
+        path.resolve() != expected
+        or asset.status != "sealed"
+        or asset.version < 1
+        or not verify_package_checksum(asset)
+    ):
+        raise ContentIntegrityError(
+            f"Sealed person profile path identity mismatch: {path}"
+        )
+
+
+def _verify_sealed_keyword_path(asset: KeywordProfilePackage, path: Path) -> None:
+    expected = _sealed_keyword_path(asset.asset_id, asset.version).resolve()
+    if (
+        path.resolve() != expected
+        or asset.status != "sealed"
+        or asset.version < 1
+        or not verify_package_checksum(asset)
+    ):
+        raise ContentIntegrityError(
+            f"Sealed keyword profile path identity mismatch: {path}"
+        )
 
 
 def _read_package(path: Path, verify_checksum: bool = False) -> LessonContentPackage:
@@ -647,6 +930,22 @@ def _read_keyword(path: Path) -> KeywordProfilePackage:
         raise ContentIntegrityError(f"Cannot read keyword profile: {path}") from exc
 
 
+def _read_sealed_person(path: Path) -> PersonProfilePackage:
+    if not path.exists():
+        raise FileNotFoundError(f"Sealed person profile not found: {path.name}")
+    asset = _read_person(path)
+    _verify_sealed_person_path(asset, path)
+    return asset
+
+
+def _read_sealed_keyword(path: Path) -> KeywordProfilePackage:
+    if not path.exists():
+        raise FileNotFoundError(f"Sealed keyword profile not found: {path.name}")
+    asset = _read_keyword(path)
+    _verify_sealed_keyword_path(asset, path)
+    return asset
+
+
 def _write_json(
     path: Path,
     payload: LessonContentPackage,
@@ -656,8 +955,45 @@ def _write_json(
     _atomic_write_json(path, payload.model_dump(mode="json"), overwrite=overwrite)
 
 
-def _write_asset_json(path: Path, payload: BaseModel) -> None:
-    _atomic_write_json(path, payload.model_dump(mode="json"))
+def _write_asset_json(
+    path: Path,
+    payload: BaseModel,
+    *,
+    overwrite: bool = True,
+) -> None:
+    _atomic_write_json(
+        path,
+        payload.model_dump(mode="json"),
+        overwrite=overwrite,
+    )
+
+
+def _require_archivable_asset_size(payload: BaseModel) -> None:
+    raw = (
+        json.dumps(
+            payload.model_dump(mode="json"),
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n"
+    ).encode("utf-8")
+    if len(raw) > MAX_ARCHIVE_FILE_BYTES:
+        raise ValueError(
+            f"sealed asset exceeds {MAX_ARCHIVE_FILE_BYTES} bytes"
+        )
+
+
+def _require_archivable_asset_file_size(path: Path) -> None:
+    try:
+        size = path.stat().st_size
+    except OSError as exc:
+        raise ContentIntegrityError(
+            f"Cannot inspect sealed asset size: {path}"
+        ) from exc
+    if size > MAX_ARCHIVE_FILE_BYTES:
+        raise ValueError(
+            f"sealed asset exceeds {MAX_ARCHIVE_FILE_BYTES} bytes"
+        )
 
 
 def _atomic_write_json(path: Path, payload: dict, *, overwrite: bool = True) -> None:
@@ -686,7 +1022,12 @@ def _person_record(asset: PersonProfilePackage, path: Path) -> ContentAssetRecor
         title=asset.name,
         kind="person",
         path=str(path.relative_to(_REPO_ROOT)) if path.is_relative_to(_REPO_ROOT) else str(path),
+        status=asset.status,
+        version=asset.version,
         updated_at=asset.updated_at,
+        sealed_at=asset.sealed_at,
+        sealed_by=asset.sealed_by,
+        checksum=asset.checksum,
     )
 
 
@@ -696,7 +1037,142 @@ def _keyword_record(asset: KeywordProfilePackage, path: Path) -> ContentAssetRec
         title=asset.word,
         kind="keyword",
         path=str(path.relative_to(_REPO_ROOT)) if path.is_relative_to(_REPO_ROOT) else str(path),
+        status=asset.status,
+        version=asset.version,
         updated_at=asset.updated_at,
+        sealed_at=asset.sealed_at,
+        sealed_by=asset.sealed_by,
+        checksum=asset.checksum,
+    )
+
+
+def _list_sealed_assets(
+    kind: Literal["person", "keyword"],
+    asset_id: str | None,
+) -> list[ContentAssetRecord]:
+    ensure_content_dirs()
+    if asset_id is not None and not _ID_PATTERN.fullmatch(asset_id):
+        raise ValueError("Invalid asset_id")
+    directory = (
+        sealed_people_asset_dir()
+        if kind == "person"
+        else sealed_keyword_asset_dir()
+    )
+    pattern = f"{asset_id}-v*.json" if asset_id else "*-v*.json"
+    records: list[ContentAssetRecord] = []
+    for path in sorted(directory.glob(pattern)):
+        if kind == "person":
+            asset = _read_sealed_person(path)
+            records.append(_person_record(asset, path))
+        else:
+            asset = _read_sealed_keyword(path)
+            records.append(_keyword_record(asset, path))
+    return sorted(
+        records,
+        key=lambda item: (item.asset_id, item.version),
+        reverse=True,
+    )
+
+
+def _latest_sealed_person(asset_id: str) -> PersonProfilePackage | None:
+    records = list_sealed_people(asset_id)
+    if not records:
+        return None
+    return get_sealed_person_profile(asset_id, records[0].version)
+
+
+def _latest_sealed_keyword(asset_id: str) -> KeywordProfilePackage | None:
+    records = list_sealed_keywords(asset_id)
+    if not records:
+        return None
+    return get_sealed_keyword_profile(asset_id, records[0].version)
+
+
+AssetPackageT = TypeVar(
+    "AssetPackageT",
+    PersonProfilePackage,
+    KeywordProfilePackage,
+)
+
+
+def _validate_asset_lifecycle(payload: AssetPackageT) -> None:
+    if payload.status == "draft" and (
+        payload.version != 0
+        or payload.sealed_at is not None
+        or payload.sealed_by is not None
+        or payload.checksum is not None
+    ):
+        raise ValueError("Draft assets cannot carry sealed version or metadata.")
+    if payload.status == "sealed" and (
+        payload.version < 1
+        or payload.sealed_at is None
+        or not payload.sealed_by
+        or payload.checksum is None
+    ):
+        raise ValueError("Sealed assets require version, actor, time and checksum.")
+
+
+def _asset_fingerprint(payload: BaseModel) -> str:
+    data = payload.model_dump(mode="json")
+    for field in (
+        "status",
+        "version",
+        "created_at",
+        "updated_at",
+        "sealed_at",
+        "sealed_by",
+        "checksum",
+    ):
+        data.pop(field, None)
+    raw = json.dumps(
+        data,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _required_text_issue(
+    issues: list[ContentAssetValidationIssue],
+    field: str,
+    value: str,
+    message: str,
+) -> None:
+    if not value.strip():
+        issues.append(
+            ContentAssetValidationIssue(
+                code=f"{field}_required",
+                severity="error",
+                field=field,
+                message=message,
+            )
+        )
+
+
+def _non_empty_values(values: list[str]) -> list[str]:
+    return [value.strip() for value in values if value.strip()]
+
+
+def _valid_source_refs(values: list[SourceRef]) -> list[SourceRef]:
+    return [
+        item
+        for item in values
+        if item.title.strip() and item.source.strip()
+    ]
+
+
+def _asset_validation_report(
+    kind: Literal["person", "keyword"],
+    asset_id: str,
+    issues: list[ContentAssetValidationIssue],
+) -> ContentAssetValidationReport:
+    return ContentAssetValidationReport(
+        kind=kind,
+        asset_id=asset_id,
+        valid=not any(item.severity == "error" for item in issues),
+        issues=issues,
+        validated_at=_now(),
     )
 
 

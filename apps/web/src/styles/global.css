@@ -102,6 +102,204 @@ body,
   text-align: center;
 }
 
+.chrono-archive-publisher {
+  border-top: 1px solid var(--border-soft);
+  margin-top: 14px;
+  padding-top: 16px;
+}
+
+.chrono-asset-editor-layout {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.45fr);
+}
+
+.chrono-archive-heading,
+.chrono-publication-state-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chrono-archive-heading h3 {
+  color: var(--text-dark);
+  font-family: '霞鹜文楷', 'Noto Serif SC', '宋体', serif;
+  font-size: 18px;
+  line-height: 1.4;
+  letter-spacing: 0;
+  margin: 3px 0 12px;
+}
+
+.chrono-archive-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.chrono-field-label {
+  color: var(--text-mute);
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.chrono-archive-actions {
+  min-height: 32px;
+}
+
+.chrono-archive-preview,
+.chrono-publication-state {
+  border-left: 3px solid #2F7D68;
+  margin-top: 14px;
+  padding: 10px 0 10px 14px;
+}
+
+.chrono-archive-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.chrono-archive-filename {
+  align-items: center;
+  color: var(--text-dark);
+  display: flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  min-width: 0;
+}
+
+.chrono-archive-filename span {
+  overflow-wrap: anywhere;
+}
+
+.chrono-archive-files,
+.chrono-archive-advanced {
+  margin-top: 10px;
+}
+
+.chrono-archive-files summary,
+.chrono-archive-advanced summary {
+  color: var(--text-mute);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.chrono-archive-files > div {
+  border-top: 1px solid var(--border-soft);
+  margin-top: 8px;
+}
+
+.chrono-archive-file-row {
+  align-items: center;
+  border-bottom: 1px solid var(--border-soft);
+  display: grid;
+  font-size: 11px;
+  gap: 8px;
+  grid-template-columns: minmax(74px, 0.35fr) minmax(0, 1fr) auto;
+  padding: 7px 0;
+}
+
+.chrono-archive-file-row code {
+  color: var(--text-mute);
+  overflow-wrap: anywhere;
+}
+
+.chrono-archive-file-row > span:last-child {
+  color: var(--text-disabled);
+  white-space: nowrap;
+}
+
+.chrono-archive-submit {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.chrono-archive-advanced > div {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.chrono-archive-notice,
+.chrono-publication-error {
+  background: #FFF7E5;
+  border-left: 3px solid #C97A20;
+  color: #8A4A13;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 12px;
+  padding: 8px 10px;
+}
+
+.chrono-publication-state {
+  border-left-color: var(--accent-blue);
+}
+
+.chrono-publication-state-header > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.chrono-publication-meta {
+  color: var(--text-mute);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 11px;
+  gap: 6px 14px;
+  margin: 7px 0 10px;
+}
+
+.chrono-publication-error {
+  margin: 0 0 10px;
+}
+
+.chrono-sealed-path {
+  min-width: 0;
+}
+
+.chrono-sealed-path .ant-tag {
+  line-height: 1.55;
+  margin-inline-end: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+@media (max-width: 620px) {
+  .chrono-archive-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chrono-archive-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .chrono-archive-actions .ant-btn {
+    width: 100%;
+  }
+
+  .chrono-archive-file-row {
+    align-items: start;
+    grid-template-columns: 1fr auto;
+  }
+
+  .chrono-archive-file-row code {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
 /* Hero */
 .chrono-hero {
   background: var(--bg-warm);
@@ -994,6 +1192,10 @@ body,
   gap: 6px 2px;
 }
 @media (max-width: 900px) {
+  .chrono-asset-editor-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .chrono-game-layout {
     grid-template-columns: 1fr;
   }

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/archive/v1/content-asset-archive-publish-request.schema.json",
+  "$comment": "Clients select one exact sealed content asset and a server-side repository binding. Pull requests remain the default.",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "content-asset-archive-publish-request/v1",
+      "default": "content-asset-archive-publish-request/v1",
+      "enum": [
+        "content-asset-archive-publish-request/v1"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "binding_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Binding Id",
+      "type": "string"
+    },
+    "asset_kind": {
+      "enum": [
+        "person",
+        "keyword",
+        "scenario"
+      ],
+      "title": "Asset Kind",
+      "type": "string"
+    },
+    "asset_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "version": {
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "expected_source_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected Source Checksum",
+      "type": "string"
+    },
+    "archive_id": {
+      "title": "Archive Id",
+      "type": "string"
+    },
+    "expected_archive_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected Archive Checksum",
+      "type": "string"
+    },
+    "mode": {
+      "default": "pull_request",
+      "enum": [
+        "pull_request",
+        "direct_commit"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "client_request_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Client Request Id",
+      "type": "string"
+    },
+    "change_summary": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Change Summary",
+      "type": "string"
+    },
+    "direct_commit_confirmed": {
+      "default": false,
+      "title": "Direct Commit Confirmed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "binding_id",
+    "asset_kind",
+    "asset_id",
+    "version",
+    "expected_source_checksum",
+    "archive_id",
+    "expected_archive_checksum",
+    "client_request_id"
+  ],
+  "title": "ContentAssetArchivePublishRequestV1",
+  "type": "object"
+}

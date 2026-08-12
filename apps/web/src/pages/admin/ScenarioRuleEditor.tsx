@@ -69,6 +69,7 @@ import {
   scenarioTypeLabel,
   validationIssueText,
 } from './scenarioRuleModel';
+import AssetPublicationPanel from './AssetPublicationPanel';
 
 const { TextArea } = Input;
 const LOCAL_SCENARIO_KEY = 'chrono.admin.content.scenario.v1';
@@ -137,6 +138,22 @@ export default function ScenarioRuleEditor({
     [draft.scenario_id, lessonScenarios],
   );
   const latestScenarioRecord = currentScenarioVersions[0];
+  const scenarioPublicationVersions = useMemo(
+    () => currentScenarioVersions.map((item) => ({
+      version: item.descriptor.version,
+      checksum: item.descriptor.checksum,
+      title: item.title,
+      sealedAt: sealed?.scenario_version === item.descriptor.version
+        && sealed.checksum === item.descriptor.checksum
+        ? sealed.sealed_at
+        : undefined,
+      sealedBy: sealed?.scenario_version === item.descriptor.version
+        && sealed.checksum === item.descriptor.checksum
+        ? sealed.sealed_by
+        : undefined,
+    })),
+    [currentScenarioVersions, sealed],
+  );
   const scenarioIdError = contractIdError(draft.scenario_id);
 
   useEffect(() => {
@@ -781,6 +798,13 @@ export default function ScenarioRuleEditor({
             <Tag color="green">v{item.descriptor.version}</Tag>
           </div>
         )) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="封存后会出现在这里；发布前学生不可见" />}
+        <AssetPublicationPanel
+          token={token}
+          assetKind="scenario"
+          assetId={draft.scenario_id.trim()}
+          assetTitle={draft.title.trim()}
+          versions={scenarioPublicationVersions}
+        />
       </aside>
     </div>
   );

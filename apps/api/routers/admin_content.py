@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Annotated, Literal, NoReturn
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
@@ -11,12 +12,47 @@ from auth_dependencies import (
     require_permission,
     trusted_actor,
 )
+from settings import secret_value, settings
 from services import content
 from services import courses as courses_data
 from services.content import KeywordProfilePackage, LessonContentPackage, PersonProfilePackage
 from services.content import runtime_artifacts
 from services.content import scenario_authoring
 from services.content import workflow as content_workflow
+from services.content_history import (
+    ArchiveBuildError,
+    CoursePublicationService,
+    PublicationArchiveChanged,
+    PublicationConfigurationError,
+    PublicationConflict,
+    PublicationDisabled,
+    PublicationNotFound,
+    PublicationRetryRejected,
+    PublicationStore,
+    PublicationStoreError,
+    archive_download_filename,
+    build_course_archive,
+    build_course_archive_zip,
+    load_repository_binding,
+)
+from services.content_history.asset_archive import (
+    ContentAssetArchiveBuildError,
+    ContentAssetArchiveChanged,
+    build_content_asset_archive,
+    build_content_asset_archive_zip,
+    content_asset_archive_download_filename,
+)
+from services.content_history.asset_service import ContentAssetPublicationService
+from services.content_history.github import GitHubGitDataClient
+from services.contracts.archive_v1 import (
+    ContentAssetArchiveManifestV1,
+    ContentAssetArchivePublishRequestV1,
+    ContentAssetKind,
+    CourseArchiveManifestV1,
+    CourseArchivePublishRequestV1,
+    GitPublicationRecordV1,
+    PublicationStatus,
+)
 from services.contracts.v1 import ScenarioTemplateV1
 
 router = APIRouter()
@@ -84,6 +120,29 @@ class ReleaseListResponse(ApiModel):
     items: list[content_workflow.CourseReleaseManifestAny]
 
 
+class ArchivePreviewResponse(ApiModel):
+    archive: CourseArchiveManifestV1
+    download_url: str
+
+
+class ContentAssetArchivePreviewResponse(ApiModel):
+    archive: ContentAssetArchiveManifestV1
+    download_url: str
+
+
+class PublicationResponse(ApiModel):
+    publication: GitPublicationRecordV1
+    reused: bool = False
+
+
+class PublicationListResponse(ApiModel):
+    items: list[GitPublicationRecordV1]
+
+
+class PublicationRetryRequest(ApiModel):
+    expected_revision: int | None = Field(default=None, ge=0)
+
+
 class LessonSourceRecord(ApiModel):
     lesson_id: str
     course_id: str
@@ -127,10 +186,26 @@ async def overview(context: ContentReader):
                 "POST /api/v1/admin/content/scenario-drafts/{scenario_id}/seal",
                 "POST /api/v1/admin/content/sealed/{lesson_id}/versions/{version}/publish",
                 "POST /api/v1/admin/content/releases/{course_id}/bootstrap-legacy",
+                "POST /api/v1/admin/content/releases/{course_id}/{release_id}/archive-preview",
+                "GET /api/v1/admin/content/releases/{course_id}/{release_id}/archive.zip",
+                "POST /api/v1/admin/content/publications",
+                "GET /api/v1/admin/content/publications",
+                "GET /api/v1/admin/content/publications/{publication_id}",
+                "POST /api/v1/admin/content/publications/{publication_id}/retry",
+                "POST /api/v1/admin/content/asset-archives/{asset_kind}/{asset_id}/versions/{version}/preview",
+                "GET /api/v1/admin/content/asset-archives/{asset_kind}/{asset_id}/versions/{version}/archive.zip",
+                "POST /api/v1/admin/content/asset-publications",
+                "GET /api/v1/admin/content/asset-publications",
+                "GET /api/v1/admin/content/asset-publications/{publication_id}",
+                "POST /api/v1/admin/content/asset-publications/{publication_id}/retry",
                 "POST /api/v1/admin/content/releases/{course_id}/rollback",
                 "GET /api/v1/admin/content/assets",
                 "POST /api/v1/admin/content/assets/people",
+                "POST /api/v1/admin/content/assets/people/{asset_id}/validate",
+                "POST /api/v1/admin/content/assets/people/{asset_id}/seal",
                 "POST /api/v1/admin/content/assets/keywords",
+                "POST /api/v1/admin/content/assets/keywords/{asset_id}/validate",
+                "POST /api/v1/admin/content/assets/keywords/{asset_id}/seal",
             ],
         }
     except Exception as exc:
@@ -719,6 +794,390 @@ async def release_detail(
         _raise_content_error(exc)
 
 
+@router.post(
+    "/releases/{course_id}/{release_id}/archive-preview",
+    response_model=ArchivePreviewResponse,
+)
+async def archive_preview(
+    course_id: str,
+    release_id: str,
+    _: ContentReader,
+):
+    try:
+        archive = build_course_archive(course_id, release_id)
+        return ArchivePreviewResponse(
+            archive=archive.manifest,
+            download_url=(
+                f"/api/v1/admin/content/releases/{course_id}/{release_id}/archive.zip"
+            ),
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/releases/{course_id}/{release_id}/archive.zip")
+async def archive_download(
+    course_id: str,
+    release_id: str,
+    _: ContentReader,
+):
+    try:
+        archive = build_course_archive(course_id, release_id)
+        filename = archive_download_filename(archive.manifest)
+        return Response(
+            content=build_course_archive_zip(archive),
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": (
+                    "attachment; filename=chronovita-course-archive.zip; "
+                    f"filename*=UTF-8''{quote(filename)}"
+                ),
+                "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "private, no-store",
+            },
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/publications",
+    response_model=PublicationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def create_publication(
+    payload: CourseArchivePublishRequestV1,
+    request: Request,
+    context: ContentPublisher,
+):
+    client: GitHubGitDataClient | None = None
+    try:
+        _require_direct_commit_admin(context, payload.mode)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.archive.publication.authorize",
+            resource_type="course-archive",
+            resource_id=payload.archive_id,
+            details={
+                "binding_id": payload.binding_id,
+                "course_id": payload.course_id,
+                "release_id": payload.release_id,
+                "mode": payload.mode,
+            },
+        )
+        service, client = _new_publication_service()
+        async with client:
+            submitted = await service.submit(
+                payload,
+                requested_by=trusted_actor(context),
+            )
+        return PublicationResponse(
+            publication=submitted.publication,
+            reused=submitted.reused,
+        )
+    except Exception as exc:
+        if client is not None and not client.is_closed:
+            await client.aclose()
+        _raise_content_error(exc)
+
+
+@router.get("/publications", response_model=PublicationListResponse)
+async def publications(
+    _: ContentReader,
+    course_id: str | None = None,
+    release_id: str | None = None,
+    publication_status: PublicationStatus | None = None,
+):
+    try:
+        return PublicationListResponse(
+            items=list(
+                PublicationStore().list(
+                    publication_kind="course",
+                    course_id=course_id,
+                    release_id=release_id,
+                    status=publication_status,
+                )
+            )
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get(
+    "/publications/{publication_id}",
+    response_model=PublicationResponse,
+)
+async def publication_detail(
+    publication_id: str,
+    _: ContentReader,
+):
+    try:
+        record = PublicationStore().get(publication_id)
+        if not isinstance(record.intent.request, CourseArchivePublishRequestV1):
+            raise PublicationNotFound(
+                f"course publication was not found: {publication_id}"
+            )
+        return PublicationResponse(
+            publication=record,
+            reused=True,
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/publications/{publication_id}/retry",
+    response_model=PublicationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def retry_publication(
+    publication_id: str,
+    payload: PublicationRetryRequest,
+    request: Request,
+    context: ContentPublisher,
+):
+    client: GitHubGitDataClient | None = None
+    try:
+        existing = PublicationStore().get(publication_id)
+        if not isinstance(
+            existing.intent.request,
+            CourseArchivePublishRequestV1,
+        ):
+            raise PublicationNotFound(
+                f"course publication was not found: {publication_id}"
+            )
+        _require_direct_commit_admin(context, existing.intent.request.mode)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.archive.publication.retry.authorize",
+            resource_type="course-publication",
+            resource_id=publication_id,
+            details={
+                "expected_revision": payload.expected_revision,
+                "mode": existing.intent.request.mode,
+            },
+        )
+        service, client = _new_publication_service()
+        async with client:
+            publication = await service.retry(
+                publication_id,
+                expected_revision=payload.expected_revision,
+            )
+        return PublicationResponse(publication=publication, reused=True)
+    except Exception as exc:
+        if client is not None and not client.is_closed:
+            await client.aclose()
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/asset-archives/{asset_kind}/{asset_id}/versions/{version}/preview",
+    response_model=ContentAssetArchivePreviewResponse,
+)
+async def content_asset_archive_preview(
+    asset_kind: ContentAssetKind,
+    asset_id: str,
+    version: int,
+    source_checksum: str,
+    _: ContentReader,
+):
+    try:
+        archive = build_content_asset_archive(
+            asset_kind,
+            asset_id,
+            version,
+            expected_source_checksum=source_checksum,
+        )
+        return ContentAssetArchivePreviewResponse(
+            archive=archive.manifest,
+            download_url=(
+                f"/api/v1/admin/content/asset-archives/{asset_kind}/"
+                f"{asset_id}/versions/{version}/archive.zip"
+                f"?source_checksum={source_checksum}"
+            ),
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get(
+    "/asset-archives/{asset_kind}/{asset_id}/versions/{version}/archive.zip"
+)
+async def content_asset_archive_download(
+    asset_kind: ContentAssetKind,
+    asset_id: str,
+    version: int,
+    source_checksum: str,
+    _: ContentReader,
+):
+    try:
+        archive = build_content_asset_archive(
+            asset_kind,
+            asset_id,
+            version,
+            expected_source_checksum=source_checksum,
+        )
+        filename = content_asset_archive_download_filename(archive.manifest)
+        return Response(
+            content=build_content_asset_archive_zip(archive),
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": (
+                    "attachment; filename=chronovita-content-asset.zip; "
+                    f"filename*=UTF-8''{quote(filename)}"
+                ),
+                "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "private, no-store",
+            },
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/asset-publications",
+    response_model=PublicationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def create_content_asset_publication(
+    payload: ContentAssetArchivePublishRequestV1,
+    request: Request,
+    context: ContentPublisher,
+):
+    client: GitHubGitDataClient | None = None
+    try:
+        _require_direct_commit_admin(context, payload.mode)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.asset.publication.authorize",
+            resource_type=f"{payload.asset_kind}-archive",
+            resource_id=payload.archive_id,
+            details={
+                "binding_id": payload.binding_id,
+                "asset_kind": payload.asset_kind,
+                "asset_id": payload.asset_id,
+                "version": payload.version,
+                "mode": payload.mode,
+            },
+        )
+        service, client = _new_asset_publication_service()
+        async with client:
+            submitted = await service.submit(
+                payload,
+                requested_by=trusted_actor(context),
+            )
+        return PublicationResponse(
+            publication=submitted.publication,
+            reused=submitted.reused,
+        )
+    except Exception as exc:
+        if client is not None and not client.is_closed:
+            await client.aclose()
+        _raise_content_error(exc)
+
+
+@router.get(
+    "/asset-publications",
+    response_model=PublicationListResponse,
+)
+async def content_asset_publications(
+    _: ContentReader,
+    asset_kind: ContentAssetKind | None = None,
+    asset_id: str | None = None,
+    asset_version: int | None = None,
+    publication_status: PublicationStatus | None = None,
+):
+    try:
+        return PublicationListResponse(
+            items=list(
+                PublicationStore().list(
+                    publication_kind="asset",
+                    asset_kind=asset_kind,
+                    asset_id=asset_id,
+                    asset_version=asset_version,
+                    status=publication_status,
+                )
+            )
+        )
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get(
+    "/asset-publications/{publication_id}",
+    response_model=PublicationResponse,
+)
+async def content_asset_publication_detail(
+    publication_id: str,
+    _: ContentReader,
+):
+    try:
+        record = PublicationStore().get(publication_id)
+        if not isinstance(
+            record.intent.request,
+            ContentAssetArchivePublishRequestV1,
+        ):
+            raise PublicationNotFound(
+                f"content asset publication was not found: {publication_id}"
+            )
+        return PublicationResponse(publication=record, reused=True)
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post(
+    "/asset-publications/{publication_id}/retry",
+    response_model=PublicationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def retry_content_asset_publication(
+    publication_id: str,
+    payload: PublicationRetryRequest,
+    request: Request,
+    context: ContentPublisher,
+):
+    client: GitHubGitDataClient | None = None
+    try:
+        existing = PublicationStore().get(publication_id)
+        if not isinstance(
+            existing.intent.request,
+            ContentAssetArchivePublishRequestV1,
+        ):
+            raise PublicationNotFound(
+                f"content asset publication was not found: {publication_id}"
+            )
+        _require_direct_commit_admin(context, existing.intent.request.mode)
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.asset.publication.retry.authorize",
+            resource_type="content-asset-publication",
+            resource_id=publication_id,
+            details={
+                "expected_revision": payload.expected_revision,
+                "mode": existing.intent.request.mode,
+            },
+        )
+        service, client = _new_asset_publication_service()
+        async with client:
+            publication = await service.retry(
+                publication_id,
+                expected_revision=payload.expected_revision,
+            )
+        return PublicationResponse(publication=publication, reused=True)
+    except Exception as exc:
+        if client is not None and not client.is_closed:
+            await client.aclose()
+        _raise_content_error(exc)
+
+
 @router.post("/releases/{course_id}/rollback", response_model=ReleaseResponse)
 async def rollback_release(
     course_id: str,
@@ -797,6 +1256,102 @@ async def save_person(
         _raise_content_error(exc)
 
 
+@router.post("/assets/people/{asset_id}/validate")
+async def validate_person_asset(
+    asset_id: str,
+    request: Request,
+    context: ContentAuthor,
+):
+    try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.author",
+            action="content.person.validate.authorize",
+            resource_type="person-profile",
+            resource_id=asset_id,
+        )
+        return {
+            "report": content.validate_person_profile(asset_id).model_dump(
+                mode="json"
+            )
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/assets/people/{asset_id}/seal")
+async def seal_person_asset(
+    asset_id: str,
+    request: Request,
+    context: ContentPublisher,
+):
+    try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.person.seal.authorize",
+            resource_type="person-profile",
+            resource_id=asset_id,
+        )
+        report = content.validate_person_profile(asset_id)
+        if not report.valid:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "content_asset_validation_failed",
+                    "message": "人物档案仍有阻断项。",
+                    "issues": [
+                        item.model_dump(mode="json")
+                        for item in report.issues
+                    ],
+                },
+            )
+        item, path, idempotent = content.seal_person_profile(
+            asset_id,
+            sealed_by=trusted_actor(context),
+        )
+        record = content.record_for_asset(item, path, kind="person")
+        return {
+            "item": item.model_dump(mode="json"),
+            "record": record.model_dump(mode="json"),
+            "idempotent": idempotent,
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/assets/people/{asset_id}/versions")
+async def person_asset_versions(asset_id: str, _: ContentReader):
+    try:
+        return {
+            "items": [
+                item.model_dump(mode="json")
+                for item in content.list_sealed_people(asset_id)
+            ]
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/assets/people/{asset_id}/versions/{version}")
+async def sealed_person_asset(
+    asset_id: str,
+    version: int,
+    _: ContentReader,
+):
+    try:
+        return content.get_sealed_person_profile(
+            asset_id,
+            version,
+        ).model_dump(mode="json")
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
 @router.get("/assets/keywords/template")
 async def keyword_template(_: ContentReader):
     return content.keyword_template().model_dump(mode="json")
@@ -834,6 +1389,102 @@ async def save_keyword(
         _raise_content_error(exc)
 
 
+@router.post("/assets/keywords/{asset_id}/validate")
+async def validate_keyword_asset(
+    asset_id: str,
+    request: Request,
+    context: ContentAuthor,
+):
+    try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.author",
+            action="content.keyword.validate.authorize",
+            resource_type="keyword-profile",
+            resource_id=asset_id,
+        )
+        return {
+            "report": content.validate_keyword_profile(asset_id).model_dump(
+                mode="json"
+            )
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.post("/assets/keywords/{asset_id}/seal")
+async def seal_keyword_asset(
+    asset_id: str,
+    request: Request,
+    context: ContentPublisher,
+):
+    try:
+        _audit_content_write(
+            request,
+            context,
+            permission="content.publish",
+            action="content.keyword.seal.authorize",
+            resource_type="keyword-profile",
+            resource_id=asset_id,
+        )
+        report = content.validate_keyword_profile(asset_id)
+        if not report.valid:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "content_asset_validation_failed",
+                    "message": "关键词档案仍有阻断项。",
+                    "issues": [
+                        item.model_dump(mode="json")
+                        for item in report.issues
+                    ],
+                },
+            )
+        item, path, idempotent = content.seal_keyword_profile(
+            asset_id,
+            sealed_by=trusted_actor(context),
+        )
+        record = content.record_for_asset(item, path, kind="keyword")
+        return {
+            "item": item.model_dump(mode="json"),
+            "record": record.model_dump(mode="json"),
+            "idempotent": idempotent,
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/assets/keywords/{asset_id}/versions")
+async def keyword_asset_versions(asset_id: str, _: ContentReader):
+    try:
+        return {
+            "items": [
+                item.model_dump(mode="json")
+                for item in content.list_sealed_keywords(asset_id)
+            ]
+        }
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
+@router.get("/assets/keywords/{asset_id}/versions/{version}")
+async def sealed_keyword_asset(
+    asset_id: str,
+    version: int,
+    _: ContentReader,
+):
+    try:
+        return content.get_sealed_keyword_profile(
+            asset_id,
+            version,
+        ).model_dump(mode="json")
+    except Exception as exc:
+        _raise_content_error(exc)
+
+
 def _audit_content_write(
     request: Request,
     context: AuthContext,
@@ -853,6 +1504,75 @@ def _audit_content_write(
         resource_id=resource_id,
         details=details,
     )
+
+
+def _new_publication_service() -> tuple[CoursePublicationService, GitHubGitDataClient]:
+    if not settings.github_publication_enabled:
+        raise PublicationDisabled("GitHub publication is not enabled")
+    token = secret_value(settings.github_publication_token)
+    if not token:
+        raise PublicationConfigurationError(
+            "GitHub publication credential is not configured"
+        )
+    binding = load_repository_binding(settings.content_history_target_path)
+    client = GitHubGitDataClient(
+        token=token,
+        repository_id=binding.repository_id,
+        full_name=binding.full_name,
+        api_base_url=settings.github_api_base_url,
+        timeout_seconds=settings.github_timeout_seconds,
+    )
+    return (
+        CoursePublicationService(
+            binding=binding,
+            github=client,
+            stale_after_seconds=settings.github_publication_stale_seconds,
+        ),
+        client,
+    )
+
+
+def _new_asset_publication_service() -> tuple[
+    ContentAssetPublicationService,
+    GitHubGitDataClient,
+]:
+    if not settings.github_publication_enabled:
+        raise PublicationDisabled("GitHub publication is not enabled")
+    token = secret_value(settings.github_publication_token)
+    if not token:
+        raise PublicationConfigurationError(
+            "GitHub publication credential is not configured"
+        )
+    binding = load_repository_binding(settings.content_history_target_path)
+    client = GitHubGitDataClient(
+        token=token,
+        repository_id=binding.repository_id,
+        full_name=binding.full_name,
+        api_base_url=settings.github_api_base_url,
+        timeout_seconds=settings.github_timeout_seconds,
+    )
+    return (
+        ContentAssetPublicationService(
+            binding=binding,
+            github=client,
+            stale_after_seconds=settings.github_publication_stale_seconds,
+        ),
+        client,
+    )
+
+
+def _require_direct_commit_admin(
+    context: AuthContext,
+    mode: Literal["pull_request", "direct_commit"],
+) -> None:
+    if mode == "direct_commit" and "admin" not in context.principal.roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "admin_role_required",
+                "message": "Direct publication requires an administrator.",
+            },
+        )
 
 
 def _require_lesson_author(
@@ -936,6 +1656,31 @@ def _raise_content_error(exc: Exception) -> NoReturn:
             issue.model_dump(mode="json")
             for issue in exc.report.issues
         ]
+    if isinstance(exc, ContentAssetArchiveChanged):
+        raise HTTPException(status_code=409, detail=detail) from exc
+    if isinstance(exc, ArchiveBuildError):
+        detail["code"] = exc.code
+        raise HTTPException(status_code=503, detail=detail) from exc
+    if isinstance(exc, PublicationNotFound):
+        raise HTTPException(status_code=404, detail=detail) from exc
+    if isinstance(
+        exc,
+        (
+            PublicationArchiveChanged,
+            PublicationConflict,
+            PublicationRetryRejected,
+        ),
+    ):
+        raise HTTPException(status_code=409, detail=detail) from exc
+    if isinstance(
+        exc,
+        (
+            PublicationConfigurationError,
+            PublicationDisabled,
+            PublicationStoreError,
+        ),
+    ):
+        raise HTTPException(status_code=503, detail=detail) from exc
     if isinstance(exc, (content_workflow.ContentNotFound, FileNotFoundError)):
         raise HTTPException(status_code=404, detail=detail) from exc
     if isinstance(exc, scenario_authoring.ScenarioDraftConflict):

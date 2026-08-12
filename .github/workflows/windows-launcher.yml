@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - houduan
+      - class
   workflow_dispatch:
 
 permissions:
@@ -44,27 +45,60 @@ jobs:
       - name: Validate launcher sources
         shell: powershell
         run: |
-          $tokens = $null
-          $parseErrors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile(
-            (Resolve-Path "scripts\teacher-editor.ps1"),
-            [ref] $tokens,
-            [ref] $parseErrors
-          ) | Out-Null
-          if ($parseErrors.Count -ne 0) {
-            $parseErrors | ForEach-Object { Write-Error $_.Message }
-            throw "PowerShell launcher parsing failed."
+          foreach ($scriptFile in @(
+            "scripts\teacher-editor.ps1",
+            "scripts\configure-content-history.ps1",
+            "scripts\stop-teacher-editor.ps1"
+          )) {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $scriptFile),
+              [ref] $tokens,
+              [ref] $parseErrors
+            ) | Out-Null
+            if ($parseErrors.Count -ne 0) {
+              $parseErrors | ForEach-Object { Write-Error $_.Message }
+              throw "PowerShell launcher parsing failed: $scriptFile"
+            }
           }
 
-          $rootLaunchers = @(
+          $rootCommands = @(
             Get-ChildItem -LiteralPath "." -File -Filter "*.cmd"
           )
-          if ($rootLaunchers.Count -ne 1) {
-            throw "Expected exactly one teacher-facing CMD at the repository root."
+          if ($rootCommands.Count -ne 2) {
+            throw "Expected exactly two teacher-facing root CMD files."
+          }
+          $rootLaunchers = @(
+            $rootCommands |
+              Where-Object {
+                [IO.File]::ReadAllText(
+                  $_.FullName,
+                  [Text.Encoding]::ASCII
+                ).Contains("scripts\teacher-editor.ps1")
+              }
+          )
+          $rootStoppers = @(
+            $rootCommands |
+              Where-Object {
+                [IO.File]::ReadAllText(
+                  $_.FullName,
+                  [Text.Encoding]::ASCII
+                ).Contains("scripts\stop-teacher-editor.ps1")
+              }
+          )
+          if (
+            $rootLaunchers.Count -ne 1 `
+            -or $rootStoppers.Count -ne 1 `
+            -or $rootLaunchers[0].FullName -eq $rootStoppers[0].FullName
+          ) {
+            throw "Could not identify distinct teacher-facing start and stop CMD files."
           }
           $cmdFiles = @(
             $rootLaunchers[0].FullName,
-            (Resolve-Path "scripts\teacher-editor.cmd").Path
+            $rootStoppers[0].FullName,
+            (Resolve-Path "scripts\teacher-editor.cmd").Path,
+            (Resolve-Path "scripts\stop-teacher-editor.cmd").Path
           )
           foreach ($cmdFile in $cmdFiles) {
             $nonAscii = [System.IO.File]::ReadAllBytes(
@@ -74,17 +108,19 @@ jobs:
               throw "$cmdFile must keep ASCII-only contents for cmd.exe."
             }
           }
+          "TEACHER_ROOT_LAUNCHER=$($rootLaunchers[0].FullName)" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEACHER_ROOT_STOPPER=$($rootStoppers[0].FullName)" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Run Windows launcher unit tests
+        shell: powershell
+        run: python -m unittest tests.test_teacher_launcher -v
 
       - name: Start through the teacher-facing launcher
         shell: powershell
         run: |
-          $rootLaunchers = @(
-            Get-ChildItem -LiteralPath "." -File -Filter "*.cmd"
-          )
-          if ($rootLaunchers.Count -ne 1) {
-            throw "Expected exactly one teacher-facing CMD at the repository root."
-          }
-          & $rootLaunchers[0].FullName -SkipBrowser
+          & $env:TEACHER_ROOT_LAUNCHER -SkipBrowser
           if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
           }
@@ -135,7 +171,7 @@ jobs:
               "--no-first-run",
               "--no-default-browser-check",
               "--user-data-dir=$profile",
-              "--virtual-time-budget=8000",
+              "--virtual-time-budget=30000",
               "--dump-dom",
               "http://127.0.0.1:5173/admin/content"
             ) `
@@ -157,6 +193,27 @@ jobs:
       - name: Check launcher does not modify tracked source
         shell: powershell
         run: git diff --exit-code
+
+      - name: Stop through the teacher-facing closer
+        shell: powershell
+        run: |
+          & $env:TEACHER_ROOT_STOPPER
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          Start-Sleep -Seconds 1
+          $remaining = @(
+            8000, 5173 |
+              ForEach-Object {
+                Get-NetTCPConnection `
+                  -State Listen `
+                  -LocalPort $_ `
+                  -ErrorAction SilentlyContinue
+              }
+          )
+          if ($remaining.Count -ne 0) {
+            throw "Teacher-facing closer left editor ports active."
+          }
 
       - name: Show launcher logs on failure
         if: failure()

@@ -1,0 +1,529 @@
+name: Teacher release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: teacher-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows-teacher-package:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      CHRONO_DISABLE_DOTENV: "true"
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require tagged source on a release branch with successful quality checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          git fetch --no-tags origin `
+            "+refs/heads/main:refs/remotes/origin/main" `
+            "+refs/heads/class:refs/remotes/origin/class"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Could not fetch the release branches."
+          }
+
+          git merge-base --is-ancestor $env:GITHUB_SHA origin/main
+          $onMain = $LASTEXITCODE -eq 0
+          git merge-base --is-ancestor $env:GITHUB_SHA origin/class
+          $onClass = $LASTEXITCODE -eq 0
+          if (-not $onMain -and -not $onClass) {
+            throw "Teacher release tags must point to a commit on main or class."
+          }
+
+          $requiredWorkflows = @(
+            "backend-quality.yml",
+            "postgres-service.yml",
+            "secret-history.yml",
+            "windows-launcher.yml"
+          )
+          foreach ($workflow in $requiredWorkflows) {
+            $endpoint = "repos/$env:GITHUB_REPOSITORY/actions/workflows/$workflow/runs?head_sha=$env:GITHUB_SHA&status=completed&per_page=100"
+            $response = & gh api $endpoint | ConvertFrom-Json
+            if ($LASTEXITCODE -ne 0) {
+              throw "Could not read workflow runs for $workflow."
+            }
+            $successfulRuns = @(
+              $response.workflow_runs |
+                Where-Object {
+                  $_.head_sha -eq $env:GITHUB_SHA `
+                    -and $_.event -eq "push" `
+                    -and $_.conclusion -eq "success"
+                }
+            )
+            if ($successfulRuns.Count -eq 0) {
+              throw "$workflow has no successful push run for $env:GITHUB_SHA."
+            }
+          }
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: apps/api/requirements.lock
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Build credential-free teacher package
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_NAME -notmatch '^v(?<version>[0-9]+\.[0-9]+\.[0-9]+)$') {
+            throw "Teacher release tags must use vMAJOR.MINOR.PATCH."
+          }
+          $version = $Matches.version
+          $appVersion = & python -c "from services.version import APP_VERSION; print(APP_VERSION)"
+          if ($LASTEXITCODE -ne 0 -or $appVersion.Trim() -ne $version) {
+            throw "Tag version does not match services/version.py."
+          }
+
+          $output = Join-Path $env:RUNNER_TEMP "teacher-release"
+          & python scripts/build_teacher_release.py build `
+            --source-root . `
+            --output-dir $output `
+            --version $version `
+            --commit $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          $archives = @(Get-ChildItem -LiteralPath $output -Filter "*-windows.zip")
+          if ($archives.Count -ne 1) {
+            throw "Expected exactly one teacher ZIP."
+          }
+          $checksum = "$($archives[0].FullName).sha256"
+          if (-not (Test-Path -LiteralPath $checksum -PathType Leaf)) {
+            throw "Teacher ZIP checksum file is missing."
+          }
+          "TEACHER_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEACHER_ARCHIVE=$($archives[0].FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEACHER_CHECKSUM=$checksum" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Verify package manifest checksum and exclusions
+        shell: pwsh
+        run: |
+          & python scripts/build_teacher_release.py verify --archive $env:TEACHER_ARCHIVE
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          $expected = (Get-Content -LiteralPath $env:TEACHER_CHECKSUM -Raw).Trim().Split()[0]
+          $actual = (Get-FileHash -LiteralPath $env:TEACHER_ARCHIVE -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected.ToLowerInvariant()) {
+            throw "Teacher ZIP checksum does not match its checksum file."
+          }
+
+          $extractRoot = Join-Path $env:RUNNER_TEMP "teacher-package-extracted"
+          Expand-Archive -LiteralPath $env:TEACHER_ARCHIVE -DestinationPath $extractRoot
+          $roots = @(Get-ChildItem -LiteralPath $extractRoot -Directory)
+          if ($roots.Count -ne 1) {
+            throw "Teacher ZIP must contain exactly one root directory."
+          }
+          $packageRoot = $roots[0].FullName
+          $forbiddenNames = @(
+            ".chronovita-local",
+            ".git",
+            ".teacher-editor-logs",
+            ".venv",
+            "__pycache__",
+            "data",
+            "dist",
+            "drafts",
+            "node_modules",
+            "sealed",
+            "tests",
+            "workflows"
+          )
+          $forbidden = @(
+            Get-ChildItem -LiteralPath $packageRoot -Force -Recurse |
+              Where-Object { $_.Name -in $forbiddenNames }
+          )
+          if ($forbidden.Count -ne 0) {
+            throw "Teacher ZIP contains forbidden local state: $($forbidden[0].FullName)"
+          }
+
+          $rootCommands = @(
+            Get-ChildItem -LiteralPath $packageRoot -File -Filter "*.cmd"
+          )
+          if ($rootCommands.Count -ne 2) {
+            throw "Teacher ZIP must contain exactly two root CMD files."
+          }
+          $rootLaunchers = @(
+            $rootCommands |
+              Where-Object {
+                [IO.File]::ReadAllText(
+                  $_.FullName,
+                  [Text.Encoding]::ASCII
+                ).Contains("scripts\teacher-editor.ps1")
+              }
+          )
+          $rootStoppers = @(
+            $rootCommands |
+              Where-Object {
+                [IO.File]::ReadAllText(
+                  $_.FullName,
+                  [Text.Encoding]::ASCII
+                ).Contains("scripts\stop-teacher-editor.ps1")
+              }
+          )
+          if (
+            $rootLaunchers.Count -ne 1 `
+            -or $rootStoppers.Count -ne 1 `
+            -or $rootLaunchers[0].FullName -eq $rootStoppers[0].FullName
+          ) {
+            throw "Teacher ZIP root start and stop CMD files are invalid."
+          }
+          foreach ($cmdFile in @(Get-ChildItem -LiteralPath $packageRoot -File -Recurse -Filter "*.cmd")) {
+            $nonAscii = [IO.File]::ReadAllBytes($cmdFile.FullName) |
+              Where-Object { $_ -gt 127 } |
+              Select-Object -First 1
+            if ($null -ne $nonAscii) {
+              throw "$($cmdFile.FullName) must remain ASCII-only."
+            }
+          }
+          foreach ($scriptFile in @(Get-ChildItem -LiteralPath $packageRoot -File -Recurse -Filter "*.ps1")) {
+            $tokens = $null
+            $parseErrors = $null
+            [Management.Automation.Language.Parser]::ParseFile(
+              $scriptFile.FullName,
+              [ref] $tokens,
+              [ref] $parseErrors
+            ) | Out-Null
+            if ($parseErrors.Count -ne 0) {
+              throw "PowerShell parsing failed: $($scriptFile.FullName)"
+            }
+          }
+          "TEACHER_PACKAGE_ROOT=$packageRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEACHER_ROOT_LAUNCHER=$($rootLaunchers[0].FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEACHER_ROOT_STOPPER=$($rootStoppers[0].FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Verify encrypted credential helper
+        shell: powershell
+        run: |
+          $credentialRoot = Join-Path $env:TEACHER_PACKAGE_ROOT ".chronovita-local"
+          $plainToken = "test-only-" + ("x" * 40)
+          $secureToken = ConvertTo-SecureString $plainToken -AsPlainText -Force
+          & "$env:TEACHER_PACKAGE_ROOT\scripts\configure-content-history.ps1" `
+            -Token $secureToken `
+            -CredentialRoot $credentialRoot
+          $credentialPath = Join-Path $credentialRoot "content-history-token.dpapi"
+          $encrypted = (Get-Content -LiteralPath $credentialPath -Raw).Trim()
+          if ([string]::IsNullOrWhiteSpace($encrypted)) {
+            throw "Credential helper wrote an empty DPAPI payload."
+          }
+          if ($encrypted.Contains($plainToken)) {
+            throw "Credential helper wrote the token as plain text."
+          }
+
+          $roundTripSecure = ConvertTo-SecureString $encrypted
+          $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($roundTripSecure)
+          try {
+            $roundTripPlain = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
+            if ($roundTripPlain -ne $plainToken) {
+              throw "Credential helper could not decrypt the DPAPI payload for this user."
+            }
+          } finally {
+            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
+            $roundTripPlain = $null
+          }
+
+      - name: Cold start through extracted one-click package
+        shell: pwsh
+        run: |
+          & $env:TEACHER_ROOT_LAUNCHER -SkipBrowser
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+      - name: Reject reuse of a different running editor version
+        shell: pwsh
+        run: |
+          $versionFile = Join-Path $env:TEACHER_PACKAGE_ROOT "services\version.py"
+          $originalBytes = [IO.File]::ReadAllBytes($versionFile)
+          try {
+            [IO.File]::WriteAllText(
+              $versionFile,
+              "APP_VERSION = `"9.9.9`"`n`n__all__ = [`"APP_VERSION`"]`n",
+              [Text.UTF8Encoding]::new($false)
+            )
+            $mismatchProcess = Start-Process `
+              -FilePath $env:TEACHER_ROOT_LAUNCHER `
+              -ArgumentList @("-SkipBrowser") `
+              -WorkingDirectory $env:TEACHER_PACKAGE_ROOT `
+              -Wait `
+              -PassThru `
+              -WindowStyle Hidden
+            if ($mismatchProcess.ExitCode -eq 0) {
+              throw "Launcher reused an editor from a different application version."
+            }
+          } finally {
+            [IO.File]::WriteAllBytes($versionFile, $originalBytes)
+          }
+
+      - name: Verify packaged API and rendered editor
+        shell: pwsh
+        run: |
+          $ready = Invoke-RestMethod `
+            -Method Get `
+            -Uri "http://127.0.0.1:8000/readyz" `
+            -TimeoutSec 5
+          if ($ready.status -ne "ready") {
+            throw "Packaged API readiness response was not ready."
+          }
+          $editor = Invoke-WebRequest `
+            -UseBasicParsing `
+            -Method Get `
+            -Uri "http://127.0.0.1:5173/admin/content" `
+            -TimeoutSec 5
+          if (
+            $editor.StatusCode -ne 200 `
+            -or $editor.Content -notmatch "Chronovita"
+          ) {
+            throw "Packaged teacher editor did not return the expected shell."
+          }
+
+          $browserCandidates = @(
+            (Join-Path ${env:ProgramFiles(x86)} "Microsoft\Edge\Application\msedge.exe"),
+            (Join-Path $env:ProgramFiles "Google\Chrome\Application\chrome.exe"),
+            (Join-Path ${env:ProgramFiles(x86)} "Google\Chrome\Application\chrome.exe")
+          )
+          $browser = $browserCandidates |
+            Where-Object { Test-Path -LiteralPath $_ } |
+            Select-Object -First 1
+          if (-not $browser) {
+            throw "No supported Edge or Chrome executable was found."
+          }
+          $profile = Join-Path $env:RUNNER_TEMP "teacher-release-browser-profile"
+          $renderedPath = Join-Path $env:RUNNER_TEMP "teacher-release-rendered.html"
+          $browserErrors = Join-Path $env:RUNNER_TEMP "teacher-release-browser-errors.log"
+          $browserProcess = Start-Process `
+            -FilePath $browser `
+            -ArgumentList @(
+              "--headless=new",
+              "--disable-gpu",
+              "--no-first-run",
+              "--no-default-browser-check",
+              "--user-data-dir=$profile",
+              "--virtual-time-budget=30000",
+              "--dump-dom",
+              "http://127.0.0.1:5173/admin/content"
+            ) `
+            -Wait `
+            -PassThru `
+            -WindowStyle Hidden `
+            -RedirectStandardOutput $renderedPath `
+            -RedirectStandardError $browserErrors
+          if ($browserProcess.ExitCode -ne 0) {
+            Get-Content -LiteralPath $browserErrors -ErrorAction SilentlyContinue
+            throw "Headless browser could not render the packaged editor."
+          }
+          $renderedDom = Get-Content -LiteralPath $renderedPath -Raw
+          if (
+            $renderedDom -notmatch 'data-testid="admin-content-editor"' `
+            -or $renderedDom -notmatch 'data-testid="archive-publication-panel"'
+          ) {
+            throw "Packaged React editor did not render the required content tools."
+          }
+
+      - name: Verify credential isolation and removal
+        shell: powershell
+        run: |
+          function Read-SharedFileBytes {
+            param([string] $Path)
+
+            $stream = [IO.File]::Open(
+              $Path,
+              [IO.FileMode]::Open,
+              [IO.FileAccess]::Read,
+              [IO.FileShare]::ReadWrite
+            )
+            try {
+              $memory = New-Object IO.MemoryStream
+              try {
+                $stream.CopyTo($memory)
+                return ,$memory.ToArray()
+              } finally {
+                $memory.Dispose()
+              }
+            } finally {
+              $stream.Dispose()
+            }
+          }
+
+          $plainToken = "test-only-" + ("x" * 40)
+          $scanRoots = @(
+            (Join-Path $env:TEACHER_PACKAGE_ROOT "apps\web\dist"),
+            (Join-Path $env:TEACHER_PACKAGE_ROOT ".teacher-editor-logs"),
+            (Join-Path $env:TEACHER_PACKAGE_ROOT "data"),
+            (Join-Path $env:TEACHER_PACKAGE_ROOT "content")
+          )
+          foreach ($scanRoot in $scanRoots) {
+            if (-not (Test-Path -LiteralPath $scanRoot)) {
+              continue
+            }
+            foreach ($file in @(Get-ChildItem -LiteralPath $scanRoot -File -Recurse)) {
+              $text = [Text.Encoding]::UTF8.GetString(
+                (Read-SharedFileBytes $file.FullName)
+              )
+              if ($text.Contains($plainToken)) {
+                throw "Plaintext publication credential reached a generated file or runtime log."
+              }
+            }
+          }
+
+          $credentialRoot = Join-Path $env:TEACHER_PACKAGE_ROOT ".chronovita-local"
+          & "$env:TEACHER_PACKAGE_ROOT\scripts\configure-content-history.ps1" `
+            -Remove `
+            -CredentialRoot $credentialRoot
+          $credentialPath = Join-Path $credentialRoot "content-history-token.dpapi"
+          if (Test-Path -LiteralPath $credentialPath) {
+            throw "Credential helper could not remove the local credential."
+          }
+
+      - name: Show packaged launcher logs on failure
+        if: failure()
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:TEACHER_PACKAGE_ROOT)) {
+            Write-Host "The package root was not created; no launcher logs are available."
+            exit 0
+          }
+          Get-ChildItem `
+            (Join-Path $env:TEACHER_PACKAGE_ROOT ".teacher-editor-logs") `
+            -Filter "*.log" `
+            -ErrorAction SilentlyContinue |
+            ForEach-Object {
+              Write-Host "== $($_.Name) =="
+              Get-Content -LiteralPath $_.FullName -Tail 100
+            }
+
+      - name: Stop packaged editor through one-click closer
+        if: success()
+        shell: pwsh
+        run: |
+          if (-not (Test-Path -LiteralPath $env:TEACHER_ROOT_STOPPER -PathType Leaf)) {
+            throw "Packaged root stopper is missing."
+          }
+          & $env:TEACHER_ROOT_STOPPER
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          Start-Sleep -Seconds 1
+          $remaining = @(
+            8000, 5173 |
+              ForEach-Object {
+                Get-NetTCPConnection `
+                  -State Listen `
+                  -LocalPort $_ `
+                  -ErrorAction SilentlyContinue
+              }
+          )
+          if ($remaining.Count -ne 0) {
+            throw "Packaged one-click closer left editor ports active."
+          }
+
+      - name: Emergency cleanup packaged editor
+        if: always()
+        shell: pwsh
+        run: |
+          $remaining = @(
+            8000, 5173 |
+              ForEach-Object {
+                Get-NetTCPConnection `
+                  -State Listen `
+                  -LocalPort $_ `
+                  -ErrorAction SilentlyContinue
+              }
+          )
+          foreach ($processId in @(
+            $remaining |
+              Select-Object -ExpandProperty OwningProcess -Unique
+          )) {
+            if ($processId -gt 0) {
+              & taskkill.exe /PID "$processId" /T /F 2>$null | Out-Null
+            }
+          }
+          Start-Sleep -Seconds 1
+          $remaining = @(
+            8000, 5173 |
+              ForEach-Object {
+                Get-NetTCPConnection `
+                  -State Listen `
+                  -LocalPort $_ `
+                  -ErrorAction SilentlyContinue
+              }
+          )
+          if ($remaining.Count -ne 0) {
+            throw "Packaged editor ports are still active after cleanup."
+          }
+
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $notesPath = Join-Path $env:RUNNER_TEMP "teacher-release-notes.md"
+          @"
+          ## Chronovita 教师编辑器 V$env:TEACHER_VERSION
+
+          - 解压后双击根目录的“点我一键启动（部署）.cmd”。
+          - 编辑完成后双击根目录的“点我一键关闭.cmd”，草稿和本机凭据不会被删除。
+          - 首次缺少投稿密钥时，启动器会安全提示输入；密钥由 Windows DPAPI 绑定当前账号加密。
+          - 首次运行自动建立 Python/Node 环境；后续按锁文件指纹自检并复用有效依赖。
+          - 发行包不含数据库、草稿、缓存、日志或 GitHub 凭据。
+          - 课程、人物、关键词和关卡规则均可生成归档并提交内容审核。
+          - 同名 `.sha256` 文件用于核对 ZIP 完整性。
+
+          当前为 V0.9.x 教师预览包，不代表生产级多用户部署已经完成。
+          "@ | Set-Content -LiteralPath $notesPath -Encoding utf8
+          & gh release view $env:GITHUB_REF_NAME `
+            --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            & gh release upload $env:GITHUB_REF_NAME `
+              $env:TEACHER_ARCHIVE `
+              $env:TEACHER_CHECKSUM `
+              --repo $env:GITHUB_REPOSITORY `
+              --clobber
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+            & gh release edit $env:GITHUB_REF_NAME `
+              --repo $env:GITHUB_REPOSITORY `
+              --prerelease `
+              --title "Chronovita 教师编辑器 V$env:TEACHER_VERSION" `
+              --notes-file $notesPath
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          } else {
+            & gh release create $env:GITHUB_REF_NAME `
+              $env:TEACHER_ARCHIVE `
+              $env:TEACHER_CHECKSUM `
+              --repo $env:GITHUB_REPOSITORY `
+              --verify-tag `
+              --prerelease `
+              --title "Chronovita 教师编辑器 V$env:TEACHER_VERSION" `
+              --notes-file $notesPath
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
