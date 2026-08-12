@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前版本 **V0.9.38**；`class` 分支已完成确定性课程归档、GitHub PR 后端链路、教师发布界面和无密钥 Windows 教师包，并根据独立审查收紧重试绑定、GitHub API 主机、归档路径与包体密钥扫描。[v0.9.38 prerelease](https://github.com/falling-feather/Chronovita/releases/tag/v0.9.38) 已通过精确提交四路门禁和完整 Windows 标签流水线验收。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.0**；V0.9.41 课堂内容与教师发布基线已通过 [PR #3](https://github.com/falling-feather/Chronovita/pull/3) 合入 `main`，`main` 已启用必经 PR、讨论解决、禁止删除/强推及四路质量检查规则。V0.10 在 `codex/v0.10-classroom` 独立分支建设“大禹治水”和“商鞅变法”双旗舰本地课堂，不宣称公网或多学校生产部署已经完成。
 
 [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](docs/00-项目总纲.md) · [开发者文档](docs/01-开发者文档.md) · [项目规划](docs/02-项目规划与设计总纲.md) · [开发历史](docs/05-发布历史与归档.md)
 
@@ -26,7 +26,7 @@
 
 - 前端：React 18 + Vite 8 + TypeScript 5 + Ant Design 5 + React Router 7 + React Flow 11 + Zustand
 - 后端：Python 3.11-3.13 + FastAPI + Pydantic v2 + SQLAlchemy 2.0 + SQLite（本地）/ PostgreSQL（生产边界）
-- LLM：DeepSeek v4-flash（saga 流式叙事） + DeepSeek v4-pro（「问」跨时对话，准确度优先） + mock 回落
+- LLM：DeepSeek/OpenAI 兼容在线模型 + 确定性规则回退；V0.10 规划使用 SQLite FTS5 与本地 BGE 的课程内证据检索
 - 包管理：npm + package lock / Node.js LTS / Python venv
 - 设计：Pencil（`assets/design/*.pen`）
 - 基础设施：Docker Compose（中长期接入 Postgres / Redis / 向量库）
@@ -67,11 +67,11 @@
 
 ## 快速启动
 
-### 教师一键启动
+### 当前可用教师包与 V0.10 课堂包
 
-Windows 教师从 [v0.9.38 Release](https://github.com/falling-feather/Chronovita/releases/tag/v0.9.38) 下载 `Chronovita-Teacher-Editor-v0.9.38-windows.zip` 并完整解压后，双击根目录的 `点我一键启动（部署）.cmd`。首次运行会自动创建本地环境、按完整哈希锁安装后端依赖、按 package lock 安装前端依赖、完成生产构建，并以生产预览服务打开 `http://127.0.0.1:5173/admin/content`；依赖安装完成后，本地编辑与预览不依赖 Google Fonts 或 GitHub。发行包不携带数据库、草稿、缓存、日志或 GitHub 凭据，ZIP 的 SHA-256 为 `e0879b2dd74d4f672feb39d6416b8bf16af2e233caa7cf2afbc02777b329a266`。当前教师包要求电脑预先安装 Python 3.11-3.13 和 Node.js 20.19+ 或 22.12+ LTS。
+当前已验收发行物仍是 [v0.9.41 教师编辑器](https://github.com/falling-feather/Chronovita/releases/tag/v0.9.41)。V0.10 统一课堂包尚在开发，完成前不要把源码分支描述成可发布课堂包；目标发行物将改为单端口、默认回环、显式 LAN 模式的 `Chronovita-Classroom-v0.10.x-windows.zip`。
 
-课程历史投稿凭据由项目管理员单独发放，教师运行 `scripts/configure-content-history.cmd` 后以 Windows DPAPI 加密保存在本机；普通编辑、保存和 ZIP 导出不要求配置凭据。当前 `class` 源码可双击根目录的 `点我一键关闭.cmd` 停止服务；原始 V0.9.38 教师包只需把这一个文件放入解压根目录即可获得同样入口，不必替换草稿、依赖或配置。未安装热更新时仍可使用 `scripts/stop-teacher-editor.cmd`。完整说明见 [课程内容历史库运维指南](docs/07-课程内容历史库运维指南.md)。
+V0.9.41 教师包完整解压后可双击根目录的 `点我一键启动（部署）.cmd`；课程历史投稿凭据由项目管理员单独发放，并由 Windows DPAPI 绑定当前账号加密保存。完整说明见 [课程内容历史库运维指南](docs/07-课程内容历史库运维指南.md)。
 
 ### 先决条件
 - Node.js 20.19+ 或 22.12+ LTS
