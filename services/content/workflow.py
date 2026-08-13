@@ -341,6 +341,7 @@ class PublishedLessonResources(LifecycleModel):
     course_id: ContractId
     lesson_id: ContractId
     content_version: int = Field(ge=1)
+    course_package: CoursePackageV1
     evidence_corpus: EvidenceCorpusV1
     lesson_presentation: LessonPresentationV1
 
@@ -1145,6 +1146,7 @@ def get_published_lesson_resources(
         course_id=package.course_id,
         lesson_id=package.lesson_id,
         content_version=package.content_version,
+        course_package=package,
         evidence_corpus=evidence,
         lesson_presentation=presentation,
     )

@@ -108,6 +108,9 @@ class Settings(BaseSettings):
         ge=1024,
         le=262_144,
     )
+    rag_index_path: str = "data/rag/index-v1.sqlite3"
+    rag_model_root: str = "distribution/models/BAAI-bge-small-zh-v1.5"
+    rag_vector_enabled: bool = True
     practice_saga_ttl_seconds: int = Field(
         default=60 * 60,
         ge=60,

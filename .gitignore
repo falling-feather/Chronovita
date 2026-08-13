@@ -63,6 +63,11 @@ uploads/
 *.psd
 *.ai
 
+# RAG model binaries are fetched from a pinned snapshot for release packaging.
+distribution/models/**
+!distribution/models/**/
+!distribution/models/**/model-resource.json
+
 # 任务队列与缓存数据卷
 .pgdata/
 .redisdata/

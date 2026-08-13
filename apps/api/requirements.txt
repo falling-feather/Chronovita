@@ -7,3 +7,4 @@ sqlalchemy==2.0.35
 psycopg[binary]==3.3.4
 httpx==0.27.2
 httpx2==2.7.0
+fastembed==0.8.0

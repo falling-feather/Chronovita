@@ -25,7 +25,7 @@ from routers import (
     practice,
     profile,
 )
-from services import content, persistence, saga
+from services import content, persistence, rag, saga
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
@@ -92,6 +92,11 @@ async def lifespan(app: FastAPI):
             catalog_path=settings.game_catalog_path,
             engine=engine,
         )
+        rag.configure_rag(
+            index_path=settings.rag_index_path,
+            model_root=settings.rag_model_root,
+            vector_enabled=settings.rag_vector_enabled,
+        )
         app.state.database_readiness = probe_database_readiness(engine)
         app.state.runtime_ready = True
         yield
@@ -100,6 +105,7 @@ async def lifespan(app: FastAPI):
         app.state.database_readiness = None
         app.state.database_engine = None
         saga.clear_states()
+        rag.shutdown_rag()
         shutdown_game_runtime()
         shutdown_identity()
         persistence.close_engine()
@@ -168,6 +174,7 @@ async def root():
             "courses",
             "learning",
             "practice",
+            "course-rag",
             "game-runtime",
             "profile",
             "admin-content",

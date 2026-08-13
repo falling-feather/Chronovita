@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.4**；V0.9.41 课堂内容与教师发布基线已通过 [PR #3](https://github.com/falling-feather/Chronovita/pull/3) 合入 `main`，`main` 已启用必经 PR、讨论解决、禁止删除/强推及四路质量检查规则。V0.10.4 已把 `C-prequin-state / L101` 大禹治水与 `L103` 商鞅变法两门正式课的正文、史实边界、六回合关卡、证据库和本地导读资源按同一 `course-release/v3` 联合发布；混合 RAG、统一账户前端和课堂发行包仍在 `codex/v0.10-classroom` 后续任务中，不宣称公网或多学校生产部署已经完成。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.5**；V0.9.41 课堂内容与教师发布基线已通过 [PR #3](https://github.com/falling-feather/Chronovita/pull/3) 合入 `main`，`main` 已启用必经 PR、讨论解决、禁止删除/强推及四路质量检查规则。V0.10.5 已为 `C-prequin-state / L101` 大禹治水与 `L103` 商鞅变法接通精确发布范围内的 FTS5/BGE 混合检索、证据引用回答和离线抽取式回退；统一账户前端、学生课堂、最终短片与课堂发行包仍在 `codex/v0.10-classroom` 后续任务中，不宣称公网或多学校生产部署已经完成。
 
 [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](docs/00-项目总纲.md) · [开发者文档](docs/01-开发者文档.md) · [项目规划](docs/02-项目规划与设计总纲.md) · [开发历史](docs/05-发布历史与归档.md)
 
@@ -26,7 +26,7 @@
 
 - 前端：React 18 + Vite 8 + TypeScript 5 + Ant Design 5 + React Router 7 + React Flow 11 + Zustand
 - 后端：Python 3.11-3.13 + FastAPI + Pydantic v2 + SQLAlchemy 2.0 + SQLite（本地）/ PostgreSQL（生产边界）
-- LLM：DeepSeek/OpenAI 兼容在线模型 + 确定性规则回退；V0.10.4 已为 L101/L103 各发布 30 个稳定证据片段，SQLite FTS5、本地 BGE 与 `/practice/ask/rag` 仍属 AI-002 后续任务
+- LLM/RAG：DeepSeek 兼容在线模型 + 本地抽取式回退；L101/L103 各 30 个稳定证据片段由 SQLite FTS5 中文字词/二元组与本地 `BAAI/bge-small-zh-v1.5` 检索，经 RRF 融合后由 `/practice/ask/rag` 返回当前发布 checksum、引用卡和不确定性；模型或向量缺失时保持 FTS/抽取可用
 - 包管理：npm + package lock / Node.js LTS / Python venv
 - 设计：Pencil（`assets/design/*.pen`）
 - 基础设施：Docker Compose（中长期接入 Postgres / Redis / 向量库）
@@ -45,6 +45,7 @@
 │   ├── courses/              14 朝代 48 节课程数据集
 │   ├── saga/                 互动剧本引擎 + 48 个模板
 │   ├── sandbox/              决策推演通用引擎（商鞅变法首发）
+│   ├── rag/                  发布内 FTS5/BGE 混合检索与证据约束回答
 │   └── llm/                  DeepSeek + mock 适配层
 ├── infra/                    docker-compose 与基础设施
 ├── content/                  课程草稿、封存件、运行制品与发布清单
@@ -89,6 +90,8 @@ cd apps/api
 后端文档：`http://127.0.0.1:8000/docs`
 
 > 访问真 DeepSeek：复制 `apps/api/.env.example` 为 `apps/api/.env`，填入 `CHRONO_DEEPSEEK_API_KEY`，并将 `CHRONO_LLM_PROVIDER=deepseek`；`.env` 已在 `.gitignore`。
+
+> 本地向量资源不直接提交大文件。执行 `& ".\.venv\Scripts\python.exe" scripts\prepare_rag_model.py` 会下载固定 revision、逐文件复验 SHA-256，并以 `local_files_only` 完成离线自检；缺少资源时 API 自动保留 FTS5 与抽取式回答。
 
 ### 启动前端
 ```powershell
