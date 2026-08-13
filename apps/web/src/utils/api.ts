@@ -1,6 +1,10 @@
 // 统一的 API 客户端 · v0.2.0
 const BASE = '/api/v1';
 
+// Accounts 模式以这个非秘密哨兵表示“使用浏览器 HttpOnly Cookie”。旧的
+// legacy-local 模式仍可显式传入共享令牌，二者不会同时发送。
+export const COOKIE_AUTH_CREDENTIAL = '__chronovita_http_only_cookie__';
+
 interface ApiValidationIssue {
   loc?: Array<string | number>;
   msg?: string;
@@ -26,7 +30,7 @@ function localizeValidationMessage(message: string): string {
   return message.replace(/^Value error,\s*/i, '');
 }
 
-async function responseError(response: Response): Promise<Error> {
+export async function apiResponseError(response: Response): Promise<ApiError> {
   const raw = await response.text();
   let message = raw || response.statusText;
   let code: string | undefined;
@@ -55,32 +59,48 @@ async function responseError(response: Response): Promise<Error> {
 async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(BASE + path, {
     ...init,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(init?.headers || {}),
     },
   });
   if (!r.ok) {
-    throw await responseError(r);
+    if (r.status === 401) {
+      window.dispatchEvent(new Event('chronovita:session-invalid'));
+    }
+    throw await apiResponseError(r);
   }
   return r.json() as Promise<T>;
 }
 
 async function adminFetch<T>(token: string, path: string, init?: RequestInit): Promise<T> {
+  const credentialHeaders: Record<string, string> = token === COOKIE_AUTH_CREDENTIAL
+    ? {}
+    : { Authorization: `Bearer ${token}` };
   return jsonFetch<T>(path, {
     ...init,
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...credentialHeaders,
       ...(init?.headers || {}),
     },
   });
 }
 
 async function adminFile(token: string, path: string): Promise<Blob> {
+  const credentialHeaders: Record<string, string> = token === COOKIE_AUTH_CREDENTIAL
+    ? {}
+    : { Authorization: `Bearer ${token}` };
   const response = await fetch(BASE + path, {
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
+    headers: credentialHeaders,
   });
-  if (!response.ok) throw await responseError(response);
+  if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new Event('chronovita:session-invalid'));
+    }
+    throw await apiResponseError(response);
+  }
   return response.blob();
 }
 

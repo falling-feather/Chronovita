@@ -69,6 +69,7 @@ const ARCHIVE_FILE_LABELS: Record<ArchiveFileKind, string> = {
 
 interface ArchivePublicationPanelProps {
   token: string;
+  canPublish: boolean;
   courseId: string;
   releases: CourseReleaseManifest[];
   currentRelease: CourseReleaseManifest | null;
@@ -174,6 +175,7 @@ function replacePublication(
 
 export default function ArchivePublicationPanel({
   token,
+  canPublish,
   courseId,
   releases,
   currentRelease,
@@ -575,7 +577,8 @@ export default function ArchivePublicationPanel({
           icon={<CloudUploadOutlined />}
           loading={activity === 'publish'}
           disabled={
-            busy
+            !canPublish
+            || busy
             || !archive
             || archive.release_id !== selectedReleaseId
             || (mode === 'direct_commit' && !directCommitConfirmed)
@@ -645,7 +648,7 @@ export default function ArchivePublicationPanel({
                   <Button
                     icon={<ReloadOutlined />}
                     loading={activity === 'retry'}
-                    disabled={busy}
+                    disabled={!canPublish || busy}
                     onClick={retryPublication}
                   >
                     重新尝试

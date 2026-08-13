@@ -46,6 +46,8 @@ import ScenarioRuleEditor from './admin/ScenarioRuleEditor';
 import ArchivePublicationPanel from './admin/ArchivePublicationPanel';
 import AssetPublicationPanel from './admin/AssetPublicationPanel';
 import { runtimeScenarioKey } from './admin/scenarioRuleModel';
+import { useAuth } from '../auth/AuthContext';
+import { COOKIE_AUTH_CREDENTIAL } from '../utils/api';
 
 const { TextArea } = Input;
 const TOKEN_KEY = 'chrono.admin.token';
@@ -766,8 +768,15 @@ function releaseItemV2(
 
 export default function AdminContentPage() {
   const navigate = useNavigate();
+  const auth = useAuth();
   const [editorMode, setEditorMode] = useState<EditorMode>(() => readEditorMode());
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || import.meta.env.VITE_ADMIN_TOKEN || '');
+  const [legacyToken, setLegacyToken] = useState(() => auth.mode === 'legacy-local'
+    ? sessionStorage.getItem(TOKEN_KEY) || import.meta.env.VITE_ADMIN_TOKEN || ''
+    : '');
+  const token = auth.mode === 'accounts' ? COOKIE_AUTH_CREDENTIAL : legacyToken;
+  const canAuthor = auth.can('content.author');
+  const canReview = auth.can('content.review');
+  const canPublish = auth.can('content.publish');
   const [editor, setEditor] = useState<EditorState>(() => readLocalEditor());
   const [personEditor, setPersonEditor] = useState<PersonEditorState>(() => readLocalPersonEditor());
   const [keywordEditor, setKeywordEditor] = useState<KeywordEditorState>(() => readLocalKeywordEditor());
@@ -841,6 +850,19 @@ export default function AdminContentPage() {
     value: runtimeScenarioKey(item),
     label: `${item.title} · v${item.descriptor.version}`,
   })), [selectedRuntimeScenarios]);
+
+  useEffect(() => {
+    if (auth.mode === 'accounts') {
+      // 清理旧版本遗留凭证；accounts 模式从不读取或写入浏览器令牌存储。
+      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
+      setLegacyToken('');
+      return;
+    }
+    if (auth.mode === 'legacy-local') {
+      setLegacyToken(sessionStorage.getItem(TOKEN_KEY) || import.meta.env.VITE_ADMIN_TOKEN || '');
+    }
+  }, [auth.mode]);
 
   const rememberEditorMode = (value: EditorMode) => {
     setEditorMode(value);
@@ -1011,8 +1033,8 @@ export default function AdminContentPage() {
     editorLoadSequenceRef.current += 1;
     tokenRefreshSequenceRef.current += 1;
     workflowRefreshSequenceRef.current += 1;
-    setToken(value);
-    localStorage.setItem(TOKEN_KEY, value);
+    setLegacyToken(value);
+    if (auth.mode === 'legacy-local') sessionStorage.setItem(TOKEN_KEY, value);
   };
 
   const updateEditor = (patch: Partial<EditorState>) => {
@@ -1897,6 +1919,13 @@ export default function AdminContentPage() {
           <h1 className="chrono-title" style={{ margin: 0 }}>内容编辑器</h1>
         </div>
         <Space wrap style={{ justifyContent: 'flex-end', maxWidth: '100%' }}>
+          {auth.mode === 'accounts' && auth.principal && (
+            <div className="chrono-admin-principal">
+              <strong>{auth.principal.display_name}</strong>
+              <span>{auth.principal.roles.join(' · ')}</span>
+            </div>
+          )}
+          {auth.mode === 'legacy-local' && (
           <Input.Password
             aria-label="Admin token"
             value={token}
@@ -1904,8 +1933,23 @@ export default function AdminContentPage() {
             onChange={(event) => rememberToken(event.target.value)}
             style={{ width: 220 }}
           />
+          )}
         </Space>
       </div>
+
+      {auth.mode === 'accounts' && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="当前职责"
+          description={[
+            canAuthor ? '可创作与送审' : '',
+            canReview ? '可独立审校' : '',
+            canPublish ? '可封存与发布' : '',
+          ].filter(Boolean).join(' · ') || '只读查看'}
+        />
+      )}
 
       <div className="chrono-card" style={{ padding: 12, marginBottom: 16 }}>
         <div className="chrono-course-eyeline" style={{ marginBottom: 8 }}>编辑对象</div>
@@ -2199,12 +2243,12 @@ export default function AdminContentPage() {
           </div>
 
           <Space wrap style={{ marginBottom: 12 }}>
-            <Button icon={<FileTextOutlined />} onClick={createNew}>新建</Button>
-            <Button icon={<FileTextOutlined />} loading={busy === 'template'} onClick={loadTemplate}>模板</Button>
+            <Button disabled={!canAuthor} icon={<FileTextOutlined />} onClick={createNew}>新建</Button>
+            <Button disabled={!canAuthor} icon={<FileTextOutlined />} loading={busy === 'template'} onClick={loadTemplate}>模板</Button>
             <Button icon={<BookOutlined />} onClick={() => setShowGuide((value) => !value)}>文档</Button>
             <Button icon={<ReloadOutlined />} onClick={parseFocusBlocks}>解析重点</Button>
             <Button icon={<EyeOutlined />} loading={busy === 'preview'} onClick={previewContent}>预览</Button>
-            <Button type="primary" icon={<SaveOutlined />} loading={busy === 'save'} onClick={saveDraft}>保存草稿</Button>
+            <Button disabled={!canAuthor} type="primary" icon={<SaveOutlined />} loading={busy === 'save'} onClick={saveDraft}>保存草稿</Button>
             <Button icon={<DownloadOutlined />} onClick={exportCurrent}>导出文件包</Button>
           </Space>
 
@@ -2331,6 +2375,7 @@ export default function AdminContentPage() {
               <Button
                 icon={<SafetyCertificateOutlined />}
                 loading={busy === 'validate'}
+                disabled={!canAuthor}
                 onClick={validateDraft}
               >
                 校验
@@ -2338,7 +2383,7 @@ export default function AdminContentPage() {
               <Button
                 icon={<SendOutlined />}
                 loading={busy === 'submit-review'}
-                disabled={!activeWorkflow || !['validated', 'changes_requested'].includes(activeWorkflow.state)}
+                disabled={!canAuthor || !activeWorkflow || !['validated', 'changes_requested'].includes(activeWorkflow.state)}
                 onClick={submitReview}
               >
                 提交审校
@@ -2346,7 +2391,7 @@ export default function AdminContentPage() {
               <Button
                 icon={<CheckCircleOutlined />}
                 loading={busy === 'approve'}
-                disabled={activeWorkflow?.state !== 'in_review'}
+                disabled={!canReview || activeWorkflow?.state !== 'in_review'}
                 onClick={() => reviewDraft('approve')}
               >
                 通过
@@ -2355,7 +2400,7 @@ export default function AdminContentPage() {
                 danger
                 icon={<CloseCircleOutlined />}
                 loading={busy === 'request-changes'}
-                disabled={activeWorkflow?.state !== 'in_review' || !reviewNote.trim()}
+                disabled={!canReview || activeWorkflow?.state !== 'in_review' || !reviewNote.trim()}
                 onClick={() => reviewDraft('changes_requested')}
               >
                 退回
@@ -2363,7 +2408,7 @@ export default function AdminContentPage() {
               <Button
                 icon={<LockOutlined />}
                 loading={busy === 'seal'}
-                disabled={activeWorkflow?.state !== 'approved'}
+                disabled={!canPublish || activeWorkflow?.state !== 'approved'}
                 onClick={sealDraft}
               >
                 封存
@@ -2372,7 +2417,7 @@ export default function AdminContentPage() {
                 type="primary"
                 icon={<RocketOutlined />}
                 loading={busy === 'publish'}
-                disabled={activeWorkflow?.state !== 'sealed' || !activeWorkflow.sealed_version}
+                disabled={!canPublish || activeWorkflow?.state !== 'sealed' || !activeWorkflow.sealed_version}
                 onClick={publishSealed}
               >
                 发布
@@ -2428,7 +2473,7 @@ export default function AdminContentPage() {
                 danger
                 icon={<RollbackOutlined />}
                 loading={busy === 'rollback'}
-                disabled={!selectedRelease || !activeWorkflow}
+                disabled={!canPublish || !selectedRelease || !activeWorkflow}
                 onClick={rollbackRelease}
               >
                 回滚
@@ -2437,6 +2482,7 @@ export default function AdminContentPage() {
 
             <ArchivePublicationPanel
               token={token}
+              canPublish={canPublish}
               courseId={editor.course_id}
               releases={releases}
               currentRelease={activeRelease}
@@ -2513,6 +2559,8 @@ export default function AdminContentPage() {
       {editorMode === 'scenario' && (
         <ScenarioRuleEditor
           token={token}
+          canAuthor={canAuthor}
+          canPublish={canPublish}
           sourceLessons={sourceLessons}
           runtimeScenarios={runtimeScenarios}
           onRefreshRuntimeScenarios={refreshRuntimeScenarios}
@@ -2580,10 +2628,10 @@ export default function AdminContentPage() {
 
           <aside className="chrono-card" style={{ padding: 16 }}>
             <Space wrap style={{ marginBottom: 12 }}>
-              <Button disabled={Boolean(busy)} icon={<FileTextOutlined />} onClick={loadPersonTemplate} loading={busy === 'person-template'}>模板</Button>
-              <Button disabled={Boolean(busy)} type="primary" icon={<SaveOutlined />} onClick={savePersonAsset} loading={busy === 'person-save'}>保存草稿</Button>
-              <Button disabled={Boolean(busy)} icon={<SafetyCertificateOutlined />} onClick={validatePersonAsset} loading={busy === 'person-validate'}>校验</Button>
-              <Button disabled={Boolean(busy)} icon={<LockOutlined />} onClick={sealPersonAsset} loading={busy === 'person-seal'}>封存</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} icon={<FileTextOutlined />} onClick={loadPersonTemplate} loading={busy === 'person-template'}>模板</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} type="primary" icon={<SaveOutlined />} onClick={savePersonAsset} loading={busy === 'person-save'}>保存草稿</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} icon={<SafetyCertificateOutlined />} onClick={validatePersonAsset} loading={busy === 'person-validate'}>校验</Button>
+              <Button disabled={Boolean(busy) || !canPublish} icon={<LockOutlined />} onClick={sealPersonAsset} loading={busy === 'person-seal'}>封存</Button>
               <Button disabled={Boolean(busy)} icon={<DownloadOutlined />} onClick={exportCurrentPerson}>导出草稿</Button>
               <Button disabled={Boolean(busy)} icon={<ReloadOutlined />} onClick={refreshPersonAssetState} loading={busy === 'person-refresh'}>刷新</Button>
             </Space>
@@ -2658,6 +2706,7 @@ export default function AdminContentPage() {
             )}
             <AssetPublicationPanel
               token={token}
+              canPublish={canPublish}
               assetKind="person"
               assetId={personEditor.asset_id.trim()}
               assetTitle={personEditor.name.trim()}
@@ -2728,10 +2777,10 @@ export default function AdminContentPage() {
 
           <aside className="chrono-card" style={{ padding: 16 }}>
             <Space wrap style={{ marginBottom: 12 }}>
-              <Button disabled={Boolean(busy)} icon={<FileTextOutlined />} onClick={loadKeywordTemplate} loading={busy === 'keyword-template'}>模板</Button>
-              <Button disabled={Boolean(busy)} type="primary" icon={<SaveOutlined />} onClick={saveKeywordAsset} loading={busy === 'keyword-save'}>保存草稿</Button>
-              <Button disabled={Boolean(busy)} icon={<SafetyCertificateOutlined />} onClick={validateKeywordAsset} loading={busy === 'keyword-validate'}>校验</Button>
-              <Button disabled={Boolean(busy)} icon={<LockOutlined />} onClick={sealKeywordAsset} loading={busy === 'keyword-seal'}>封存</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} icon={<FileTextOutlined />} onClick={loadKeywordTemplate} loading={busy === 'keyword-template'}>模板</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} type="primary" icon={<SaveOutlined />} onClick={saveKeywordAsset} loading={busy === 'keyword-save'}>保存草稿</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} icon={<SafetyCertificateOutlined />} onClick={validateKeywordAsset} loading={busy === 'keyword-validate'}>校验</Button>
+              <Button disabled={Boolean(busy) || !canPublish} icon={<LockOutlined />} onClick={sealKeywordAsset} loading={busy === 'keyword-seal'}>封存</Button>
               <Button disabled={Boolean(busy)} icon={<DownloadOutlined />} onClick={exportCurrentKeyword}>导出草稿</Button>
               <Button disabled={Boolean(busy)} icon={<ReloadOutlined />} onClick={refreshKeywordAssetState} loading={busy === 'keyword-refresh'}>刷新</Button>
             </Space>
@@ -2806,6 +2855,7 @@ export default function AdminContentPage() {
             )}
             <AssetPublicationPanel
               token={token}
+              canPublish={canPublish}
               assetKind="keyword"
               assetId={keywordEditor.asset_id.trim()}
               assetTitle={keywordEditor.word.trim()}

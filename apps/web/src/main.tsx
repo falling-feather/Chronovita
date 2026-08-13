@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import App from './App';
+import { AuthProvider } from './auth/AuthContext';
 import { theme } from './theme';
 import './styles/global.css';
 
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ConfigProvider locale={zhCN} theme={theme}>
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </ConfigProvider>
   </React.StrictMode>,

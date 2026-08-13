@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.5**；V0.9.41 课堂内容与教师发布基线已通过 [PR #3](https://github.com/falling-feather/Chronovita/pull/3) 合入 `main`，`main` 已启用必经 PR、讨论解决、禁止删除/强推及四路质量检查规则。V0.10.5 已为 `C-prequin-state / L101` 大禹治水与 `L103` 商鞅变法接通精确发布范围内的 FTS5/BGE 混合检索、证据引用回答和离线抽取式回退；统一账户前端、学生课堂、最终短片与课堂发行包仍在 `codex/v0.10-classroom` 后续任务中，不宣称公网或多学校生产部署已经完成。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.6**；V0.9.41 课堂内容与教师发布基线已通过 [PR #3](https://github.com/falling-feather/Chronovita/pull/3) 合入受保护的 `main`。V0.10.6 已为 `C-prequin-state / L101` 大禹治水与 `L103` 商鞅变法建立精确发布证据 RAG，并接通统一 Cookie 登录、四角色工作区、路由守卫和管理员账户管理；学生双课课堂表达、最终短片与 Windows/LAN 课堂包仍在 `codex/v0.10-classroom` 后续任务中，不宣称公网或多学校生产部署已经完成。
 
 [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](docs/00-项目总纲.md) · [开发者文档](docs/01-开发者文档.md) · [项目规划](docs/02-项目规划与设计总纲.md) · [开发历史](docs/05-发布历史与归档.md)
 
