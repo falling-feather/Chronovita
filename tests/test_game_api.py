@@ -79,6 +79,7 @@ class GameApiTests(unittest.TestCase):
                 "scenario-dayu-flood-control",
                 "scenario-shangyang-institutional-reform",
                 "dayu-crisis-governance",
+                "shangyang-institutional-reform",
             }.issubset(items_by_id)
         )
         self.assertEqual(listed.json()["session_storage"], "sqlite-json")
@@ -92,6 +93,10 @@ class GameApiTests(unittest.TestCase):
         )
         self.assertEqual(
             items_by_id["dayu-crisis-governance"]["audience"],
+            "published",
+        )
+        self.assertEqual(
+            items_by_id["shangyang-institutional-reform"]["audience"],
             "published",
         )
         dayu_summary = items_by_id["scenario-dayu-flood-control"]

@@ -79,13 +79,15 @@ Regenerate and validate from the repository root:
 & ".\.venv\Scripts\python.exe" -m unittest discover -s tests -v
 ```
 
-The legacy Dayu fixtures under `examples/v1/` are development data. Historical body text, facts, persona material, and explanations marked `教师待审` remain compatibility fixtures. The formal `C-prequin-state / L101` source is `services/content/flagships/dayu_l101.py`; it has been materialized through distinct author/reviewer/publisher identities into the active V3 release. Example V2/V3 manifests are only contract fixtures; publication remains controlled exclusively by an active release pointer.
+The legacy Dayu and Shangyang fixtures under `examples/v1/` are development data. Historical body text, facts, persona material, and explanations marked `教师待审` remain compatibility fixtures. The formal `C-prequin-state / L101` and `L103` sources are `services/content/flagships/dayu_l101.py` and `services/content/flagships/shangyang_l103.py`; each has been materialized through distinct author/reviewer/publisher identities into one active V3 release. Example V2/V3 manifests are only contract fixtures; publication remains controlled exclusively by an active release pointer.
 
-Reproduce or verify the formal L101 publication from the repository root:
+Reproduce or verify both formal publications from the repository root:
 
 ```powershell
 & ".\.venv\Scripts\python.exe" scripts\publish_flagship_lesson.py L101 --content-root content
+& ".\.venv\Scripts\python.exe" scripts\publish_flagship_lesson.py L103 --content-root content
 & ".\.venv\Scripts\python.exe" -m unittest tests.test_dayu_flagship_content -v
+& ".\.venv\Scripts\python.exe" -m unittest tests.test_shangyang_flagship_content -v
 ```
 
 The command is read-only when the canonical source matches the active immutable package. Source drift fails closed and requires a new content version; it never rewrites the existing release.

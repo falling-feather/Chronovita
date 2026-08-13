@@ -1,0 +1,1729 @@
+{
+  "schema_version": "scenario-template/v1",
+  "scenario_id": "shangyang-institutional-reform",
+  "scenario_version": 1,
+  "status": "sealed",
+  "engine_family": "rules_v1",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L103",
+  "title": "六回合变法议事：强国之法由谁承担",
+  "scenario_type": "institutional_reform",
+  "student_role": "秦国改革议事与执行记录者",
+  "objective": "在六个制度节点中提高国家能力、粮食供给、军事准备和制度信用，同时控制社会压力与旧贵族阻力，并为每项选择写出证据边界。",
+  "opening": "秦孝公希望改变秦国在列国竞争中的处境，旧贵族担心身份秩序被打破，农户与基层官吏则追问新法怎样兑现。你只能作六次节点选择。数值是课堂模型，不是战国秦国统计。",
+  "max_turns": 6,
+  "variables": [
+    {
+      "variable_id": "state-capacity",
+      "label": "国家能力",
+      "description": "登记、计量、地方执行和资源组织能力。",
+      "initial": 38.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "military-readiness",
+      "label": "军事准备",
+      "description": "兵源、军功激励和组织动员的综合课堂指标。",
+      "initial": 34.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "grain-supply",
+      "label": "粮食供给",
+      "description": "农业产出、储备和征发可持续性的课堂指标。",
+      "initial": 48.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "legal-credibility",
+      "label": "制度信用",
+      "description": "规则是否公开、承诺是否兑现、执行是否可预期。",
+      "initial": 34.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "social-pressure",
+      "label": "社会压力",
+      "description": "家庭负担、战争风险、监督惩罚和行政强度；越低越可承受。",
+      "initial": 32.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "elite-resistance",
+      "label": "旧贵族阻力",
+      "description": "旧身份与既得利益受到调整后形成的反对；越低越利于持续。",
+      "initial": 58.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    }
+  ],
+  "npcs": [
+    {
+      "person_id": "person-c797c18e",
+      "display_name": "商鞅",
+      "role": "改革主持者",
+      "persona": "主张规则清楚、赏罚兑现与执行能力；角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "不把《商君书》全部自称原话。",
+        "不知道较晚秦简具体文字。"
+      ],
+      "initial_attitude": 15.0,
+      "initial_trust": 18.0,
+      "fact_refs": [
+        "fact-33ae0793",
+        "fact-b7c6c3a2",
+        "fact-e90ebe23"
+      ]
+    },
+    {
+      "person_id": "person-bd001399",
+      "display_name": "秦孝公",
+      "role": "改革支持者",
+      "persona": "关注竞争窗口、支持联盟和政策延续；角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "不虚构宫廷密谈。",
+        "不预言统一必然发生。"
+      ],
+      "initial_attitude": 18.0,
+      "initial_trust": 20.0,
+      "fact_refs": [
+        "fact-0b8262fb",
+        "fact-242808fb"
+      ]
+    },
+    {
+      "person_id": "person-75b468fa",
+      "display_name": "旧贵族代表",
+      "role": "旧身份秩序的合成人群",
+      "persona": "追问权力、程序和特权调整；角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "不等同某位具名大臣。",
+        "不把所有贵族写成同一立场。"
+      ],
+      "initial_attitude": -12.0,
+      "initial_trust": -5.0,
+      "fact_refs": [
+        "fact-34814f17",
+        "fact-dc3e4e17"
+      ]
+    },
+    {
+      "person_id": "person-a748c58d",
+      "display_name": "农耕家庭代表",
+      "role": "生产与赋役承担者",
+      "persona": "从收成、征发和家庭安全评价政策；角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "合成人群，不虚构田亩税额。",
+        "变量不是历史账册。"
+      ],
+      "initial_attitude": 0.0,
+      "initial_trust": 2.0,
+      "fact_refs": [
+        "fact-1c5d4753",
+        "fact-56a9aeb0"
+      ]
+    },
+    {
+      "person_id": "person-44990ad0",
+      "display_name": "军功士卒",
+      "role": "身份机会与战争风险承担者",
+      "persona": "同时陈述军功机会与战场代价；角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "不虚构战役和斩首数。",
+        "不把军功爵等同现代平等。"
+      ],
+      "initial_attitude": 5.0,
+      "initial_trust": 5.0,
+      "fact_refs": [
+        "fact-34814f17",
+        "fact-e1c7298f"
+      ]
+    },
+    {
+      "person_id": "person-829de766",
+      "display_name": "县廷吏员",
+      "role": "基层执行者",
+      "persona": "要求制度可登记、可复核、可执行；角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "较晚秦简只用于观察成熟秦制。",
+        "不自称持有商鞅原令。"
+      ],
+      "initial_attitude": 3.0,
+      "initial_trust": 5.0,
+      "fact_refs": [
+        "fact-7355435e",
+        "fact-89ff8386",
+        "fact-e2fba344"
+      ]
+    }
+  ],
+  "action_rules": [
+    {
+      "action_id": "consult-interests",
+      "label": "先听取各方陈述",
+      "description": "让旧贵族、农户、士卒和吏员分别说明可执行条件。",
+      "aliases": [
+        "听取意见",
+        "协商"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 2.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 12.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": -3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": -9.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-75b468fa",
+          "attitude_delta": 5.0,
+          "trust_delta": 7.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-a748c58d",
+          "attitude_delta": 5.0,
+          "trust_delta": 8.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "改革速度没有明显提高，但分歧第一次被写成可检查的问题。",
+      "fact_refs": [
+        "fact-0b8262fb",
+        "fact-dc3e4e17"
+      ],
+      "next_node_id": "law-publication"
+    },
+    {
+      "action_id": "announce-reform-goal",
+      "label": "公布富国强兵目标",
+      "description": "明确改革方向，但先不处理执行规则和群体疑问。",
+      "aliases": [
+        "公布目标",
+        "宣布变法"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": 5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 5.0
+        }
+      ],
+      "feedback": "方向得到宣布，支持者受到鼓舞；但目标还没有变成可兑现规则。",
+      "fact_refs": [
+        "fact-242808fb",
+        "fact-26e05675"
+      ],
+      "next_node_id": "law-publication"
+    },
+    {
+      "action_id": "silence-opposition",
+      "label": "压下反对立即推进",
+      "description": "以政治支持压下争论，把速度放在协商之前。",
+      "aliases": [
+        "强推",
+        "压下反对"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": 5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": -7.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 11.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 13.0
+        }
+      ],
+      "feedback": "决策窗口被迅速利用，公开反对暂时沉默，抵触与不安却转入执行层。",
+      "fact_refs": [
+        "fact-0b8262fb",
+        "fact-dc3e4e17"
+      ],
+      "next_node_id": "law-publication"
+    },
+    {
+      "action_id": "publish-clear-rules",
+      "label": "公开法令与申诉记录",
+      "description": "把责任、尺度和执行步骤写清，并记录争议供复核。",
+      "aliases": [
+        "公开法令",
+        "明法"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 8.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 17.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 3.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-829de766",
+          "attitude_delta": 5.0,
+          "trust_delta": 9.0,
+          "reveal_fact_refs": [
+            "fact-b7c6c3a2"
+          ]
+        }
+      ],
+      "feedback": "规则开始可查、可解释；公开本身不消除强制，却减少了任意变化。",
+      "fact_refs": [
+        "fact-b7c6c3a2",
+        "fact-e1c7298f"
+      ],
+      "next_node_id": "incentive-design"
+    },
+    {
+      "action_id": "stage-symbolic-promise",
+      "label": "以公开赏格建立承诺",
+      "description": "用一次清楚兑现的赏格展示新令会被执行。",
+      "aliases": [
+        "徙木立信",
+        "兑现赏格"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 11.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 2.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 5.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-c797c18e",
+          "attitude_delta": 4.0,
+          "trust_delta": 6.0,
+          "reveal_fact_refs": [
+            "fact-f3fe8320"
+          ]
+        }
+      ],
+      "feedback": "承诺得到一次兑现；史官同时注明这是借《史记》故事形成的课堂选择。",
+      "fact_refs": [
+        "fact-33ae0793",
+        "fact-f3fe8320"
+      ],
+      "next_node_id": "incentive-design"
+    },
+    {
+      "action_id": "impose-collective-liability",
+      "label": "先推什伍连带追责",
+      "description": "以相互监督和连带处置迅速压实基层责任。",
+      "aliases": [
+        "连坐",
+        "什伍追责"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 14.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 2.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 16.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 8.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-a748c58d",
+          "attitude_delta": -9.0,
+          "trust_delta": -12.0,
+          "reveal_fact_refs": [
+            "fact-1c5d4753"
+          ]
+        }
+      ],
+      "feedback": "追责网络提高了可见度，也让邻里与家庭承担他人行为的风险。",
+      "fact_refs": [
+        "fact-1c5d4753",
+        "fact-e1c7298f"
+      ],
+      "next_node_id": "incentive-design"
+    },
+    {
+      "action_id": "balance-farming-and-merit",
+      "label": "并列耕作保障与军功通道",
+      "description": "给农业生产和服役立下清楚奖励，同时限制额外征发。",
+      "aliases": [
+        "平衡耕战",
+        "耕战并举"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 6.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": 11.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": 13.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 7.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 6.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-a748c58d",
+          "attitude_delta": 4.0,
+          "trust_delta": 6.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-44990ad0",
+          "attitude_delta": 5.0,
+          "trust_delta": 7.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "粮食与服役激励都得到推进，身份机会扩大，家庭仍感到战争目标正在进入生活。",
+      "fact_refs": [
+        "fact-34814f17",
+        "fact-56a9aeb0",
+        "fact-dc3e4e17"
+      ],
+      "next_node_id": "administration"
+    },
+    {
+      "action_id": "prioritize-military-merit",
+      "label": "优先军功爵与战备",
+      "description": "把身份上升和资源奖励主要系于军功。",
+      "aliases": [
+        "军功爵",
+        "优先战备"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 8.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": 25.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": -4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 13.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-44990ad0",
+          "attitude_delta": 9.0,
+          "trust_delta": 9.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-75b468fa",
+          "attitude_delta": -8.0,
+          "trust_delta": -6.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "士卒看到新通道，战备迅速提升；旧特权与社会军事化压力同时上升。",
+      "fact_refs": [
+        "fact-34814f17",
+        "fact-dc3e4e17"
+      ],
+      "next_node_id": "administration"
+    },
+    {
+      "action_id": "reward-farming-first",
+      "label": "先稳农业与家庭生产",
+      "description": "优先保障耕作时间和产出奖励，放慢军事激励。",
+      "aliases": [
+        "奖励耕织",
+        "先稳农业"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": 3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": 17.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 2.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-a748c58d",
+          "attitude_delta": 8.0,
+          "trust_delta": 9.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "粮食与家庭预期改善，改革的军事目标推进较慢。",
+      "fact_refs": [
+        "fact-56a9aeb0"
+      ],
+      "next_node_id": "administration"
+    },
+    {
+      "action_id": "standardize-measures",
+      "label": "先统一计量与账册",
+      "description": "以标准量器和共同账册连接粮食、交换与征收。",
+      "aliases": [
+        "统一度量衡",
+        "商鞅方升"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 16.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": 6.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 9.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 3.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-829de766",
+          "attitude_delta": 7.0,
+          "trust_delta": 9.0,
+          "reveal_fact_refs": [
+            "fact-4e4b5f90"
+          ]
+        }
+      ],
+      "feedback": "标准尺度使记录可比较；这项选择有公元前344年方升铭文的直接实物支撑。",
+      "fact_refs": [
+        "fact-4e4b5f90"
+      ],
+      "next_node_id": "enforcement"
+    },
+    {
+      "action_id": "build-county-offices",
+      "label": "建设县廷并培训吏员",
+      "description": "建立地方执行和复核环节，避免命令只停在都城。",
+      "aliases": [
+        "推行县制",
+        "建设县廷"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 14.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 6.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 6.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 8.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-829de766",
+          "attitude_delta": 7.0,
+          "trust_delta": 8.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "地方执行能力提高，也产生登记、征收和问责的新压力。",
+      "fact_refs": [
+        "fact-7355435e",
+        "fact-89ff8386",
+        "fact-e2fba344"
+      ],
+      "next_node_id": "enforcement"
+    },
+    {
+      "action_id": "rapid-requisition-network",
+      "label": "先建征发与追责网络",
+      "description": "用户籍、基层编组和严密征发快速集中资源。",
+      "aliases": [
+        "严密征发",
+        "基层追责"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 19.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": 8.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": 7.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": -4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 16.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 9.0
+        }
+      ],
+      "feedback": "国家掌握资源的速度提高，家庭和基层执行者承受明显压力。",
+      "fact_refs": [
+        "fact-1c5d4753",
+        "fact-89ff8386"
+      ],
+      "next_node_id": "enforcement"
+    },
+    {
+      "action_id": "defer-local-implementation",
+      "label": "暂留旧办法等待自愿采用",
+      "description": "不建立统一执行机构，让地方自行选择是否跟进。",
+      "aliases": [
+        "暂缓县政",
+        "地方自愿"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": -3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": -5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": -4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": -8.0
+        }
+      ],
+      "feedback": "冲突暂时下降，规则却在不同地方呈现不同含义。",
+      "fact_refs": [
+        "fact-89ff8386",
+        "fact-b7c6c3a2"
+      ],
+      "next_node_id": "enforcement"
+    },
+    {
+      "action_id": "phase-and-audit",
+      "label": "分阶段执行并公开复核",
+      "description": "先在部分区域执行，记录负担与错误后修订步骤。",
+      "aliases": [
+        "分阶段",
+        "审计修订"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 9.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": -7.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": -6.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-829de766",
+          "attitude_delta": 5.0,
+          "trust_delta": 8.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-a748c58d",
+          "attitude_delta": 4.0,
+          "trust_delta": 7.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "推进略慢，但错误和负担被写进可复核记录，制度更有持续条件。",
+      "fact_refs": [
+        "fact-b7c6c3a2",
+        "fact-dc3e4e17"
+      ],
+      "next_node_id": "evaluation"
+    },
+    {
+      "action_id": "enforce-with-severe-penalties",
+      "label": "以严罚完成全面执行",
+      "description": "用高强度惩罚和连带责任压缩执行时间。",
+      "aliases": [
+        "严刑执行",
+        "全面强推"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 16.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": -7.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 19.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-a748c58d",
+          "attitude_delta": -11.0,
+          "trust_delta": -13.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "person_id": "person-829de766",
+          "attitude_delta": -3.0,
+          "trust_delta": -5.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "命令迅速落实，压力、抵触和惩罚外溢也达到危险水平。",
+      "fact_refs": [
+        "fact-1c5d4753",
+        "fact-dc3e4e17",
+        "fact-e1c7298f"
+      ],
+      "next_node_id": "evaluation"
+    },
+    {
+      "action_id": "correct-burdens",
+      "label": "纠正过重征发与含混条款",
+      "description": "减少过量征发，解释含混规则并保护基本耕作时间。",
+      "aliases": [
+        "减轻负担",
+        "纠错"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": 4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 12.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": -9.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": -4.0
+        }
+      ],
+      "feedback": "国家暂时放慢扩张，却换来更清楚规则和可持续执行。",
+      "fact_refs": [
+        "fact-56a9aeb0",
+        "fact-dc3e4e17"
+      ],
+      "next_node_id": "evaluation"
+    },
+    {
+      "action_id": "suspend-enforcement",
+      "label": "暂停执行等待局势自行稳定",
+      "description": "停止推进，但不解决规则冲突或建立替代方案。",
+      "aliases": [
+        "暂停变法",
+        "继续等待"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": -5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": -3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": -8.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": -4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": -7.0
+        }
+      ],
+      "feedback": "眼前压力下降，改革目标与执行承诺同时失去清晰度。",
+      "fact_refs": [
+        "fact-0b8262fb",
+        "fact-b7c6c3a2"
+      ],
+      "next_node_id": "evaluation"
+    },
+    {
+      "action_id": "consolidate-balanced-reform",
+      "label": "封存规则并保留复核",
+      "description": "把标准、县政、激励和负担修订写入可持续执行方案。",
+      "aliases": [
+        "平衡收束",
+        "封存改革"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 10.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": 8.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": 5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 6.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": -3.0
+        }
+      ],
+      "feedback": "六轮方案完成：国家能力、制度信用和社会承受将共同决定结局。",
+      "fact_refs": [
+        "fact-242808fb",
+        "fact-dc3e4e17"
+      ],
+      "next_node_id": "evaluation"
+    },
+    {
+      "action_id": "drive-mobilization",
+      "label": "以战备成果继续加速",
+      "description": "把最后资源投入征发、军功和强制执行。",
+      "aliases": [
+        "继续强推",
+        "加速动员"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 12.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": 16.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": 4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": -4.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 11.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": 7.0
+        }
+      ],
+      "feedback": "动员能力冲到高位，制度是否仍可承受将在卷宗中接受检验。",
+      "fact_refs": [
+        "fact-34814f17",
+        "fact-dc3e4e17"
+      ],
+      "next_node_id": "evaluation"
+    },
+    {
+      "action_id": "negotiate-limited-reform",
+      "label": "保留核心措施并继续协商",
+      "description": "承认执行能力有限，先保留可兑现措施和后续复核。",
+      "aliases": [
+        "折中收束",
+        "有限改革"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": 3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": 8.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": -8.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": -10.0
+        }
+      ],
+      "feedback": "方案没有完成全部目标，但保住了继续执行和协商的条件。",
+      "fact_refs": [
+        "fact-b4c904b0",
+        "fact-dc3e4e17"
+      ],
+      "next_node_id": "evaluation"
+    },
+    {
+      "action_id": "abandon-reform",
+      "label": "撤回方案恢复旧序",
+      "description": "因阻力与执行困难取消尚未稳固的改革措施。",
+      "aliases": [
+        "放弃变法",
+        "恢复旧制"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": -10.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operation": "add",
+          "value": -8.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": -3.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": -12.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": -5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operation": "add",
+          "value": -15.0
+        }
+      ],
+      "feedback": "眼前反对有所缓和，求变窗口和已作承诺一并失去。",
+      "fact_refs": [
+        "fact-0b8262fb",
+        "fact-26e05675"
+      ],
+      "next_node_id": "reform-withdrawn"
+    }
+  ],
+  "event_rules": [
+    {
+      "event_id": "rules-become-visible",
+      "title": "规则开始可核验",
+      "match": "all",
+      "trigger": [
+        {
+          "kind": "turn",
+          "operator": "gte",
+          "value": 2
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operator": "gte",
+          "value": 55.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": 4.0
+        }
+      ],
+      "narrative": "公开且兑现的规则减少了反复解释成本，基层执行能力小幅提高。",
+      "once": true,
+      "priority": 10,
+      "fact_refs": [
+        "fact-b7c6c3a2"
+      ]
+    },
+    {
+      "event_id": "resistance-coalesces",
+      "title": "旧利益联合阻挠",
+      "match": "all",
+      "trigger": [
+        {
+          "kind": "state",
+          "variable_id": "elite-resistance",
+          "operator": "gte",
+          "value": 78.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operation": "add",
+          "value": -5.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operation": "add",
+          "value": 6.0
+        }
+      ],
+      "narrative": "特权调整与强推方式使反对力量联合，改革执行出现额外摩擦。",
+      "once": true,
+      "priority": 20,
+      "fact_refs": [
+        "fact-34814f17",
+        "fact-dc3e4e17"
+      ]
+    },
+    {
+      "event_id": "administrative-overload",
+      "title": "基层执行过载",
+      "match": "all",
+      "trigger": [
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operator": "gte",
+          "value": 75.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operator": "gte",
+          "value": 72.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operation": "add",
+          "value": -6.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operation": "add",
+          "value": -4.0
+        }
+      ],
+      "narrative": "征发、登记和处罚同时加速，基层错误增加，国家能力的增长开始反噬制度信用。",
+      "once": true,
+      "priority": 30,
+      "fact_refs": [
+        "fact-89ff8386",
+        "fact-dc3e4e17"
+      ]
+    }
+  ],
+  "ending_rules": [
+    {
+      "ending_id": "ending-balanced-reform",
+      "title": "法立而可续",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "operator": "gte",
+          "value": 6
+        },
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operator": "gte",
+          "value": 75.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operator": "gte",
+          "value": 50.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-supply",
+          "operator": "gte",
+          "value": 60.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operator": "gte",
+          "value": 65.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operator": "lte",
+          "value": 65.0
+        }
+      ],
+      "summary": "标准、地方执行、农业与军功激励形成连接，规则也保留复核；改革获得阶段成功而未把代价藏起来。",
+      "historical_explanation": "这是课堂的平衡成功模型，不声称真实秦国曾按六项数值运行。秦的长期强盛仍需多代、多因素解释。",
+      "major_costs": [
+        "身份与资源更紧密地服务国家目标",
+        "家庭仍承担赋役和战争压力",
+        "旧特权调整需要持续政治支持"
+      ],
+      "source_ref_ids": [
+        "source-10db7596",
+        "source-978c3867",
+        "source-e176bc0e"
+      ],
+      "fact_refs": [
+        "fact-242808fb",
+        "fact-4e4b5f90",
+        "fact-dc3e4e17"
+      ],
+      "priority": 10
+    },
+    {
+      "ending_id": "ending-coercive-strength",
+      "title": "国强而压重",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "operator": "gte",
+          "value": 6
+        },
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operator": "gte",
+          "value": 75.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "military-readiness",
+          "operator": "gte",
+          "value": 65.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operator": "gte",
+          "value": 72.0
+        }
+      ],
+      "summary": "征发、战备和基层追责迅速增强，家庭、士卒与吏员承受高压，制度信用也受到侵蚀。",
+      "historical_explanation": "富国强兵并不自动等于所有群体获益。本结局把国家能力与强制代价并列，但数值不是秦国史实统计。",
+      "major_costs": [
+        "连带责任和严罚扩大",
+        "战争动员深入家庭生活",
+        "基层过载与旧贵族阻力可能反噬改革"
+      ],
+      "source_ref_ids": [
+        "source-06962396",
+        "source-978c3867",
+        "source-e73460a4"
+      ],
+      "fact_refs": [
+        "fact-1c5d4753",
+        "fact-34814f17",
+        "fact-dc3e4e17"
+      ],
+      "priority": 20
+    },
+    {
+      "ending_id": "ending-negotiated-compromise",
+      "title": "新法初立，能力有限",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "operator": "gte",
+          "value": 6
+        },
+        {
+          "kind": "state",
+          "variable_id": "state-capacity",
+          "operator": "gte",
+          "value": 50.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "legal-credibility",
+          "operator": "gte",
+          "value": 50.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "social-pressure",
+          "operator": "lte",
+          "value": 65.0
+        }
+      ],
+      "summary": "部分规则获得信用，粮食或地方治理有所改善，但军事和行政目标没有全部完成。改革进入继续协商和修订的阶段。",
+      "historical_explanation": "制度变化常是长期过程。折中结局保留阶段成果，不把改革写成一次完成的清单。",
+      "major_costs": [
+        "国家能力仍不足以覆盖所有地区",
+        "部分身份与土地问题没有解决",
+        "支持联盟需要继续维持"
+      ],
+      "source_ref_ids": [
+        "source-45754e9e",
+        "source-978c3867"
+      ],
+      "fact_refs": [
+        "fact-242808fb",
+        "fact-89ff8386",
+        "fact-b4c904b0"
+      ],
+      "priority": 30
+    },
+    {
+      "ending_id": "ending-reform-breakdown",
+      "title": "承诺失信，窗口关闭",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "operator": "gte",
+          "value": 6
+        }
+      ],
+      "summary": "六轮结束时执行能力或制度信用仍不足，改革目标在阻力、含混规则和迟疑中失去窗口。",
+      "historical_explanation": "这是课堂规则的失败兜底，用于复盘支持、执行、资源与代价怎样相互作用，不对应某次真实廷议。",
+      "major_costs": [
+        "公开承诺未能稳定兑现",
+        "已投入资源没有形成持续制度",
+        "列国竞争压力仍在"
+      ],
+      "source_ref_ids": [
+        "source-978c3867",
+        "source-e176bc0e"
+      ],
+      "fact_refs": [
+        "fact-0b8262fb",
+        "fact-26e05675",
+        "fact-dc3e4e17"
+      ],
+      "priority": 1000
+    }
+  ],
+  "start_node_id": "court-debate",
+  "nodes": [
+    {
+      "node_id": "court-debate",
+      "title": "第一节点：改革是否启动",
+      "narration": "求变窗口已经打开，先决定怎样面对目标与反对。",
+      "action_ids": [
+        "consult-interests",
+        "announce-reform-goal",
+        "silence-opposition"
+      ],
+      "ending_id": null
+    },
+    {
+      "node_id": "law-publication",
+      "title": "第二节点：新令怎样取得信用",
+      "narration": "方向已定，人们仍在等待规则是否公开、承诺是否兑现。",
+      "action_ids": [
+        "publish-clear-rules",
+        "stage-symbolic-promise",
+        "impose-collective-liability"
+      ],
+      "ending_id": null
+    },
+    {
+      "node_id": "incentive-design",
+      "title": "第三节点：耕作、军功与身份",
+      "narration": "改革进入利益分配，粮食、战备与身份机会不可能毫无冲突。",
+      "action_ids": [
+        "balance-farming-and-merit",
+        "prioritize-military-merit",
+        "reward-farming-first"
+      ],
+      "ending_id": null
+    },
+    {
+      "node_id": "administration",
+      "title": "第四节点：规则怎样抵达地方",
+      "narration": "没有计量、账册和地方执行，法令可能只停留在都城。",
+      "action_ids": [
+        "standardize-measures",
+        "build-county-offices",
+        "rapid-requisition-network",
+        "defer-local-implementation"
+      ],
+      "ending_id": null
+    },
+    {
+      "node_id": "enforcement",
+      "title": "第五节点：执行速度与纠错",
+      "narration": "制度开始改变日常生活，必须选择执行强度和纠错方式。",
+      "action_ids": [
+        "phase-and-audit",
+        "enforce-with-severe-penalties",
+        "correct-burdens",
+        "suspend-enforcement"
+      ],
+      "ending_id": null
+    },
+    {
+      "node_id": "evaluation",
+      "title": "第六节点：封存、折中或撤回",
+      "narration": "最后一次决定不会抹平之前的轨迹，只会决定怎样带着成果与代价进入卷宗。",
+      "action_ids": [
+        "consolidate-balanced-reform",
+        "drive-mobilization",
+        "negotiate-limited-reform",
+        "abandon-reform"
+      ],
+      "ending_id": null
+    },
+    {
+      "node_id": "reform-withdrawn",
+      "title": "终局节点：方案撤回",
+      "narration": "改革承诺被撤回，求变窗口关闭，进入失败复盘。",
+      "action_ids": [],
+      "ending_id": "ending-reform-breakdown"
+    }
+  ],
+  "fact_refs": [
+    "fact-0b8262fb",
+    "fact-1c5d4753",
+    "fact-242808fb",
+    "fact-26e05675",
+    "fact-2742a743",
+    "fact-33ae0793",
+    "fact-34814f17",
+    "fact-4e4b5f90",
+    "fact-56a9aeb0",
+    "fact-7355435e",
+    "fact-89ff8386",
+    "fact-b3de11a4",
+    "fact-b4c904b0",
+    "fact-b7c6c3a2",
+    "fact-dc3e4e17",
+    "fact-e1c7298f",
+    "fact-e2fba344",
+    "fact-e90ebe23",
+    "fact-f3fe8320"
+  ],
+  "source_ref_ids": [
+    "source-06962396",
+    "source-10db7596",
+    "source-16378093",
+    "source-45754e9e",
+    "source-543a393d",
+    "source-978c3867",
+    "source-b0f78264",
+    "source-c57cb559",
+    "source-e176bc0e",
+    "source-e73460a4"
+  ],
+  "dossier_template": {
+    "title_template": "《{scenario_title}·史官卷宗》",
+    "reflection_questions": [
+      "哪一次选择最改变国家能力或制度信用？请引用变量变化和事实来源。",
+      "你的结局让哪些群体获得机会，又让哪些群体承担压力？",
+      "卷宗中的《史记》、方升、秦简和《商君书》分别能证明到什么程度？",
+      "秦国后来强盛还需要哪些因素，为什么不能只归因于商鞅？"
+    ],
+    "knowledge_node_kinds": [
+      "evidence",
+      "claim",
+      "boundary",
+      "institution",
+      "cause",
+      "consequence",
+      "cost"
+    ]
+  },
+  "created_at": "2026-08-13T02:32:38.951901Z",
+  "updated_at": "2026-08-13T02:32:39.043837Z",
+  "sealed_at": "2026-08-13T02:32:39.043837Z",
+  "sealed_by": "content-publisher-admin",
+  "checksum": "eddb9370bc7ad0cd8080784c68f15db25ecba11ffed4f2d272e8588d10f87cbd",
+  "compatibility": {
+    "kind": "native-v1",
+    "source_id": "",
+    "source_version": "",
+    "source_checksum": null,
+    "notes": "",
+    "unresolved_refs": [],
+    "legacy_materials": [],
+    "legacy_id_map": {}
+  }
+}
