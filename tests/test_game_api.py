@@ -71,17 +71,30 @@ class GameApiTests(unittest.TestCase):
     def test_catalog_start_turn_get_and_complete_without_client_state(self):
         listed = self.client.get("/api/v1/practice/game/scenarios")
         self.assertEqual(listed.status_code, 200, listed.text)
-        self.assertEqual(len(listed.json()["items"]), 2)
+        items = listed.json()["items"]
+        items_by_id = {item["scenario_id"]: item for item in items}
+        self.assertEqual(len(items_by_id), len(items))
+        self.assertTrue(
+            {
+                "scenario-dayu-flood-control",
+                "scenario-shangyang-institutional-reform",
+                "dayu-crisis-governance",
+            }.issubset(items_by_id)
+        )
         self.assertEqual(listed.json()["session_storage"], "sqlite-json")
         self.assertEqual(
-            {item["audience"] for item in listed.json()["items"]},
-            {"development"},
+            items_by_id["scenario-dayu-flood-control"]["audience"],
+            "development",
         )
-        dayu_summary = next(
-            item
-            for item in listed.json()["items"]
-            if item["scenario_id"] == "scenario-dayu-flood-control"
+        self.assertEqual(
+            items_by_id["scenario-shangyang-institutional-reform"]["audience"],
+            "development",
         )
+        self.assertEqual(
+            items_by_id["dayu-crisis-governance"]["audience"],
+            "published",
+        )
+        dayu_summary = items_by_id["scenario-dayu-flood-control"]
         self.assertGreaterEqual(len(dayu_summary["variables"]), 1)
         self.assertGreaterEqual(len(dayu_summary["npcs"]), 1)
         self.assertEqual(

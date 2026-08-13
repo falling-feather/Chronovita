@@ -1,0 +1,99 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L101",
+  "course_id": "C-prequin-state",
+  "state": "published",
+  "revision": 6,
+  "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
+  "validation": {
+    "schema_version": "content-validation/v1",
+    "validator_version": "course-minimum/v1",
+    "lesson_id": "L101",
+    "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
+    "valid": true,
+    "issues": [],
+    "validated_at": "2026-08-13T01:57:23.468095Z",
+    "validated_by": "content-publisher-admin"
+  },
+  "sealed_version": 1,
+  "sealed_checksum": "49ca4556d2c840491f072bfceb7b294b2af854db6d5a6e67f4bf3496ef45c03e",
+  "published_course_id": "C-prequin-state",
+  "published_version": 1,
+  "published_release_id": "rel-28b5624648-0002",
+  "updated_at": "2026-08-13T01:57:23.729536Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "content-author-dayu",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-08-13T01:57:23.430135Z",
+      "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "validation_passed",
+      "from_state": "draft",
+      "to_state": "validated",
+      "actor": "content-author-dayu",
+      "note": "Minimum content validation passed.",
+      "occurred_at": "2026-08-13T01:57:23.441653Z",
+      "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 3,
+      "action": "submit_review",
+      "from_state": "validated",
+      "to_state": "in_review",
+      "actor": "content-author-dayu",
+      "note": "L101 正文、史实边界、人物、地图与课堂结构已完成，申请独立审校。",
+      "occurred_at": "2026-08-13T01:57:23.450216Z",
+      "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 4,
+      "action": "approve",
+      "from_state": "in_review",
+      "to_state": "approved",
+      "actor": "content-reviewer-dayu",
+      "note": "已逐项核对传说、传世文献、考古判断和教学解释，批准封存。",
+      "occurred_at": "2026-08-13T01:57:23.458204Z",
+      "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 5,
+      "action": "seal",
+      "from_state": "approved",
+      "to_state": "sealed",
+      "actor": "content-publisher-admin",
+      "note": "Sealed immutable source version 1.",
+      "occurred_at": "2026-08-13T01:57:23.478659Z",
+      "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
+      "sealed_version": 1,
+      "release_id": null
+    },
+    {
+      "sequence": 6,
+      "action": "publish",
+      "from_state": "sealed",
+      "to_state": "published",
+      "actor": "content-publisher-admin",
+      "note": "发布 L101 大禹治水正式旗舰课：课程、六回合关卡、证据库与导读资源精确绑定。",
+      "occurred_at": "2026-08-13T01:57:23.729536Z",
+      "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0002"
+    }
+  ],
+  "checksum": "ff82457e05470c822f93d932e9c47fa792914ec32c5970d88d432d808360fb06"
+}

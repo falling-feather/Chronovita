@@ -1,0 +1,13 @@
+{
+  "schema_version": "course-release-pointer/v1",
+  "course_id": "C-prequin-state",
+  "release_id": "rel-28b5624648-0002",
+  "release_no": 2,
+  "manifest_path": "releases/manifests/C-prequin-state/rel-28b5624648-0002.json",
+  "manifest_checksum": "83b3b035442d179e5df80395f54f89e8025d173222dc8922570bca66b4cdc038",
+  "generation": 1,
+  "previous_release_id": null,
+  "activated_at": "2026-08-13T01:57:23.727536Z",
+  "activated_by": "content-publisher-admin",
+  "checksum": "b7078d11b5037dd638c6883f56e90cbc218f4b0f55970b15b85fd22dc60c5075"
+}

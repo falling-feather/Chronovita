@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07182e"/><stop offset="1" stop-color="#123b50"/>
+    </linearGradient>
+    <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+      <path d="M80 0H0V80" fill="none" stroke="#c7a461" stroke-opacity=".08" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)"/><rect width="1920" height="1080" fill="url(#grid)"/>
+  <path d="M0 815 C250 700 400 920 660 805 S1110 680 1380 820 S1690 880 1920 735 V1080 H0Z" fill="#1b6d78" opacity=".55"/>
+  <path d="M0 860 C260 750 450 960 720 850 S1180 730 1450 875 S1730 920 1920 805" fill="none" stroke="#66c7c1" stroke-width="9" opacity=".8"/>
+  <rect x="130" y="120" width="12" height="250" rx="6" fill="#c7a461"/>
+  <text x="180" y="184" fill="#d9bd7b" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="32" font-weight="600" letter-spacing="7">L101 · 课堂导读</text>
+  <text x="180" y="300" fill="#f4ead7" font-family="Noto Serif SC, SimSun, serif" font-size="86" font-weight="700">一场洪水，</text>
+  <text x="180" y="414" fill="#f4ead7" font-family="Noto Serif SC, SimSun, serif" font-size="86" font-weight="700">为什么会改变共同体？</text>
+  <text x="184" y="505" fill="#a9d9d5" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="36">先分清材料的时代，再讨论治理、权力与代价。</text>
+  <g transform="translate(1370 130)">
+    <circle cx="210" cy="210" r="170" fill="none" stroke="#c7a461" stroke-width="3" opacity=".7"/>
+    <circle cx="210" cy="210" r="118" fill="none" stroke="#66c7c1" stroke-width="2" stroke-dasharray="10 14"/>
+    <path d="M60 235 C115 175 160 260 220 195 S330 150 368 220" fill="none" stroke="#66c7c1" stroke-width="13" stroke-linecap="round"/>
+    <path d="M82 278 C138 218 180 300 238 242 S330 208 350 262" fill="none" stroke="#d9bd7b" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <text x="180" y="970" fill="#97aeb8" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="27">传说 · 传世文献 · 考古观察 · 教学解释</text>
+</svg>

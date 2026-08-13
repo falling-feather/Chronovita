@@ -1,0 +1,519 @@
+{
+  "schema_version": "course-package/v1",
+  "package_id": "pkg-L101",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L101",
+  "content_version": 1,
+  "status": "sealed",
+  "title": "大禹治水：洪水记忆与早期国家",
+  "unit": "早期国家与权力秩序",
+  "era": "约公元前21世纪—约公元前1600年（传统夏代年代框架）",
+  "body": [
+    "如果一场持续的洪水冲毁田地、道路和聚落，人们为什么愿意把粮食、劳力与决定权交给一个共同的组织者？“大禹治水”常被讲成英雄战胜洪水的故事，本课却要多追问一步：这个故事由哪些时代留下，哪些内容能由考古材料观察，哪些只是后人的解释？我们将把传说、传世文献、考古发现和课堂推演分开标注，再讨论灾害治理怎样可能改变人与人之间的协作方式、首领权威和早期国家秩序。",
+    "先从洪水本身说起。黄河及其支流含沙量高、河道摆动明显，不同流域在史前时期也经历过各自的水患。对没有现代堤坝、预报与机械的聚落而言，连续降雨、河道改道或局地堰塞湖溃决，都可能同时威胁住房、种子、牲畜和饮水。但“许多地方可能发生过洪水”并不等于“曾有一场覆盖天下、时间与路线完全确定的洪水”。课堂中的危机背景是依据常见风险建立的教学情境，不是一份可以还原某一年天气的记录。",
+    "关于禹的故事主要保存在后世传世文献中。《孟子》《尚书》相关篇章和《史记·夏本纪》成书、编定或流传的时代，都晚于传统叙事所说的禹生活年代。它们能够说明战国、秦汉及后世的人怎样记忆和解释远古，却不能自动等同于事件发生当时的现场记录。读这些文字时，我们既不应把它们全部丢进“虚构”一栏，也不能因为文字写得具体，就把每一个地名、年数和动作都当作已经被同时代材料证实。",
+    "在传世叙事中，鲧先受命治理洪水，后来禹接续其事；禹长期在外，疏通河道，使水有所归，最终因治水声望成为联盟首领。“三过家门而不入”把公共责任推到极致，成为后世反复讲述的道德形象。它适合帮助我们理解古人赞赏怎样的领导者，却没有对应的考古材料能核验“三次”这一细节。本课人物卡中的禹、鲧和益，也都是依照传世叙事建立的有边界角色，不会假装说出未经文献支持的“原话”。",
+    "“鲧用堵、禹用疏”是常见的课堂概括。传世文献确实把鲧的失利与禹顺水势、疏川导流相对照，但真实水利从来不是一道单选题：局部护岸、临时围挡、疏浚、分洪、迁居和粮食调配可能同时需要。把一种方法说成永远错误、另一种说成处处正确，会掩盖地形、季节和资源差异。因此六回合关卡允许勘察、加固、疏导、轮换劳作、公开方案和赈济并用，评价的是组合、时机与代价，而不是背诵唯一按钮。",
+    "治水不只需要技术，还需要组织。上游开口可能影响下游聚落，今天投入劳力会减少耕作时间，谁先得到粮食、谁承担危险、谁能改变方案，都会影响信任。一个首领若能协调多个聚落、记录地形、分配物资并让承诺得到执行，权威就可能在共同事务中扩大；若只强迫劳作，即使水位暂时下降，也可能留下饥饿、逃离和怨恨。这里的“权威从治理中形成”是现代教学解释，不是考古学家在某件器物上直接读到的一句话。",
+    "传世叙事还把治水与政治继承连在一起：禹之后，其子启取得首领位置，后世用“禅让转向世袭”或“公天下转向家天下”概括这一变化。这个框架有助于七年级学生观察权力秩序的转折，却仍来自较晚文献整理的王朝谱系。约公元前21世纪、约公元前1600年等日期，是教学和研究中使用的年代框架，不是精确到某年的同时代纪年。我们可以讨论继承秩序怎样被解释，却不能声称已经找到禹或启亲自留下的文字档案。",
+    "考古学提供了另一种观察窗口。河南偃师二里头遗址位于伊洛河流域，遗址年代、分布中心和发展阶段与传世文献所述夏后期活动范围有较高重合，因此它是探索夏史最重要的材料之一。考古人员发现了大规模都邑、成组道路、宫殿区、祭祀区、铸铜与绿松石作坊，以及等级有别的建筑和墓葬。这些可观察遗存说明当时存在集中规划、专业生产、礼仪秩序和明显的社会分化，为讨论广域王权与早期国家提供了坚实材料。",
+    "不过，考古学首先命名的是“二里头遗址”和“二里头文化”。把它们进一步解释为夏后期都城或夏文化，是综合年代、地域、聚落等级和传世文献作出的历史判断。国家博物馆等公共机构把二里头称为探索夏人历史面貌的主要遗存，部分研究者使用更肯定的“夏都”表述，也有学者提醒目前尚无二里头同时代文字明确写出“禹”或“夏”。本课保留这种证据强弱差别：可以说“高度相关、重要对象”，不把解释写成无条件的一一对应。",
+    "判断证据时还要分清“没有发现”与“证明不存在”。目前没有可公认直读为禹的同时代铭文，只能限制我们对人物姓名的断言，不能反过来证明后世叙事必定毫无历史基础；二里头显示出复杂都邑，也不能单靠复杂性就确认王朝名称。历史研究经常处在两种急切之间：一种急着让遗物给故事盖章，另一种因缺少直接文字便否定所有记忆。更稳妥的方法，是把每项材料能回答的问题写出来：器物和布局回答社会怎样组织，传世文本回答后人怎样记忆，自然科学回答何时何地可能发生灾害；只有证据链相接时，结论才向前一步。",
+    "2016年发表在《Science》的研究提出，黄河上游积石峡约公元前1920年可能发生过大型堰塞湖溃决，并讨论它与洪水传说及夏代年代的关系。这项研究让自然科学证据进入讨论，也很快引发对测年、洪水范围和文化联系的复核。即使接受那里曾有灾害，也只能先证明特定地点与时段的自然事件；从局地洪水跨到“就是大禹治理的洪水”，还缺少人物、路线和连续传播链的直接证据。积石峡因此被放在地图上作为争议案例，而不是禹的“考古打卡点”。",
+    "后世地图也需要放回自己的时代。南宋《禹迹图》以石刻地图表现河流、山川和“禹迹”，距离传统所说的禹时代已有数千年。它珍贵地展示了十二世纪的人如何用地图组织疆域知识和文化记忆，却不能当作夏代测绘原件。同样，《禹贡》中的九州、山川和贡赋结构，适合研究古人怎样想象空间与秩序；文本层次和地名沿革复杂，不能把每条线直接画成禹实际施工路线。地图踏勘会同时显示“遗址点”“自然事件点”和“记忆地图”，避免把三者混成一张证据图。",
+    "现在回到课堂危机。你不是扮演无所不知的神话英雄，而是作为治水共同体的议事记录者，在六个回合中协调勘察、工程、粮食和劳作。洪水风险下降只是一个指标；地形认知、聚落信任、劳作者状态、粮食储备与协作能力同样可见。快速强征可能形成“有功但代价沉重”的结局，照顾所有人却迟迟不处理水势也可能失败。规则不是历史复刻，而是让“公共工程为何会产生权力、权力又应承担什么责任”变成可以观察、干预、反馈和复盘的问题。",
+    "召见人物时，禹、益、聚落代表或劳作者只能依据本课当前发布的证据片段回答，并会标明“角色化教学表达，不是史料原话”。如果材料不足，他们应说“依据不足”，而不是用模型常识补齐。你也可以召见历史研究助教，比较传世文本与考古材料的年代距离。每一张回答卡都应带来源、片段、发布版本和不确定性，让“我听到一个有说服力的故事”转化为“我知道这句话依据什么、还能追问什么”。",
+    "最后生成的史官卷宗不会只宣布成败。它会保存六次选择、变量轨迹、触发事件、主要代价、历史解释和来源，再幂等导入知识画板。复盘时请用四句话完成证据链：我观察到什么材料；我作出了什么判断；还有哪一种解释可能成立；如果增加一条新证据，我会怎样修改结论。理解大禹治水的价值，不在于把传说简单判成“真”或“假”，而在于学会尊重不同证据的时间、能力与边界，并看见共同治理、政治权威和社会代价之间的复杂联系。"
+  ],
+  "abstract": "从传说、传世文献、自然科学研究与二里头考古四层证据出发，在六回合危机治理中讨论公共协作、权威形成及其社会代价。",
+  "course_title": "先秦·早期国家与社会变革",
+  "era_id": "preqin",
+  "section": "通史",
+  "lesson_no": "1.1",
+  "duration": "40:00",
+  "teaching_objectives": [
+    "能把课程材料标注为传说、传世文献、考古观察、研究判断或教学解释。",
+    "能用至少两种不同类型证据说明二里头为何重要，并写出结论边界。",
+    "能在六回合治理中同时追踪风险、粮食、劳作、信任、知识与协作。",
+    "能用选择—变化—代价—证据链完成史官卷宗并导入知识画板。"
+  ],
+  "keywords": [
+    {
+      "keyword_id": "keyword-71a83cfd",
+      "word": "大禹治水",
+      "pinyin": "dà yǔ zhì shuǐ",
+      "gloss": "后世关于禹组织治理洪水的核心叙事；需区分传说记忆与可核验证据。",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-078009d4",
+      "word": "疏导",
+      "pinyin": "shū dǎo",
+      "gloss": "顺应水势、疏通或分导水流的治理思路，不等于任何地点都只用一种工程。",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-647f7838",
+      "word": "传世文献",
+      "pinyin": "chuán shì wén xiàn",
+      "gloss": "经后世抄传保存至今的文字材料，必须追问成书、编定和流传年代。",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-fdd15274",
+      "word": "考古学文化",
+      "pinyin": "kǎo gǔ xué wén huà",
+      "gloss": "考古学依据遗物、遗迹组合划分的时空共同体，不自动等同于文献中的族群或王朝。",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-92e1d418",
+      "word": "二里头",
+      "pinyin": "èr lǐ tóu",
+      "gloss": "河南偃师的重要都邑遗址与考古学文化，是探索夏史和早期国家的关键材料。",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-d6c3f872",
+      "word": "早期国家",
+      "pinyin": "zǎo qī guó jiā",
+      "gloss": "具有集中权力、社会分化、公共组织和区域影响等特征的早期政治形态。",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-c4f5c56d",
+      "word": "公共动员",
+      "pinyin": "gōng gòng dòng yuán",
+      "gloss": "为共同事务组织跨聚落劳力、粮食、技术和信息，同时伴随权利与代价问题。",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-8cbbb613",
+      "word": "证据边界",
+      "pinyin": "zhèng jù biān jiè",
+      "gloss": "一项材料能够支持到什么程度、不能推出什么结论的清晰范围。",
+      "source_ref_ids": []
+    }
+  ],
+  "people": [
+    {
+      "person_id": "person-7c4825d9",
+      "name": "禹",
+      "role": "传世叙事中的治水组织者",
+      "summary": "后世文献把禹塑造为长期治水、协调众人并由此取得政治声望的首领。",
+      "persona": "以审慎、重视地形和公共责任的口吻讨论选择；每次回答都承认材料年代。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "只依据本课关于《史记》《孟子》《禹贡》与考古边界的已发布片段回答。",
+        "不得声称亲眼见过二里头遗址、积石峡测年或后世王朝。",
+        "不得把三过家门的次数、具体施工路线或个人原话说成考古事实。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    },
+    {
+      "person_id": "person-b40a4965",
+      "name": "鲧",
+      "role": "传世叙事中的前任治水者",
+      "summary": "后世叙事常以鲧的失利与禹的治理相对照，但简单的“只堵不疏”不能代替复杂水利分析。",
+      "persona": "从防护聚落、资源紧迫与方案受限的角度提出异议；不把后世评价当作本人供词。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "承认鲧的具体工程、失败原因与个人动机缺乏同时代记录。",
+        "不能断言所有筑堤或围挡都错误，也不能虚构刑罚现场。",
+        "回答只限课程片段，不知道二里头考古与现代水利术语。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    },
+    {
+      "person_id": "person-31118bee",
+      "name": "益（伯益）",
+      "role": "传世叙事中的协作者与观察者",
+      "summary": "作为帮助组织、观察地形和连接聚落意见的教学角色，用于呈现协作而非单一英雄。",
+      "persona": "强调记录、复核与跨聚落协商，主动区分亲历角色口吻和后世材料。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "人物关系依据传世叙事作有限表达，不补写私人对话、精确年龄与行程。",
+        "不能把课堂变量当作真实历史统计。",
+        "遇到超出已发布证据的问题回答“依据不足”。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    },
+    {
+      "person_id": "person-cef45322",
+      "name": "聚落代表",
+      "role": "受水患影响的多聚落意见群体",
+      "summary": "汇集上游、下游与低地聚落对安全、粮食、公平和信息公开的不同诉求。",
+      "persona": "以群体而非单一历史人物发言，追问谁承担风险、谁得到保护。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "这是为课堂推演设置的合成人群，不对应一位有姓名的历史人物。",
+        "不得声称代表所有史前居民，也不得给出虚构人口和伤亡数字。",
+        "观点只能解释治理权衡，不能证明禹故事的真伪。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    },
+    {
+      "person_id": "person-dc224fcf",
+      "name": "治水劳作者",
+      "role": "承担勘察、开渠、加固和运输的劳动群体",
+      "summary": "提醒决策者看到公共工程背后的耕作时间、口粮、伤病与轮换问题。",
+      "persona": "从劳动安全、家庭生计和任务可执行性出发回应。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "这是课堂合成人群，不假冒出土文字中的自述。",
+        "不提供未经来源支持的工具、工期或伤亡细节。",
+        "可以评价关卡中的代价，但必须说明变量是教学模型。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    }
+  ],
+  "map_points": [
+    {
+      "point_id": "map-cdd1cf95",
+      "label": "二里头遗址",
+      "region": "河南省洛阳市偃师区",
+      "lat": 34.69,
+      "lng": 112.69,
+      "note": "约距今3800—3500年的大型都邑遗址；是探索夏史的重要考古材料，不等同于发现了禹的铭文。",
+      "kind": "archaeological_site"
+    },
+    {
+      "point_id": "map-bd73a50f",
+      "label": "伊洛河流域",
+      "region": "河南西部",
+      "lat": 34.68,
+      "lng": 112.45,
+      "note": "二里头文化核心区域，也与传世文献所述夏人主要活动区域有较高重合。",
+      "kind": "region"
+    },
+    {
+      "point_id": "map-d1450c4c",
+      "label": "积石峡",
+      "region": "青海省黄河上游",
+      "lat": 35.84,
+      "lng": 102.72,
+      "note": "约公元前1920年溃决洪水假说的研究地点；只能作为有争议的自然事件案例，不是已证实的禹治水地点。",
+      "kind": "research_case"
+    },
+    {
+      "point_id": "map-de8007c4",
+      "label": "《禹迹图》所见天下",
+      "region": "1136年南宋石刻地图的知识空间",
+      "lat": null,
+      "lng": null,
+      "note": "用于观察后世地理知识与大禹记忆；不提供夏代坐标，也不绘制确定施工路线。",
+      "kind": "memory_map"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "fact-bf990cb8",
+      "statement": "【传世文献】现存关于禹治水的主要文字形成或编定年代晚于传统叙事所指事件，能证明后世记忆，不能自动视为同时代记录。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-98a8d039",
+      "statement": "【传世文献】《史记·夏本纪》由西汉司马迁撰成，距离传统所说的禹时代很远，具体叙事需要与其他材料互证。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-f3213419",
+      "statement": "【传世文献】《孟子》反映战国时期的论说语境，其中疏河与三过家门叙事首先是后人理解禹的重要证据。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-03fb8208",
+      "statement": "【传世文献】《尚书·禹贡》的文本层次、九州地名和成篇年代存在研究讨论，不宜直接当作夏代施工地图。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-d3d71c82",
+      "statement": "【传说】“三过家门而不入”是影响深远的责任伦理叙事，目前不能由考古材料核验次数与现场细节。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-34f9b1ba",
+      "statement": "【教学概括】“鲧堵禹疏”来自传世叙事的对照，真实治水可能同时使用防护、疏导、分洪、迁居和物资调配。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-55c2fa8b",
+      "statement": "【自然科学研究】积石峡约公元前1920年大型溃决洪水是一项有争议的研究判断，局地灾害不能直接证明禹、全国洪水或夏王朝。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-db3673df",
+      "statement": "【考古边界】目前二里头材料中没有得到学界公认、可同时代直读为“禹”的铭文，人物与遗址不能直接绑定。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-699a85c1",
+      "statement": "【考古判断】二里头文化的年代与核心分布同传世文献所述夏后期时空范围高度重合，是探索夏史的关键材料。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-aafc4705",
+      "statement": "【考古观察】二里头的大型都邑、道路网、宫殿区、祭祀区、官营作坊和等级差异支持早期国家与广域王权研究。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-1afd8491",
+      "statement": "【解释边界】“二里头文化”是考古学命名；进一步称其为夏文化或夏都需要综合论证，不应写成无条件同义词。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-c708f42f",
+      "statement": "【教学解释】以洪水治理说明跨聚落协作和首领权威形成，是基于材料的课堂分析模型，不是某件遗物直接陈述的事实。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-6fe6c697",
+      "statement": "【传世叙事】禹后启继位以及禅让转向世袭的框架来自后世王朝叙事，适合讨论权力秩序但不是同时代档案。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-00b6a9f4",
+      "statement": "【教学解释】公共工程会占用耕作、粮食与人身安全；成功、代价和信任必须同时进入历史评价。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-4ba96f68",
+      "statement": "【空间边界】遗址、自然事件地点与后世记忆地图属于不同证据层，不能拼成一条确定的禹治水路线。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-d4f1e760",
+      "statement": "【年代边界】约公元前21世纪至约公元前1600年的夏代框架是教学与研究使用的约数，不是精确到年的同时代纪年。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    }
+  ],
+  "source_refs": [
+    {
+      "source_id": "source-485dba0f",
+      "title": "义务教育历史课程标准（2022年版）",
+      "kind": "other",
+      "publisher": "中华人民共和国教育部",
+      "url_or_path": "https://www.moe.gov.cn/srcsite/A26/s8001/202204/t20220420_619921.html",
+      "citation_note": "用于确定七年级历史核心素养、证据意识与适龄表达；只保存自写摘要。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-e40f7e07",
+      "title": "义务教育教科书·中国历史七年级上册目录与课程位置",
+      "kind": "other",
+      "publisher": "人民教育出版社",
+      "url_or_path": "https://www.pep.com.cn/products/jc/czjks/201802/t20180227_1922743.shtml",
+      "citation_note": "用于确认早期国家单元的年级与主题位置；不复制教材章节。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-6822895b",
+      "title": "《史记·夏本纪》",
+      "kind": "other",
+      "publisher": "中国哲学书电子化计划（传世文献底本索引）",
+      "url_or_path": "https://ctext.org/shiji/xia-ben-ji/zh",
+      "citation_note": "西汉成书的传世叙事；用于研究后世夏史记忆，不视为禹时代现场记录。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-58eb4cda",
+      "title": "《孟子·滕文公上》",
+      "kind": "other",
+      "publisher": "中国哲学书电子化计划（传世文献底本索引）",
+      "url_or_path": "https://ctext.org/mengzi/teng-wen-gong-i/zh",
+      "citation_note": "战国论说语境中的治水与公共责任叙事。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-8e213884",
+      "title": "《尚书·禹贡》",
+      "kind": "other",
+      "publisher": "中国哲学书电子化计划（传世文献底本索引）",
+      "url_or_path": "https://ctext.org/shang-shu/tribute-of-yu/zh",
+      "citation_note": "用于观察九州、山川与贡赋秩序的后世文本表达；成篇与地名边界需提示。",
+      "reliability": "disputed"
+    },
+    {
+      "source_id": "source-bfb9d857",
+      "title": "古代中国：夏商西周时期",
+      "kind": "other",
+      "publisher": "中国国家博物馆",
+      "url_or_path": "https://www.chnmuseum.cn/portals/0/web/zt/gudai/detail2.html",
+      "citation_note": "用于早期国家、二里头与夏史关系及手工业观察的公共机构资料。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-3d327ec3",
+      "title": "中华文明总进程的引领者：二里头文化",
+      "kind": "other",
+      "publisher": "国家发展和改革委员会",
+      "url_or_path": "https://www.ndrc.gov.cn/xwdt/ztzl/dyhgjwhgy/202209/t20220920_1335799_ext.html",
+      "citation_note": "用于二里头都邑、宫城、道路与作坊资料；对“夏都”的认定作为机构性解释呈现。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-b4bc34eb",
+      "title": "二里头都城布局的新发现及其意义",
+      "kind": "other",
+      "publisher": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2021/0208/c219544-32025885.html",
+      "citation_note": "考古工作者对道路网、功能分区、等级结构及夏史对应关系的研究说明。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-8196d6b8",
+      "title": "中华文明起源与早期发展综合研究",
+      "kind": "other",
+      "publisher": "中国人大网",
+      "url_or_path": "https://www.npc.gov.cn/npc/c2/c30834/202309/t20230901_431407.html",
+      "citation_note": "用于伊洛河流域、二里头年代、宫城和高等级手工业的综合研究摘要。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-a39aeec3",
+      "title": "Outburst flood at 1920 BCE supports historicity of China's Great Flood and the Xia dynasty",
+      "kind": "other",
+      "publisher": "Science",
+      "url_or_path": "https://doi.org/10.1126/science.aaf0842",
+      "citation_note": "积石峡洪水假说的原始研究；从自然事件到历史人物的推论需要与质疑研究并列。",
+      "reliability": "disputed"
+    },
+    {
+      "source_id": "source-9be183a9",
+      "title": "The Jishi Outburst Flood of 1920 BCE and the Great Flood Legend in Ancient China: Preliminary Reflections",
+      "kind": "other",
+      "publisher": "Journal of Chinese Humanities / 山东大学《文史哲》",
+      "url_or_path": "https://doi.org/10.1163/23521341-12340041",
+      "citation_note": "对积石峡洪水、洪水传说与夏史连接方式的学术反思。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-0cee9745",
+      "title": "Yu ji tu（禹迹图，1136年石刻地图拓本）",
+      "kind": "other",
+      "publisher": "美国国会图书馆",
+      "url_or_path": "https://www.loc.gov/item/2021668264/",
+      "citation_note": "用于观察南宋时期的地理知识和大禹文化记忆，不能作为夏代地图。",
+      "reliability": "reviewed"
+    }
+  ],
+  "qa_points": [
+    "为什么传世文献很重要，却不能直接当作禹时代的现场记录？",
+    "“三过家门而不入”能够支持哪类历史认识，不能证明什么？",
+    "“鲧堵禹疏”为什么只是教学概括，关卡为何保留多种工程组合？",
+    "二里头有哪些可直接观察的考古材料，它们如何支持早期国家研究？",
+    "为什么“二里头文化”与“夏文化”不能不加说明地写成同义词？",
+    "积石峡洪水研究证明了什么，又没有证明什么？",
+    "公共工程怎样可能扩大首领权威，又会给普通劳作者带来哪些代价？",
+    "如果新发现一条可确认年代的文字材料，你会怎样修改现有结论？"
+  ],
+  "level_goals": [
+    "能把课程材料标注为传说、传世文献、考古观察、研究判断或教学解释。",
+    "能用至少两种不同类型证据说明二里头为何重要，并写出结论边界。",
+    "能在六回合治理中同时追踪风险、粮食、劳作、信任、知识与协作。",
+    "能用选择—变化—代价—证据链完成史官卷宗并导入知识画板。"
+  ],
+  "scenario_refs": [],
+  "seed_canvas": [
+    {
+      "node_id": "evidence-layers",
+      "label": "四层证据",
+      "note": "传说—文献—考古—解释不可混写"
+    },
+    {
+      "node_id": "flood-and-governance",
+      "label": "洪水与治理",
+      "note": "自然风险需要技术和组织共同回应"
+    },
+    {
+      "node_id": "cooperation-and-power",
+      "label": "协作与权威",
+      "note": "公共动员可能扩大权力，也产生责任"
+    },
+    {
+      "node_id": "erlitou-state",
+      "label": "二里头与早期国家",
+      "note": "从可观察遗存走向有边界的历史判断"
+    },
+    {
+      "node_id": "cost-and-trust",
+      "label": "代价与信任",
+      "note": "工程结果不能遮蔽粮食、劳作和公平"
+    },
+    {
+      "node_id": "claim-evidence-boundary",
+      "label": "结论—证据—边界",
+      "note": "卷宗复盘的核心论证结构"
+    }
+  ],
+  "teacher_notes": "正式旗舰课。课堂总时长40分钟：踏勘9、抉择14、召见7、卷宗10。禁止把角色对白当史料原话；积石峡研究必须与质疑并列；二里头采用“关键材料/高度相关”措辞。正文与片段均为项目自写摘要，仅保留必要短引和出处，不复制教材章节。",
+  "created_at": "2026-08-13T01:57:23.425133Z",
+  "updated_at": "2026-08-13T01:57:23.473530Z",
+  "sealed_at": "2026-08-13T01:57:23.473530Z",
+  "sealed_by": "content-publisher-admin",
+  "checksum": "8fa5f4ddd847f6c3179cf868c3b7b2b858fcd2abfbbd30f710f6df630fcd1723",
+  "compatibility": {
+    "kind": "lesson-content-package",
+    "source_id": "L101",
+    "source_version": "1",
+    "source_checksum": "49ca4556d2c840491f072bfceb7b294b2af854db6d5a6e67f4bf3496ef45c03e",
+    "notes": "Normalized from the A1 LessonContentPackage without changing the source draft.",
+    "unresolved_refs": [
+      "dayu-classroom-intro",
+      "dayu-crisis-governance"
+    ],
+    "legacy_materials": [
+      {
+        "kind": "saga",
+        "title": "踏勘：四层证据中的大禹治水",
+        "objective": "在地图与短片中辨认遗址、自然事件、传世文本和后世记忆的不同身份。",
+        "notes": "建议9分钟；先观察材料标签，再提出一条可证与一条不可证结论。",
+        "assets": [
+          "dayu-classroom-intro"
+        ]
+      },
+      {
+        "kind": "sandbox",
+        "title": "抉择：六回合洪水危机治理",
+        "objective": "协调地形勘察、工程、粮食、劳作与公共信任，比较成功、代价、折中和失败。",
+        "notes": "固定行动在断网时仍可完成；规则变量是教学模型，不是历史统计。",
+        "assets": [
+          "dayu-crisis-governance"
+        ]
+      }
+    ],
+    "legacy_id_map": {}
+  }
+}
