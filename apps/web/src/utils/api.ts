@@ -173,6 +173,12 @@ export interface RuntimeArtifactDescriptor {
   artifact_id: string; course_id: string; lesson_id: string;
   version: number; checksum: string; path: string;
 }
+export interface SupplementArtifactDescriptor {
+  kind: 'evidence-corpus' | 'lesson-presentation';
+  schema_version: 'evidence-corpus/v1' | 'lesson-presentation/v1';
+  artifact_id: string; course_id: string; lesson_id: string;
+  version: number; checksum: string; path: string;
+}
 export interface CourseReleaseItemV1 {
   lesson_id: string; course_id: string; content_version: number;
   source_path: string; source_checksum: string; package_path: string;
@@ -186,7 +192,11 @@ export interface CourseReleaseItemV2 {
   primary_scenario_id?: string | null;
   audience: 'published';
 }
-export type CourseReleaseItem = CourseReleaseItemV1 | CourseReleaseItemV2;
+export interface CourseReleaseItemV3 extends CourseReleaseItemV2 {
+  evidence_corpus: SupplementArtifactDescriptor;
+  lesson_presentation: SupplementArtifactDescriptor;
+}
+export type CourseReleaseItem = CourseReleaseItemV1 | CourseReleaseItemV2 | CourseReleaseItemV3;
 export interface CourseReleaseManifest {
   schema_version: string; release_id: string; release_no: number; course_id: string;
   operation: 'bootstrap' | 'publish' | 'rollback'; parent_release_id?: string | null;
@@ -198,6 +208,8 @@ export type ArchiveFileKind =
   | 'sealed-lesson'
   | 'course-package'
   | 'scenario-template'
+  | 'evidence-corpus'
+  | 'lesson-presentation'
   | 'format-layer'
   | 'teacher-markdown'
   | 'preview-html';
@@ -483,6 +495,87 @@ export interface LessonPresentationResponse {
   asset_urls: { video: string; poster: string; transcript: string };
 }
 
+export type EvidenceWorkflowState =
+  | 'draft'
+  | 'validated'
+  | 'in_review'
+  | 'changes_requested'
+  | 'approved'
+  | 'sealed';
+export type EvidenceSourceKind =
+  | 'curriculum'
+  | 'textbook'
+  | 'primary_source'
+  | 'archaeology'
+  | 'museum'
+  | 'research'
+  | 'other';
+export type EvidenceKind =
+  | 'curriculum_goal'
+  | 'transmitted_text'
+  | 'archaeological_evidence'
+  | 'scholarly_interpretation'
+  | 'teaching_explanation'
+  | 'boundary_note';
+export type EvidenceCertainty = 'consensus' | 'interpretation' | 'legend' | 'disputed';
+export interface EvidenceSource {
+  source_id: string; title: string; kind: EvidenceSourceKind;
+  author_or_institution: string; publisher: string; published_year: number | null;
+  url_or_path: string; locator: string; citation_note: string;
+  reliability: 'reviewed' | 'disputed'; rights_note: string;
+}
+export interface EvidencePassage {
+  passage_id: string; source_id: string; title: string; text: string; summary: string;
+  fact_ids: string[]; person_ids: string[]; keywords: string[];
+  evidence_kind: EvidenceKind; certainty: EvidenceCertainty;
+  chronology_note: string; teaching_note: string;
+}
+export interface EvidenceDraft {
+  schema_version: 'evidence-corpus-draft/v1'; corpus_id: string;
+  course_id: string; lesson_id: string; title: string; scope_note: string;
+  sources: EvidenceSource[]; passages: EvidencePassage[]; revision: number;
+  created_at: string | null; updated_at: string | null;
+  created_by: string | null; updated_by: string | null;
+}
+export interface EvidenceValidationIssue {
+  code: string; severity: 'error' | 'warning'; field: string; message: string;
+}
+export interface EvidenceValidationReport {
+  schema_version: 'evidence-validation/v1'; validator_version: string;
+  corpus_id: string; course_id: string; lesson_id: string;
+  draft_revision: number; draft_fingerprint: string; valid: boolean;
+  issues: EvidenceValidationIssue[]; source_count: number; passage_count: number;
+  validated_at: string; validated_by: string;
+}
+export interface EvidenceWorkflowEvent {
+  sequence: number; action: string; from_state: EvidenceWorkflowState;
+  to_state: EvidenceWorkflowState; actor: string; note: string;
+  occurred_at: string; draft_revision: number; draft_fingerprint: string;
+  sealed_version: number | null;
+}
+export interface EvidenceWorkflowRecord {
+  schema_version: 'evidence-workflow/v1'; corpus_id: string;
+  course_id: string; lesson_id: string; state: EvidenceWorkflowState;
+  revision: number; draft_revision: number; draft_fingerprint: string;
+  validation: EvidenceValidationReport | null; sealed_version: number | null;
+  sealed_checksum: string | null; updated_at: string;
+  history: EvidenceWorkflowEvent[]; checksum: string;
+}
+export interface RuntimeEvidenceRecord {
+  descriptor: SupplementArtifactDescriptor; title: string;
+  source_count: number; passage_count: number;
+}
+export interface RuntimePresentationRecord {
+  descriptor: SupplementArtifactDescriptor; title: string;
+  estimated_minutes: number; video_duration_seconds: number;
+}
+export interface EvidenceReleaseSelection {
+  corpus_id: string; corpus_version: number; corpus_checksum: string;
+}
+export interface PresentationReleaseSelection {
+  presentation_id: string; presentation_version: number; presentation_checksum: string;
+}
+
 export type RagPersonaMode = 'expert' | 'person';
 export interface RagAskRequest {
   course_id: string; lesson_id: string; persona_mode: RagPersonaMode;
@@ -739,6 +832,8 @@ export const api = {
     version: number,
     note: string,
     scenarios?: ScenarioReleaseSelection[] | null,
+    evidence?: EvidenceReleaseSelection | null,
+    presentation?: PresentationReleaseSelection | null,
   ) => adminFetch<ReleaseResponse>(
     token,
     `/admin/content/sealed/${lesson_id}/versions/${version}/publish`,
@@ -747,6 +842,8 @@ export const api = {
       body: JSON.stringify({
         note,
         ...(scenarios === undefined ? {} : { scenarios }),
+        ...(evidence === undefined ? {} : { evidence }),
+        ...(presentation === undefined ? {} : { presentation }),
       }),
     },
   ),
@@ -965,6 +1062,69 @@ export const api = {
       body: JSON.stringify({ expected_revision }),
     },
   ),
+  adminEvidenceDrafts: (token: string) =>
+    adminFetch<{ items: EvidenceDraft[] }>(token, '/admin/content/evidence-drafts'),
+  adminEvidenceDraft: (token: string, corpus_id: string) =>
+    adminFetch<{ item: EvidenceDraft; workflow: EvidenceWorkflowRecord | null }>(
+      token,
+      `/admin/content/evidence-drafts/${encodeURIComponent(corpus_id)}`,
+    ),
+  adminSaveEvidenceDraft: (token: string, body: EvidenceDraft) =>
+    adminFetch<{ item: EvidenceDraft; workflow: EvidenceWorkflowRecord }>(
+      token,
+      '/admin/content/evidence-drafts',
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
+  adminUpdateEvidenceDraft: (token: string, body: EvidenceDraft) =>
+    adminFetch<{ item: EvidenceDraft; workflow: EvidenceWorkflowRecord }>(
+      token,
+      `/admin/content/evidence-drafts/${encodeURIComponent(body.corpus_id)}`,
+      { method: 'PUT', body: JSON.stringify(body) },
+    ),
+  adminValidateEvidenceDraft: (token: string, corpus_id: string) =>
+    adminFetch<{ workflow: EvidenceWorkflowRecord; report: EvidenceValidationReport | null }>(
+      token,
+      `/admin/content/evidence-drafts/${encodeURIComponent(corpus_id)}/validate`,
+      { method: 'POST', body: JSON.stringify({}) },
+    ),
+  adminSubmitEvidenceReview: (token: string, corpus_id: string, note: string) =>
+    adminFetch<{ workflow: EvidenceWorkflowRecord; report: EvidenceValidationReport | null }>(
+      token,
+      `/admin/content/evidence-drafts/${encodeURIComponent(corpus_id)}/submit-review`,
+      { method: 'POST', body: JSON.stringify({ note }) },
+    ),
+  adminReviewEvidenceDraft: (
+    token: string,
+    corpus_id: string,
+    decision: 'approve' | 'changes_requested',
+    note: string,
+  ) => adminFetch<{ workflow: EvidenceWorkflowRecord; report: EvidenceValidationReport | null }>(
+    token,
+    `/admin/content/evidence-drafts/${encodeURIComponent(corpus_id)}/review`,
+    { method: 'POST', body: JSON.stringify({ decision, note }) },
+  ),
+  adminSealEvidenceDraft: (token: string, corpus_id: string) =>
+    adminFetch<{
+      item: Record<string, unknown>; record: RuntimeEvidenceRecord;
+      workflow: EvidenceWorkflowRecord; idempotent: boolean;
+    }>(
+      token,
+      `/admin/content/evidence-drafts/${encodeURIComponent(corpus_id)}/seal`,
+      { method: 'POST', body: JSON.stringify({}) },
+    ),
+  adminRuntimeEvidence: (token: string) =>
+    adminFetch<{ items: RuntimeEvidenceRecord[] }>(token, '/admin/content/runtime-evidence'),
+  adminLessonPresentations: (token: string) =>
+    adminFetch<{ items: RuntimePresentationRecord[] }>(
+      token,
+      '/admin/content/lesson-presentations',
+    ),
+  adminStageLessonPresentation: (token: string, body: LessonPresentation) =>
+    adminFetch<{ record: RuntimePresentationRecord }>(
+      token,
+      '/admin/content/lesson-presentations',
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
   adminScenarioTemplate: (token: string) =>
     adminFetch<ScenarioAuthorDraft>(token, '/admin/content/scenario-drafts/template'),
   adminScenarioDrafts: (token: string) =>

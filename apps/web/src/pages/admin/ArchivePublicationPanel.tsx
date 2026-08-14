@@ -62,6 +62,8 @@ const ARCHIVE_FILE_LABELS: Record<ArchiveFileKind, string> = {
   'sealed-lesson': '课程原稿',
   'course-package': '课程运行包',
   'scenario-template': '情境关卡',
+  'evidence-corpus': '证据库',
+  'lesson-presentation': '课堂展示',
   'format-layer': '格式层',
   'teacher-markdown': '教师稿',
   'preview-html': '离线预览',
