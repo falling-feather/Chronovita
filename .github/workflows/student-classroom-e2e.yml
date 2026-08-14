@@ -97,8 +97,6 @@ jobs:
       - name: Configure isolated classroom accounts and storage
         shell: powershell
         run: |
-          $adminPassword = "CI-admin-$([guid]::NewGuid().ToString('N'))-Aa1!"
-          $userPassword = "CI-student-$([guid]::NewGuid().ToString('N'))-Bb2!"
           $database = Join-Path $env:RUNNER_TEMP "chronovita-student-e2e.db"
           $ragIndex = Join-Path $env:RUNNER_TEMP "chronovita-student-rag.db"
           $missingModel = Join-Path $env:RUNNER_TEMP "intentionally-missing-bge"
@@ -106,12 +104,6 @@ jobs:
           $webRoot = (Resolve-Path "apps\web\dist").Path
           $pythonPath = "$env:GITHUB_WORKSPACE;$env:GITHUB_WORKSPACE\apps\api"
 
-          "CHRONO_AUTH_BOOTSTRAP_PASSWORD=$adminPassword" |
-            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "CHRONO_E2E_ADMIN_PASSWORD=$adminPassword" |
-            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "CHRONO_E2E_USER_PASSWORD=$userPassword" |
-            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CHRONO_SQLITE_PATH=$database" |
             Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CHRONO_RAG_INDEX_PATH=$ragIndex" |
@@ -129,9 +121,17 @@ jobs:
           "PYTHONPATH=$pythonPath" |
             Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Start isolated single-port classroom
+      - name: Run isolated single-port classroom browser chain
         shell: powershell
         run: |
+          $adminPassword = "CI-admin-$([guid]::NewGuid().ToString('N'))-Aa1!"
+          $userPassword = "CI-student-$([guid]::NewGuid().ToString('N'))-Bb2!"
+          Write-Output "::add-mask::$adminPassword"
+          Write-Output "::add-mask::$userPassword"
+          $env:CHRONO_AUTH_BOOTSTRAP_PASSWORD = $adminPassword
+          $env:CHRONO_E2E_ADMIN_PASSWORD = $adminPassword
+          $env:CHRONO_E2E_USER_PASSWORD = $userPassword
+
           $stdout = Join-Path $env:RUNNER_TEMP "chronovita-e2e-api.stdout.log"
           $stderr = Join-Path $env:RUNNER_TEMP "chronovita-e2e-api.stderr.log"
           $python = (Get-Command python).Source
@@ -183,10 +183,11 @@ jobs:
             Get-Content -LiteralPath $stderr -ErrorAction SilentlyContinue
             throw "Classroom service did not become healthy."
           }
-
-      - name: Run two-course accounts browser chain
-        shell: powershell
-        run: npm --prefix apps/web run test:e2e
+          $env:CHRONO_AUTH_BOOTSTRAP_PASSWORD = $null
+          & npm.cmd --prefix apps/web run test:e2e
+          if ($LASTEXITCODE -ne 0) {
+            throw "Student classroom Playwright chain failed with $LASTEXITCODE."
+          }
 
       - name: Upload browser evidence on failure
         if: failure()

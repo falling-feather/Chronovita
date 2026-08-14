@@ -69,7 +69,7 @@ export default function LoginPage() {
           <div className="chrono-logo-mark">历</div>
           <div>
             <div className="chrono-logo-cn">历史未来课堂</div>
-            <div className="chrono-logo-en">Chronovita · V0.10.11</div>
+            <div className="chrono-logo-en">Chronovita · V0.10.12</div>
           </div>
         </div>
         <div className="chrono-login-copy">
