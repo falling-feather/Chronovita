@@ -1,0 +1,249 @@
+import {
+  expect,
+  test,
+  type Browser,
+  type Page,
+  type TestInfo,
+} from '@playwright/test';
+
+interface FlagshipLesson {
+  lessonId: 'L101' | 'L103';
+  title: string;
+  freeInput: string;
+  question: string;
+  personMode: boolean;
+}
+
+const COURSE_ID = 'C-prequin-state';
+const USER_PASSWORD = process.env.CHRONO_E2E_USER_PASSWORD || '';
+const ADMIN_USERNAME = process.env.CHRONO_E2E_ADMIN_USERNAME || 'classroom.admin';
+const ADMIN_PASSWORD = process.env.CHRONO_E2E_ADMIN_PASSWORD || '';
+const BASE_URL = (process.env.CHRONO_E2E_BASE_URL || 'http://127.0.0.1:8765').replace(/\/$/, '');
+
+const FLAGSHIPS: FlagshipLesson[] = [
+  {
+    lessonId: 'L101',
+    title: '大禹治水',
+    freeInput: '踏勘',
+    question: '积石峡洪水为什么不能直接证明大禹和夏朝？',
+    personMode: false,
+  },
+  {
+    lessonId: 'L103',
+    title: '商鞅变法',
+    freeInput: '听取意见',
+    question: '为何不能把睡虎地秦简都说成我的亲笔法令？',
+    personMode: true,
+  },
+];
+
+function projectSuffix(testInfo: TestInfo): 'laptop' | 'fullhd' {
+  return testInfo.project.name.includes('1920') ? 'fullhd' : 'laptop';
+}
+
+function studentUsername(lessonId: FlagshipLesson['lessonId'], testInfo: TestInfo) {
+  return `student.${lessonId.toLowerCase()}.${projectSuffix(testInfo)}`;
+}
+
+async function login(page: Page, username: string, password: string) {
+  await page.getByLabel('账号').fill(username);
+  await page.getByLabel('密码').fill(password);
+  await page.getByRole('button', { name: '进入我的工作区' }).click();
+}
+
+function observeRuntimeHealth(page: Page) {
+  const issues: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error' || message.type() === 'warning') {
+      const text = message.text();
+      if (text === 'Failed to load resource: the server responded with a status of 401 (Unauthorized)') {
+        return;
+      }
+      const source = message.location().url;
+      issues.push(`console.${message.type()}: ${text}${source ? ` @ ${source}` : ''}`);
+    }
+  });
+  page.on('pageerror', (error) => issues.push(`pageerror: ${error.message}`));
+  page.on('response', (response) => {
+    if (response.status() >= 500) issues.push(`http ${response.status()}: ${response.url()}`);
+  });
+  return issues;
+}
+
+async function keepClassroomLocalOnly(page: Page) {
+  const externalRequests: string[] = [];
+  const classroomOrigin = new URL(BASE_URL).origin;
+  await page.route('**/*', async (route) => {
+    const url = new URL(route.request().url());
+    if ((url.protocol === 'http:' || url.protocol === 'https:') && url.origin !== classroomOrigin) {
+      externalRequests.push(url.href);
+      await route.abort('blockedbyclient');
+      return;
+    }
+    await route.continue();
+  });
+  return externalRequests;
+}
+
+async function expectNoHorizontalOverflow(page: Page) {
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+}
+
+async function openStage(page: Page, name: '抉择' | '召见' | '卷宗') {
+  await page.locator('.chrono-stage-rail').getByRole('button', { name: new RegExp(name) }).click();
+  await expect(page).toHaveURL(new RegExp(`layer=${name === '抉择' ? 'practice' : name === '召见' ? 'ask' : 'create'}`));
+}
+
+async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: TestInfo) {
+  const issues = observeRuntimeHealth(page);
+  const externalRequests = await keepClassroomLocalOnly(page);
+  const lessonPath = `/courses/${COURSE_ID}/lessons/${lesson.lessonId}`;
+
+  await page.goto(lessonPath);
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByText('登录后返回原页面')).toBeVisible();
+  await login(page, studentUsername(lesson.lessonId, testInfo), USER_PASSWORD);
+
+  await expect(page).toHaveURL(`${BASE_URL}${lessonPath}`);
+  await expect(page.getByRole('heading', { name: lesson.title, level: 1 })).toBeVisible();
+  await expect(page.locator('.chrono-local-video video')).toBeVisible();
+  await expect(page.getByText('展示资源与当前发布 checksum 精确绑定')).toBeVisible();
+
+  const videoSource = await page.locator('.chrono-local-video source').getAttribute('src');
+  expect(videoSource).toBeTruthy();
+  const media = await page.request.get(new URL(videoSource!, BASE_URL).href, {
+    headers: { Range: 'bytes=0-1023' },
+  });
+  expect(media.status()).toBe(206);
+  expect(media.headers()['content-type']).toContain('video/mp4');
+  expect(media.headers()['cache-control']).toContain('immutable');
+  expect(media.headers().etag).toBeTruthy();
+
+  await page.getByRole('button', { name: '读取文字稿' }).click();
+  await expect(page.getByRole('button', { name: /可访问文字稿/ })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.reload();
+  await expect(page).toHaveURL(`${BASE_URL}${lessonPath}`);
+  await expect(page.getByRole('heading', { name: lesson.title, level: 1 })).toBeVisible();
+  await expect(page).not.toHaveURL(/\/login$/);
+
+  await openStage(page, '抉择');
+  await expect(page.getByRole('region', { name: '历史抉择关卡' })).toBeVisible();
+  const progress = page.locator('.chrono-game-progress strong');
+  await expect(progress).toHaveText('0 / 6');
+
+  await page.getByLabel('自拟历史行动').fill(lesson.freeInput);
+  await page.locator('.chrono-game-free-input').getByRole('button', { name: '提交' }).click();
+  await expect(progress).toHaveText('1 / 6');
+
+  for (let turn = 2; turn <= 6; turn += 1) {
+    await page.locator('.chrono-game-actions button').first().click();
+    await expect(progress).toHaveText(`${turn} / 6`);
+    if (turn === 3) {
+      await page.reload();
+      await expect(progress).toHaveText('3 / 6');
+      await expect(page.getByText('已恢复学习记录')).toBeVisible();
+    }
+  }
+  await expect(page.getByText('本次推演已完成')).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await openStage(page, '召见');
+  if (lesson.personMode) {
+    await page.getByText('课程人物 / 群体', { exact: true }).click();
+    await expect(page.getByRole('combobox', { name: '选择课程人物' })).toBeVisible();
+  }
+  const question = page.getByPlaceholder('追问史料边界、选择代价或人物立场');
+  await question.fill(lesson.question);
+  await page.locator('.chrono-consult-composer').getByRole('button', { name: '提问' }).click();
+  const answer = page.getByRole('article', { name: '课程证据回答' });
+  await expect(answer).toBeVisible();
+  await expect(answer.locator('.chrono-rag-citations blockquote').first()).toBeVisible();
+  await expect(answer.getByText(/本地抽取式回答|模型据证据组织/)).toBeVisible();
+  if (lesson.personMode) {
+    await expect(answer.getByText('角色化教学表达，不是史料原话。')).toBeVisible();
+  }
+  await expectNoHorizontalOverflow(page);
+
+  await openStage(page, '卷宗');
+  await expect(page.getByRole('region', { name: '史官卷宗' })).toBeVisible();
+  await expect(page.getByText('已封卷')).toBeVisible();
+  const importButton = page.getByRole('button', { name: /导入知识节点|已导入画板/ });
+  await expect(importButton).toBeVisible();
+  const alreadyImported = (await importButton.innerText()).includes('已导入画板');
+  if (!alreadyImported) await importButton.click();
+  await expect(page.getByRole('button', { name: '已导入画板' })).toBeVisible();
+  await expect(page.locator('.chrono-canvas-save-status')).toContainText(
+    alreadyImported ? /已保存|画板已就绪/ : '已保存',
+  );
+
+  await page.reload();
+  await expect(page.getByRole('button', { name: '已导入画板' })).toBeVisible();
+  await expect(page.locator('.chrono-canvas-save-status')).toContainText(/已保存|画板已就绪/);
+  await expectNoHorizontalOverflow(page);
+
+  await page.goto('/admin/accounts');
+  await expect(page).toHaveURL(/\/forbidden/);
+  await expect(page.getByText('当前身份不能进入这个工作区')).toBeVisible();
+
+  expect(externalRequests, 'The offline classroom must not request internet resources.').toEqual([]);
+  expect(issues, 'The browser console and application responses must stay clean.').toEqual([]);
+}
+
+for (const lesson of FLAGSHIPS) {
+  test(`${lesson.lessonId} ${lesson.title} completes the offline classroom chain`, async ({ page }, testInfo) => {
+    await exerciseFlagship(page, lesson, testInfo);
+  });
+}
+
+async function verifyRoleWorkspace(
+  browser: Browser,
+  username: string,
+  password: string,
+  expectedPath: RegExp,
+  expectedTestId: string,
+) {
+  const context = await browser.newContext({ baseURL: BASE_URL });
+  const page = await context.newPage();
+  const issues = observeRuntimeHealth(page);
+  try {
+    await page.goto('/login');
+    await login(page, username, password);
+    await expect(page).toHaveURL(expectedPath);
+    await expect(page.getByTestId(expectedTestId)).toBeVisible();
+    expect(issues).toEqual([]);
+  } finally {
+    await context.close();
+  }
+}
+
+test('teacher, reviewer and administrator land only in their permitted workspaces', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'classroom-1366x768', 'The role matrix needs one browser viewport.');
+  const suffix = projectSuffix(testInfo);
+  await verifyRoleWorkspace(
+    browser,
+    `teacher.e2e.${suffix}`,
+    USER_PASSWORD,
+    /\/admin\/content$/,
+    'admin-content-editor',
+  );
+  await verifyRoleWorkspace(
+    browser,
+    `reviewer.e2e.${suffix}`,
+    USER_PASSWORD,
+    /\/admin\/content$/,
+    'admin-content-editor',
+  );
+  await verifyRoleWorkspace(
+    browser,
+    ADMIN_USERNAME,
+    ADMIN_PASSWORD,
+    /\/admin\/accounts$/,
+    'account-management',
+  );
+});

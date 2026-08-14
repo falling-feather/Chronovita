@@ -78,6 +78,9 @@ distribution/wheelhouse/**
 .minio/
 
 apps/web/.vite/
+apps/web/playwright-report/
+apps/web/test-results/
+apps/web/blob-report/
 *.tsbuildinfo
 
 # Teacher package local credentials

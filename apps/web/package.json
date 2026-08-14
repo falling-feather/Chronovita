@@ -1,12 +1,13 @@
 {
   "name": "@chronovita/web",
-  "version": "0.10.10",
+  "version": "0.10.11",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run",
+    "test:e2e": "playwright test --config playwright.config.ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.61.1",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
     "@types/node": "22.19.11",
