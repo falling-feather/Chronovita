@@ -66,6 +66,11 @@ jobs:
             -r apps/api/requirements.lock
           npm --prefix apps/web ci
 
+      - name: Install pinned Playwright failure-video helper
+        shell: powershell
+        working-directory: apps/web
+        run: npm exec -- playwright install ffmpeg
+
       - name: Recheck flagship contracts, RAG benchmark and package boundaries
         shell: powershell
         run: |
