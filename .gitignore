@@ -68,6 +68,9 @@ distribution/models/**
 !distribution/models/**/
 !distribution/models/**/model-resource.json
 
+# Windows classroom release dependencies are rebuilt from requirements.lock in CI.
+distribution/wheelhouse/**
+
 # 任务队列与缓存数据卷
 .pgdata/
 .redisdata/

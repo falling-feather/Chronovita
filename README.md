@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.9**；V0.9.41 课堂内容与教师发布基线已通过 [PR #3](https://github.com/falling-feather/Chronovita/pull/3) 合入受保护的 `main`。V0.10.9 已为 `C-prequin-state / L101` 大禹治水与 `L103` 商鞅变法接通统一账号下的“踏勘—抉择—召见—卷宗”学生课堂、发布证据 RAG、教师证据/展示工作台，并发布两段 45 秒 HyperFrames 本地课堂短片；Windows/LAN 统一课堂包仍在 `codex/v0.10-classroom` 后续任务中，不宣称公网或多学校生产部署已经完成。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.10**；V0.9.41 课堂内容与教师发布基线已通过 [PR #3](https://github.com/falling-feather/Chronovita/pull/3) 合入受保护的 `main`。V0.10.10 已为 `C-prequin-state / L101` 大禹治水与 `L103` 商鞅变法接通统一账号下的“踏勘—抉择—召见—卷宗”学生课堂、发布证据 RAG、教师证据/展示工作台、两段 45 秒 HyperFrames 本地短片，以及默认回环、显式 LAN、单端口的 Windows 课堂包构建链；最终 prerelease 仍须通过 QA-004 与用户内容验收，不宣称公网或多学校生产部署已经完成。
 
 [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](docs/00-项目总纲.md) · [开发者文档](docs/01-开发者文档.md) · [项目规划](docs/02-项目规划与设计总纲.md) · [开发历史](docs/05-发布历史与归档.md)
 
@@ -70,7 +70,9 @@
 
 ### 当前可用教师包与 V0.10 课堂包
 
-当前已验收发行物仍是 [v0.9.41 教师编辑器](https://github.com/falling-feather/Chronovita/releases/tag/v0.9.41)。V0.10 统一课堂包尚在开发，完成前不要把源码分支描述成可发布课堂包；目标发行物将改为单端口、默认回环、显式 LAN 模式的 `Chronovita-Classroom-v0.10.x-windows.zip`。
+当前已公开验收的稳定发行物仍是 [v0.9.41 教师编辑器](https://github.com/falling-feather/Chronovita/releases/tag/v0.9.41)。V0.10.10 已能在 CI 或本机确定性生成 `Chronovita-Classroom-v0.10.10-windows.zip`、对应 SHA-256 和依赖/模型许可清单；最终 prerelease 尚待 QA-004 与用户内容验收，因此不要把开发分支描述成已公开发布版本。
+
+课堂包完整解压后双击 `启动Chronovita课堂.cmd`；默认只监听 `127.0.0.1:8000`，首次启动安全创建管理员密码。仅在可信课堂网络中从 PowerShell 显式执行 `.\scripts\classroom.ps1 -Lan`，才会绑定 LAN 并显示学生地址。完整说明见 [课堂包使用说明](distribution/classroom/课堂使用说明.txt)。
 
 V0.9.41 教师包完整解压后可双击根目录的 `点我一键启动（部署）.cmd`；课程历史投稿凭据由项目管理员单独发放，并由 Windows DPAPI 绑定当前账号加密保存。完整说明见 [课程内容历史库运维指南](docs/07-课程内容历史库运维指南.md)。
 

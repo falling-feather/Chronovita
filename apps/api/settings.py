@@ -52,6 +52,8 @@ class Settings(BaseSettings):
         le=300,
     )
     content_root: str = "content"
+    serve_web_app: bool = False
+    web_dist_root: str = "apps/web/dist"
     content_history_target_path: str = "infra/content-history-target.json"
     github_publication_enabled: bool = False
     github_publication_token: SecretStr = SecretStr("")
@@ -64,7 +66,7 @@ class Settings(BaseSettings):
     )
     admin_token: SecretStr = SecretStr("")
     admin_actor: str = "local-admin"
-    auth_mode: Literal["legacy-local", "accounts"] = "legacy-local"
+    auth_mode: Literal["legacy-local", "accounts"] = "accounts"
     auth_session_ttl_seconds: int = Field(default=8 * 60 * 60, ge=300, le=30 * 24 * 60 * 60)
     auth_session_idle_timeout_seconds: int = Field(
         default=2 * 60 * 60,

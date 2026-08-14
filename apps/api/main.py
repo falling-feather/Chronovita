@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from settings import secret_value, settings
+from static_web import mount_classroom_web
 from routers import (
     admin_content,
     auth,
@@ -164,22 +165,24 @@ app.include_router(game.router, prefix=f"{API_PREFIX}/practice/game", tags=["gam
 app.include_router(profile.router, prefix=f"{API_PREFIX}/profile", tags=["profile"])
 
 
-@app.get("/", tags=["common"])
-async def root():
-    return {
-        "name": settings.app_name,
-        "version": settings.app_version,
-        "modules": [
-            "home",
-            "courses",
-            "learning",
-            "practice",
-            "course-rag",
-            "game-runtime",
-            "profile",
-            "admin-content",
-        ],
-    }
+if not settings.serve_web_app:
+
+    @app.get("/", tags=["common"])
+    async def root():
+        return {
+            "name": settings.app_name,
+            "version": settings.app_version,
+            "modules": [
+                "home",
+                "courses",
+                "learning",
+                "practice",
+                "course-rag",
+                "game-runtime",
+                "profile",
+                "admin-content",
+            ],
+        }
 
 
 @app.get("/healthz", tags=["common"])
@@ -221,3 +224,7 @@ async def readyz(request: Request):
         "version": settings.app_version,
         "checks": readiness.public_checks(),
     }
+
+
+if settings.serve_web_app:
+    app.state.web_dist_root = mount_classroom_web(app, settings.web_dist_root)

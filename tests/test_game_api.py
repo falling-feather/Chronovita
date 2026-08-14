@@ -53,11 +53,13 @@ class GameApiTests(unittest.TestCase):
             "game_catalog_path": settings.game_catalog_path,
             "game_user_id": settings.game_user_id,
             "sqlite_path": settings.sqlite_path,
+            "auth_mode": settings.auth_mode,
         }
         settings.content_root = str(REPO_ROOT / "content")
         settings.game_catalog_path = "scenarios/catalog.v1.json"
         settings.game_user_id = "api-student"
         settings.sqlite_path = str(Path(self.temp_dir.name) / "chronovita.db")
+        settings.auth_mode = "legacy-local"
         self.client = TestClient(app)
         self.client.__enter__()
 
