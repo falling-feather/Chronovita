@@ -3,7 +3,7 @@
   "lesson_id": "L103",
   "course_id": "C-prequin-state",
   "state": "published",
-  "revision": 6,
+  "revision": 8,
   "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
   "validation": {
     "schema_version": "content-validation/v1",
@@ -19,8 +19,8 @@
   "sealed_checksum": "d6e55dfac0486d0f167921d125aa53959cbd104741c0f9e10a414086dd9a2dd5",
   "published_course_id": "C-prequin-state",
   "published_version": 1,
-  "published_release_id": "rel-28b5624648-0003",
-  "updated_at": "2026-08-13T02:32:39.385551Z",
+  "published_release_id": "rel-28b5624648-0005",
+  "updated_at": "2026-08-14T02:58:26.449332Z",
   "history": [
     {
       "sequence": 1,
@@ -93,7 +93,31 @@
       "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
       "sealed_version": null,
       "release_id": "rel-28b5624648-0003"
+    },
+    {
+      "sequence": 7,
+      "action": "publish",
+      "from_state": "published",
+      "to_state": "published",
+      "actor": "content-publisher-admin",
+      "note": "发布 L101 大禹治水 HyperFrames 课堂短片：保留课程、关卡与证据版本，将展示资源升级并精确绑定至 v002。",
+      "occurred_at": "2026-08-14T02:58:25.527244Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0004"
+    },
+    {
+      "sequence": 8,
+      "action": "publish",
+      "from_state": "published",
+      "to_state": "published",
+      "actor": "content-publisher-admin",
+      "note": "发布 L103 商鞅变法 HyperFrames 课堂短片：保留课程、关卡与证据版本，将展示资源升级并精确绑定至 v002。",
+      "occurred_at": "2026-08-14T02:58:26.449332Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0005"
     }
   ],
-  "checksum": "5c736be6e27e99b0f555eb77823014dc3009423cc49d9345646082ca4febb651"
+  "checksum": "b32fd994fdd7cea03f4b3d936237514527a5e18731eea0ffa630f0b0f2bfd179"
 }

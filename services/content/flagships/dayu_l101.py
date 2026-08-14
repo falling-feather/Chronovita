@@ -646,8 +646,9 @@ def build_dayu_presentation(
     *,
     sealed_by: str,
     sealed_at: datetime | None = None,
+    presentation_version: int = 1,
 ) -> LessonPresentationV1:
-    root = Path("media/lessons/L101/v001")
+    root = Path(f"media/lessons/L101/v{presentation_version:03d}")
     video = root / "dayu-intro.mp4"
     poster = root / "dayu-poster.webp"
     transcript = root / "dayu-transcript.md"
@@ -655,7 +656,7 @@ def build_dayu_presentation(
         presentation_id=DAYU_PRESENTATION_ID,
         course_id=COURSE_ID,
         lesson_id=LESSON_ID,
-        presentation_version=1,
+        presentation_version=presentation_version,
         title="大禹治水：四层证据课堂导读",
         estimated_minutes=40,
         phase_minutes={"observe": 9, "decide": 14, "consult": 7, "dossier": 10},
@@ -666,7 +667,11 @@ def build_dayu_presentation(
         video_sha256=_sha256(content_root / video),
         poster_sha256=_sha256(content_root / poster),
         transcript_sha256=_sha256(content_root / transcript),
-        accessibility_note="无声中文文字导读；关键信息全部写入画面并提供本地 Markdown 文字稿，学生可随时跳过。",
+        accessibility_note=(
+            "无声 HyperFrames 中文动画；关键信息全部写入画面并提供本地 Markdown 文字稿，学生可随时跳过。"
+            if presentation_version >= 2
+            else "无声中文文字导读；关键信息全部写入画面并提供本地 Markdown 文字稿，学生可随时跳过。"
+        ),
         sealed_at=sealed_at or datetime.now(timezone.utc),
         sealed_by=sealed_by,
         checksum="0" * 64,

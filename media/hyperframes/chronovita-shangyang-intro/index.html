@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>商鞅变法：材料年代与制度代价导读</title>
+    <script src="assets/gsap-3.14.2.min.js"></script>
+    <style>
+      @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"); font-style: normal; font-weight: 100 900; }
+      @font-face { font-family: "STKaiti"; src: local("STKaiti"); font-style: normal; font-weight: 400 700; }
+      @font-face { font-family: "KaiTi"; src: local("KaiTi"); font-style: normal; font-weight: 400 700; }
+      * { box-sizing: border-box; }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        overflow: hidden;
+        background: #071a28;
+      }
+      body {
+        color: #f2e7cf;
+        font-family: "Microsoft YaHei", sans-serif;
+        font-weight: 350;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background-color: #071a28;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background-color: #071a28;
+      }
+      #s2, #s3, #s4, #s5 { opacity: 0; }
+      .scene-decor {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      .scene-decor::before {
+        position: absolute;
+        top: -300px;
+        right: -120px;
+        width: 920px;
+        height: 920px;
+        content: "";
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(209, 164, 97, 0.17) 0%, rgba(209, 164, 97, 0) 69%);
+      }
+      .grid-lines {
+        position: absolute;
+        inset: -40px;
+        width: 2000px;
+        height: 1160px;
+        opacity: 0.18;
+        background-image:
+          linear-gradient(rgba(84, 201, 195, 0.2) 1px, rgba(84, 201, 195, 0) 1px),
+          linear-gradient(90deg, rgba(84, 201, 195, 0.2) 1px, rgba(84, 201, 195, 0) 1px);
+        background-size: 80px 80px;
+      }
+      .ghost-mark {
+        position: absolute;
+        right: 44px;
+        bottom: -142px;
+        color: rgba(242, 231, 207, 0.05);
+        font-family: "STKaiti", "KaiTi", serif;
+        font-size: 430px;
+        line-height: 1;
+      }
+      .scene-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        gap: 34px;
+        padding: 86px 112px 78px;
+      }
+      .topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 38px;
+        color: #d1a461;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+      }
+      .topline .timecode {
+        color: rgba(242, 231, 207, 0.72);
+        font-variant-numeric: tabular-nums;
+        font-weight: 400;
+        letter-spacing: 0.08em;
+      }
+      .main-grid {
+        display: grid;
+        min-height: 0;
+        flex: 1;
+        grid-template-columns: minmax(0, 1.08fr) minmax(540px, 0.92fr);
+        gap: 80px;
+        align-items: center;
+      }
+      .copy {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 30px;
+      }
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        color: #54c9c3;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+      }
+      .eyebrow::before {
+        width: 68px;
+        height: 3px;
+        content: "";
+        background-color: #54c9c3;
+      }
+      h1, h2, p { margin: 0; }
+      h1, h2 {
+        max-width: 1050px;
+        font-family: "STKaiti", "KaiTi", serif;
+        font-weight: 650;
+        letter-spacing: -0.035em;
+      }
+      h1 { font-size: 90px; line-height: 1.17; }
+      h2 { font-size: 70px; line-height: 1.2; }
+      .lead {
+        max-width: 960px;
+        color: rgba(242, 231, 207, 0.84);
+        font-size: 30px;
+        line-height: 1.65;
+      }
+      .source-note {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: rgba(242, 231, 207, 0.74);
+        font-size: 20px;
+        line-height: 1.5;
+      }
+      .source-note strong {
+        flex: 0 0 auto;
+        padding: 7px 13px;
+        color: #071a28;
+        background-color: #d1a461;
+        font-size: 17px;
+        letter-spacing: 0.08em;
+      }
+      .visual-panel {
+        position: relative;
+        display: flex;
+        min-height: 590px;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: #0b2431;
+        border: 1px solid rgba(209, 164, 97, 0.6);
+      }
+      .visual-panel::after {
+        position: absolute;
+        inset: 22px;
+        content: "";
+        border: 1px solid rgba(84, 201, 195, 0.22);
+        pointer-events: none;
+      }
+      .footer-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 42px;
+        color: rgba(242, 231, 207, 0.66);
+        font-size: 20px;
+      }
+      .footer-line strong { color: #d1a461; font-weight: 700; }
+      .scene-count { font-variant-numeric: tabular-nums; letter-spacing: 0.12em; }
+      .balance-figure {
+        position: relative;
+        display: grid;
+        width: 610px;
+        height: 500px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+        align-items: end;
+        padding: 70px 38px 60px;
+      }
+      .balance-axis {
+        position: absolute;
+        right: 38px;
+        bottom: 58px;
+        left: 38px;
+        height: 3px;
+        background-color: #d1a461;
+      }
+      .balance-column {
+        position: relative;
+        display: flex;
+        height: 100%;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 14px;
+      }
+      .balance-column i {
+        display: block;
+        width: 100%;
+        background-color: rgba(84, 201, 195, 0.28);
+        border: 2px solid #54c9c3;
+      }
+      .balance-column.capacity i { height: 72%; }
+      .balance-column.credit i { height: 58%; border-color: #d1a461; background-color: rgba(209, 164, 97, 0.2); }
+      .balance-column.cost i { height: 44%; border-style: dashed; border-color: #d1a461; background-color: rgba(209, 164, 97, 0.11); }
+      .balance-column strong { min-height: 54px; color: #f2e7cf; font-size: 20px; line-height: 1.4; text-align: center; }
+      .balance-question {
+        position: absolute;
+        top: 28px;
+        left: 38px;
+        color: #d1a461;
+        font-size: 18px;
+        letter-spacing: 0.1em;
+      }
+      .timeline {
+        position: relative;
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        justify-content: center;
+        gap: 48px;
+        padding: 62px;
+      }
+      .timeline-track {
+        position: absolute;
+        top: 50%;
+        right: 84px;
+        left: 84px;
+        height: 3px;
+        background-color: #d1a461;
+      }
+      .time-point {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        align-items: center;
+        gap: 24px;
+        padding: 18px 20px;
+        background-color: rgba(7, 26, 40, 0.9);
+        border: 1px solid rgba(209, 164, 97, 0.5);
+      }
+      .time-point strong {
+        color: #54c9c3;
+        font-size: 22px;
+        font-variant-numeric: tabular-nums;
+      }
+      .time-point span { color: #f2e7cf; font-size: 22px; line-height: 1.45; }
+      .time-gap {
+        align-self: center;
+        padding: 9px 18px;
+        color: #071a28;
+        background-color: #d1a461;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+      .fangsheng-figure {
+        position: relative;
+        width: 610px;
+        height: 510px;
+      }
+      .fangsheng-figure svg { width: 100%; height: 100%; }
+      .measure-line {
+        position: absolute;
+        left: 64px;
+        width: 470px;
+        height: 1px;
+        background-color: rgba(84, 201, 195, 0.55);
+      }
+      .measure-line.one { top: 95px; }
+      .measure-line.two { top: 215px; }
+      .measure-line.three { top: 335px; }
+      .measure-line span {
+        position: absolute;
+        top: -13px;
+        right: -4px;
+        padding-left: 10px;
+        color: #54c9c3;
+        background-color: #0b2431;
+        font-size: 15px;
+        font-variant-numeric: tabular-nums;
+      }
+      .artifact-label {
+        position: absolute;
+        bottom: 22px;
+        left: 38px;
+        color: #d1a461;
+        font-size: 18px;
+        letter-spacing: 0.12em;
+      }
+      .direct-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        align-self: flex-start;
+        padding: 12px 17px;
+        color: #f2e7cf;
+        background-color: #0b2431;
+        border: 1px solid #54c9c3;
+        font-size: 21px;
+      }
+      .direct-badge b { color: #54c9c3; font-size: 27px; }
+      .slips-figure {
+        position: relative;
+        display: flex;
+        width: 610px;
+        height: 500px;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+      }
+      .slip {
+        position: relative;
+        width: 78px;
+        height: 350px;
+        padding: 28px 18px;
+        color: #071a28;
+        background-color: #d1a461;
+        border: 1px solid #f2e7cf;
+        font-family: "STKaiti", "KaiTi", serif;
+        font-size: 23px;
+        line-height: 1.25;
+        writing-mode: vertical-rl;
+      }
+      .slip:nth-child(2), .slip:nth-child(5) { transform: translateY(24px); }
+      .slip:nth-child(3) { height: 392px; }
+      .slip::before, .slip::after {
+        position: absolute;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        content: "";
+        border: 2px solid #071a28;
+        border-radius: 50%;
+        transform: translateX(-50%);
+      }
+      .slip::before { top: 12px; }
+      .slip::after { bottom: 12px; }
+      .slips-date {
+        position: absolute;
+        right: 22px;
+        bottom: 20px;
+        left: 22px;
+        display: flex;
+        justify-content: space-between;
+        color: #54c9c3;
+        font-size: 16px;
+        font-variant-numeric: tabular-nums;
+      }
+      .variables-panel {
+        display: grid;
+        width: 100%;
+        height: 100%;
+        padding: 62px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px 40px;
+        align-content: center;
+      }
+      .variable {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        align-items: center;
+        gap: 18px;
+      }
+      .variable-ring {
+        display: grid;
+        width: 82px;
+        height: 82px;
+        place-items: center;
+        color: #54c9c3;
+        border: 2px solid rgba(209, 164, 97, 0.7);
+        border-radius: 50%;
+        font-size: 18px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .variable.cost .variable-ring { color: #d1a461; border-style: dashed; }
+      .variable strong { color: #f2e7cf; font-size: 21px; font-weight: 600; }
+      .variable span { display: block; margin-top: 5px; color: rgba(242, 231, 207, 0.64); font-size: 16px; }
+      .turns { display: flex; gap: 10px; align-items: center; }
+      .turns i {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        color: #071a28;
+        background-color: #d1a461;
+        font-style: normal;
+        font-size: 17px;
+        font-weight: 700;
+      }
+      .turns i:last-child { background-color: #54c9c3; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="shangyang-classroom-intro-v2" data-start="0" data-duration="45" data-width="1920" data-height="1080">
+      <section id="s1" class="scene" data-layout-allow-overflow>
+        <div id="s1-decor" class="scene-decor" data-layout-ignore><div id="s1-grid" class="grid-lines"></div><div class="ghost-mark">法</div></div>
+        <div class="scene-content">
+          <div id="s1-top" class="topline"><span>L103 · 课堂导读</span><span class="timecode">00:00—00:09</span></div>
+          <div class="main-grid">
+            <div class="copy">
+              <div id="s1-eye" class="eyebrow">改革要回答什么</div>
+              <h1 id="s1-title">秦国变强，是否等于每个人都获益？</h1>
+              <p id="s1-lead" class="lead">同时观察国家能力、制度信用，以及普通家庭承担的社会代价。</p>
+              <div id="s1-note" class="source-note"><strong>方法</strong><span>把“强国”拆成可比较、可追问的制度关系。</span></div>
+            </div>
+            <div id="s1-visual" class="visual-panel">
+              <div class="balance-figure">
+                <span class="balance-question">REFORM · THREE QUESTIONS</span>
+                <div class="balance-axis"></div>
+                <div class="balance-column capacity"><i></i><strong>国家能力</strong></div>
+                <div class="balance-column credit"><i></i><strong>制度信用</strong></div>
+                <div class="balance-column cost"><i></i><strong>社会代价</strong></div>
+              </div>
+            </div>
+          </div>
+          <div id="s1-footer" class="footer-line"><span>结果、执行与承受者必须同时进入评价。</span><strong class="scene-count">01 / 05</strong></div>
+        </div>
+      </section>
+
+      <section id="s2" class="scene" data-layout-allow-overflow>
+        <div id="s2-decor" class="scene-decor" data-layout-ignore><div id="s2-grid" class="grid-lines"></div><div class="ghost-mark">记</div></div>
+        <div class="scene-content">
+          <div id="s2-top" class="topline"><span>后世怎样讲述</span><span class="timecode">00:09—00:18</span></div>
+          <div class="main-grid">
+            <div class="copy">
+              <div id="s2-eye" class="eyebrow">《史记·商君列传》</div>
+              <h2 id="s2-title">能保存改革记忆，不能充当现场记录。</h2>
+              <p id="s2-lead" class="lead">入秦、徙木立信和变法结局的重要叙事，来自西汉成书的后世文献。</p>
+              <div id="s2-note" class="source-note"><strong>年代</strong><span>文本晚于最初变法二百多年，现场细节不能逐项核验。</span></div>
+            </div>
+            <div id="s2-visual" class="visual-panel">
+              <div class="timeline">
+                <div class="timeline-track"></div>
+                <div class="time-point"><strong>前 356 年前后</strong><span>秦孝公时期的改革进程</span></div>
+                <div class="time-gap">相隔二百多年</div>
+                <div class="time-point"><strong>西汉</strong><span>《史记》整理并讲述商鞅故事</span></div>
+              </div>
+            </div>
+          </div>
+          <div id="s2-footer" class="footer-line"><span>后世文献很重要，重要不等于同时代。</span><strong class="scene-count">02 / 05</strong></div>
+        </div>
+      </section>
+
+      <section id="s3" class="scene" data-layout-allow-overflow>
+        <div id="s3-decor" class="scene-decor" data-layout-ignore><div id="s3-grid" class="grid-lines"></div><div class="ghost-mark">量</div></div>
+        <div class="scene-content">
+          <div id="s3-top" class="topline"><span>同时代实物</span><span class="timecode">00:18—00:27</span></div>
+          <div class="main-grid">
+            <div class="copy">
+              <div id="s3-eye" class="eyebrow">公元前 344 年 · 商鞅方升</div>
+              <h2 id="s3-title">标准尺度，把国家能力带进日常计量。</h2>
+              <p id="s3-lead" class="lead">容量标准与“大良造鞅”相关铭文，为度量改革提供直接实物支持。</p>
+              <div id="s3-badge" class="direct-badge"><span>这件器物能直接支持</span><b>标准量器改革</b></div>
+              <div id="s3-note" class="source-note"><strong>边界</strong><span>一件方升不能替全部变法故事作证。</span></div>
+            </div>
+            <div id="s3-visual" class="visual-panel">
+              <div class="fangsheng-figure">
+                <div class="measure-line one"><span>刻度 A</span></div>
+                <div class="measure-line two"><span>刻度 B</span></div>
+                <div class="measure-line three"><span>刻度 C</span></div>
+                <svg id="s3-vessel" viewBox="0 0 610 510" aria-hidden="true">
+                  <path d="M158 162 L414 162 L452 338 Q448 386 396 390 L180 390 Q128 386 124 338 Z" fill="rgba(209,164,97,.16)" stroke="#d1a461" stroke-width="8" />
+                  <path d="M414 214 L530 188 Q560 184 562 214 L562 246 Q558 270 526 268 L428 264" fill="none" stroke="#d1a461" stroke-width="18" stroke-linecap="round" />
+                  <path d="M184 212 H382 M174 260 H394 M166 308 H406" stroke="#54c9c3" stroke-width="4" stroke-dasharray="12 12" />
+                  <path d="M214 142 Q288 102 360 142" fill="none" stroke="#f2e7cf" stroke-width="4" />
+                </svg>
+                <span class="artifact-label">器物轮廓示意 · 非写实复原</span>
+              </div>
+            </div>
+          </div>
+          <div id="s3-footer" class="footer-line"><span>实物证据更直接，也仍有自己的解释边界。</span><strong class="scene-count">03 / 05</strong></div>
+        </div>
+      </section>
+
+      <section id="s4" class="scene" data-layout-allow-overflow>
+        <div id="s4-decor" class="scene-decor" data-layout-ignore><div id="s4-grid" class="grid-lines"></div><div class="ghost-mark">简</div></div>
+        <div class="scene-content">
+          <div id="s4-top" class="topline"><span>较晚的出土文字</span><span class="timecode">00:27—00:36</span></div>
+          <div class="main-grid">
+            <div class="copy">
+              <div id="s4-eye" class="eyebrow">睡虎地秦简</div>
+              <h2 id="s4-title">展示成熟秦制运行，不是商鞅亲笔原令合集。</h2>
+              <p id="s4-lead" class="lead">简牍主要写于战国晚期与秦始皇时期，比最初变法晚一百多年。</p>
+              <div id="s4-note" class="source-note"><strong>用途</strong><span>观察县政、法律与基层执行怎样持续运转。</span></div>
+            </div>
+            <div id="s4-visual" class="visual-panel">
+              <div class="slips-figure">
+                <div class="slip">登记与核验</div><div class="slip">县廷行政</div><div class="slip">法律问答</div><div class="slip">基层执行</div><div class="slip">责任边界</div>
+                <div class="slips-date"><span>最初变法</span><span>相隔一百多年</span><span>战国晚期至秦</span></div>
+              </div>
+            </div>
+          </div>
+          <div id="s4-footer" class="footer-line"><span>出土文字不是“越早越真”，仍须标清年代和用途。</span><strong class="scene-count">04 / 05</strong></div>
+        </div>
+      </section>
+
+      <section id="s5" class="scene" data-layout-allow-overflow>
+        <div id="s5-decor" class="scene-decor" data-layout-ignore><div id="s5-grid" class="grid-lines"></div><div class="ghost-mark">择</div></div>
+        <div class="scene-content">
+          <div id="s5-top" class="topline"><span>进入六回合议事</span><span class="timecode">00:36—00:45</span></div>
+          <div class="main-grid">
+            <div class="copy">
+              <div id="s5-eye" class="eyebrow">公开法令 · 耕战激励 · 标准尺度 · 县政执行</div>
+              <h2 id="s5-title">富国强兵，由谁承担？</h2>
+              <p id="s5-lead" class="lead">六次选择会同时改变能力、粮食、战备、信用、压力与阻力。</p>
+              <div id="s5-turns" class="turns"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i></div>
+              <div id="s5-note" class="source-note"><strong>下一步</strong><span>让选择、代价与每条来源共同回答。</span></div>
+            </div>
+            <div id="s5-visual" class="visual-panel">
+              <div class="variables-panel">
+                <div class="variable"><i class="variable-ring">能</i><div><strong>国家能力</strong><span>登记、计量与组织</span></div></div>
+                <div class="variable"><i class="variable-ring">军</i><div><strong>军事准备</strong><span>兵源与军功激励</span></div></div>
+                <div class="variable"><i class="variable-ring">粮</i><div><strong>粮食供给</strong><span>产出、储备与征发</span></div></div>
+                <div class="variable"><i class="variable-ring">信</i><div><strong>制度信用</strong><span>公开、兑现与预期</span></div></div>
+                <div class="variable cost"><i class="variable-ring">压</i><div><strong>社会压力</strong><span>家庭负担与惩罚</span></div></div>
+                <div class="variable cost"><i class="variable-ring">阻</i><div><strong>旧贵族阻力</strong><span>身份与既得利益</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div id="s5-footer" class="footer-line"><span>数值是现代课堂模型，不是秦国统计表。</span><strong class="scene-count">05 / 05</strong></div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.from("#s1-decor", { opacity: 0, scale: 1.04, duration: 0.8, ease: "sine.out" }, 0.2);
+      tl.from("#s1-top", { x: -46, opacity: 0, duration: 0.42, ease: "expo.out" }, 0.28);
+      tl.from("#s1-eye", { y: 34, opacity: 0, duration: 0.38, ease: "power3.out" }, 0.48);
+      tl.from("#s1-title", { x: -72, opacity: 0, duration: 0.78, ease: "expo.out" }, 0.62);
+      tl.from("#s1-lead", { y: 42, opacity: 0, duration: 0.55, ease: "sine.out" }, 0.92);
+      tl.from("#s1-note", { scale: 0.94, opacity: 0, duration: 0.36, ease: "back.out(1.25)" }, 1.12);
+      tl.from("#s1-visual", { x: 86, opacity: 0, duration: 0.72, ease: "power4.out" }, 0.58);
+      tl.from("#s1-visual .balance-column", { scaleY: 0.35, transformOrigin: "center bottom", opacity: 0, duration: 0.45, stagger: 0.11, ease: "back.out(1.2)" }, 1.0);
+      tl.from("#s1-footer", { y: 24, opacity: 0, duration: 0.36, ease: "power2.out" }, 1.42);
+      tl.to("#s1-grid", { x: 34, duration: 7.2, ease: "sine.inOut" }, 0.6);
+
+      tl.to("#s1", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 8.5);
+      tl.fromTo("#s2", { x: 1920, opacity: 1 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.inOut" }, 8.5);
+      tl.set("#s1", { opacity: 0 }, 9.01);
+      tl.from("#s2-decor", { opacity: 0, scale: 1.04, duration: 0.7, ease: "sine.out" }, 8.72);
+      tl.from("#s2-top", { y: -34, opacity: 0, duration: 0.38, ease: "power3.out" }, 8.78);
+      tl.from("#s2-eye", { x: -42, opacity: 0, duration: 0.34, ease: "expo.out" }, 8.94);
+      tl.from("#s2-title", { y: 56, opacity: 0, duration: 0.72, ease: "power4.out" }, 9.04);
+      tl.from("#s2-lead", { x: -38, opacity: 0, duration: 0.5, ease: "sine.out" }, 9.3);
+      tl.from("#s2-note", { scale: 0.95, opacity: 0, duration: 0.36, ease: "back.out(1.2)" }, 9.54);
+      tl.from("#s2-visual", { x: 76, opacity: 0, duration: 0.62, ease: "expo.out" }, 9.02);
+      tl.from("#s2-visual .time-point", { x: 40, opacity: 0, duration: 0.38, stagger: 0.14, ease: "power2.out" }, 9.34);
+      tl.from("#s2-visual .time-gap", { scale: 0.78, opacity: 0, duration: 0.34, ease: "back.out(1.3)" }, 9.58);
+      tl.from("#s2-footer", { y: 20, opacity: 0, duration: 0.34, ease: "circ.out" }, 9.94);
+      tl.to("#s2-grid", { x: -30, duration: 7.1, ease: "sine.inOut" }, 9.1);
+
+      tl.to("#s2", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 17.5);
+      tl.fromTo("#s3", { x: 1920, opacity: 1 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.inOut" }, 17.5);
+      tl.set("#s2", { opacity: 0 }, 18.01);
+      tl.from("#s3-decor", { opacity: 0, scale: 1.05, duration: 0.8, ease: "sine.out" }, 17.68);
+      tl.from("#s3-top", { x: 44, opacity: 0, duration: 0.34, ease: "expo.out" }, 17.76);
+      tl.from("#s3-eye", { scale: 0.9, opacity: 0, duration: 0.36, ease: "back.out(1.3)" }, 17.94);
+      tl.from("#s3-title", { x: -68, opacity: 0, duration: 0.7, ease: "power4.out" }, 18.02);
+      tl.from("#s3-lead", { y: 44, opacity: 0, duration: 0.48, ease: "sine.out" }, 18.32);
+      tl.from("#s3-badge", { x: -34, opacity: 0, duration: 0.4, ease: "circ.out" }, 18.54);
+      tl.from("#s3-note", { scale: 0.95, opacity: 0, duration: 0.34, ease: "back.out(1.18)" }, 18.72);
+      tl.from("#s3-visual", { scale: 0.94, opacity: 0, duration: 0.64, ease: "expo.out" }, 18.0);
+      tl.from("#s3-vessel", { y: 52, opacity: 0, duration: 0.62, ease: "power3.out" }, 18.32);
+      tl.from("#s3-visual .measure-line", { scaleX: 0, transformOrigin: "left center", duration: 0.34, stagger: 0.12, ease: "power2.out" }, 18.48);
+      tl.from("#s3-footer", { y: 20, opacity: 0, duration: 0.34, ease: "power2.out" }, 18.96);
+      tl.to("#s3-grid", { y: 28, duration: 7.0, ease: "sine.inOut" }, 18.1);
+
+      tl.to("#s3", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 26.5);
+      tl.fromTo("#s4", { x: 1920, opacity: 1 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.inOut" }, 26.5);
+      tl.set("#s3", { opacity: 0 }, 27.01);
+      tl.from("#s4-decor", { opacity: 0, scale: 1.05, duration: 0.72, ease: "sine.out" }, 26.7);
+      tl.from("#s4-top", { y: -38, opacity: 0, duration: 0.34, ease: "power3.out" }, 26.78);
+      tl.from("#s4-eye", { x: -44, opacity: 0, duration: 0.36, ease: "expo.out" }, 26.92);
+      tl.from("#s4-title", { scale: 0.95, opacity: 0, duration: 0.64, ease: "power4.out" }, 27.04);
+      tl.from("#s4-lead", { y: 46, opacity: 0, duration: 0.5, ease: "sine.out" }, 27.3);
+      tl.from("#s4-note", { x: -30, opacity: 0, duration: 0.38, ease: "circ.out" }, 27.56);
+      tl.from("#s4-visual", { x: 82, opacity: 0, duration: 0.62, ease: "expo.out" }, 27.0);
+      tl.from("#s4-visual .slip", { y: 64, opacity: 0, duration: 0.42, stagger: 0.09, ease: "back.out(1.18)" }, 27.32);
+      tl.from("#s4-visual .slips-date", { scale: 0.92, opacity: 0, duration: 0.34, ease: "power2.out" }, 27.86);
+      tl.from("#s4-footer", { y: 18, opacity: 0, duration: 0.32, ease: "power2.out" }, 28.04);
+      tl.to("#s4-grid", { x: 30, duration: 7.0, ease: "sine.inOut" }, 27.0);
+
+      tl.to("#s4", { y: -1080, duration: 0.55, ease: "power3.inOut" }, 35.45);
+      tl.fromTo("#s5", { y: 1080, opacity: 1 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.inOut" }, 35.45);
+      tl.set("#s4", { opacity: 0 }, 36.01);
+      tl.from("#s5-decor", { opacity: 0, scale: 1.06, duration: 0.78, ease: "sine.out" }, 35.66);
+      tl.from("#s5-top", { x: -46, opacity: 0, duration: 0.36, ease: "expo.out" }, 35.74);
+      tl.from("#s5-eye", { y: 32, opacity: 0, duration: 0.34, ease: "power3.out" }, 35.9);
+      tl.from("#s5-title", { x: -76, opacity: 0, duration: 0.68, ease: "power4.out" }, 36.04);
+      tl.from("#s5-lead", { y: 42, opacity: 0, duration: 0.48, ease: "sine.out" }, 36.34);
+      tl.from("#s5-turns i", { scale: 0.5, opacity: 0, duration: 0.28, stagger: 0.075, ease: "back.out(1.45)" }, 36.54);
+      tl.from("#s5-note", { x: -34, opacity: 0, duration: 0.36, ease: "circ.out" }, 37.02);
+      tl.from("#s5-visual", { scale: 0.92, opacity: 0, duration: 0.66, ease: "expo.out" }, 36.04);
+      tl.from("#s5-visual .variable", { x: 38, opacity: 0, duration: 0.32, stagger: 0.08, ease: "power2.out" }, 36.38);
+      tl.from("#s5-footer", { y: 20, opacity: 0, duration: 0.34, ease: "sine.out" }, 37.18);
+      tl.to("#s5-grid", { y: -28, duration: 7.0, ease: "sine.inOut" }, 36.0);
+      tl.to("#s5 .scene-content", { opacity: 0, duration: 0.7, ease: "power2.in" }, 44.2);
+      tl.to("#s5-decor", { opacity: 0, duration: 0.7, ease: "power2.in" }, 44.2);
+
+      window.__timelines["shangyang-classroom-intro-v2"] = tl;
+    </script>
+  </body>
+</html>

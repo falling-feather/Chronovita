@@ -464,8 +464,9 @@ def build_shangyang_presentation(
     *,
     sealed_by: str,
     sealed_at: datetime | None = None,
+    presentation_version: int = 1,
 ) -> LessonPresentationV1:
-    root = Path("media/lessons/L103/v001")
+    root = Path(f"media/lessons/L103/v{presentation_version:03d}")
     video = root / "shangyang-intro.mp4"
     poster = root / "shangyang-poster.webp"
     transcript = root / "shangyang-transcript.md"
@@ -473,7 +474,7 @@ def build_shangyang_presentation(
         presentation_id=SHANGYANG_PRESENTATION_ID,
         course_id=COURSE_ID,
         lesson_id=LESSON_ID,
-        presentation_version=1,
+        presentation_version=presentation_version,
         title="商鞅变法：材料年代与制度代价导读",
         estimated_minutes=40,
         phase_minutes={"observe": 9, "decide": 14, "consult": 7, "dossier": 10},
@@ -484,7 +485,11 @@ def build_shangyang_presentation(
         video_sha256=_sha256(content_root / video),
         poster_sha256=_sha256(content_root / poster),
         transcript_sha256=_sha256(content_root / transcript),
-        accessibility_note="无声中文文字导读；全部关键信息写入画面并提供本地 Markdown 文字稿，学生可随时跳过。",
+        accessibility_note=(
+            "无声 HyperFrames 中文动画；全部关键信息写入画面并提供本地 Markdown 文字稿，学生可随时跳过。"
+            if presentation_version >= 2
+            else "无声中文文字导读；全部关键信息写入画面并提供本地 Markdown 文字稿，学生可随时跳过。"
+        ),
         sealed_at=sealed_at or datetime.now(timezone.utc),
         sealed_by=sealed_by,
         checksum="0" * 64,

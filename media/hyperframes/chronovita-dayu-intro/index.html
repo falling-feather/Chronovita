@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>大禹治水：四层证据课堂导读</title>
+    <script src="assets/gsap-3.14.2.min.js"></script>
+    <style>
+      @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"); font-style: normal; font-weight: 100 900; }
+      @font-face { font-family: "STKaiti"; src: local("STKaiti"); font-style: normal; font-weight: 400 700; }
+      @font-face { font-family: "KaiTi"; src: local("KaiTi"); font-style: normal; font-weight: 400 700; }
+      * { box-sizing: border-box; }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        overflow: hidden;
+        background: #071a28;
+      }
+      body {
+        color: #f2e7cf;
+        font-family: "Microsoft YaHei", sans-serif;
+        font-weight: 350;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background-color: #071a28;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background-color: #071a28;
+      }
+      #d2, #d3, #d4, #d5 { opacity: 0; }
+      .scene-decor {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      .scene-decor::before {
+        position: absolute;
+        top: -280px;
+        right: -120px;
+        width: 900px;
+        height: 900px;
+        content: "";
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(84, 201, 195, 0.16) 0%, rgba(84, 201, 195, 0) 68%);
+      }
+      .grid-lines {
+        position: absolute;
+        inset: -40px;
+        width: 2000px;
+        height: 1160px;
+        opacity: 0.18;
+        background-image:
+          linear-gradient(rgba(209, 164, 97, 0.24) 1px, rgba(209, 164, 97, 0) 1px),
+          linear-gradient(90deg, rgba(209, 164, 97, 0.24) 1px, rgba(209, 164, 97, 0) 1px);
+        background-size: 80px 80px;
+      }
+      .ghost-mark {
+        position: absolute;
+        right: 54px;
+        bottom: -138px;
+        color: rgba(242, 231, 207, 0.05);
+        font-family: "STKaiti", "KaiTi", serif;
+        font-size: 430px;
+        line-height: 1;
+      }
+      .scene-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        gap: 34px;
+        padding: 86px 112px 78px;
+      }
+      .topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 38px;
+        color: #d1a461;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+      }
+      .topline .timecode {
+        color: rgba(242, 231, 207, 0.72);
+        font-variant-numeric: tabular-nums;
+        font-weight: 400;
+        letter-spacing: 0.08em;
+      }
+      .main-grid {
+        display: grid;
+        min-height: 0;
+        flex: 1;
+        grid-template-columns: minmax(0, 1.08fr) minmax(540px, 0.92fr);
+        gap: 80px;
+        align-items: center;
+      }
+      .copy {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 30px;
+      }
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        color: #54c9c3;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+      }
+      .eyebrow::before {
+        width: 68px;
+        height: 3px;
+        content: "";
+        background-color: #54c9c3;
+      }
+      h1, h2, p { margin: 0; }
+      h1, h2 {
+        max-width: 1050px;
+        font-family: "STKaiti", "KaiTi", serif;
+        font-weight: 650;
+        letter-spacing: -0.035em;
+      }
+      h1 { font-size: 92px; line-height: 1.16; }
+      h2 { font-size: 72px; line-height: 1.18; }
+      .lead {
+        max-width: 960px;
+        color: rgba(242, 231, 207, 0.84);
+        font-size: 31px;
+        line-height: 1.65;
+      }
+      .source-note {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: rgba(242, 231, 207, 0.74);
+        font-size: 20px;
+        line-height: 1.5;
+      }
+      .source-note strong {
+        flex: 0 0 auto;
+        padding: 7px 13px;
+        color: #071a28;
+        background-color: #d1a461;
+        font-size: 17px;
+        letter-spacing: 0.08em;
+      }
+      .visual-panel {
+        position: relative;
+        display: flex;
+        min-height: 590px;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: #0b2431;
+        border: 1px solid rgba(209, 164, 97, 0.6);
+      }
+      .visual-panel::after {
+        position: absolute;
+        inset: 22px;
+        content: "";
+        border: 1px solid rgba(84, 201, 195, 0.22);
+        pointer-events: none;
+      }
+      .footer-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 42px;
+        color: rgba(242, 231, 207, 0.66);
+        font-size: 20px;
+      }
+      .footer-line strong { color: #d1a461; font-weight: 700; }
+      .scene-count { font-variant-numeric: tabular-nums; letter-spacing: 0.12em; }
+      .river-figure {
+        position: relative;
+        width: 610px;
+        height: 480px;
+      }
+      .river-figure svg { width: 100%; height: 100%; overflow: visible; }
+      .river-ring {
+        position: absolute;
+        top: 70px;
+        right: 46px;
+        width: 310px;
+        height: 310px;
+        border: 2px solid rgba(209, 164, 97, 0.72);
+        border-radius: 50%;
+      }
+      .river-label {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: #f2e7cf;
+      }
+      .river-label strong { color: #54c9c3; font-size: 29px; }
+      .river-label span { color: rgba(242, 231, 207, 0.7); font-size: 18px; }
+      .river-label.upstream { top: 42px; left: 26px; }
+      .river-label.lowland { right: 14px; bottom: 24px; text-align: right; }
+      .layers-panel {
+        display: grid;
+        width: 100%;
+        height: 100%;
+        padding: 56px;
+        grid-template-rows: repeat(4, 1fr);
+        gap: 13px;
+      }
+      .layer {
+        display: grid;
+        grid-template-columns: 64px 170px 1fr;
+        align-items: center;
+        gap: 20px;
+        padding: 15px 20px;
+        background-color: rgba(7, 26, 40, 0.72);
+        border: 1px solid rgba(209, 164, 97, 0.34);
+      }
+      .layer-index {
+        display: grid;
+        width: 50px;
+        height: 50px;
+        place-items: center;
+        color: #071a28;
+        background-color: #d1a461;
+        font-size: 20px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .layer strong { color: #f2e7cf; font-size: 24px; }
+      .layer span { color: rgba(242, 231, 207, 0.72); font-size: 19px; line-height: 1.5; }
+      .layer:nth-child(3) { border-color: rgba(84, 201, 195, 0.78); }
+      .layer:nth-child(3) .layer-index { background-color: #54c9c3; }
+      .city-map {
+        position: relative;
+        width: 610px;
+        height: 500px;
+        border: 1px solid rgba(84, 201, 195, 0.35);
+      }
+      .city-map::before, .city-map::after {
+        position: absolute;
+        content: "";
+        background-color: rgba(209, 164, 97, 0.62);
+      }
+      .city-map::before { top: 0; bottom: 0; left: 43%; width: 18px; }
+      .city-map::after { top: 57%; right: 0; left: 0; height: 14px; }
+      .map-block {
+        position: absolute;
+        display: flex;
+        align-items: flex-end;
+        padding: 15px;
+        color: #f2e7cf;
+        background-color: rgba(84, 201, 195, 0.14);
+        border: 1px solid rgba(84, 201, 195, 0.72);
+        font-size: 18px;
+      }
+      .map-block.palace { top: 54px; left: 72px; width: 174px; height: 126px; }
+      .map-block.workshop { top: 76px; right: 56px; width: 188px; height: 156px; }
+      .map-block.ritual { bottom: 54px; left: 62px; width: 180px; height: 132px; }
+      .map-block.settlement { right: 54px; bottom: 44px; width: 196px; height: 154px; }
+      .map-axis {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        color: #d1a461;
+        font-size: 16px;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.12em;
+      }
+      .relation-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        align-self: flex-start;
+        padding: 12px 17px;
+        color: #f2e7cf;
+        background-color: #0b2431;
+        border: 1px solid #d1a461;
+        font-size: 21px;
+      }
+      .relation-badge b { color: #54c9c3; font-size: 27px; }
+      .boundary-panel {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        justify-content: center;
+        gap: 34px;
+        padding: 58px;
+      }
+      .claim-step {
+        position: relative;
+        display: grid;
+        grid-template-columns: 116px 1fr;
+        align-items: center;
+        gap: 22px;
+        min-height: 88px;
+        padding: 17px 20px;
+        background-color: rgba(7, 26, 40, 0.8);
+        border: 1px solid rgba(209, 164, 97, 0.42);
+      }
+      .claim-step + .claim-step::before {
+        position: absolute;
+        top: -35px;
+        left: 70px;
+        width: 1px;
+        height: 34px;
+        content: "";
+        background-color: #d1a461;
+      }
+      .claim-step strong { color: #d1a461; font-size: 17px; letter-spacing: 0.08em; }
+      .claim-step span { color: #f2e7cf; font-size: 22px; line-height: 1.45; }
+      .claim-step.allowed { border-color: #54c9c3; }
+      .claim-step.allowed strong { color: #54c9c3; }
+      .claim-step.blocked { opacity: 0.7; border-style: dashed; }
+      .claim-step.blocked span { text-decoration: line-through; text-decoration-color: #d1a461; }
+      .variables-panel {
+        display: grid;
+        width: 100%;
+        height: 100%;
+        padding: 62px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px 40px;
+        align-content: center;
+      }
+      .variable {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        align-items: center;
+        gap: 18px;
+      }
+      .variable-ring {
+        position: relative;
+        display: grid;
+        width: 82px;
+        height: 82px;
+        place-items: center;
+        border: 2px solid rgba(209, 164, 97, 0.7);
+        border-radius: 50%;
+        color: #54c9c3;
+        font-size: 18px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .variable strong { color: #f2e7cf; font-size: 21px; font-weight: 600; }
+      .variable span { display: block; margin-top: 5px; color: rgba(242, 231, 207, 0.64); font-size: 16px; }
+      .turns {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .turns i {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        color: #071a28;
+        background-color: #d1a461;
+        font-style: normal;
+        font-size: 17px;
+        font-weight: 700;
+      }
+      .turns i:last-child { background-color: #54c9c3; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="dayu-classroom-intro-v2" data-start="0" data-duration="45" data-width="1920" data-height="1080">
+      <section id="d1" class="scene" data-layout-allow-overflow>
+        <div id="d1-decor" class="scene-decor" data-layout-ignore>
+          <div id="d1-grid" class="grid-lines"></div><div class="ghost-mark">水</div>
+        </div>
+        <div class="scene-content">
+          <div id="d1-top" class="topline"><span>L101 · 课堂导读</span><span class="timecode">00:00—00:09</span></div>
+          <div class="main-grid">
+            <div class="copy">
+              <div id="d1-eye" class="eyebrow">问题从哪里开始</div>
+              <h1 id="d1-title">一场洪水，为什么会改变共同体？</h1>
+              <p id="d1-lead" class="lead">先不急着判断故事“真”或“假”，把每种材料放回它自己的时代。</p>
+              <div id="d1-note" class="source-note"><strong>方法</strong><span>观察材料身份，再讨论治理、权力与代价。</span></div>
+            </div>
+            <div id="d1-visual" class="visual-panel">
+              <div class="river-figure">
+                <div class="river-ring"></div>
+                <svg id="d1-flow" viewBox="0 0 610 480" aria-hidden="true">
+                  <path d="M-30 292 C80 205 155 350 276 262 C382 186 435 155 660 244" fill="none" stroke="#54c9c3" stroke-width="26" stroke-linecap="round" />
+                  <path d="M-10 362 C118 265 214 420 342 327 C438 257 528 265 655 338" fill="none" stroke="#d1a461" stroke-width="7" stroke-linecap="round" />
+                  <path d="M84 123 C190 54 386 43 530 142" fill="none" stroke="rgba(84,201,195,.7)" stroke-width="3" stroke-dasharray="15 18" />
+                </svg>
+                <div class="river-label upstream"><strong>上游</strong><span>地形与水势</span></div>
+                <div class="river-label lowland"><strong>低地聚落</strong><span>粮食 · 劳作 · 安全</span></div>
+              </div>
+            </div>
+          </div>
+          <div id="d1-footer" class="footer-line"><span>传说 · 传世文献 · 考古观察 · 教学解释</span><strong class="scene-count">01 / 05</strong></div>
+        </div>
+      </section>
+
+      <section id="d2" class="scene" data-layout-allow-overflow>
+        <div id="d2-decor" class="scene-decor" data-layout-ignore><div id="d2-grid" class="grid-lines"></div><div class="ghost-mark">证</div></div>
+        <div class="scene-content">
+          <div id="d2-top" class="topline"><span>材料分层</span><span class="timecode">00:09—00:18</span></div>
+          <div class="main-grid">
+            <div class="copy">
+              <div id="d2-eye" class="eyebrow">传说与传世文献</div>
+              <h2 id="d2-title">同一个“禹”，存在于不同材料层。</h2>
+              <p id="d2-lead" class="lead">禹、鲧、疏河与“三过家门”的故事，保存了古人对公共责任的记忆。</p>
+              <div id="d2-note" class="source-note"><strong>边界</strong><span>它们不是禹时代的现场记录，不能与考古材料直接画等号。</span></div>
+            </div>
+            <div id="d2-visual" class="visual-panel">
+              <div class="layers-panel">
+                <div class="layer"><i class="layer-index">01</i><strong>传说</strong><span>共同体怎样记忆英雄与责任</span></div>
+                <div class="layer"><i class="layer-index">02</i><strong>传世文献</strong><span>后世编写、流传与解释的文本</span></div>
+                <div class="layer"><i class="layer-index">03</i><strong>考古观察</strong><span>遗址、道路、作坊与器物</span></div>
+                <div class="layer"><i class="layer-index">04</i><strong>教学解释</strong><span>把材料转化为可讨论的问题</span></div>
+              </div>
+            </div>
+          </div>
+          <div id="d2-footer" class="footer-line"><span>材料身份不同，能够支持的结论也不同。</span><strong class="scene-count">02 / 05</strong></div>
+        </div>
+      </section>
+
+      <section id="d3" class="scene" data-layout-allow-overflow>
+        <div id="d3-decor" class="scene-decor" data-layout-ignore><div id="d3-grid" class="grid-lines"></div><div class="ghost-mark">邑</div></div>
+        <div class="scene-content">
+          <div id="d3-top" class="topline"><span>考古观察</span><span class="timecode">00:18—00:27</span></div>
+          <div class="main-grid">
+            <div class="copy">
+              <div id="d3-eye" class="eyebrow">二里头遗址</div>
+              <h2 id="d3-title">可以观察早期国家，不能跳过历史解释。</h2>
+              <p id="d3-lead" class="lead">大型都邑、道路、宫殿区、作坊与礼器，为理解组织能力提供材料。</p>
+              <div id="d3-badge" class="relation-badge"><span>二里头文化与夏史</span><b>高度相关 ≠ 自动等同</b></div>
+            </div>
+            <div id="d3-visual" class="visual-panel">
+              <div class="city-map">
+                <span class="map-axis">ERLITOU · OBSERVATION GRID</span>
+                <div class="map-block palace">宫殿区</div>
+                <div class="map-block workshop">手工业作坊</div>
+                <div class="map-block ritual">礼仪器物</div>
+                <div class="map-block settlement">道路与聚落</div>
+              </div>
+            </div>
+          </div>
+          <div id="d3-footer" class="footer-line"><span>考古材料让结构可见，但不会自己说出王朝名称。</span><strong class="scene-count">03 / 05</strong></div>
+        </div>
+      </section>
+
+      <section id="d4" class="scene" data-layout-allow-overflow>
+        <div id="d4-decor" class="scene-decor" data-layout-ignore><div id="d4-grid" class="grid-lines"></div><div class="ghost-mark">界</div></div>
+        <div class="scene-content">
+          <div id="d4-top" class="topline"><span>争议与边界</span><span class="timecode">00:27—00:36</span></div>
+          <div class="main-grid">
+            <div class="copy">
+              <div id="d4-eye" class="eyebrow">积石峡洪水研究</div>
+              <h2 id="d4-title">局地洪水，不等于全国洪水。</h2>
+              <p id="d4-lead" class="lead">约公元前 1920 年的洪水研究具有争议。证据能走多远，结论才走多远。</p>
+              <div id="d4-note" class="source-note"><strong>谨慎</strong><span>自然科学研究提供线索，不直接证明禹、全国洪水或夏王朝。</span></div>
+            </div>
+            <div id="d4-visual" class="visual-panel">
+              <div class="boundary-panel">
+                <div class="claim-step allowed"><strong>可以讨论</strong><span>特定地点、特定年代的一次洪水事件</span></div>
+                <div class="claim-step"><strong>仍需解释</strong><span>洪水记忆怎样进入后世叙事</span></div>
+                <div class="claim-step blocked"><strong>不能直推</strong><span>禹本人、全国洪水与夏王朝已经被证明</span></div>
+              </div>
+            </div>
+          </div>
+          <div id="d4-footer" class="footer-line"><span>争议不是空白，而是标注确信程度。</span><strong class="scene-count">04 / 05</strong></div>
+        </div>
+      </section>
+
+      <section id="d5" class="scene" data-layout-allow-overflow>
+        <div id="d5-decor" class="scene-decor" data-layout-ignore><div id="d5-grid" class="grid-lines"></div><div class="ghost-mark">择</div></div>
+        <div class="scene-content">
+          <div id="d5-top" class="topline"><span>进入六回合议事</span><span class="timecode">00:36—00:45</span></div>
+          <div class="main-grid">
+            <div class="copy">
+              <div id="d5-eye" class="eyebrow">可观察 · 可干预 · 可反馈 · 可复盘</div>
+              <h2 id="d5-title">水退，就等于成功吗？</h2>
+              <p id="d5-lead" class="lead">六次选择会同时改变风险、粮食、劳作、信任、知识与协作。</p>
+              <div id="d5-turns" class="turns"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i></div>
+              <div id="d5-note" class="source-note"><strong>下一步</strong><span>让每项代价、每次变化和每条来源共同回答。</span></div>
+            </div>
+            <div id="d5-visual" class="visual-panel">
+              <div class="variables-panel">
+                <div class="variable"><i class="variable-ring">↓</i><div><strong>洪水风险</strong><span>越低越安全</span></div></div>
+                <div class="variable"><i class="variable-ring">粮</i><div><strong>粮食储备</strong><span>工程与生计</span></div></div>
+                <div class="variable"><i class="variable-ring">劳</i><div><strong>劳作者状态</strong><span>负担与安全</span></div></div>
+                <div class="variable"><i class="variable-ring">信</i><div><strong>聚落信任</strong><span>承诺与公平</span></div></div>
+                <div class="variable"><i class="variable-ring">知</i><div><strong>地形知识</strong><span>勘察与记录</span></div></div>
+                <div class="variable"><i class="variable-ring">协</i><div><strong>协作能力</strong><span>跨聚落治理</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div id="d5-footer" class="footer-line"><span>课堂模型不是夏代统计表；它帮助我们看见权衡。</span><strong class="scene-count">05 / 05</strong></div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.from("#d1-decor", { opacity: 0, scale: 1.04, duration: 0.8, ease: "sine.out" }, 0.2);
+      tl.from("#d1-top", { x: -46, opacity: 0, duration: 0.42, ease: "expo.out" }, 0.28);
+      tl.from("#d1-eye", { y: 34, opacity: 0, duration: 0.38, ease: "power3.out" }, 0.48);
+      tl.from("#d1-title", { x: -72, opacity: 0, duration: 0.78, ease: "expo.out" }, 0.62);
+      tl.from("#d1-lead", { y: 42, opacity: 0, duration: 0.55, ease: "sine.out" }, 0.92);
+      tl.from("#d1-note", { scale: 0.94, opacity: 0, duration: 0.36, ease: "back.out(1.25)" }, 1.12);
+      tl.from("#d1-visual", { x: 86, opacity: 0, duration: 0.72, ease: "power4.out" }, 0.58);
+      tl.from("#d1-footer", { y: 24, opacity: 0, duration: 0.36, ease: "power2.out" }, 1.18);
+      tl.to("#d1-grid", { x: 34, duration: 7.2, ease: "sine.inOut" }, 0.6);
+      tl.to("#d1-flow", { x: 28, duration: 6.4, ease: "sine.inOut" }, 1.05);
+
+      tl.to("#d1", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 8.5);
+      tl.fromTo("#d2", { x: 1920, opacity: 1 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.inOut" }, 8.5);
+      tl.set("#d1", { opacity: 0 }, 9.01);
+      tl.from("#d2-decor", { opacity: 0, scale: 1.04, duration: 0.7, ease: "sine.out" }, 8.72);
+      tl.from("#d2-top", { y: -34, opacity: 0, duration: 0.38, ease: "power3.out" }, 8.78);
+      tl.from("#d2-eye", { x: -42, opacity: 0, duration: 0.34, ease: "expo.out" }, 8.94);
+      tl.from("#d2-title", { y: 56, opacity: 0, duration: 0.72, ease: "power4.out" }, 9.04);
+      tl.from("#d2-lead", { x: -38, opacity: 0, duration: 0.5, ease: "sine.out" }, 9.3);
+      tl.from("#d2-note", { scale: 0.95, opacity: 0, duration: 0.36, ease: "back.out(1.2)" }, 9.54);
+      tl.from("#d2-visual", { x: 76, opacity: 0, duration: 0.62, ease: "expo.out" }, 9.02);
+      tl.from("#d2-visual .layer", { x: 42, opacity: 0, duration: 0.36, stagger: 0.1, ease: "power2.out" }, 9.34);
+      tl.from("#d2-footer", { y: 20, opacity: 0, duration: 0.34, ease: "circ.out" }, 9.82);
+      tl.to("#d2-grid", { x: -30, duration: 7.1, ease: "sine.inOut" }, 9.1);
+
+      tl.to("#d2", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 17.5);
+      tl.fromTo("#d3", { x: 1920, opacity: 1 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.inOut" }, 17.5);
+      tl.set("#d2", { opacity: 0 }, 18.01);
+      tl.from("#d3-decor", { opacity: 0, scale: 1.05, duration: 0.8, ease: "sine.out" }, 17.68);
+      tl.from("#d3-top", { x: 44, opacity: 0, duration: 0.34, ease: "expo.out" }, 17.76);
+      tl.from("#d3-eye", { scale: 0.9, opacity: 0, duration: 0.36, ease: "back.out(1.3)" }, 17.94);
+      tl.from("#d3-title", { x: -68, opacity: 0, duration: 0.7, ease: "power4.out" }, 18.02);
+      tl.from("#d3-lead", { y: 44, opacity: 0, duration: 0.48, ease: "sine.out" }, 18.32);
+      tl.from("#d3-badge", { x: -34, opacity: 0, duration: 0.4, ease: "circ.out" }, 18.56);
+      tl.from("#d3-visual", { scale: 0.94, opacity: 0, duration: 0.64, ease: "expo.out" }, 18.0);
+      tl.from("#d3-visual .map-block", { scale: 0.82, opacity: 0, duration: 0.32, stagger: 0.09, ease: "back.out(1.2)" }, 18.38);
+      tl.from("#d3-footer", { y: 20, opacity: 0, duration: 0.34, ease: "power2.out" }, 18.86);
+      tl.to("#d3-grid", { y: 28, duration: 7.0, ease: "sine.inOut" }, 18.1);
+
+      tl.to("#d3", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 26.5);
+      tl.fromTo("#d4", { x: 1920, opacity: 1 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.inOut" }, 26.5);
+      tl.set("#d3", { opacity: 0 }, 27.01);
+      tl.from("#d4-decor", { opacity: 0, scale: 1.05, duration: 0.72, ease: "sine.out" }, 26.7);
+      tl.from("#d4-top", { y: -38, opacity: 0, duration: 0.34, ease: "power3.out" }, 26.78);
+      tl.from("#d4-eye", { x: -44, opacity: 0, duration: 0.36, ease: "expo.out" }, 26.92);
+      tl.from("#d4-title", { scale: 0.95, opacity: 0, duration: 0.64, ease: "power4.out" }, 27.04);
+      tl.from("#d4-lead", { y: 46, opacity: 0, duration: 0.5, ease: "sine.out" }, 27.3);
+      tl.from("#d4-note", { x: -30, opacity: 0, duration: 0.38, ease: "circ.out" }, 27.56);
+      tl.from("#d4-visual", { x: 82, opacity: 0, duration: 0.62, ease: "expo.out" }, 27.0);
+      tl.from("#d4-visual .claim-step", { y: 30, opacity: 0, duration: 0.34, stagger: 0.13, ease: "back.out(1.18)" }, 27.36);
+      tl.from("#d4-footer", { y: 18, opacity: 0, duration: 0.32, ease: "power2.out" }, 27.9);
+      tl.to("#d4-grid", { x: 30, duration: 7.0, ease: "sine.inOut" }, 27.0);
+
+      tl.to("#d4", { y: -1080, duration: 0.55, ease: "power3.inOut" }, 35.45);
+      tl.fromTo("#d5", { y: 1080, opacity: 1 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.inOut" }, 35.45);
+      tl.set("#d4", { opacity: 0 }, 36.01);
+      tl.from("#d5-decor", { opacity: 0, scale: 1.06, duration: 0.78, ease: "sine.out" }, 35.66);
+      tl.from("#d5-top", { x: -46, opacity: 0, duration: 0.36, ease: "expo.out" }, 35.74);
+      tl.from("#d5-eye", { y: 32, opacity: 0, duration: 0.34, ease: "power3.out" }, 35.9);
+      tl.from("#d5-title", { x: -76, opacity: 0, duration: 0.68, ease: "power4.out" }, 36.04);
+      tl.from("#d5-lead", { y: 42, opacity: 0, duration: 0.48, ease: "sine.out" }, 36.34);
+      tl.from("#d5-turns i", { scale: 0.5, opacity: 0, duration: 0.28, stagger: 0.075, ease: "back.out(1.45)" }, 36.54);
+      tl.from("#d5-note", { x: -34, opacity: 0, duration: 0.36, ease: "circ.out" }, 37.02);
+      tl.from("#d5-visual", { scale: 0.92, opacity: 0, duration: 0.66, ease: "expo.out" }, 36.04);
+      tl.from("#d5-visual .variable", { x: 38, opacity: 0, duration: 0.32, stagger: 0.08, ease: "power2.out" }, 36.38);
+      tl.from("#d5-footer", { y: 20, opacity: 0, duration: 0.34, ease: "sine.out" }, 37.18);
+      tl.to("#d5-grid", { y: -28, duration: 7.0, ease: "sine.inOut" }, 36.0);
+      tl.to("#d5 .scene-content", { opacity: 0, duration: 0.7, ease: "power2.in" }, 44.2);
+      tl.to("#d5-decor", { opacity: 0, duration: 0.7, ease: "power2.in" }, 44.2);
+
+      window.__timelines["dayu-classroom-intro-v2"] = tl;
+    </script>
+  </body>
+</html>
