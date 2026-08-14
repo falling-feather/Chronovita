@@ -115,7 +115,8 @@ export interface CourseDetail {
 }
 export interface Keyword { word: string; pinyin: string; gloss: string }
 export interface PersonCard {
-  name: string; role?: string; summary?: string; persona?: string; boundaries?: string[];
+  person_id?: string; name: string; role?: string; summary?: string;
+  persona?: string; boundaries?: string[];
 }
 export interface MapPoint {
   label: string; region?: string; lat?: number | null; lng?: number | null; note?: string; kind?: string;
@@ -463,6 +464,46 @@ export interface Lesson {
   scenario_refs: LessonScenarioRef[]; primary_scenario_id: string | null;
 }
 
+export interface LessonPresentation {
+  schema_version: 'lesson-presentation/v1'; presentation_id: string;
+  course_id: string; lesson_id: string; presentation_version: number;
+  status: 'sealed'; title: string; estimated_minutes: number;
+  phase_minutes: {
+    observe: number; decide: number; consult: number; dossier: number;
+  };
+  video_path: string; poster_path: string; transcript_path: string;
+  video_duration_seconds: number; video_width: 1920; video_height: 1080;
+  video_fps: 30; video_sha256: string; poster_sha256: string;
+  transcript_sha256: string; skip_allowed: true; accessibility_note: string;
+  sealed_at: string; sealed_by: string; checksum: string;
+}
+export interface LessonPresentationResponse {
+  release_id: string; release_no: number; release_checksum: string;
+  presentation: LessonPresentation;
+  asset_urls: { video: string; poster: string; transcript: string };
+}
+
+export type RagPersonaMode = 'expert' | 'person';
+export interface RagAskRequest {
+  course_id: string; lesson_id: string; persona_mode: RagPersonaMode;
+  person_id?: string; question: string;
+}
+export interface RagCitation {
+  citation_id: string; passage_id: string; source_id: string;
+  source_title: string; locator: string; excerpt: string;
+  relevance: number; certainty: 'consensus' | 'interpretation' | 'legend' | 'disputed';
+}
+export interface RagAnswer {
+  schema_version: 'rag-answer/v1';
+  answer_source: 'model' | 'extractive' | 'insufficient_evidence';
+  body: string; persona_mode: RagPersonaMode; person_id: string | null;
+  role_disclaimer: string | null; citations: RagCitation[];
+  retrieved_passage_ids: string[]; course_id: string; lesson_id: string;
+  release_id: string; release_no: number; release_checksum: string;
+  evidence_corpus_id: string; evidence_version: number; evidence_checksum: string;
+  uncertainty: 'low' | 'medium' | 'high';
+}
+
 export interface ScenarioReleasePin {
   release_id: string; release_no: number; release_checksum: string;
   course_id: string; lesson_id: string;
@@ -487,12 +528,33 @@ export interface GameScenarioSummary {
 export interface GameNarrativeMessage {
   role: 'system' | 'player' | 'narrator'; text: string; turn_no: number;
 }
+export interface GameNpcState {
+  person_id: string; attitude: number; trust: number;
+  known_fact_refs: string[]; last_basis_refs: string[];
+  flags: Record<string, string | number | boolean>; updated_turn: number;
+}
+export interface GameStateChange {
+  variable_id: string; before: number; after: number; delta: number;
+}
+export interface GameNpcChange {
+  person_id: string; attitude_before: number; attitude_after: number;
+  trust_before: number; trust_after: number; revealed_fact_refs: string[];
+}
+export interface GameTurn {
+  turn_id: string; session_id: string; client_action_id: string; turn_no: number;
+  status: 'applied' | 'rejected' | 'failed'; raw_input: string;
+  action_source: 'fixed' | 'free_input' | 'fallback'; classified_action_id: string;
+  state_before: Record<string, number>; state_after: Record<string, number>;
+  state_changes: GameStateChange[]; npc_changes: GameNpcChange[];
+  triggered_event_ids: string[]; narrative: string; created_at: string;
+}
 export interface GameSession {
   session_id: string; user_id: string; course_id: string; lesson_id: string;
   scenario_id: string; scenario_version: number;
   course_content_version: number; course_checksum: string; scenario_checksum: string;
   status: 'active' | 'completed' | 'abandoned' | 'failed';
   revision: number; current_turn: number; current_state: Record<string, number>;
+  npc_states: GameNpcState[]; turns: GameTurn[]; triggered_event_ids: string[];
   available_action_ids: string[]; available_choices: string[];
   summary: string; history: GameNarrativeMessage[]; ending_id: string | null;
   dossier_id: string | null;
@@ -578,6 +640,13 @@ export const api = {
   },
   course: (id: string) => jsonFetch<CourseDetail>(`/courses/${id}`),
   lesson: (cid: string, lid: string) => jsonFetch<Lesson>(`/courses/${cid}/lessons/${lid}`),
+  lessonPresentation: (cid: string, lid: string) =>
+    jsonFetch<LessonPresentationResponse>(
+      `/courses/${encodeURIComponent(cid)}/lessons/${encodeURIComponent(lid)}/presentation`,
+    ),
+  ragAsk: (body: RagAskRequest) => jsonFetch<RagAnswer>('/practice/ask/rag', {
+    method: 'POST', body: JSON.stringify(body),
+  }),
   gameStart: (body: GameStartRequest) =>
     jsonFetch<GameStartResponse>('/practice/game/sessions', {
       method: 'POST', body: JSON.stringify(body),

@@ -1,124 +1,157 @@
-import { useEffect, useState } from 'react';
-import { Button, Row, Col } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
+import { Button, Spin, Tag } from 'antd';
+import {
+  ArrowRightOutlined,
+  CompassOutlined,
+  FileDoneOutlined,
+  RadarChartOutlined,
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { api, type ProgressItem } from '../utils/api';
+import type { CourseDetail, ProgressItem } from '../utils/api';
+import { api } from '../utils/api';
+import {
+  CLASSROOM_PRINCIPLES,
+  CLASSROOM_STAGES,
+  isFlagshipLesson,
+  progressLayerLabel,
+} from '../features/classroom/classroomModel';
 
-const LAYER_LABEL: Record<string, string> = { watch: '看', practice: '练', ask: '问', create: '创' };
-
-const recommended = [
-  { title: '先秦 · 礼乐之邦', meta: '七年级 · 8 章 · 已选 0 人' },
-  { title: '秦汉 · 大一统', meta: '七年级 · 10 章 · 已选 0 人' },
-  { title: '隋唐 · 风华长安', meta: '七年级 · 9 章 · 已选 0 人' },
-  { title: '隋唐 · 万邦来朝', meta: '七年级 · 9 章 · 已选 0 人' },
-];
-
-const pedagogy = [
-  { tag: '看', title: '沉浸情景', desc: 'AI 生成的微视频带你回到历史现场' },
-  { tag: '练', title: '决策沙盘', desc: '在关键节点做选择，看历史的另一种走向' },
-  { tag: '问', title: '跨时对话', desc: '与商鞅、王安石们对谈，问出你的疑问' },
-  { tag: '创', title: '历史画板', desc: '用节点和连线整理你眼中的因果脉络' },
-];
+const FLAGSHIP_COURSE_ID = 'C-prequin-state';
 
 export default function HomePage() {
   const nav = useNavigate();
+  const [course, setCourse] = useState<CourseDetail | null>(null);
   const [resume, setResume] = useState<ProgressItem | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.progressLatest().then((r) => setResume(r.item)).catch(() => {});
+    let active = true;
+    Promise.all([
+      api.course(FLAGSHIP_COURSE_ID).catch(() => null),
+      api.progressLatest().then((response) => response.item).catch(() => null),
+    ]).then(([nextCourse, nextResume]) => {
+      if (!active) return;
+      setCourse(nextCourse);
+      setResume(nextResume);
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
   }, []);
+
+  const flagships = useMemo(
+    () => course?.lessons.filter((lesson) => isFlagshipLesson(lesson.id)) ?? [],
+    [course],
+  );
+
+  const resumePath = resume?.course_id
+    ? `/courses/${resume.course_id}/lessons/${resume.lesson_id}?layer=${resume.last_layer}`
+    : flagships[0]
+      ? `/courses/${FLAGSHIP_COURSE_ID}/lessons/${flagships[0].id}?layer=watch`
+      : `/courses/${FLAGSHIP_COURSE_ID}`;
+
   return (
-    <div style={{ maxWidth: 1392, margin: '0 auto' }}>
-      {/* Hero */}
-      <Row gutter={20} style={{ marginBottom: 32 }}>
-        <Col flex="auto">
-          <div className="chrono-hero" style={{ height: '100%' }}>
-            <div style={{ fontSize: 12, color: 'var(--accent-gold)', letterSpacing: 2, marginBottom: 8 }}>
-              CHRONOVITA · V0.7.0
-            </div>
-            <h1>以史为鉴 · 看练问创</h1>
-            <p>沉浸情景、决策沙盘、跨时对话、历史画板 — 让每一段历史都可以被推演、被追问、被再创作。</p>
-            <Button type="primary" size="large" style={{ marginRight: 12 }} onClick={() => nav('/courses')}>
-              进入课程中心
+    <div className="chrono-classroom-home">
+      <section className="chrono-classroom-hero">
+        <div className="chrono-classroom-hero-copy">
+          <span className="chrono-eyebrow">七年级 · 本地课堂 · 35–45 分钟</span>
+          <h1>走进历史现场，留下有依据的判断</h1>
+          <p>
+            从材料踏勘开始，在六回合抉择中观察局势变化；再召见人物与专家，
+            最终把选择、代价和证据整理成自己的史官卷宗。
+          </p>
+          <div className="chrono-classroom-hero-actions">
+            <Button type="primary" size="large" onClick={() => nav(resumePath)}>
+              {resume ? '继续上次学习' : '进入旗舰课堂'} <ArrowRightOutlined />
             </Button>
-            <Button size="large" onClick={() => {
-              const el = document.getElementById('chrono-pedagogy');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}>
-              了解教学法
+            <Button size="large" onClick={() => nav(`/courses/${FLAGSHIP_COURSE_ID}`)}>
+              查看课程路线
             </Button>
           </div>
-        </Col>
-        <Col flex="320px">
-          <div
-            className="chrono-card-dark"
-            style={{ height: '100%', cursor: 'pointer' }}
-            onClick={() => {
-              if (resume?.course_id) {
-                nav(`/courses/${resume.course_id}/lessons/${resume.lesson_id}?layer=${resume.last_layer}`);
-              } else {
-                nav('/courses');
-              }
-            }}
-          >
-            <div style={{ color: 'var(--accent-gold)', fontSize: 12, marginBottom: 8 }}>
-              {resume ? '继续学习' : '本周精选'}
+          {resume ? (
+            <div className="chrono-resume-line">
+              <FileDoneOutlined />
+              <span>上次停在「{progressLayerLabel(resume.last_layer)}」阶段 · {resume.title}</span>
             </div>
-            <div className="chrono-title" style={{ fontSize: 22, marginBottom: 12 }}>
-              {resume?.title ?? '华夏文明的起源与发展'}
-            </div>
-            <div style={{ color: 'var(--text-cream-mute)', fontSize: 12 }}>
-              {resume
-                ? `上次到：${LAYER_LABEL[resume.last_layer] ?? resume.last_layer} 层`
-                : '七年级 · 第一单元'}
-            </div>
+          ) : null}
+        </div>
+        <div className="chrono-classroom-hero-map" aria-label="四阶段课堂路线">
+          <div className="chrono-orbit" aria-hidden="true" />
+          <CompassOutlined className="chrono-hero-compass" />
+          <ol>
+            {CLASSROOM_STAGES.map((stage) => (
+              <li key={stage.layer}>
+                <span>{stage.index}</span>
+                <div><strong>{stage.title}</strong><small>{stage.verb}</small></div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="chrono-principles" aria-labelledby="principle-heading">
+        <div className="chrono-section-heading">
+          <div>
+            <span>课堂方法</span>
+            <h2 id="principle-heading">观察、干预、反馈、复盘形成一个闭环</h2>
           </div>
-        </Col>
-      </Row>
+          <RadarChartOutlined />
+        </div>
+        <div className="chrono-principle-grid">
+          {CLASSROOM_PRINCIPLES.map((principle, index) => (
+            <article key={principle.title}>
+              <span>0{index + 1}</span>
+              <h3>{principle.title}</h3>
+              <p>{principle.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
 
-      {/* 推荐课程 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-        <h3 className="chrono-title" style={{ fontSize: 18, margin: 0 }}>推荐课程</h3>
-        <a style={{ color: 'var(--accent-gold)', fontSize: 12 }} onClick={() => nav('/courses')}>查看更多 ›</a>
-      </div>
-      <Row gutter={16} style={{ marginBottom: 32 }}>
-        {recommended.map((c) => (
-          <Col span={6} key={c.title}>
-            <div
-              className="chrono-card"
-              style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }}
-              onClick={() => nav('/courses')}
-            >
-              <div style={{ height: 120, background: 'var(--accent-bronze)' }} />
-              <div style={{ padding: 16 }}>
-                <div className="chrono-title" style={{ fontSize: 15, marginBottom: 6 }}>{c.title}</div>
-                <div style={{ color: 'var(--text-mute)', fontSize: 11 }}>{c.meta}</div>
-              </div>
-            </div>
-          </Col>
-        ))}
-      </Row>
-
-      {/* 教学法 */}
-      <h3 id="chrono-pedagogy" className="chrono-title" style={{ fontSize: 18, marginBottom: 12 }}>教学法 · 看练问创</h3>
-      <Row gutter={16}>
-        {pedagogy.map((p) => (
-          <Col span={6} key={p.tag}>
-            <div
-              className="chrono-card-dark"
-              style={{ minHeight: 180, cursor: 'pointer' }}
-              onClick={() => nav('/practice')}
-            >
-              <div style={{ fontSize: 48, color: 'var(--accent-gold)', fontWeight: 700, marginBottom: 8 }}>
-                {p.tag}
-              </div>
-              <div className="chrono-title" style={{ fontSize: 16, marginBottom: 6, color: 'var(--text-cream)' }}>
-                {p.title}
-              </div>
-              <div style={{ color: 'var(--text-cream-mute)', fontSize: 12 }}>{p.desc}</div>
-            </div>
-          </Col>
-        ))}
-      </Row>
+      <section className="chrono-flagships" aria-labelledby="flagship-heading">
+        <div className="chrono-section-heading">
+          <div>
+            <span>双旗舰课程</span>
+            <h2 id="flagship-heading">两种历史难题，同一套证据化学习流程</h2>
+          </div>
+          <Button type="link" onClick={() => nav(`/courses/${FLAGSHIP_COURSE_ID}`)}>
+            查看完整路线 <ArrowRightOutlined />
+          </Button>
+        </div>
+        {loading ? (
+          <div className="chrono-flagship-loading"><Spin /><span>正在读取正式课程发布…</span></div>
+        ) : (
+          <div className="chrono-flagship-grid">
+            {flagships.map((lesson, index) => (
+              <article key={lesson.id} className={`chrono-flagship-card flagship-${index + 1}`}>
+                <div className="chrono-flagship-mapline" aria-hidden="true">
+                  <span /><span /><span /><span />
+                </div>
+                <div className="chrono-flagship-meta">
+                  <Tag>{lesson.id}</Tag>
+                  <span>{lesson.duration} · 六回合历史抉择</span>
+                </div>
+                <h3>{lesson.title}</h3>
+                <p>{index === 0
+                  ? '从洪水记忆与多层证据出发，讨论公共协作、权威形成和治理代价。'
+                  : '从传世叙事、量器铭文与秦简出发，比较富国强兵、制度信用和社会代价。'}</p>
+                <div className="chrono-flagship-stages">
+                  {CLASSROOM_STAGES.map((stage) => <span key={stage.layer}>{stage.title}</span>)}
+                </div>
+                <Button
+                  type="primary"
+                  onClick={() => nav(`/courses/${FLAGSHIP_COURSE_ID}/lessons/${lesson.id}?layer=watch`)}
+                >
+                  开始踏勘 <ArrowRightOutlined />
+                </Button>
+              </article>
+            ))}
+            {!loading && flagships.length === 0 ? (
+              <div className="chrono-empty">正式课程发布暂不可读，请教师检查本地课程包。</div>
+            ) : null}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -42,6 +42,7 @@ import {
   readStoredStartedGameReference,
   type GameBinding,
 } from './gameSessionReference';
+import { projectDossierKnowledge } from '../../features/classroom/dossierProjection';
 
 interface CanvasNodeData {
   label: string;
@@ -230,6 +231,7 @@ function mergeDossierGraph(
   currentNodes: CanvasNode[],
   currentEdges: CanvasEdge[],
 ): CanvasGraph & { addedNodes: number; addedEdges: number } {
+  const projection = projectDossierKnowledge(dossier);
   const knownNodeIds = new Set(currentNodes.map((node) => node.id));
   const knownEdgeIds = new Set(currentEdges.map((edge) => edge.id));
   const baseY = currentNodes.length > 0
@@ -237,7 +239,7 @@ function mergeDossierGraph(
     : 80;
 
   const importedNodes: CanvasNode[] = [];
-  for (const [index, item] of dossier.knowledge_nodes.entries()) {
+  for (const [index, item] of projection.nodes.entries()) {
     const id = dossierNodeId(dossier, item.node_id);
     if (knownNodeIds.has(id)) continue;
     const palette = DOSSIER_KIND_STYLES[item.kind];
@@ -269,7 +271,7 @@ function mergeDossierGraph(
   }
 
   const importedEdges: CanvasEdge[] = [];
-  for (const item of dossier.knowledge_edges) {
+  for (const item of projection.edges) {
     const id = dossierEdgeId(dossier, item.edge_id);
     if (knownEdgeIds.has(id)) continue;
     const source = dossierNodeId(dossier, item.source_node_id);
@@ -307,12 +309,13 @@ function isDossierImported(
   nodes: CanvasNode[],
   edges: CanvasEdge[],
 ): boolean {
-  if (dossier.knowledge_nodes.length === 0) return false;
+  const projection = projectDossierKnowledge(dossier);
+  if (projection.nodes.length === 0) return false;
   const nodeIds = new Set(nodes.map((node) => node.id));
   const edgeIds = new Set(edges.map((edge) => edge.id));
-  return dossier.knowledge_nodes.every(
+  return projection.nodes.every(
     (node) => nodeIds.has(dossierNodeId(dossier, node.node_id)),
-  ) && dossier.knowledge_edges.every(
+  ) && projection.edges.every(
     (edge) => edgeIds.has(dossierEdgeId(dossier, edge.edge_id)),
   );
 }
@@ -1028,7 +1031,8 @@ function DossierPanel({
   }
 
   const { dossier } = state;
-  const hasKnowledge = dossier.knowledge_nodes.length > 0;
+  const projection = projectDossierKnowledge(dossier);
+  const hasKnowledge = projection.nodes.length > 0;
   return (
     <section className="chrono-dossier-band" aria-label="史官卷宗">
       <header className="chrono-dossier-header">
@@ -1087,7 +1091,7 @@ function DossierPanel({
           <div className="chrono-dossier-knowledge-count">
             <ApartmentOutlined />
             {hasKnowledge
-              ? `${dossier.knowledge_nodes.length} 个知识节点，${dossier.knowledge_edges.length} 条关系`
+              ? `${projection.nodes.length} 个知识节点，${projection.edges.length} 条关系${projection.derived ? '（由封卷内容整理）' : ''}`
               : '本次卷宗没有可导入的知识节点'}
           </div>
         </div>

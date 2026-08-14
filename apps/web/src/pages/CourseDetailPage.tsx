@@ -1,64 +1,141 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Tag, Spin, Progress } from 'antd';
-import { PlayCircleOutlined, RightOutlined } from '@ant-design/icons';
-import { api, type CourseDetail } from '../utils/api';
+import { Button, Progress, Spin, Tag } from 'antd';
+import {
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  CheckOutlined,
+  ClockCircleOutlined,
+  EnvironmentOutlined,
+} from '@ant-design/icons';
+import type { CourseDetail, ProgressItem } from '../utils/api';
+import { api } from '../utils/api';
+import { CLASSROOM_STAGES, isFlagshipLesson } from '../features/classroom/classroomModel';
 
 export default function CourseDetailPage() {
   const { courseId = '' } = useParams();
   const nav = useNavigate();
   const [data, setData] = useState<CourseDetail | null>(null);
+  const [progress, setProgress] = useState<ProgressItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     setLoading(true);
-    api.course(courseId).then(setData).finally(() => setLoading(false));
+    Promise.all([
+      api.course(courseId),
+      api.progressList().then((response) => response.items).catch(() => []),
+    ]).then(([course, items]) => {
+      if (!active) return;
+      setData(course);
+      setProgress(items);
+    }).catch(() => {
+      if (active) setData(null);
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
   }, [courseId]);
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div>;
-  if (!data) return <div style={{ padding: 24 }}>课程不存在</div>;
-  const c = data.summary;
+  const progressByLesson = useMemo(
+    () => new Map(progress.map((item) => [item.lesson_id, item])),
+    [progress],
+  );
+
+  if (loading) return <div className="chrono-page-loading"><Spin /><span>正在展开课程路线…</span></div>;
+  if (!data) return <div className="chrono-empty">课程不存在或当前发布暂不可读。</div>;
+
+  const course = data.summary;
+  const flagshipCount = data.lessons.filter((lesson) => isFlagshipLesson(lesson.id)).length;
+  const firstFlagship = data.lessons.find((lesson) => isFlagshipLesson(lesson.id)) ?? data.lessons[0];
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-      <div style={{ marginBottom: 16 }}>
-        <a onClick={() => nav('/courses')} style={{ color: 'var(--text-mute)', fontSize: 12 }}>← 返回课程中心</a>
-      </div>
+    <div className="chrono-course-route-page">
+      <button className="chrono-back-link" type="button" onClick={() => nav('/courses')}>
+        <ArrowLeftOutlined /> 返回课程中心
+      </button>
 
-      <div className="chrono-card-warm" style={{ marginBottom: 24, padding: 28 }}>
-        <Tag color="gold">{c.section}</Tag>
-        <h1 className="chrono-title" style={{ fontSize: 30, margin: '8px 0' }}>{c.title}</h1>
-        <div style={{ color: 'var(--text-mute)', marginBottom: 14 }}>{c.subtitle}</div>
-        <p style={{ color: 'var(--text-dark)', fontSize: 14, lineHeight: 1.8, margin: 0 }}>{data.intro}</p>
-        <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Progress percent={0} strokeColor="var(--accent-gold)" style={{ flex: 1, maxWidth: 320 }} showInfo={false} />
-          <span style={{ fontSize: 12, color: 'var(--text-mute)' }}>共 {c.lesson_count} 节 · 进度 0%</span>
-          {data.lessons.length > 0 && (
-            <Button type="primary"
-                    icon={<PlayCircleOutlined />}
-                    onClick={() => nav(`/courses/${c.id}/lessons/${data.lessons[0].id}?layer=watch`)}>
-              开始学习
-            </Button>
-          )}
+      <header className="chrono-course-route-hero">
+        <div>
+          <span className="chrono-eyebrow">{course.section} · {course.era_id}</span>
+          <h1>{course.title}</h1>
+          <p className="chrono-course-subtitle">{course.subtitle}</p>
+          <p>{data.intro}</p>
         </div>
-      </div>
+        <aside>
+          <ClockCircleOutlined />
+          <strong>35–45 分钟 / 旗舰课</strong>
+          <span>{flagshipCount} 门正式旗舰课 · 四阶段课堂闭环</span>
+          {firstFlagship ? (
+            <Button
+              type="primary"
+              onClick={() => nav(`/courses/${course.id}/lessons/${firstFlagship.id}?layer=watch`)}
+            >
+              从第一门旗舰课开始 <ArrowRightOutlined />
+            </Button>
+          ) : null}
+        </aside>
+      </header>
 
-      <h3 className="chrono-title" style={{ fontSize: 18, marginBottom: 12 }}>章节目录</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {data.lessons.length === 0 && <div className="chrono-empty">课时内容将在后续版本上线</div>}
-        {data.lessons.map((l) => (
-          <div key={l.id} className="chrono-card"
-               style={{ display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer' }}
-               onClick={() => nav(`/courses/${c.id}/lessons/${l.id}?layer=watch`)}>
-            <div style={{ fontSize: 14, color: 'var(--accent-gold)', fontWeight: 600, width: 48 }}>{l.num}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, color: 'var(--text-dark)' }}>{l.title}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-mute)', marginTop: 2 }}>时长 {l.duration} · 看 / 练 / 问 / 创 四层</div>
+      <section className="chrono-route-stage-plan" aria-label="课堂阶段时间安排">
+        {CLASSROOM_STAGES.map((stage) => (
+          <article key={stage.layer}>
+            <span>{stage.index}</span>
+            <div>
+              <strong>{stage.title} · {stage.duration}</strong>
+              <p>{stage.purpose}</p>
             </div>
-            <RightOutlined style={{ color: 'var(--text-disabled)' }} />
-          </div>
+          </article>
         ))}
-      </div>
+      </section>
+
+      <section className="chrono-route-board" aria-labelledby="route-heading">
+        <div className="chrono-route-board-heading">
+          <div>
+            <span>课程节点</span>
+            <h2 id="route-heading">沿着早期国家形成的线索前进</h2>
+          </div>
+          <p>双旗舰节点提供正式史实稿、六回合关卡、课程内 RAG 与史官卷宗。</p>
+        </div>
+        <div className="chrono-route-contours" aria-hidden="true" />
+        <ol className="chrono-route-nodes">
+          {data.lessons.map((lesson, index) => {
+            const flagship = isFlagshipLesson(lesson.id);
+            const item = progressByLesson.get(lesson.id);
+            const completedStages = item ? Object.values(item.layers).filter(Boolean).length : 0;
+            const percent = completedStages * 25;
+            return (
+              <li key={lesson.id} className={flagship ? 'flagship' : ''}>
+                <div className="chrono-route-marker">
+                  {percent === 100 ? <CheckOutlined /> : <span>{String(index + 1).padStart(2, '0')}</span>}
+                </div>
+                <article onClick={() => nav(`/courses/${course.id}/lessons/${lesson.id}?layer=${item?.last_layer ?? 'watch'}`)}>
+                  <div className="chrono-route-node-meta">
+                    <span>{lesson.num}</span>
+                    {flagship ? <Tag color="gold">旗舰课堂</Tag> : <Tag>课程节点</Tag>}
+                    <span><ClockCircleOutlined /> {lesson.duration}</span>
+                  </div>
+                  <h3>{lesson.title}</h3>
+                  <p>{flagship
+                    ? '踏勘材料、完成六回合抉择、召见人物并生成史官卷宗。'
+                    : '沿用课程目录内容，可继续使用看、练、问、创兼容学习流程。'}</p>
+                  <div className="chrono-route-node-progress">
+                    <Progress percent={percent} showInfo={false} strokeColor="#54AFA8" />
+                    <span>{item ? `已完成 ${completedStages} / 4 阶段` : '尚未开始'}</span>
+                    <Button type="link">
+                      {item ? '继续学习' : '进入课时'} <ArrowRightOutlined />
+                    </Button>
+                  </div>
+                </article>
+                {index < data.lessons.length - 1 ? <div className="chrono-route-connector" aria-hidden="true" /> : null}
+              </li>
+            );
+          })}
+        </ol>
+        <div className="chrono-route-legend">
+          <EnvironmentOutlined /> 路线用于表达课程结构，不代表历史事件只有单一路径。
+        </div>
+      </section>
     </div>
   );
 }

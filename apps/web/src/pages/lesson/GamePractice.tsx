@@ -4,9 +4,11 @@ import {
   EditOutlined,
   FileDoneOutlined,
   HistoryOutlined,
+  RiseOutlined,
   ReloadOutlined,
   SafetyCertificateOutlined,
   SendOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import type {
   GameScenarioSummary,
@@ -19,6 +21,7 @@ import {
   assertScenarioIdentity,
   assertSessionIdentity,
   buildGameBinding,
+  clearStoredGameReference,
   persistPendingGameReference,
   readStoredGameReference,
   type GameBinding,
@@ -79,6 +82,8 @@ function PinnedGamePlayer({
   const [actingMode, setActingMode] = useState<'fixed' | 'free' | null>(null);
   const [freeInput, setFreeInput] = useState('');
   const [freeInputNotice, setFreeInputNotice] = useState<FreeInputNotice | null>(null);
+  const [lastFeedback, setLastFeedback] = useState('');
+  const [lastEventIds, setLastEventIds] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [resumed, setResumed] = useState(false);
   const requestGeneration = useRef(0);
@@ -90,8 +95,11 @@ function PinnedGamePlayer({
     setBooting(true);
     setError('');
     if (fresh) {
+      clearStoredGameReference(binding);
       setFreeInput('');
       setFreeInputNotice(null);
+      setLastFeedback('');
+      setLastEventIds([]);
     }
 
     const stored = fresh ? null : readStoredGameReference(binding);
@@ -165,6 +173,8 @@ function PinnedGamePlayer({
       });
       assertSessionIdentity(result.session, binding);
       setSession(result.session);
+      setLastFeedback(result.action_feedback);
+      setLastEventIds(result.triggered_event_ids);
     } catch (actionError) {
       await restoreSession(session.session_id);
       setError(errorMessage(actionError));
@@ -190,6 +200,8 @@ function PinnedGamePlayer({
         assertSessionIdentity(response.result.session, binding);
         setSession(response.result.session);
         setFreeInput('');
+        setLastFeedback(response.result.action_feedback);
+        setLastEventIds(response.result.triggered_event_ids);
       } else {
         setFreeInputNotice({ kind: response.kind, message: response.message });
       }
@@ -218,7 +230,12 @@ function PinnedGamePlayer({
         showIcon
         message="互动关卡暂时无法载入"
         description={error || '未能建立经过版本校验的学习会话。'}
-        action={<Button onClick={() => void openSession()}>重试</Button>}
+        action={(
+          <div className="chrono-game-error-actions">
+            <Button onClick={() => void openSession()}>重试恢复</Button>
+            <Button type="primary" onClick={() => void openSession(true)}>建立新记录</Button>
+          </div>
+        )}
       />
     );
   }
@@ -229,6 +246,9 @@ function PinnedGamePlayer({
     label: session.available_choices[index] || actionId,
   }));
   const terminal = session.status !== 'active';
+  const lastTurn = session.turns.at(-1);
+  const variableById = new Map(scenario.variables.map((variable) => [variable.variable_id, variable]));
+  const npcById = new Map(scenario.npcs.map((npc) => [npc.person_id, npc]));
 
   return (
     <div className="chrono-game-layout">
@@ -274,6 +294,14 @@ function PinnedGamePlayer({
             </div>
           ) : null}
         </div>
+
+        {lastFeedback || lastEventIds.length > 0 ? (
+          <div className="chrono-game-event-strip">
+            <strong>回合反馈</strong>
+            <span>{lastFeedback || '局势已按规则更新。'}</span>
+            {lastEventIds.map((eventId) => <Tag key={eventId}>事件 · {eventId}</Tag>)}
+          </div>
+        ) : null}
 
         {error ? <Alert type="warning" showIcon message={error} closable onClose={() => setError('')} /> : null}
 
@@ -372,6 +400,54 @@ function PinnedGamePlayer({
             <span>发布 #{scenario.release_no}</span>
           </div>
         </div>
+        <div className="chrono-game-variables">
+          <h3><RiseOutlined /> 局势变量</h3>
+          {scenario.variables.map((variable) => {
+            const value = session.current_state[variable.variable_id] ?? variable.initial;
+            const change = lastTurn?.state_changes.find((item) => item.variable_id === variable.variable_id);
+            const range = variable.maximum - variable.minimum;
+            const percent = range > 0 ? Math.max(0, Math.min(100, ((value - variable.minimum) / range) * 100)) : 0;
+            return (
+              <div key={variable.variable_id} title={variable.description}>
+                <span>{variable.label}</span>
+                <strong>{formatNumber(value)}</strong>
+                <em className={change && change.delta < 0 ? 'negative' : 'positive'}>
+                  {change ? formatDelta(change.delta) : '—'}
+                </em>
+                <i><b style={{ width: `${percent}%` }} /></i>
+              </div>
+            );
+          })}
+        </div>
+        {scenario.npcs.length > 0 ? (
+          <div className="chrono-game-npcs">
+            <h3><TeamOutlined /> 人物信任</h3>
+            {session.npc_states.map((npcState) => {
+              const npc = npcById.get(npcState.person_id);
+              const change = lastTurn?.npc_changes.find((item) => item.person_id === npcState.person_id);
+              return (
+                <div key={npcState.person_id}>
+                  <span><strong>{npc?.display_name || npcState.person_id}</strong><small>{npc?.role}</small></span>
+                  <b>{formatNumber(npcState.trust)}</b>
+                  <em className={change && change.trust_after < change.trust_before ? 'negative' : 'positive'}>
+                    {change ? formatDelta(change.trust_after - change.trust_before) : '—'}
+                  </em>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+        {lastTurn && lastTurn.state_changes.length > 0 ? (
+          <div className="chrono-game-turn-delta">
+            <h3>本回合变化</h3>
+            {lastTurn.state_changes.map((change) => (
+              <span key={change.variable_id}>
+                {variableById.get(change.variable_id)?.label || change.variable_id}
+                <b className={change.delta < 0 ? 'negative' : 'positive'}>{formatDelta(change.delta)}</b>
+              </span>
+            ))}
+          </div>
+        ) : null}
         <div className="chrono-game-keywords">
           <h3>本课关键词</h3>
           <div>
@@ -381,6 +457,15 @@ function PinnedGamePlayer({
       </aside>
     </div>
   );
+}
+
+function formatNumber(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function formatDelta(value: number): string {
+  if (value === 0) return '±0';
+  return `${value > 0 ? '+' : ''}${formatNumber(value)}`;
 }
 
 function createRequestId(kind: 'start' | 'turn'): string {
