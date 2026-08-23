@@ -61,13 +61,14 @@ export default function CoursesPage() {
     [eras],
   );
   const currentEra = ERA_OVERLAYS.find((era) => era.id === mapEraId)!;
-  const visibleItems = useMemo(() => {
-    if (!city) return items;
+  const cityMatches = useMemo(() => {
+    if (!city) return [];
     const keywords = [city, cityModern].filter(Boolean);
     return items.filter((item) => keywords.some(
       (keyword) => item.title.includes(keyword) || item.subtitle.includes(keyword),
     ));
   }, [city, cityModern, items]);
+  const visibleItems = city && cityMatches.length > 0 ? cityMatches : items;
 
   const setParam = (key: string, value: string) => {
     const next = new URLSearchParams(params);
@@ -91,6 +92,7 @@ export default function CoursesPage() {
 
   const onPickCity = (picked: EraMapCity) => {
     const next = new URLSearchParams(params);
+    next.set('era', currentEra.id);
     next.set('city', picked.name);
     if (picked.modern && picked.modern !== picked.name) next.set('cityModern', picked.modern);
     else next.delete('cityModern');
@@ -176,7 +178,9 @@ export default function CoursesPage() {
           <div>
             <h2 id="course-catalogue-title">课程目录</h2>
             <p>{city
-              ? `正在查看与「${city}」相关的课时。`
+              ? cityMatches.length > 0
+                ? `正在查看与「${city}」直接相关的课程。`
+                : `「${city}」暂无标题直达课程，先展示${currentEra.name}课程。`
               : courseEra === 'all'
                 ? '从时代与主题两个方向筛选。'
                 : `当前时代：${currentEra.name} · ${currentEra.period}`}</p>

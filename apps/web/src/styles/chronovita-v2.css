@@ -1286,6 +1286,479 @@ select {
   box-shadow: 0 12px 28px rgba(28, 17, 11, .26);
 }
 
+/* V0.10.19 山河图：生成式地形只作纹理，所有地名与交互仍由代码输出 */
+.chrono-eramap-v2 {
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--cv-paper-100);
+  background:
+    radial-gradient(circle at 34% 46%, color-mix(in srgb, var(--map-era-primary) 42%, transparent), transparent 48%),
+    var(--cv-ink-950);
+}
+
+.chrono-eramap-v2::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(6, 19, 28, .35), transparent 18%, transparent 72%, rgba(6, 19, 28, .44)),
+    linear-gradient(180deg, rgba(6, 19, 28, .23), transparent 20%, transparent 76%, rgba(6, 19, 28, .45));
+  box-shadow: inset 0 0 64px rgba(6, 19, 28, .42);
+}
+
+.chrono-eramap-v2 > svg {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
+}
+
+.chrono-eramap-v2 > svg:focus-visible {
+  outline: 2px solid var(--cv-bronze-400);
+  outline-offset: -4px;
+}
+
+.chrono-eramap-v2 .chrono-eramap-subera,
+.chrono-eramap-v2 .chrono-eramap-zoom,
+.chrono-map-compass,
+.chrono-map-guidance,
+.chrono-map-edge-hint,
+.chrono-map-city-card,
+.chrono-map-legend,
+.chrono-eramap-v2 .chrono-eramap-jump {
+  z-index: 5;
+}
+
+.chrono-eramap-v2 .chrono-eramap-subera {
+  max-width: calc(100% - 190px);
+}
+
+.chrono-eramap-v2 .chrono-subera-chip {
+  min-height: 34px;
+  color: #3c3022;
+  background: rgba(232, 210, 169, .9);
+  border-color: rgba(69, 49, 30, .32);
+  box-shadow: 0 6px 18px rgba(6, 19, 28, .13);
+  transition: color .2s ease, background-color .2s ease, transform .2s ease;
+}
+
+.chrono-eramap-v2 .chrono-subera-chip:hover,
+.chrono-eramap-v2 .chrono-subera-chip:focus-visible {
+  color: var(--cv-cinnabar-500);
+  outline: 1px solid var(--cv-bronze-600);
+  outline-offset: 2px;
+  transform: translateY(-1px);
+}
+
+.chrono-eramap-v2 .chrono-subera-chip.active {
+  color: var(--cv-paper-100);
+  background: rgba(72, 43, 31, .94);
+  border-color: var(--cv-bronze-400);
+}
+
+.chrono-eramap-v2 .chrono-eramap-zoom {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+  min-height: 38px;
+  padding: 0;
+  color: #30261c;
+  background: rgba(232, 210, 169, .92);
+  border: 1px solid rgba(72, 50, 29, .38);
+  box-shadow: 0 8px 22px rgba(6, 19, 28, .16);
+}
+
+.chrono-eramap-v2 .chrono-eramap-zoom button {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: #3c3022;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid rgba(72, 50, 29, .2);
+  cursor: pointer;
+}
+
+.chrono-eramap-v2 .chrono-eramap-zoom button:hover,
+.chrono-eramap-v2 .chrono-eramap-zoom button:focus-visible {
+  color: var(--cv-paper-100);
+  background: #684435;
+  outline: none;
+}
+
+.chrono-eramap-v2 .chrono-eramap-zoom button:disabled {
+  color: rgba(60, 48, 34, .34);
+  cursor: default;
+  background: transparent;
+}
+
+.chrono-eramap-v2 .chrono-eramap-zoom-level {
+  min-width: 62px;
+  color: #654f35;
+  font: 600 10px 'IBM Plex Mono', Consolas, monospace;
+  text-align: center;
+}
+
+.chrono-map-compass {
+  position: absolute;
+  top: 70px;
+  right: 18px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  color: rgba(242, 231, 207, .72);
+  border: 1px solid rgba(242, 231, 207, .24);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.chrono-map-compass .anticon {
+  font-size: 24px;
+}
+
+.chrono-map-compass span {
+  position: absolute;
+  top: -14px;
+  font-size: 8px;
+  letter-spacing: .14em;
+}
+
+.chrono-map-guidance {
+  position: absolute;
+  top: 67px;
+  left: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 7px 9px;
+  color: rgba(242, 231, 207, .76);
+  background: rgba(6, 19, 28, .52);
+  border-left: 2px solid var(--cv-bronze-400);
+  font-size: 9px;
+  letter-spacing: .05em;
+  pointer-events: none;
+  backdrop-filter: blur(5px);
+}
+
+.chrono-map-edge-hint {
+  position: absolute;
+  bottom: 76px;
+  left: 50%;
+  padding: 8px 12px;
+  color: var(--cv-paper-100);
+  background: rgba(6, 19, 28, .86);
+  border: 1px solid rgba(198, 162, 97, .42);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition: opacity .18s ease, transform .18s ease;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.chrono-map-edge-hint.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.chrono-era-outline-v2 {
+  transform-origin: center;
+  animation: cv-map-territory-enter .72s cubic-bezier(.22, .8, .22, 1) both;
+}
+
+.chrono-map-relief-lines {
+  opacity: .74;
+  mix-blend-mode: multiply;
+}
+
+.chrono-era-tracks-v2 > g {
+  opacity: 0;
+  animation: cv-map-route-enter .68s ease forwards;
+}
+
+.chrono-era-tracks-v2 > g > path:last-child {
+  animation: cv-map-route-march 16s linear infinite;
+}
+
+.chrono-city-node {
+  outline: none;
+  opacity: 0;
+  animation: cv-map-city-enter .4s ease forwards;
+}
+
+.chrono-city-node .chrono-city-glow {
+  opacity: .45;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.chrono-city-node .chrono-city-dot {
+  fill: #f3e2bd;
+  stroke: rgba(69, 42, 28, .92);
+  stroke-width: 1.7;
+  vector-effect: non-scaling-stroke;
+}
+
+.chrono-city-node.is-capital .chrono-city-dot {
+  fill: #f4c56d;
+  stroke: var(--cv-cinnabar-500);
+  stroke-width: 2.2;
+}
+
+.chrono-city-node .chrono-city-orbit {
+  fill: none;
+  stroke: rgba(244, 197, 109, .62);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+  vector-effect: non-scaling-stroke;
+  animation: cv-map-city-orbit 14s linear infinite;
+}
+
+.chrono-city-label {
+  fill: #18272b;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 12px;
+  font-weight: 650;
+  paint-order: stroke;
+  stroke: rgba(237, 218, 179, .92);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  transition: opacity .2s ease;
+  pointer-events: none;
+}
+
+.chrono-city-modern {
+  fill: #725f46;
+  font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  font-size: 8px;
+  font-weight: 500;
+}
+
+.chrono-city-node .chrono-city-label {
+  opacity: 0;
+}
+
+.chrono-city-node.is-overview-label .chrono-city-label,
+.chrono-eramap-v2.is-detailed .chrono-city-node .chrono-city-label,
+.chrono-city-node.is-active .chrono-city-label,
+.chrono-city-node:focus .chrono-city-label {
+  opacity: 1;
+}
+
+.chrono-city-node:hover .chrono-city-glow,
+.chrono-city-node:focus .chrono-city-glow,
+.chrono-city-node.is-active .chrono-city-glow {
+  opacity: .96;
+  transform: scale(1.22);
+}
+
+.chrono-city-node:focus .chrono-city-dot,
+.chrono-city-node.is-active .chrono-city-dot {
+  stroke: #fff1ca;
+  stroke-width: 3;
+}
+
+.chrono-map-watermark text:first-child {
+  fill: var(--map-era-primary);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  opacity: .26;
+}
+
+.chrono-map-watermark text:last-child {
+  fill: rgba(242, 231, 207, .66);
+  font: 500 11px 'IBM Plex Mono', Consolas, monospace;
+  letter-spacing: .12em;
+}
+
+.chrono-map-city-card {
+  position: absolute;
+  right: 18px;
+  bottom: 74px;
+  width: min(270px, calc(100% - 36px));
+  min-height: 146px;
+  padding: 18px 18px 16px;
+  color: #3c3022;
+  background:
+    linear-gradient(rgba(91, 66, 36, .035) 1px, transparent 1px),
+    rgba(238, 217, 177, .96);
+  background-size: 100% 24px;
+  border: 1px solid rgba(82, 58, 33, .48);
+  border-left: 3px solid var(--cv-cinnabar-500);
+  box-shadow: 0 16px 38px rgba(6, 19, 28, .24);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(12px);
+  transition: opacity .24s ease, transform .24s ease;
+}
+
+.chrono-map-city-card.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.chrono-map-city-card > span {
+  display: block;
+  color: var(--cv-cinnabar-500);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+
+.chrono-map-city-card > strong {
+  display: inline-block;
+  margin-top: 5px;
+  color: #2f241a;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 24px;
+}
+
+.chrono-map-city-card > small {
+  margin-left: 9px;
+  color: #846e51;
+  font-size: 9px;
+}
+
+.chrono-map-city-card p {
+  margin: 8px 0 0;
+  color: #5b4d3c;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.chrono-map-city-card button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 9px 11px;
+  color: var(--cv-paper-100);
+  background: #6a3e30;
+  border: 1px solid #8f6246;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.chrono-map-city-card button:hover,
+.chrono-map-city-card button:focus-visible {
+  background: var(--cv-cinnabar-500);
+  outline: 2px solid rgba(242, 231, 207, .72);
+  outline-offset: 2px;
+}
+
+.chrono-map-legend {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 11px;
+  max-width: calc(100% - 250px);
+  padding: 8px 10px;
+  color: rgba(242, 231, 207, .76);
+  background: rgba(6, 19, 28, .68);
+  border: 1px solid rgba(242, 231, 207, .13);
+  font-size: 8px;
+  backdrop-filter: blur(6px);
+}
+
+.chrono-map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.chrono-map-legend i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.chrono-map-legend i.is-capital {
+  background: #f4c56d;
+  border: 1px solid var(--cv-cinnabar-500);
+  box-shadow: 0 0 0 3px rgba(244, 197, 109, .2);
+}
+
+.chrono-map-legend i.is-city {
+  background: var(--cv-paper-100);
+  border: 1px solid #5f4930;
+}
+
+.chrono-map-legend i.is-water {
+  width: 16px;
+  height: 2px;
+  background: #79afba;
+  border-radius: 0;
+}
+
+.chrono-map-legend i.is-route {
+  width: 17px;
+  height: 0;
+  background: transparent;
+  border-top: 1px dashed currentcolor;
+  border-radius: 0;
+}
+
+.chrono-map-legend em {
+  color: rgba(242, 231, 207, .45);
+  font-style: normal;
+}
+
+.chrono-eramap-v2 .chrono-eramap-jump {
+  z-index: 6;
+  right: 18px;
+  bottom: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 8px 15px;
+  font-size: 10px;
+}
+
+@keyframes cv-map-territory-enter {
+  from { opacity: 0; transform: scale(.985); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cv-map-route-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cv-map-route-march {
+  to { stroke-dashoffset: -100; }
+}
+
+@keyframes cv-map-city-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cv-map-city-orbit {
+  to { stroke-dashoffset: -70; }
+}
+
 .chrono-atlas-frame .chrono-erapanel {
   position: relative;
   overflow: hidden;
@@ -2093,6 +2566,14 @@ select {
     border-left: 1px solid #8f7149;
   }
 
+  .chrono-map-city-card {
+    width: 235px;
+  }
+
+  .chrono-map-legend {
+    max-width: calc(100% - 210px);
+  }
+
   .chrono-atlas-timeline {
     overflow-x: auto;
     scrollbar-width: none;
@@ -2143,7 +2624,8 @@ select {
   }
 
   .chrono-atlas-frame .chrono-eramap-subera {
-    right: 74px;
+    right: 132px;
+    max-width: none;
     max-height: 78px;
     overflow-y: auto;
   }
@@ -2163,6 +2645,51 @@ select {
 
   .chrono-atlas-frame .chrono-eramap-zoom-level {
     display: none;
+  }
+
+  .chrono-map-guidance {
+    top: 58px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+    padding: 5px 7px;
+    font-size: 8px;
+  }
+
+  .chrono-map-compass,
+  .chrono-map-legend {
+    display: none;
+  }
+
+  .chrono-map-city-card {
+    right: 10px;
+    bottom: 60px;
+    left: 10px;
+    width: auto;
+    min-height: 0;
+    padding: 12px 13px;
+  }
+
+  .chrono-map-city-card > strong {
+    font-size: 20px;
+  }
+
+  .chrono-map-city-card p {
+    max-height: 34px;
+    overflow: hidden;
+  }
+
+  .chrono-map-city-card button {
+    margin-top: 8px;
+    padding: 7px 9px;
+  }
+
+  .chrono-map-edge-hint {
+    bottom: 58px;
+  }
+
+  .chrono-eramap-v2 .chrono-eramap-jump {
+    right: 10px;
+    bottom: 10px;
   }
 
   .chrono-course-catalogue {
