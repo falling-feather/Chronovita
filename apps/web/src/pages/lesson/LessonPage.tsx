@@ -172,16 +172,15 @@ export default function LessonPage() {
         })}
       </nav>
 
-      <div className={`chrono-lesson-workspace${layer === 'ask' ? ' consult-wide' : ''}${layer === 'watch' ? ' observe-wide' : ''}`}>
+      <div className={`chrono-lesson-workspace companion-floating${layer === 'ask' ? ' consult-wide' : ''}${layer === 'watch' ? ' observe-wide' : ''}`}>
         <main>{content}</main>
-        {layer !== 'ask' && layer !== 'watch' ? (
-          <LessonCompanion
-            lesson={lesson}
-            presentation={presentation}
-            onOpenConsult={(question, personId) => openLayer('ask', { question, personId })}
-          />
-        ) : null}
       </div>
+
+      <LessonCompanion
+        lesson={lesson}
+        presentation={presentation}
+        onOpenConsult={(question, personId) => openLayer('ask', { question, personId })}
+      />
 
       <footer className="chrono-stage-footer">
         <div>

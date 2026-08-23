@@ -3677,3 +3677,698 @@ select {
     transition: none;
   }
 }
+
+/* V0.10.22 随行助教：人物浮窗与分课时临时笔记 */
+.chrono-lesson-workspace.companion-floating {
+  display: block;
+}
+
+.chrono-companion-float {
+  position: fixed;
+  z-index: 90;
+  right: clamp(14px, 2.2vw, 34px);
+  bottom: 10px;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.chrono-companion-launcher {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 152px;
+  height: 60px;
+  padding: 0 12px 0 65px;
+  color: var(--cv-paper-100);
+  background:
+    linear-gradient(105deg, rgba(198, 162, 97, .14), transparent 46%),
+    rgba(7, 26, 40, .96);
+  border: 1px solid rgba(198, 162, 97, .64);
+  border-radius: 3px 3px 18px 3px;
+  box-shadow: 0 16px 44px rgba(4, 16, 22, .32), inset 0 0 0 1px rgba(255, 255, 255, .025);
+  cursor: pointer;
+  pointer-events: auto;
+  text-align: left;
+  transition: transform .24s ease, border-color .24s ease, box-shadow .24s ease;
+}
+
+.chrono-companion-launcher::before {
+  position: absolute;
+  right: 11px;
+  bottom: 9px;
+  width: 18px;
+  height: 18px;
+  content: '';
+  opacity: .45;
+  border-right: 1px solid var(--cv-bronze-400);
+  border-bottom: 1px solid var(--cv-bronze-400);
+}
+
+.chrono-companion-launcher:hover,
+.chrono-companion-launcher:focus-visible {
+  border-color: var(--cv-bronze-300);
+  box-shadow: 0 20px 54px rgba(4, 16, 22, .4), 0 0 0 3px rgba(198, 162, 97, .12);
+  outline: none;
+  transform: translateY(-4px);
+}
+
+.chrono-companion-launcher-figure {
+  position: absolute;
+  bottom: 0;
+  left: -13px;
+  display: grid;
+  width: 80px;
+  height: 106px;
+  place-items: end center;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.chrono-companion-launcher-figure::after {
+  position: absolute;
+  z-index: -1;
+  bottom: 5px;
+  left: 10px;
+  width: 64px;
+  height: 24px;
+  content: '';
+  background: radial-gradient(ellipse, rgba(0, 0, 0, .42), transparent 68%);
+}
+
+.chrono-companion-launcher-figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 8px 7px rgba(0, 0, 0, .3));
+}
+
+.chrono-companion-launcher-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.chrono-companion-launcher-copy small {
+  color: var(--cv-bronze-300);
+  font-size: 9px;
+  letter-spacing: .12em;
+}
+
+.chrono-companion-launcher-copy strong {
+  overflow: hidden;
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 17px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-companion-note-dot {
+  position: absolute;
+  top: -9px;
+  right: -8px;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  color: #fff4dc;
+  background: var(--cv-cinnabar-500);
+  border: 2px solid var(--cv-paper-100);
+  border-radius: 50%;
+  font-size: 10px;
+}
+
+.chrono-companion-panel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  width: min(418px, calc(100vw - 28px));
+  max-height: min(720px, calc(100vh - 92px));
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--cv-paper-100);
+  background: rgba(7, 26, 40, .985);
+  border: 1px solid rgba(198, 162, 97, .68);
+  box-shadow: 0 28px 90px rgba(2, 11, 16, .52), inset 0 0 0 1px rgba(255, 255, 255, .025);
+  pointer-events: auto;
+  animation: chrono-companion-open .32s cubic-bezier(.16, .78, .24, 1) both;
+}
+
+@keyframes chrono-companion-open {
+  from { opacity: 0; transform: translateY(18px) scale(.96); transform-origin: right bottom; }
+  to { opacity: 1; transform: translateY(0) scale(1); transform-origin: right bottom; }
+}
+
+.chrono-companion-panel-header {
+  position: relative;
+  display: grid;
+  min-height: 124px;
+  grid-template-columns: 116px minmax(0, 1fr) 34px;
+  align-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 9% 32%, rgba(198, 162, 97, .16), transparent 31%),
+    linear-gradient(125deg, rgba(70, 125, 122, .16), transparent 58%),
+    #0a2633;
+  border-bottom: 1px solid rgba(198, 162, 97, .3);
+}
+
+.chrono-companion-panel-header::after {
+  position: absolute;
+  right: 44px;
+  bottom: -42px;
+  width: 112px;
+  height: 112px;
+  content: '史';
+  display: grid;
+  place-items: center;
+  color: rgba(198, 162, 97, .045);
+  border: 1px solid rgba(198, 162, 97, .055);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 54px;
+  transform: rotate(-8deg);
+}
+
+.chrono-companion-panel-figure {
+  align-self: end;
+  width: 116px;
+  height: 120px;
+  overflow: hidden;
+}
+
+.chrono-companion-panel-figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .32));
+}
+
+.chrono-companion-panel-title {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 18px 8px 16px 0;
+}
+
+.chrono-companion-panel-title > span {
+  color: var(--cv-bronze-300);
+  font: 600 8px 'IBM Plex Mono', Consolas, monospace;
+  letter-spacing: .14em;
+}
+
+.chrono-companion-panel-title strong {
+  overflow: hidden;
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 22px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-companion-panel-title p {
+  display: -webkit-box;
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: #91a6ad;
+  font-size: 10px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.chrono-companion-close {
+  position: relative;
+  z-index: 2;
+  align-self: start;
+  width: 34px;
+  height: 34px;
+  margin-top: 8px;
+  color: #91a6ad;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.chrono-companion-close:hover,
+.chrono-companion-close:focus-visible {
+  color: var(--cv-paper-100);
+  outline: 1px solid rgba(198, 162, 97, .5);
+}
+
+.chrono-companion-seal {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  color: #f8ead0;
+  background: #9e4035;
+  border: 1px solid rgba(248, 234, 208, .65);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 31px;
+  box-shadow: inset 0 0 0 4px rgba(248, 234, 208, .08);
+}
+
+.chrono-companion-panel-figure > .chrono-companion-seal {
+  margin: 24px auto;
+}
+
+.chrono-companion-seal.compact {
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+}
+
+.chrono-companion-personas {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 9px 11px 8px;
+  background: #061923;
+  border-bottom: 1px solid rgba(198, 162, 97, .16);
+  scrollbar-color: rgba(198, 162, 97, .35) transparent;
+  scrollbar-width: thin;
+}
+
+.chrono-companion-personas button {
+  display: grid;
+  min-width: 52px;
+  grid-template-rows: 48px auto;
+  gap: 3px;
+  padding: 2px 3px 4px;
+  color: #8fa0a5;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.chrono-companion-personas button:hover,
+.chrono-companion-personas button:focus-visible {
+  color: var(--cv-paper-100);
+  background: rgba(198, 162, 97, .07);
+  outline: none;
+}
+
+.chrono-companion-personas button.active {
+  color: var(--cv-paper-100);
+  background: rgba(198, 162, 97, .11);
+  border-color: rgba(198, 162, 97, .52);
+}
+
+.chrono-companion-personas button > span {
+  display: grid;
+  height: 48px;
+  place-items: end center;
+  overflow: hidden;
+}
+
+.chrono-companion-personas img {
+  width: 45px;
+  height: 50px;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.chrono-companion-personas small {
+  overflow: hidden;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-companion-tabs {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: 1fr 1fr;
+  background: #0a222e;
+  border-bottom: 1px solid rgba(198, 162, 97, .18);
+}
+
+.chrono-companion-tabs button {
+  position: relative;
+  height: 46px;
+  color: #91a6ad;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid rgba(198, 162, 97, .16);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.chrono-companion-tabs button:first-child {
+  border-left: 0;
+}
+
+.chrono-companion-tabs button.active {
+  color: var(--cv-paper-100);
+  background: rgba(198, 162, 97, .065);
+}
+
+.chrono-companion-tabs button.active::after {
+  position: absolute;
+  right: 22%;
+  bottom: 0;
+  left: 22%;
+  height: 2px;
+  content: '';
+  background: var(--cv-cinnabar-500);
+}
+
+.chrono-companion-tabs i {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 3px;
+  background: var(--cv-cinnabar-400);
+  border-radius: 50%;
+  vertical-align: 2px;
+}
+
+.chrono-companion-pane {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.chrono-companion-ask-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chrono-companion-ask-pane .ant-input {
+  color: var(--cv-paper-100) !important;
+  background: #061923 !important;
+  border-color: #3c5964 !important;
+  border-radius: 2px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.chrono-companion-ask-pane .ant-input::placeholder {
+  color: #667d85;
+}
+
+.chrono-companion-ask-pane > .ant-btn-primary {
+  border-radius: 2px;
+}
+
+.chrono-companion-seeds {
+  display: grid;
+  gap: 5px;
+}
+
+.chrono-companion-seeds button {
+  padding: 7px 0;
+  overflow: hidden;
+  color: #aebcc1;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #29454f;
+  cursor: pointer;
+  font-size: 9px;
+  line-height: 1.5;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-companion-seeds button:hover,
+.chrono-companion-seeds button:focus-visible {
+  color: var(--cv-teal-300);
+  outline: none;
+}
+
+.chrono-companion-role-note {
+  color: #789097;
+  font-size: 8px;
+  text-align: center;
+}
+
+.chrono-companion-answer:empty {
+  display: none;
+}
+
+.chrono-companion-expand-link {
+  align-self: flex-end;
+  padding: 3px 0;
+  color: var(--cv-bronze-300);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 9px;
+}
+
+.chrono-companion-simple-state {
+  display: grid;
+  min-height: 250px;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  color: #91a6ad;
+  text-align: center;
+}
+
+.chrono-companion-simple-state > .anticon {
+  color: var(--cv-bronze-400);
+  font-size: 27px;
+}
+
+.chrono-companion-simple-state strong {
+  color: var(--cv-paper-100);
+}
+
+.chrono-companion-simple-state p {
+  margin: 0 0 7px;
+  font-size: 10px;
+}
+
+.chrono-companion-notebook-pane {
+  display: flex;
+  min-height: 340px;
+  flex-direction: column;
+  gap: 13px;
+  background:
+    linear-gradient(90deg, transparent 0 32px, rgba(163, 70, 54, .2) 33px, transparent 34px),
+    linear-gradient(rgba(198, 162, 97, .08) 1px, transparent 1px),
+    #0a222e;
+  background-size: auto, 100% 28px, auto;
+}
+
+.chrono-companion-notebook-pane > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-left: 26px;
+}
+
+.chrono-companion-notebook-pane > header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.chrono-companion-notebook-pane > header strong {
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 14px;
+}
+
+.chrono-companion-notebook-pane > header span,
+.chrono-companion-notebook-pane > p {
+  color: #789097;
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+.chrono-companion-notebook-pane .chrono-note-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.chrono-companion-notebook-pane .chrono-note-status.saved {
+  color: var(--cv-teal-300);
+}
+
+.chrono-companion-notebook-pane .chrono-note-status.error {
+  color: #e79a87;
+}
+
+.chrono-companion-notebook-pane .ant-input-textarea {
+  padding-left: 26px;
+}
+
+.chrono-companion-notebook-pane .ant-input {
+  color: #3d3328 !important;
+  background:
+    linear-gradient(rgba(121, 91, 56, .11) 1px, transparent 1px),
+    #efe0bf !important;
+  background-size: 100% 27px !important;
+  border: 1px solid #a9895e !important;
+  border-radius: 1px;
+  font: 12px/27px 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  resize: none;
+}
+
+.chrono-companion-notebook-pane .ant-input::placeholder {
+  color: #927d62;
+}
+
+.chrono-companion-notebook-pane .ant-input-data-count {
+  color: #8d765b;
+  font-size: 8px;
+}
+
+.chrono-companion-notebook-pane > p {
+  margin: 0;
+  padding-left: 26px;
+}
+
+.chrono-temporary-note-handoff {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 24px 22px 44px;
+  color: #3f3528;
+  background:
+    linear-gradient(90deg, transparent 0 24px, rgba(158, 64, 53, .25) 25px, transparent 26px),
+    linear-gradient(rgba(112, 82, 44, .055) 1px, transparent 1px),
+    #efe0bf;
+  background-size: auto, 100% 30px, auto;
+  border: 1px solid #ad9064;
+  box-shadow: 0 12px 30px rgba(77, 54, 27, .09);
+}
+
+.chrono-temporary-note-handoff::after {
+  position: absolute;
+  right: 18px;
+  bottom: -26px;
+  width: 76px;
+  height: 76px;
+  content: '记';
+  display: grid;
+  place-items: center;
+  color: rgba(158, 64, 53, .075);
+  border: 1px solid rgba(158, 64, 53, .075);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 35px;
+  transform: rotate(-7deg);
+}
+
+.chrono-temporary-note-handoff > header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #765632;
+}
+
+.chrono-temporary-note-handoff > header > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.chrono-temporary-note-handoff > header span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+
+.chrono-temporary-note-handoff time {
+  color: #8b765d;
+  font-size: 9px;
+}
+
+.chrono-temporary-note-handoff > p {
+  position: relative;
+  z-index: 1;
+  margin: 14px 0 0;
+  color: #45392b;
+  font: 13px/2 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  white-space: pre-wrap;
+}
+
+.chrono-temporary-note-handoff.is-empty {
+  opacity: .72;
+}
+
+.chrono-temporary-note-handoff.is-empty > p {
+  color: #806f5a;
+  font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .chrono-companion-float {
+    right: 9px;
+    bottom: 9px;
+  }
+
+  .chrono-companion-launcher {
+    width: 154px;
+    height: 62px;
+    padding-left: 66px;
+  }
+
+  .chrono-companion-launcher-figure {
+    width: 78px;
+    height: 106px;
+  }
+
+  .chrono-companion-panel {
+    width: calc(100vw - 30px);
+    max-height: calc(100vh - 82px);
+  }
+
+  .chrono-companion-panel-header {
+    min-height: 108px;
+    grid-template-columns: 96px minmax(0, 1fr) 32px;
+  }
+
+  .chrono-companion-panel-figure {
+    width: 96px;
+    height: 105px;
+  }
+
+  .chrono-companion-panel-title strong {
+    font-size: 19px;
+  }
+
+  .chrono-companion-personas button {
+    min-width: 48px;
+  }
+
+  .chrono-companion-pane {
+    padding: 13px;
+  }
+
+  .chrono-temporary-note-handoff {
+    padding: 16px 18px 20px 35px;
+  }
+
+  .chrono-temporary-note-handoff > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrono-companion-panel {
+    animation: none;
+  }
+
+  .chrono-companion-launcher {
+    transition: none;
+  }
+}

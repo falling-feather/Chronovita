@@ -18,6 +18,7 @@ import {
   ApartmentOutlined,
   CheckCircleFilled,
   CloudSyncOutlined,
+  EditOutlined,
   ExclamationCircleFilled,
   FileDoneOutlined,
   PlusOutlined,
@@ -34,6 +35,7 @@ import type {
   Lesson,
 } from '../../utils/api';
 import { api } from '../../utils/api';
+import { useAuth } from '../../auth/AuthContext';
 import {
   assertDossierIdentity,
   assertScenarioIdentity,
@@ -43,6 +45,12 @@ import {
   type GameBinding,
 } from './gameSessionReference';
 import { projectDossierKnowledge } from '../../features/classroom/dossierProjection';
+import {
+  TEMPORARY_NOTEBOOK_EVENT,
+  readTemporaryNotebook,
+  temporaryNotebookStorageKey,
+  type TemporaryNotebookIdentity,
+} from '../../features/classroom/temporaryNotebook';
 
 interface CanvasNodeData {
   label: string;
@@ -329,6 +337,19 @@ export default function LessonCreate({
   active: boolean;
   onOpenPractice?: () => void;
 }) {
+  const auth = useAuth();
+  const noteOwnerId = auth.principal?.user_id ?? (auth.mode === 'legacy-local' ? 'legacy-local' : 'anonymous');
+  const temporaryNoteIdentity = useMemo<TemporaryNotebookIdentity>(() => ({
+    ownerId: noteOwnerId,
+    courseId: lesson.course_id,
+    lessonId: lesson.id,
+  }), [lesson.course_id, lesson.id, noteOwnerId]);
+  const temporaryNoteKey = useMemo(
+    () => temporaryNotebookStorageKey(temporaryNoteIdentity),
+    [temporaryNoteIdentity],
+  );
+  const [temporaryNote, setTemporaryNote] = useState('');
+  const [temporaryNoteUpdatedAt, setTemporaryNoteUpdatedAt] = useState('');
   const [nodes, setNodes, applyNodeChanges] = useNodesState<CanvasNodeData>([]);
   const [edges, setEdges, applyEdgeChanges] = useEdgesState<CanvasEdgeData>([]);
   const [newLabel, setNewLabel] = useState('');
@@ -352,6 +373,24 @@ export default function LessonCreate({
   const editVersionRef = useRef(0);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const errorNotifiedRef = useRef(false);
+
+  useEffect(() => {
+    const refresh = () => {
+      const record = readTemporaryNotebook(window.localStorage, temporaryNoteIdentity);
+      setTemporaryNote(record?.body ?? '');
+      setTemporaryNoteUpdatedAt(record?.body.trim() ? record.updated_at : '');
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === temporaryNoteKey) refresh();
+    };
+    refresh();
+    window.addEventListener(TEMPORARY_NOTEBOOK_EVENT, refresh);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(TEMPORARY_NOTEBOOK_EVENT, refresh);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [temporaryNoteIdentity, temporaryNoteKey]);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -891,6 +930,21 @@ export default function LessonCreate({
         onRetry={() => void loadDossier()}
         onOpenPractice={onOpenPractice}
       />
+
+      <section className={`chrono-temporary-note-handoff${temporaryNote.trim() ? '' : ' is-empty'}`} aria-label="本课临时笔记">
+        <header>
+          <div>
+            <EditOutlined />
+            <span>随手记 · 已带入卷宗</span>
+          </div>
+          {temporaryNoteUpdatedAt ? <time>本机保存 {formatHm(new Date(temporaryNoteUpdatedAt))}</time> : null}
+        </header>
+        {temporaryNote.trim() ? (
+          <p>{temporaryNote}</p>
+        ) : (
+          <p>本课还没有临时笔记。可随时打开右下角助教，在“临时笔记”中记录。</p>
+        )}
+      </section>
 
       {canvasPhase === 'error' ? (
         <Alert

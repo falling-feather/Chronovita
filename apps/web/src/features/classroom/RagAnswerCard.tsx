@@ -37,14 +37,20 @@ export default function RagAnswerCard({
       <header>
         <div>
           {insufficient ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />}
-          <strong>{SOURCE_LABEL[answer.answer_source]}</strong>
-          <Tag color={answer.retrieval_mode === 'hybrid' ? 'cyan' : 'default'}>
-            {answer.retrieval_mode === 'hybrid' ? '混合检索' : '词法回退'}
-          </Tag>
+          <strong>{compact
+            ? (insufficient ? '当前材料暂不能回答' : '依据本课材料')
+            : SOURCE_LABEL[answer.answer_source]}</strong>
+          {!compact ? (
+            <Tag color={answer.retrieval_mode === 'hybrid' ? 'cyan' : 'default'}>
+              {answer.retrieval_mode === 'hybrid' ? '混合检索' : '词法回退'}
+            </Tag>
+          ) : null}
         </div>
-        <Tag color={answer.uncertainty === 'high' ? 'orange' : answer.uncertainty === 'low' ? 'green' : 'gold'}>
-          不确定性 {UNCERTAINTY_LABEL[answer.uncertainty]}
-        </Tag>
+        {!compact ? (
+          <Tag color={answer.uncertainty === 'high' ? 'orange' : answer.uncertainty === 'low' ? 'green' : 'gold'}>
+            不确定性 {UNCERTAINTY_LABEL[answer.uncertainty]}
+          </Tag>
+        ) : null}
       </header>
 
       <p className="chrono-rag-body">{answer.body}</p>
@@ -74,11 +80,15 @@ export default function RagAnswerCard({
         </section>
       ) : null}
 
-      <footer>
-        <span><BookOutlined /> 发布 #{answer.release_no}</span>
-        <span>证据库 v{answer.evidence_version}</span>
-        <code title={answer.evidence_checksum}>校验 {answer.evidence_checksum.slice(0, 10)}</code>
-      </footer>
+      {compact ? (
+        <footer><span><BookOutlined /> {answer.citations.length} 条课程依据</span></footer>
+      ) : (
+        <footer>
+          <span><BookOutlined /> 发布 #{answer.release_no}</span>
+          <span>证据库 v{answer.evidence_version}</span>
+          <code title={answer.evidence_checksum}>校验 {answer.evidence_checksum.slice(0, 10)}</code>
+        </footer>
+      )}
     </article>
   );
 }

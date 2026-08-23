@@ -2080,25 +2080,6 @@ body,
 .chrono-stage-footer > div:first-child strong { color: var(--text-dark); font-size: 12px; }
 .chrono-stage-footer > div:last-child { display: flex; gap: 8px; }
 
-/* 随行助教 */
-.chrono-companion { position: sticky; top: 18px; display: flex; min-width: 0; flex-direction: column; gap: 12px; padding: 18px; color: #e9e1d1; background: #0b2431; border: 1px solid #34515c; }
-.chrono-companion > header { display: flex; align-items: center; gap: 10px; padding-bottom: 13px; border-bottom: 1px solid #34515c; }
-.chrono-companion-mark { display: grid; width: 34px; height: 34px; place-items: center; color: #071a28; background: #d1a461; }
-.chrono-companion > header > div:last-child { display: grid; gap: 2px; }
-.chrono-companion > header strong { color: #f2e7cf; font-size: 14px; }
-.chrono-companion > header span { color: #91a6ad; font-size: 10px; }
-.chrono-companion-field { display: grid; gap: 6px; }
-.chrono-companion-field > span { color: #c5d0d3; font-size: 11px; }
-.chrono-companion .ant-select-selector,
-.chrono-companion .ant-input { color: #e9e1d1 !important; background: #071a28 !important; border-color: #4d6771 !important; }
-.chrono-companion .ant-select-selection-item { color: #e9e1d1 !important; font-size: 11px; }
-.chrono-companion-seeds { display: grid; gap: 5px; }
-.chrono-companion-seeds button { padding: 7px 0; color: #aebcc1; background: transparent; border: 0; border-bottom: 1px solid #314c57; cursor: pointer; font-size: 10px; line-height: 1.5; text-align: left; }
-.chrono-companion-seeds button:hover { color: #54c9c3; }
-.chrono-companion-boundary { padding: 10px; background: #071a28; border-left: 2px solid #d1a461; }
-.chrono-companion-boundary p { margin: 7px 0 0; color: #91a6ad; font-size: 10px; line-height: 1.5; }
-.chrono-companion > .ant-btn-link { align-self: flex-end; height: auto; padding: 0; color: #d1a461; font-size: 11px; }
-
 /* 踏勘 */
 .chrono-observe-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; align-items: start; }
 .chrono-observe-main { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
@@ -2259,7 +2240,6 @@ body,
   .chrono-stage-rail button { grid-template-columns: auto minmax(0, 1fr); }
   .chrono-stage-rail time { grid-column: 2; }
   .chrono-lesson-workspace { grid-template-columns: 1fr; }
-  .chrono-companion { position: static; }
   .chrono-observe-layout { grid-template-columns: 1fr; }
   .chrono-observe-aside { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .chrono-observe-integrity { grid-column: 1 / -1; }
