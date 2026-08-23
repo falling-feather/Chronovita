@@ -16,7 +16,8 @@ import {
   type ClassroomLayer,
 } from '../../features/classroom/classroomModel';
 import LessonCompanion from '../../features/classroom/LessonCompanion';
-import LessonWatch from './LessonWatch';
+import CourseCoverPicture from '../../features/courses/CourseCoverPicture';
+import LessonWatch, { LessonWatchMedia } from './LessonWatch';
 import LessonAsk from './LessonAsk';
 import LessonPractice from './LessonPractice';
 
@@ -80,7 +81,7 @@ export default function LessonPage() {
 
   const content = useMemo(() => {
     if (!lesson) return null;
-    if (layer === 'watch') return <LessonWatch lesson={lesson} presentation={presentation} />;
+    if (layer === 'watch') return <LessonWatch lesson={lesson} />;
     if (layer === 'practice') {
       return <LessonPractice lesson={lesson} onOpenDossier={() => openLayer('create')} />;
     }
@@ -118,6 +119,13 @@ export default function LessonPage() {
       </button>
 
       <header className="chrono-lesson-masthead">
+        <CourseCoverPicture
+          courseId={lesson.course_id || courseId}
+          width={1440}
+          eager
+          fallbackColor="#354b50"
+          className="chrono-lesson-masthead-art"
+        />
         <div className="chrono-lesson-masthead-copy">
           <h1>{lesson.title}</h1>
           <span>{lesson.num} · {lesson.era || lesson.unit}</span>
@@ -142,6 +150,8 @@ export default function LessonPage() {
         </div>
       </header>
 
+      {layer === 'watch' ? <LessonWatchMedia lesson={lesson} presentation={presentation} /> : null}
+
       <nav className="chrono-stage-rail" aria-label="课堂四阶段">
         {CLASSROOM_STAGES.map((stage) => {
           const active = stage.layer === layer;
@@ -162,9 +172,9 @@ export default function LessonPage() {
         })}
       </nav>
 
-      <div className={`chrono-lesson-workspace${layer === 'ask' ? ' consult-wide' : ''}`}>
+      <div className={`chrono-lesson-workspace${layer === 'ask' ? ' consult-wide' : ''}${layer === 'watch' ? ' observe-wide' : ''}`}>
         <main>{content}</main>
-        {layer !== 'ask' ? (
+        {layer !== 'ask' && layer !== 'watch' ? (
           <LessonCompanion
             lesson={lesson}
             presentation={presentation}

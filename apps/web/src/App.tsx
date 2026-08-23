@@ -43,6 +43,7 @@ import {
   principalLandingPath,
   type UserRole,
 } from './auth/types';
+import { APP_VERSION_LABEL } from './version';
 import HomePage from './pages/HomePage';
 import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
@@ -313,7 +314,7 @@ function ShellLayout() {
         </Suspense>
       </Content>
       <Footer className="chrono-shell-footer">
-        Chronovita · V0.10.18 · 本地课堂
+        Chronovita · {APP_VERSION_LABEL} · 本地课堂
       </Footer>
     </Layout>
   );
