@@ -2157,10 +2157,32 @@ select {
   overflow: hidden;
   display: block;
   color: var(--cv-paper-100);
-  background:
-    linear-gradient(135deg, rgba(6, 19, 28, .3), rgba(6, 19, 28, .72)),
-    var(--course-accent);
+  background: var(--course-accent);
   border-bottom: 1px solid rgba(255, 255, 255, .14);
+}
+
+.chrono-course-cover-picture,
+.chrono-course-cover-fallback {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.chrono-course-cover-picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--course-cover-focus, 50% 50%);
+  transition: filter .45s ease, transform .7s cubic-bezier(.2, .75, .2, 1);
+}
+
+.chrono-course-entry:not(:disabled):hover .chrono-course-cover-picture img,
+.chrono-course-entry:not(:disabled):focus-visible .chrono-course-cover-picture img {
+  filter: saturate(1.08) contrast(1.03);
+  transform: scale(1.035);
 }
 
 .chrono-course-entry-cover::before,
@@ -2171,21 +2193,18 @@ select {
 }
 
 .chrono-course-entry-cover::before {
-  top: -76px;
-  right: -50px;
-  width: 220px;
-  height: 220px;
-  border: 1px solid rgba(242, 231, 207, .18);
-  border-radius: 50%;
-  box-shadow: 0 0 0 26px rgba(242, 231, 207, .03), 0 0 0 56px rgba(242, 231, 207, .02);
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 17, 23, .58) 0%, rgba(5, 17, 23, .08) 46%, rgba(5, 17, 23, .48) 100%),
+    linear-gradient(90deg, rgba(5, 17, 23, .2), transparent 48%);
 }
 
 .chrono-course-entry-cover::after {
+  z-index: 1;
   inset: 0;
-  opacity: .24;
-  background-image:
-    linear-gradient(32deg, transparent 47%, rgba(242, 231, 207, .3) 48% 49%, transparent 50%),
-    linear-gradient(146deg, transparent 64%, rgba(242, 231, 207, .18) 65% 66%, transparent 67%);
+  border: 1px solid rgba(242, 231, 207, .16);
+  box-shadow: inset 0 -36px 55px -42px rgba(3, 12, 17, .9);
 }
 
 .chrono-course-entry-cover small,
@@ -2193,7 +2212,11 @@ select {
   position: absolute;
   z-index: 2;
   top: 18px;
-  color: #e4d7be;
+  padding: 5px 8px;
+  color: #f3e7d0;
+  background: rgba(5, 20, 27, .68);
+  border: 1px solid rgba(242, 231, 207, .2);
+  backdrop-filter: blur(7px);
   font-size: 9px;
   font-style: normal;
   letter-spacing: .1em;
@@ -2201,31 +2224,6 @@ select {
 
 .chrono-course-entry-cover small { left: 20px; }
 .chrono-course-entry-cover em { right: 20px; }
-
-.chrono-course-entry-cover b {
-  position: absolute;
-  z-index: 1;
-  right: 22px;
-  bottom: -10px;
-  color: rgba(242, 231, 207, .13);
-  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
-  font-size: 86px;
-  font-weight: 800;
-  letter-spacing: -.16em;
-}
-
-.chrono-course-entry-contour {
-  position: absolute;
-  bottom: 25px;
-  left: -8%;
-  width: 76%;
-  height: 70px;
-  opacity: .32;
-  border-top: 1px solid var(--cv-paper-100);
-  border-radius: 50%;
-  box-shadow: 0 -14px 0 -13px var(--cv-paper-100), 0 -28px 0 -27px var(--cv-paper-100);
-  transform: rotate(-7deg);
-}
 
 .chrono-course-entry-body {
   display: grid;
@@ -2275,7 +2273,7 @@ select {
 
 .chrono-course-route-hero-v2 {
   position: relative;
-  min-height: 350px;
+  min-height: 410px;
   overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 350px;
@@ -2297,6 +2295,25 @@ select {
   border: 1px solid rgba(101, 170, 160, .2);
   border-radius: 50%;
   box-shadow: 0 0 0 36px rgba(198, 162, 97, .025), 0 0 0 78px rgba(101, 170, 160, .018);
+}
+
+.chrono-course-route-hero-v2::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 18, 25, .96) 0%, rgba(5, 18, 25, .88) 36%, rgba(5, 18, 25, .42) 68%, rgba(5, 18, 25, .7) 100%),
+    linear-gradient(0deg, rgba(5, 18, 25, .72), transparent 54%);
+}
+
+.chrono-course-route-art {
+  z-index: 0;
+}
+
+.chrono-course-route-art img {
+  filter: saturate(.82) contrast(1.04);
 }
 
 .chrono-course-route-hero-v2 .chrono-course-route-copy {
@@ -2342,8 +2359,9 @@ select {
   z-index: 1;
   justify-content: center;
   padding: clamp(34px, 4vw, 58px);
-  background: rgba(16, 45, 55, .72);
+  background: rgba(10, 34, 43, .76);
   border-left-color: rgba(198, 162, 97, .2);
+  backdrop-filter: blur(14px);
 }
 
 .chrono-course-route-hero-v2 > aside .ant-btn {

@@ -11,6 +11,7 @@ import {
 import type { CourseDetail, ProgressItem } from '../utils/api';
 import { api } from '../utils/api';
 import { CLASSROOM_STAGES, isFlagshipLesson } from '../features/classroom/classroomModel';
+import CourseCoverPicture from '../features/courses/CourseCoverPicture';
 
 export default function CourseDetailPage() {
   const { courseId = '' } = useParams();
@@ -56,6 +57,13 @@ export default function CourseDetailPage() {
       </button>
 
       <header className="chrono-course-route-hero chrono-course-route-hero-v2">
+        <CourseCoverPicture
+          className="chrono-course-route-art"
+          courseId={course.id}
+          width={1440}
+          eager
+          fallbackColor={course.cover_color}
+        />
         <div className="chrono-course-route-copy">
           <h1>{course.title}</h1>
           <p className="chrono-course-subtitle">{course.subtitle}</p>

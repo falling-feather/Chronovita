@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Empty, Spin } from 'antd';
 import { ArrowRightOutlined, CloseOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { api, type CourseSummary, type Era } from '../utils/api';
+import CourseCoverPicture from '../features/courses/CourseCoverPicture';
 import { ERA_OVERLAYS, type EraMapCity } from './courses/eraMap';
 import EraTimeline from './courses/EraTimeline';
 
@@ -258,10 +259,12 @@ export default function CoursesPage() {
                   onClick={() => nav(`/courses/${course.id}`)}
                 >
                   <span className="chrono-course-entry-cover" aria-hidden="true">
-                    <i className="chrono-course-entry-contour" />
+                    <CourseCoverPicture
+                      courseId={course.id}
+                      fallbackColor={course.cover_color}
+                    />
                     <small>{eraName}</small>
                     <em>{course.section}</em>
-                    <b>{course.title.slice(0, 2)}</b>
                   </span>
                   <span className="chrono-course-entry-body">
                     <strong>{course.title}</strong>
