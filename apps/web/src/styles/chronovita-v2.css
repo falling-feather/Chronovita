@@ -1,0 +1,1141 @@
+:root {
+  --cv-ink-950: #06131c;
+  --cv-ink-900: #091c27;
+  --cv-ink-800: #102d37;
+  --cv-ink-700: #24434b;
+  --cv-paper-050: #f8f1e3;
+  --cv-paper-100: #f2e7cf;
+  --cv-paper-200: #e6d3ad;
+  --cv-paper-500: #b79b70;
+  --cv-bronze-400: #c6a261;
+  --cv-bronze-600: #8f693a;
+  --cv-patina-400: #65aaa0;
+  --cv-patina-600: #39766f;
+  --cv-cinnabar-500: #a64235;
+  --cv-content-max: 1680px;
+  --bg-page: var(--cv-paper-050);
+  --bg-warm: #eadbbf;
+  --bg-warm-soft: #f6efdf;
+  --bg-tint: #f7e5bd;
+  --bg-navy: var(--cv-ink-950);
+  --bg-mid: var(--cv-ink-800);
+  --text-dark: #122933;
+  --text-mute: #6f675b;
+  --text-disabled: #958b7c;
+  --text-cream: var(--cv-paper-100);
+  --text-cream-mute: #a7b4b4;
+  --accent-gold: var(--cv-bronze-400);
+  --accent-gold-hover: #d7b878;
+  --accent-bronze: var(--cv-bronze-600);
+  --accent-blue: var(--cv-patina-600);
+  --border-soft: #d8c7a7;
+}
+
+html {
+  color-scheme: light;
+  background: var(--cv-paper-050);
+  scroll-behavior: smooth;
+}
+
+body,
+#root {
+  min-width: 320px;
+  background:
+    linear-gradient(rgba(70, 52, 30, .018) 1px, transparent 1px),
+    var(--cv-paper-050);
+  background-size: 100% 28px;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  color: var(--cv-paper-100);
+  background: var(--cv-cinnabar-500);
+}
+
+.chrono-shell-header {
+  position: sticky;
+  z-index: 100;
+  top: 0;
+  height: 72px !important;
+  gap: clamp(18px, 3vw, 48px);
+  padding-inline: clamp(22px, 4vw, 68px) !important;
+  background: rgba(6, 19, 28, .97) !important;
+  border-bottom: 1px solid rgba(198, 162, 97, .26);
+  box-shadow: 0 12px 34px rgba(1, 9, 14, .2);
+  backdrop-filter: blur(16px);
+}
+
+.chrono-logo {
+  gap: 11px;
+  text-decoration: none !important;
+}
+
+.chrono-logo-mark {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  color: var(--cv-ink-950);
+  background: var(--cv-bronze-400);
+  border: 1px solid #e1c887;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 3px rgba(68, 45, 21, .16);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.chrono-logo-mark::after {
+  position: absolute;
+  inset: 4px;
+  content: '';
+  border: 1px solid rgba(68, 45, 21, .38);
+  pointer-events: none;
+}
+
+.chrono-logo-cn {
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 17px;
+  letter-spacing: .08em;
+}
+
+.chrono-logo-en {
+  color: #8fa4a7;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .31em;
+  text-transform: uppercase;
+}
+
+.chrono-shell-header .chrono-nav {
+  height: 72px;
+  line-height: 72px;
+  background: transparent !important;
+  font-size: 14px;
+}
+
+.chrono-nav.ant-menu-horizontal > .ant-menu-item {
+  position: relative;
+  height: 72px;
+  padding-inline: clamp(10px, 1.2vw, 18px) !important;
+  color: #c7d0ce !important;
+}
+
+.chrono-nav.ant-menu-horizontal > .ant-menu-item::after {
+  right: 18px !important;
+  bottom: 0 !important;
+  left: 18px !important;
+  border-bottom-width: 2px !important;
+}
+
+.chrono-nav.ant-menu-horizontal > .ant-menu-item:hover,
+.chrono-nav.ant-menu-horizontal > .ant-menu-item-selected {
+  color: var(--cv-paper-100) !important;
+}
+
+.chrono-shell-content {
+  padding: clamp(18px, 2.4vw, 36px);
+  background: var(--cv-paper-050) !important;
+}
+
+.chrono-shell-content.is-home {
+  padding: 0;
+}
+
+.chrono-shell-footer {
+  padding: 24px !important;
+  color: #74888a !important;
+  background: var(--cv-ink-950) !important;
+  border-top: 1px solid rgba(198, 162, 97, .18);
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+}
+
+.chrono-user-slot {
+  min-width: 0;
+}
+
+.chrono-shell-icon-button.ant-btn {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  padding: 0;
+  color: #b7c4c3;
+  border: 1px solid rgba(151, 174, 174, .25);
+  border-radius: 50%;
+}
+
+.chrono-shell-icon-button.ant-btn:hover,
+.chrono-shell-icon-button.ant-btn:focus-visible {
+  color: var(--cv-paper-100) !important;
+  background: rgba(198, 162, 97, .12) !important;
+  border-color: var(--cv-bronze-400) !important;
+}
+
+.chrono-shell-search {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 38px;
+  transition: width .24s ease;
+}
+
+.chrono-shell-search.is-open {
+  width: min(280px, 25vw);
+  background: #0b202a;
+  border: 1px solid rgba(198, 162, 97, .34);
+}
+
+.chrono-shell-search.is-open .chrono-shell-icon-button.ant-btn {
+  border: 0;
+  border-radius: 0;
+}
+
+.chrono-shell-search .ant-input-affix-wrapper {
+  min-width: 0;
+  padding-inline: 4px 10px;
+  color: var(--cv-paper-100);
+  background: transparent;
+}
+
+.chrono-shell-search .ant-input {
+  color: var(--cv-paper-100);
+  font-size: 12px;
+}
+
+.chrono-shell-search .ant-input::placeholder {
+  color: #71878a;
+}
+
+.chrono-shell-search-close {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  padding: 0;
+  color: #829698;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.chrono-account-trigger.ant-btn {
+  max-width: 168px;
+  height: 44px;
+  padding: 2px 8px 2px 3px;
+  color: var(--cv-paper-100);
+  border-radius: 22px;
+}
+
+.chrono-account-trigger .ant-avatar {
+  color: var(--cv-ink-950);
+  background: var(--cv-bronze-400);
+}
+
+.chrono-account-trigger > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* V0.10.17 首页：日晷、天时与历史长卷 */
+.chrono-home-v2 {
+  color: var(--cv-paper-100);
+  background: var(--cv-ink-950);
+}
+
+.chrono-home-hero-v2 {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100svh - 72px);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: minmax(470px, 1fr) auto;
+  background: var(--cv-ink-950);
+}
+
+.chrono-home-sky {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 71% 34%, rgba(207, 170, 99, .2), transparent 23%),
+    linear-gradient(180deg, #071924 0%, #06131c 58%, #071017 100%);
+}
+
+.chrono-home-hero-v2[data-solar-period='dawn'] .chrono-home-sky {
+  background:
+    radial-gradient(circle at 72% 39%, rgba(222, 166, 104, .27), transparent 25%),
+    linear-gradient(180deg, #132d38 0%, #0a1921 63%, #071017 100%);
+}
+
+.chrono-home-hero-v2[data-solar-period='day'] .chrono-home-sky {
+  background:
+    radial-gradient(circle at 73% 22%, rgba(231, 194, 126, .26), transparent 26%),
+    linear-gradient(180deg, #12313b 0%, #091a23 64%, #071017 100%);
+}
+
+.chrono-home-hero-v2[data-solar-period='dusk'] .chrono-home-sky {
+  background:
+    radial-gradient(circle at 68% 40%, rgba(203, 124, 77, .26), transparent 24%),
+    linear-gradient(180deg, #1b2b34 0%, #0c1820 62%, #071017 100%);
+}
+
+.chrono-home-sky::before {
+  position: absolute;
+  inset: 0;
+  content: '';
+  opacity: .22;
+  background-image:
+    linear-gradient(rgba(198, 162, 97, .1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(198, 162, 97, .08) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: linear-gradient(to bottom, #000, transparent 72%);
+}
+
+.chrono-home-sky-glow {
+  position: absolute;
+  top: 12%;
+  right: 18%;
+  width: min(32vw, 520px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(198, 162, 97, .22);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 34px rgba(198, 162, 97, .03),
+    0 0 0 76px rgba(198, 162, 97, .018);
+}
+
+.chrono-home-mountain {
+  position: absolute;
+  right: -4%;
+  bottom: 128px;
+  left: 28%;
+  height: 34%;
+  background: #0a1d25;
+  clip-path: polygon(0 100%, 0 82%, 10% 66%, 18% 74%, 30% 35%, 38% 60%, 49% 20%, 59% 58%, 71% 31%, 80% 66%, 91% 46%, 100% 70%, 100% 100%);
+}
+
+.chrono-home-mountain.mountain-back {
+  bottom: 150px;
+  opacity: .52;
+  transform: scaleY(.78) translateY(10%);
+  background: #153039;
+}
+
+.chrono-home-wall {
+  position: absolute;
+  right: -2%;
+  bottom: 148px;
+  width: 58%;
+  height: 88px;
+  opacity: .18;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 34px, #c0a168 35px 38px),
+    linear-gradient(180deg, transparent 0 45%, #c0a168 46% 54%, transparent 55%);
+  clip-path: polygon(0 62%, 9% 51%, 18% 59%, 28% 35%, 39% 48%, 50% 24%, 62% 42%, 72% 20%, 83% 35%, 92% 18%, 100% 31%, 100% 100%, 0 100%);
+}
+
+.chrono-home-copy-v2 {
+  z-index: 3;
+  grid-column: 1 / 7;
+  grid-row: 1;
+  align-self: center;
+  width: min(760px, 100%);
+  padding: clamp(68px, 8vh, 118px) 30px clamp(72px, 10vh, 132px) clamp(40px, 6vw, 112px);
+}
+
+.chrono-home-copy-v2 h1 {
+  max-width: 720px;
+  margin: 0;
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(44px, 5.2vw, 78px);
+  font-weight: 600;
+  line-height: 1.16;
+  letter-spacing: .035em;
+  text-wrap: balance;
+  text-shadow: 0 8px 38px rgba(0, 0, 0, .34);
+}
+
+.chrono-home-copy-v2 > p {
+  max-width: 650px;
+  margin: 28px 0 0;
+  color: #bdc9c6;
+  font-size: clamp(15px, 1.3vw, 19px);
+  line-height: 1.8;
+  letter-spacing: .1em;
+}
+
+.chrono-home-actions-v2 {
+  display: flex;
+  gap: 12px;
+  margin-top: 38px;
+}
+
+.chrono-home-actions-v2 .ant-btn {
+  height: 48px;
+  padding-inline: 24px;
+  border-radius: 1px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+
+.chrono-home-actions-v2 .ant-btn-primary {
+  color: var(--cv-ink-950);
+  background: var(--cv-bronze-400);
+  border-color: var(--cv-bronze-400);
+}
+
+.chrono-home-actions-v2 .ant-btn-default {
+  color: var(--cv-paper-100);
+  background: rgba(6, 19, 28, .35);
+  border-color: rgba(198, 162, 97, .46);
+}
+
+.chrono-home-resume-v2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 24px;
+  margin-top: 18px;
+  color: #879b9a;
+  font-size: 11px;
+}
+
+.chrono-home-resume-v2 .anticon {
+  color: var(--cv-patina-400);
+}
+
+.chrono-home-instrument {
+  position: relative;
+  z-index: 2;
+  grid-column: 5 / 13;
+  grid-row: 1;
+  min-width: 0;
+  min-height: 500px;
+}
+
+.chrono-sundial-scene {
+  position: absolute;
+  inset: clamp(10px, 2vh, 34px) 0 0;
+}
+
+.chrono-sundial-canvas,
+.chrono-sundial-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.chrono-sundial-canvas {
+  z-index: 2;
+  opacity: 0;
+  transition: opacity .7s ease;
+}
+
+.chrono-sundial-scene.is-ready .chrono-sundial-canvas {
+  opacity: 1;
+}
+
+.chrono-sundial-fallback {
+  z-index: 1;
+  object-fit: contain;
+  opacity: .88;
+  transition: opacity .5s ease;
+}
+
+.chrono-sundial-scene.is-ready .chrono-sundial-fallback {
+  opacity: 0;
+}
+
+.chrono-home-time {
+  position: absolute;
+  z-index: 4;
+  top: clamp(34px, 7vh, 88px);
+  right: clamp(30px, 5vw, 88px);
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 0 10px;
+  padding: 13px 0 13px 16px;
+  color: #899c9c;
+  border-left: 1px solid rgba(198, 162, 97, .48);
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+.chrono-home-time time {
+  color: var(--cv-paper-100);
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-size: 16px;
+  letter-spacing: .08em;
+}
+
+.chrono-home-time strong {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+  color: var(--cv-bronze-400);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.chrono-history-scroll {
+  position: relative;
+  z-index: 6;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr) 128px;
+  align-items: stretch;
+  min-height: 126px;
+  margin: 0 clamp(20px, 3vw, 54px) 28px;
+  color: #493b2a;
+  background:
+    linear-gradient(90deg, rgba(106, 75, 38, .06) 1px, transparent 1px),
+    #e5d1aa;
+  background-size: 29px 100%;
+  border: 1px solid #a88759;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, .3);
+}
+
+.chrono-history-scroll::before,
+.chrono-history-scroll::after {
+  position: absolute;
+  z-index: -1;
+  top: 8px;
+  bottom: 8px;
+  width: 18px;
+  content: '';
+  background: #b99156;
+  border: 1px solid #795a35;
+  box-shadow: inset 0 0 0 4px rgba(243, 223, 181, .2);
+}
+
+.chrono-history-scroll::before { left: -10px; }
+.chrono-history-scroll::after { right: -10px; }
+
+.chrono-history-scroll-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 9px;
+  color: #725534;
+  border-right: 1px solid rgba(115, 84, 46, .3);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+
+.chrono-history-scroll-title .anticon {
+  color: var(--cv-bronze-600);
+  font-size: 22px;
+}
+
+.chrono-history-scroll ol {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(90px, 1fr));
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chrono-history-scroll ol::before {
+  position: absolute;
+  top: 47px;
+  right: 7%;
+  left: 7%;
+  height: 1px;
+  content: '';
+  background: rgba(111, 81, 46, .35);
+}
+
+.chrono-history-scroll li {
+  position: relative;
+  min-width: 0;
+}
+
+.chrono-history-scroll li::before {
+  position: absolute;
+  z-index: 2;
+  top: 42px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  content: '';
+  background: #e5d1aa;
+  border: 1px solid #8d704b;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.chrono-history-scroll li.is-current::before {
+  background: var(--cv-cinnabar-500);
+  border-color: var(--cv-cinnabar-500);
+  box-shadow: 0 0 0 6px rgba(166, 66, 53, .13);
+}
+
+.chrono-history-scroll li button {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  padding: 59px 8px 20px;
+  color: #604a32;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.chrono-history-scroll li button:hover,
+.chrono-history-scroll li button:focus-visible {
+  color: var(--cv-cinnabar-500);
+  background: rgba(255, 247, 227, .28);
+  outline: none;
+}
+
+.chrono-history-scroll li span {
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chrono-history-scroll li small {
+  overflow: hidden;
+  color: #8e795e;
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-scroll-enter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  color: #6f4f2c;
+  background: rgba(117, 82, 42, .06);
+  border: 0;
+  border-left: 1px solid rgba(115, 84, 46, .3);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chrono-scroll-enter:hover,
+.chrono-scroll-enter:focus-visible {
+  color: var(--cv-cinnabar-500);
+  background: rgba(255, 247, 227, .35);
+}
+
+.chrono-home-method,
+.chrono-home-flagships-v2 {
+  color: var(--text-dark);
+  background: var(--cv-paper-050);
+}
+
+#home-method-title,
+#home-flagship-title {
+  scroll-margin-top: 104px;
+}
+
+.chrono-home-method {
+  padding: clamp(70px, 8vw, 132px) max(24px, calc((100vw - var(--cv-content-max)) / 2 + 60px));
+}
+
+.chrono-home-method > header {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 22px;
+  width: min(860px, 100%);
+}
+
+.chrono-home-method > header > .anticon {
+  margin-top: 7px;
+  color: var(--cv-bronze-600);
+  font-size: 34px;
+}
+
+.chrono-home-method h2,
+.chrono-home-flagships-v2 h2 {
+  margin: 0;
+  color: #132c35;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(30px, 3.2vw, 48px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: .04em;
+}
+
+.chrono-home-method > header p,
+.chrono-home-flagships-v2 > header p {
+  margin: 14px 0 0;
+  color: var(--text-mute);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.chrono-home-method > ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: clamp(46px, 6vw, 84px) 0 0;
+  padding: 0;
+  border-top: 1px solid var(--border-soft);
+  list-style: none;
+}
+
+.chrono-home-method > ol li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 14px;
+  min-height: 174px;
+  padding: 28px clamp(18px, 2.5vw, 36px) 22px;
+  border-left: 1px solid var(--border-soft);
+}
+
+.chrono-home-method > ol li:first-child {
+  border-left: 0;
+}
+
+.chrono-home-method > ol li > span {
+  color: var(--cv-bronze-600);
+  font: 700 11px 'IBM Plex Mono', Consolas, monospace;
+}
+
+.chrono-home-method h3 {
+  margin: 0 0 11px;
+  color: #18323b;
+  font-size: 18px;
+}
+
+.chrono-home-method li p {
+  margin: 0;
+  color: var(--text-mute);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.chrono-home-stage-line {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 34px;
+  color: var(--cv-paper-100);
+  background: var(--cv-ink-900);
+  border: 1px solid var(--cv-ink-700);
+}
+
+.chrono-home-stage-line > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 9px;
+  padding: 16px;
+  border-left: 1px solid var(--cv-ink-700);
+}
+
+.chrono-home-stage-line > span:first-child {
+  border-left: 0;
+}
+
+.chrono-home-stage-line b {
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 16px;
+}
+
+.chrono-home-stage-line small {
+  color: #819697;
+  font-size: 10px;
+}
+
+.chrono-home-flagships-v2 {
+  padding: 0 max(24px, calc((100vw - var(--cv-content-max)) / 2 + 60px)) clamp(84px, 10vw, 160px);
+}
+
+.chrono-home-flagships-v2 > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  padding-top: 72px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.chrono-home-flagships-v2 > header .ant-btn {
+  color: var(--cv-bronze-600);
+  font-weight: 700;
+}
+
+.chrono-home-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 260px;
+  color: var(--text-mute);
+}
+
+.chrono-home-flagship-list {
+  margin-top: 54px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.chrono-home-flagship-list article {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 90px;
+  align-items: center;
+  min-height: 226px;
+  color: var(--cv-paper-100);
+  background: var(--cv-ink-900);
+  border-right: 1px solid var(--cv-ink-700);
+  border-bottom: 1px solid var(--cv-ink-700);
+  border-left: 1px solid var(--cv-ink-700);
+}
+
+.chrono-home-flagship-list article::after {
+  position: absolute;
+  right: 8%;
+  width: 320px;
+  height: 320px;
+  content: '';
+  opacity: .28;
+  border: 1px solid var(--cv-bronze-400);
+  border-radius: 50%;
+  box-shadow: 0 0 0 38px rgba(198, 162, 97, .04), 0 0 0 80px rgba(101, 170, 160, .025);
+}
+
+.chrono-home-flagship-list article.is-flagship-2 {
+  background: #151d20;
+}
+
+.chrono-home-flagship-number {
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  color: var(--cv-bronze-400);
+  border-right: 1px solid var(--cv-ink-700);
+  font: 600 16px 'IBM Plex Mono', Consolas, monospace;
+}
+
+.chrono-home-flagship-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+  padding: 34px clamp(26px, 4vw, 58px);
+}
+
+.chrono-home-flagship-copy > span {
+  color: #84999a;
+  font: 500 10px 'IBM Plex Mono', Consolas, monospace;
+  letter-spacing: .06em;
+}
+
+.chrono-home-flagship-copy h3 {
+  margin: 12px 0 10px;
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(23px, 2.4vw, 34px);
+  font-weight: 600;
+}
+
+.chrono-home-flagship-copy p {
+  margin: 0;
+  color: #9fb0ae;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.chrono-home-flagship-action.ant-btn {
+  position: relative;
+  z-index: 2;
+  color: var(--cv-bronze-400);
+  font-weight: 700;
+}
+
+@media (max-width: 1180px) {
+  .chrono-shell-header {
+    gap: 14px;
+    padding-inline: 20px !important;
+  }
+
+  .chrono-logo-cn,
+  .chrono-logo-en {
+    display: none;
+  }
+
+  .chrono-home-copy-v2 {
+    grid-column: 1 / 8;
+    padding-left: 54px;
+  }
+
+  .chrono-home-instrument {
+    grid-column: 5 / 13;
+    opacity: .78;
+  }
+
+  .chrono-history-scroll {
+    grid-template-columns: 130px minmax(0, 1fr) 100px;
+  }
+}
+
+@media (max-width: 920px) {
+  .chrono-shell-header .chrono-nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .chrono-shell-header .chrono-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chrono-shell-search {
+    display: none;
+  }
+
+  .chrono-home-hero-v2 {
+    grid-template-rows: minmax(620px, 1fr) auto;
+  }
+
+  .chrono-home-copy-v2 {
+    grid-column: 1 / 10;
+    align-self: start;
+    padding: 82px 30px 240px 38px;
+  }
+
+  .chrono-home-instrument {
+    top: 140px;
+    grid-column: 5 / 13;
+    min-height: 470px;
+    opacity: .58;
+  }
+
+  .chrono-home-time {
+    display: none;
+  }
+
+  .chrono-history-scroll {
+    grid-template-columns: 110px minmax(560px, 1fr) 96px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-inline: 14px;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .chrono-history-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chrono-home-method > ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chrono-home-method > ol li:nth-child(3) {
+    border-top: 1px solid var(--border-soft);
+    border-left: 0;
+  }
+
+  .chrono-home-method > ol li:nth-child(4) {
+    border-top: 1px solid var(--border-soft);
+  }
+}
+
+@media (max-width: 680px) {
+  .chrono-shell-header {
+    height: 64px !important;
+    padding-inline: 12px !important;
+  }
+
+  .chrono-shell-header .chrono-nav {
+    height: 64px;
+    line-height: 64px;
+  }
+
+  .chrono-nav.ant-menu-horizontal > .ant-menu-item {
+    height: 64px;
+    padding-inline: 9px !important;
+    font-size: 12px;
+  }
+
+  .chrono-account-trigger.ant-btn {
+    width: 38px;
+    padding: 0;
+  }
+
+  .chrono-account-trigger > span:last-child,
+  .chrono-user-slot .ant-badge {
+    display: none;
+  }
+
+  .chrono-home-hero-v2 {
+    min-height: calc(100svh - 64px);
+    grid-template-rows: minmax(600px, 1fr) 106px;
+  }
+
+  .chrono-home-copy-v2 {
+    grid-column: 1 / -1;
+    padding: 62px 22px 250px;
+  }
+
+  .chrono-home-copy-v2 h1 {
+    max-width: 520px;
+    font-size: clamp(38px, 12vw, 56px);
+  }
+
+  .chrono-home-copy-v2 > p {
+    margin-top: 18px;
+    font-size: 14px;
+    letter-spacing: .04em;
+  }
+
+  .chrono-home-actions-v2 {
+    align-items: stretch;
+    flex-direction: column;
+    width: min(300px, 100%);
+    margin-top: 28px;
+  }
+
+  .chrono-home-instrument {
+    top: 250px;
+    right: -31%;
+    grid-column: 1 / -1;
+    min-height: 390px;
+    opacity: .52;
+    pointer-events: none;
+  }
+
+  .chrono-history-scroll {
+    min-height: 96px;
+    grid-template-columns: 86px minmax(510px, 1fr) 80px;
+    margin: 0 8px 10px;
+  }
+
+  .chrono-history-scroll-title {
+    font-size: 10px;
+  }
+
+  .chrono-history-scroll ol::before {
+    top: 32px;
+  }
+
+  .chrono-history-scroll li::before {
+    top: 27px;
+  }
+
+  .chrono-history-scroll li button {
+    padding: 43px 5px 12px;
+  }
+
+  .chrono-scroll-enter {
+    padding: 8px;
+    font-size: 10px;
+  }
+
+  .chrono-home-method,
+  .chrono-home-flagships-v2 {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+
+  .chrono-home-method {
+    padding-top: 72px;
+    padding-bottom: 80px;
+  }
+
+  .chrono-home-method > header {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-home-method > header > .anticon {
+    font-size: 28px;
+  }
+
+  .chrono-home-method > ol,
+  .chrono-home-stage-line {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-home-method > ol li {
+    min-height: 122px;
+    border-top: 1px solid var(--border-soft);
+    border-left: 0;
+  }
+
+  .chrono-home-stage-line > span {
+    border-top: 1px solid var(--cv-ink-700);
+    border-left: 0;
+  }
+
+  .chrono-home-stage-line > span:first-child {
+    border-top: 0;
+  }
+
+  .chrono-home-flagships-v2 > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .chrono-home-flagship-list article {
+    grid-template-columns: 54px minmax(0, 1fr);
+  }
+
+  .chrono-home-flagship-action.ant-btn {
+    grid-column: 2;
+    justify-self: start;
+    margin: -24px 0 20px 18px;
+  }
+
+  .chrono-home-flagship-copy {
+    padding: 28px 18px 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .chrono-sundial-canvas {
+    display: none;
+  }
+
+  .chrono-sundial-fallback {
+    opacity: .88 !important;
+  }
+}

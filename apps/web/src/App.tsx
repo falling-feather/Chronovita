@@ -15,6 +15,7 @@ import {
 } from 'antd';
 import {
   BellOutlined,
+  CloseOutlined,
   LogoutOutlined,
   ReloadOutlined,
   SearchOutlined,
@@ -90,7 +91,13 @@ function UserSlot() {
   const auth = useAuth();
   const nav = useNavigate();
   const [q, setQ] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
   const isStudent = auth.mode === 'legacy-local' || auth.principal?.roles.includes('student');
+
+  const submitSearch = () => {
+    const keyword = q.trim();
+    nav(keyword ? `/courses?q=${encodeURIComponent(keyword)}` : '/courses');
+  };
 
   const refresh = async () => {
     try {
@@ -116,20 +123,52 @@ function UserSlot() {
   return (
     <Space size={12} align="center" className="chrono-user-slot">
       {isStudent && (
-        <div className="chrono-search">
-          <SearchOutlined className="chrono-search-icon" />
-          <Input
-            placeholder="搜索课程、知识点或历史人物..."
-            variant="borderless"
-            allowClear
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            onPressEnter={() => {
-              const keyword = q.trim();
-              nav(keyword ? `/courses?q=${encodeURIComponent(keyword)}` : '/courses');
+        <form
+          className={`chrono-shell-search${searchOpen ? ' is-open' : ''}`}
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (searchOpen) submitSearch(); else setSearchOpen(true);
+          }}
+        >
+          <Button
+            type="text"
+            htmlType={searchOpen ? 'submit' : 'button'}
+            className="chrono-shell-icon-button"
+            icon={<SearchOutlined />}
+            aria-label={searchOpen ? '提交课程搜索' : '打开课程搜索'}
+            aria-expanded={searchOpen}
+            onClick={() => {
+              if (!searchOpen) setSearchOpen(true);
             }}
           />
-        </div>
+          {searchOpen && (
+            <Input
+              autoFocus
+              placeholder="课程、知识点或历史人物"
+              variant="borderless"
+              value={q}
+              onChange={(event) => setQ(event.target.value)}
+              onPressEnter={(event) => {
+                event.preventDefault();
+                submitSearch();
+              }}
+              suffix={(
+                <button
+                  type="button"
+                  className="chrono-shell-search-close"
+                  aria-label="关闭课程搜索"
+                  onClick={() => {
+                    setQ('');
+                    setSearchOpen(false);
+                  }}
+                >
+                  <CloseOutlined />
+                </button>
+              )}
+            />
+          )}
+        </form>
       )}
 
       {auth.mode === 'legacy-local' ? (
@@ -140,8 +179,11 @@ function UserSlot() {
         <>
           {isStudent && (
             <Badge dot>
-              <BellOutlined
-                className="chrono-header-icon"
+              <Button
+                type="text"
+                className="chrono-shell-icon-button"
+                icon={<BellOutlined />}
+                aria-label="查看学习通知"
                 onClick={() => nav('/profile?tab=2')}
               />
             </Badge>
@@ -265,13 +307,13 @@ function ShellLayout() {
         <div className="chrono-header-spacer" />
         <UserSlot />
       </Header>
-      <Content className="chrono-shell-content">
+      <Content className={`chrono-shell-content${location.pathname === '/' ? ' is-home' : ''}`}>
         <Suspense fallback={<AuthLoadingScreen />}>
           <Outlet />
         </Suspense>
       </Content>
       <Footer className="chrono-shell-footer">
-        历史未来课堂 · Chronovita · V0.10.16 · 统一身份 · 角色分工 · 本地课堂
+        Chronovita · V0.10.17 · 本地课堂
       </Footer>
     </Layout>
   );

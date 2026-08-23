@@ -7,6 +7,7 @@ import App from './App';
 import { AuthProvider } from './auth/AuthContext';
 import { theme } from './theme';
 import './styles/global.css';
+import './styles/chronovita-v2.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
