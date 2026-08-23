@@ -38,6 +38,9 @@ export default function RagAnswerCard({
         <div>
           {insufficient ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />}
           <strong>{SOURCE_LABEL[answer.answer_source]}</strong>
+          <Tag color={answer.retrieval_mode === 'hybrid' ? 'cyan' : 'default'}>
+            {answer.retrieval_mode === 'hybrid' ? '混合检索' : '词法回退'}
+          </Tag>
         </div>
         <Tag color={answer.uncertainty === 'high' ? 'orange' : answer.uncertainty === 'low' ? 'green' : 'gold'}>
           不确定性 {UNCERTAINTY_LABEL[answer.uncertainty]}

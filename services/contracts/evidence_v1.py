@@ -217,6 +217,7 @@ class RagAskRequestV1(EvidenceContractModel):
 class RagAnswerV1(EvidenceContractModel):
     schema_version: Literal["rag-answer/v1"] = "rag-answer/v1"
     answer_source: Literal["model", "extractive", "insufficient_evidence"]
+    retrieval_mode: Literal["hybrid", "lexical"] = "lexical"
     body: NonEmptyText
     persona_mode: Literal["expert", "person"]
     person_id: ContractId | None = None

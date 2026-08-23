@@ -173,6 +173,7 @@ class RagAnswerService:
     ) -> RagAnswerV1:
         return RagAnswerV1(
             answer_source="insufficient_evidence",
+            retrieval_mode="hybrid" if batch.vector_used else "lexical",
             body=(
                 "依据不足：当前课程发布的证据片段无法支持这个问题。"
                 "请缩小到本课人物、材料或历史边界后再问。"
@@ -306,6 +307,7 @@ def _answer_contract(
     )
     return RagAnswerV1(
         answer_source=source,
+        retrieval_mode="hybrid" if batch.vector_used else "lexical",
         body=body,
         persona_mode=request.persona_mode,
         person_id=request.person_id,

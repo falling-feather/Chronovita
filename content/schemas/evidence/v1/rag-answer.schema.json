@@ -92,6 +92,15 @@
       "title": "Answer Source",
       "type": "string"
     },
+    "retrieval_mode": {
+      "default": "lexical",
+      "enum": [
+        "hybrid",
+        "lexical"
+      ],
+      "title": "Retrieval Mode",
+      "type": "string"
+    },
     "body": {
       "minLength": 1,
       "title": "Body",

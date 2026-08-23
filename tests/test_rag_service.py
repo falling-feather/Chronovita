@@ -37,6 +37,7 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
             "L101",
         )
         self.assertEqual(answer.answer_source, "extractive")
+        self.assertEqual(answer.retrieval_mode, "lexical")
         self.assertEqual(answer.release_checksum, resources.release_checksum)
         self.assertEqual(answer.evidence_checksum, resources.evidence_corpus.checksum)
         self.assertTrue(answer.citations)

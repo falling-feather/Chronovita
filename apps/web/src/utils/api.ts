@@ -589,6 +589,7 @@ export interface RagCitation {
 export interface RagAnswer {
   schema_version: 'rag-answer/v1';
   answer_source: 'model' | 'extractive' | 'insufficient_evidence';
+  retrieval_mode: 'hybrid' | 'lexical';
   body: string; persona_mode: RagPersonaMode; person_id: string | null;
   role_disclaimer: string | null; citations: RagCitation[];
   retrieved_passage_ids: string[]; course_id: string; lesson_id: string;

@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.15**；本版本在 V0.10.14 双旗舰技术候选基线之上固化统一文档事实源和十一项长期重构路线，并正式启动学生端视觉、交互、RAG 与学习书案建设。V0.10.14 已完成统一账号下的“踏勘—抉择—召见—卷宗”、发布证据 RAG、教师工作台、两段本地短片、Windows/LAN 课堂包和双分辨率整链门禁；最终 prerelease 仍须经过用户验收和发行物复核，不宣称公网或多学校生产部署已经完成。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.16**；本版本在 V0.10.14 双旗舰技术候选基线和 V0.10.15 长期规划之上，修正双端口验收的可信 Origin、accounts Cookie 写入与 BGE 混合检索状态。后续学生端视觉、交互、RAG 与学习书案建设按十一项长期任务连续推进；最终 prerelease 仍须经过用户验收和发行物复核，不宣称公网或多学校生产部署已经完成。
 
 [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](doc/00-项目总纲.md) · [开发者文档](doc/01-开发者文档.md) · [项目规划](doc/02-项目规划.md) · [开发历史](doc/03-开发历史.md)
 
@@ -81,6 +81,16 @@ V0.9.41 教师包完整解压后可双击根目录的 `点我一键启动（部�
 - Node.js 20.19+ 或 22.12+ LTS
 - Python 3.11、3.12 或 3.13
 - 项目根虚拟环境 `.venv/`，后端以 PowerShell `& ".\.venv\Scripts\python.exe" -m uvicorn ...` 启动
+
+### 正式双端口验收
+
+不要手工拼接任意 Vite/API 端口。开发工作树中统一执行：
+
+```powershell
+.\scripts\classroom-review.ps1
+```
+
+默认使用 Web `5174`、API `8010`，自动把实际 Web Origin 写入 Cookie 白名单，并强制复验打包 BGE 模型后以混合检索启动。端口冲突时显式传入 `-WebPort` 与 `-ApiPort`；只有明确验证离线回退时才使用 `-LexicalOnly`。停止执行 `.\scripts\stop-classroom-review.ps1`。
 
 ### 启动后端
 ```powershell

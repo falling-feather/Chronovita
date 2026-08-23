@@ -85,3 +85,4 @@ apps/web/blob-report/
 
 # Teacher package local credentials
 .chronovita-local/
+.chronovita-review/

@@ -156,6 +156,7 @@ class RagApiTests(unittest.TestCase):
             "L101",
         )
         self.assertEqual(answer["answer_source"], "extractive")
+        self.assertIn(answer["retrieval_mode"], {"hybrid", "lexical"})
         self.assertEqual(answer["release_checksum"], resources.release_checksum)
         self.assertEqual(
             answer["evidence_checksum"],
