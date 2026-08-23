@@ -271,7 +271,7 @@ function ShellLayout() {
         </Suspense>
       </Content>
       <Footer className="chrono-shell-footer">
-        历史未来课堂 · Chronovita · V0.10.14 · 统一身份 · 角色分工 · 本地课堂
+        历史未来课堂 · Chronovita · V0.10.15 · 统一身份 · 角色分工 · 本地课堂
       </Footer>
     </Layout>
   );
