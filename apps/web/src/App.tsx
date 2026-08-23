@@ -313,7 +313,7 @@ function ShellLayout() {
         </Suspense>
       </Content>
       <Footer className="chrono-shell-footer">
-        Chronovita · V0.10.17 · 本地课堂
+        Chronovita · V0.10.18 · 本地课堂
       </Footer>
     </Layout>
   );

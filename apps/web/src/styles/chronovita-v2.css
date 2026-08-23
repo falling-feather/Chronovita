@@ -1139,3 +1139,1069 @@ select {
     opacity: .88 !important;
   }
 }
+
+/* V0.10.18 课程中心：地图主视区、时间轴、课程目录 */
+.chrono-courses-v2 {
+  width: min(var(--cv-content-max), 100%);
+  margin: 0 auto;
+}
+
+.chrono-atlas-heading {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(38px, 5vw, 74px) clamp(30px, 5vw, 82px) 34px;
+  color: var(--cv-paper-100);
+  background: var(--cv-ink-950);
+  border: 1px solid var(--cv-ink-700);
+  border-bottom: 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+
+.chrono-atlas-heading.entered {
+  opacity: 1;
+  transform: none;
+}
+
+.chrono-atlas-heading::after {
+  position: absolute;
+  top: -120px;
+  right: 5%;
+  width: 420px;
+  height: 420px;
+  content: '';
+  opacity: .38;
+  border: 1px solid rgba(198, 162, 97, .26);
+  border-radius: 50%;
+  box-shadow: 0 0 0 42px rgba(198, 162, 97, .03), 0 0 0 88px rgba(101, 170, 160, .025);
+}
+
+.chrono-atlas-heading h1 {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(34px, 4vw, 58px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: .045em;
+}
+
+.chrono-atlas-heading p {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 16px 0 0;
+  color: #9eb0ae;
+  font-size: 13px;
+  line-height: 1.8;
+  letter-spacing: .06em;
+}
+
+.chrono-atlas-frame {
+  padding: 0 clamp(12px, 1.6vw, 24px) clamp(12px, 1.6vw, 24px);
+  background: var(--cv-ink-950);
+  border-right: 1px solid var(--cv-ink-700);
+  border-bottom: 1px solid var(--cv-ink-700);
+  border-left: 1px solid var(--cv-ink-700);
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .58s ease .08s, transform .58s ease .08s;
+}
+
+.chrono-atlas-frame.entered {
+  opacity: 1;
+  transform: none;
+}
+
+.chrono-atlas-frame .chrono-mapwrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 0;
+  margin: 0;
+  opacity: 1;
+  transform: none;
+}
+
+.chrono-atlas-frame .chrono-mapstage {
+  min-height: 560px;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: #cbb992;
+  border: 1px solid #715a3d;
+  border-radius: 0;
+  box-shadow: inset 0 0 70px rgba(36, 27, 17, .2);
+}
+
+.chrono-map-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  color: #725f45;
+}
+
+.chrono-atlas-frame .chrono-eramap-subera {
+  top: 16px;
+  left: 16px;
+  gap: 4px;
+}
+
+.chrono-atlas-frame .chrono-subera-chip {
+  padding: 7px 13px;
+  color: #3c3328;
+  background: rgba(236, 218, 180, .9);
+  border-color: rgba(91, 68, 39, .32);
+  border-radius: 1px;
+  backdrop-filter: blur(8px);
+}
+
+.chrono-atlas-frame .chrono-subera-chip.active {
+  color: var(--cv-paper-100);
+  background: rgba(85, 51, 34, .92);
+  border-color: #b79155;
+}
+
+.chrono-atlas-frame .chrono-eramap-zoom {
+  top: 16px;
+  right: 16px;
+  color: #3c3328;
+  background: rgba(236, 218, 180, .9);
+  border-color: rgba(91, 68, 39, .32);
+  border-radius: 1px;
+}
+
+.chrono-atlas-frame .chrono-eramap-jump {
+  right: 20px;
+  bottom: 20px;
+  padding: 11px 19px;
+  color: var(--cv-paper-100);
+  background: rgba(78, 43, 30, .92);
+  border: 1px solid #b48b55;
+  border-radius: 1px;
+  box-shadow: 0 12px 28px rgba(28, 17, 11, .26);
+}
+
+.chrono-atlas-frame .chrono-erapanel {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: clamp(26px, 3vw, 44px);
+  color: #403529;
+  background:
+    linear-gradient(rgba(88, 65, 38, .035) 1px, transparent 1px),
+    #ead9b7;
+  background-size: 100% 28px;
+  border: 1px solid #8f7149;
+  border-left: 0;
+  border-radius: 0;
+  box-shadow: inset 0 0 48px rgba(100, 73, 39, .09);
+}
+
+.chrono-atlas-frame .chrono-erapanel::after {
+  position: absolute;
+  right: -70px;
+  bottom: -70px;
+  width: 190px;
+  height: 190px;
+  content: '';
+  opacity: .15;
+  border: 4px double var(--cv-cinnabar-500);
+  border-radius: 50%;
+}
+
+.chrono-atlas-frame .chrono-erapanel-name {
+  color: #362b21;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(30px, 3vw, 45px);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.chrono-atlas-frame .chrono-erapanel-period {
+  margin-top: 4px;
+  color: var(--cv-cinnabar-500);
+  font: 600 11px 'IBM Plex Mono', Consolas, monospace;
+  letter-spacing: .08em;
+}
+
+.chrono-erapanel-frontier {
+  margin: 14px 0 0;
+  color: #765f45;
+  font-size: 11px;
+}
+
+.chrono-atlas-frame .chrono-erapanel-blurb {
+  margin: 13px 0 0;
+  color: #514536;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.chrono-atlas-frame .chrono-erapanel-events {
+  display: grid;
+  gap: 0;
+  margin: 21px 0 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid rgba(91, 68, 39, .28);
+  border-radius: 0;
+  list-style: none;
+}
+
+.chrono-atlas-frame .chrono-erapanel-events li {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(91, 68, 39, .18);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.chrono-atlas-frame .chrono-erapanel-events time {
+  color: var(--cv-cinnabar-500);
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+}
+
+.chrono-atlas-frame .chrono-erapanel-events span {
+  color: #5d503f;
+}
+
+.chrono-erapanel-course-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  color: #6c563b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.chrono-erapanel-course-heading button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  color: var(--cv-cinnabar-500);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.chrono-erapanel-loading {
+  display: grid;
+  min-height: 82px;
+  place-items: center;
+}
+
+.chrono-atlas-frame .chrono-erapanel-empty {
+  margin: 12px 0 0;
+  padding: 13px 0;
+  color: #776a58;
+  background: transparent;
+  border-top: 1px solid rgba(91, 68, 39, .18);
+  border-radius: 0;
+  text-align: left;
+}
+
+.chrono-atlas-frame .chrono-erapanel-courses {
+  display: grid;
+  gap: 0;
+  margin-top: 8px;
+  border-top: 1px solid rgba(91, 68, 39, .22);
+}
+
+.chrono-atlas-frame .chrono-erapanel-courses > button {
+  display: grid;
+  grid-template-columns: 4px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 12px 0;
+  color: #4b3f31;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(91, 68, 39, .18);
+  cursor: pointer;
+  text-align: left;
+}
+
+.chrono-atlas-frame .chrono-erapanel-courses > button:disabled {
+  opacity: .48;
+  cursor: default;
+}
+
+.chrono-atlas-frame .chrono-erapanel-courses > button:not(:disabled):hover,
+.chrono-atlas-frame .chrono-erapanel-courses > button:not(:disabled):focus-visible {
+  color: var(--cv-cinnabar-500);
+  outline: none;
+  transform: translateX(3px);
+}
+
+.chrono-atlas-frame .chrono-erapanel-courses i {
+  width: 3px;
+  height: 35px;
+}
+
+.chrono-atlas-frame .chrono-erapanel-courses span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.chrono-atlas-frame .chrono-erapanel-courses small {
+  color: #8d775d;
+  font-size: 8px;
+}
+
+.chrono-atlas-frame .chrono-erapanel-courses strong {
+  overflow: hidden;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-atlas-timeline {
+  padding: 18px clamp(22px, 4vw, 58px) 28px;
+  background: var(--cv-ink-900);
+  border-right: 1px solid var(--cv-ink-700);
+  border-bottom: 1px solid var(--cv-ink-700);
+  border-left: 1px solid var(--cv-ink-700);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .6s ease .18s, transform .6s ease .18s;
+}
+
+.chrono-atlas-timeline.entered {
+  opacity: 1;
+  transform: none;
+}
+
+.chrono-atlas-timeline .chrono-eratl-track {
+  background: #2c4348;
+}
+
+.chrono-atlas-timeline .chrono-eratl-progress {
+  background: var(--cv-bronze-400);
+}
+
+.chrono-atlas-timeline .chrono-eratl-dot {
+  background: #6f8282;
+  border-color: var(--cv-ink-900);
+}
+
+.chrono-atlas-timeline .chrono-eratl-stop.active .chrono-eratl-dot {
+  background: var(--cv-cinnabar-500);
+  box-shadow: 0 0 0 6px rgba(166, 66, 53, .2);
+}
+
+.chrono-atlas-timeline .chrono-eratl-name,
+.chrono-atlas-timeline .chrono-eratl-stop.active .chrono-eratl-name {
+  color: var(--cv-paper-100);
+}
+
+.chrono-atlas-timeline .chrono-eratl-period {
+  color: #829596;
+}
+
+.chrono-course-catalogue {
+  scroll-margin-top: 100px;
+  padding: clamp(66px, 7vw, 116px) clamp(24px, 4.5vw, 74px) clamp(80px, 8vw, 132px);
+  background: var(--cv-paper-050);
+  border-right: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  border-left: 1px solid var(--border-soft);
+}
+
+.chrono-course-catalogue > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.chrono-course-catalogue > header h2 {
+  margin: 0;
+  color: #142d36;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(30px, 3.4vw, 48px);
+  font-weight: 600;
+}
+
+.chrono-course-catalogue > header p {
+  margin: 11px 0 0;
+  color: var(--text-mute);
+  font-size: 12px;
+}
+
+.chrono-course-catalogue > header > .anticon {
+  color: var(--cv-bronze-600);
+  font-size: 34px;
+}
+
+.chrono-catalogue-filters {
+  display: grid;
+  gap: 0;
+  margin: 38px 0 42px;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.chrono-filter-line {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(216, 199, 167, .64);
+}
+
+.chrono-filter-line:first-child {
+  border-top: 0;
+}
+
+.chrono-filter-line > span {
+  padding-top: 6px;
+  color: var(--cv-bronze-600);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.chrono-filter-line > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.chrono-filter-line button {
+  padding: 6px 12px;
+  color: #665b4d;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.chrono-filter-line button:hover,
+.chrono-filter-line button:focus-visible,
+.chrono-filter-line button.is-active {
+  color: var(--cv-cinnabar-500);
+  border-bottom-color: var(--cv-cinnabar-500);
+  outline: none;
+}
+
+.chrono-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(216, 199, 167, .64);
+}
+
+.chrono-active-filters > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px 5px 11px;
+  color: #635442;
+  background: #eadcbe;
+  border-left: 2px solid var(--cv-cinnabar-500);
+  font-size: 10px;
+}
+
+.chrono-active-filters button {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  padding: 0;
+  color: #806c53;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.chrono-course-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 280px;
+  color: var(--text-mute);
+}
+
+.chrono-course-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--border-soft);
+  border-left: 1px solid var(--border-soft);
+}
+
+.chrono-course-entry {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 168px minmax(150px, auto);
+  padding: 0;
+  color: #173039;
+  background: #f8f1e3;
+  border: 0;
+  border-right: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  cursor: pointer;
+  text-align: left;
+}
+
+.chrono-course-entry:disabled {
+  cursor: default;
+  filter: saturate(.62);
+  opacity: .68;
+}
+
+.chrono-course-entry:not(:disabled):hover,
+.chrono-course-entry:not(:disabled):focus-visible {
+  z-index: 2;
+  outline: 1px solid var(--cv-bronze-600);
+  outline-offset: -1px;
+}
+
+.chrono-course-entry-cover {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  color: var(--cv-paper-100);
+  background:
+    linear-gradient(135deg, rgba(6, 19, 28, .3), rgba(6, 19, 28, .72)),
+    var(--course-accent);
+  border-bottom: 1px solid rgba(255, 255, 255, .14);
+}
+
+.chrono-course-entry-cover::before,
+.chrono-course-entry-cover::after {
+  position: absolute;
+  content: '';
+  pointer-events: none;
+}
+
+.chrono-course-entry-cover::before {
+  top: -76px;
+  right: -50px;
+  width: 220px;
+  height: 220px;
+  border: 1px solid rgba(242, 231, 207, .18);
+  border-radius: 50%;
+  box-shadow: 0 0 0 26px rgba(242, 231, 207, .03), 0 0 0 56px rgba(242, 231, 207, .02);
+}
+
+.chrono-course-entry-cover::after {
+  inset: 0;
+  opacity: .24;
+  background-image:
+    linear-gradient(32deg, transparent 47%, rgba(242, 231, 207, .3) 48% 49%, transparent 50%),
+    linear-gradient(146deg, transparent 64%, rgba(242, 231, 207, .18) 65% 66%, transparent 67%);
+}
+
+.chrono-course-entry-cover small,
+.chrono-course-entry-cover em {
+  position: absolute;
+  z-index: 2;
+  top: 18px;
+  color: #e4d7be;
+  font-size: 9px;
+  font-style: normal;
+  letter-spacing: .1em;
+}
+
+.chrono-course-entry-cover small { left: 20px; }
+.chrono-course-entry-cover em { right: 20px; }
+
+.chrono-course-entry-cover b {
+  position: absolute;
+  z-index: 1;
+  right: 22px;
+  bottom: -10px;
+  color: rgba(242, 231, 207, .13);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 86px;
+  font-weight: 800;
+  letter-spacing: -.16em;
+}
+
+.chrono-course-entry-contour {
+  position: absolute;
+  bottom: 25px;
+  left: -8%;
+  width: 76%;
+  height: 70px;
+  opacity: .32;
+  border-top: 1px solid var(--cv-paper-100);
+  border-radius: 50%;
+  box-shadow: 0 -14px 0 -13px var(--cv-paper-100), 0 -28px 0 -27px var(--cv-paper-100);
+  transform: rotate(-7deg);
+}
+
+.chrono-course-entry-body {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 24px 52px 24px 24px;
+}
+
+.chrono-course-entry-body > strong {
+  color: #173039;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.chrono-course-entry-body > span {
+  color: var(--text-mute);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.chrono-course-entry-body > small {
+  margin-top: 4px;
+  color: #8c806e;
+  font-size: 9px;
+}
+
+.chrono-course-entry > .anticon {
+  position: absolute;
+  right: 22px;
+  bottom: 26px;
+  color: var(--cv-bronze-600);
+}
+
+/* V0.10.18 课程路线与课时共同壳 */
+.chrono-course-route-page,
+.chrono-lesson-classroom {
+  width: min(var(--cv-content-max), 100%);
+}
+
+.chrono-course-route-page .chrono-back-link,
+.chrono-lesson-classroom .chrono-back-link {
+  margin-bottom: 16px;
+  color: #776a59;
+}
+
+.chrono-course-route-hero-v2 {
+  position: relative;
+  min-height: 350px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  color: var(--cv-paper-100);
+  background:
+    radial-gradient(circle at 75% 32%, rgba(198, 162, 97, .17), transparent 26%),
+    var(--cv-ink-950);
+  border: 1px solid var(--cv-ink-700);
+}
+
+.chrono-course-route-hero-v2::before {
+  position: absolute;
+  right: 18%;
+  bottom: -62%;
+  width: 520px;
+  height: 520px;
+  content: '';
+  opacity: .42;
+  border: 1px solid rgba(101, 170, 160, .2);
+  border-radius: 50%;
+  box-shadow: 0 0 0 36px rgba(198, 162, 97, .025), 0 0 0 78px rgba(101, 170, 160, .018);
+}
+
+.chrono-course-route-hero-v2 .chrono-course-route-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  padding: clamp(44px, 6vw, 88px);
+}
+
+.chrono-course-route-hero-v2 h1 {
+  margin: 0;
+  color: var(--cv-paper-100);
+  font-size: clamp(38px, 4vw, 58px);
+  line-height: 1.24;
+}
+
+.chrono-course-route-hero-v2 .chrono-course-subtitle {
+  margin: 13px 0 0;
+  color: var(--cv-bronze-400);
+  font-size: 14px;
+}
+
+.chrono-course-route-hero-v2 .chrono-course-identity {
+  margin: 18px 0 0;
+  color: #829798;
+  font: 600 9px 'IBM Plex Mono', Consolas, monospace;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.chrono-course-route-hero-v2 .chrono-course-identity + p {
+  max-width: 850px;
+  margin-top: 12px;
+  color: #aab9b7;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.chrono-course-route-hero-v2 > aside {
+  position: relative;
+  z-index: 1;
+  justify-content: center;
+  padding: clamp(34px, 4vw, 58px);
+  background: rgba(16, 45, 55, .72);
+  border-left-color: rgba(198, 162, 97, .2);
+}
+
+.chrono-course-route-hero-v2 > aside .ant-btn {
+  height: 43px;
+  margin-top: 10px;
+  color: var(--cv-ink-950) !important;
+  background: var(--cv-bronze-400) !important;
+  border-color: var(--cv-bronze-400) !important;
+  border-radius: 1px;
+  font-weight: 700;
+}
+
+.chrono-route-stage-plan {
+  margin: 0 0 28px;
+  color: var(--cv-paper-100);
+  background: var(--cv-ink-900);
+  border-color: var(--cv-ink-700);
+}
+
+.chrono-route-stage-plan article {
+  min-height: 106px;
+  border-left-color: var(--cv-ink-700);
+}
+
+.chrono-route-stage-plan article > span {
+  color: var(--cv-bronze-400);
+}
+
+.chrono-route-stage-plan strong {
+  color: var(--cv-paper-100);
+}
+
+.chrono-route-stage-plan p {
+  color: #85999a;
+}
+
+.chrono-route-board {
+  background:
+    linear-gradient(rgba(90, 66, 38, .025) 1px, transparent 1px),
+    #ead9b7;
+  background-size: 100% 28px;
+  border-color: #b99c70;
+}
+
+.chrono-route-board-heading > div > span {
+  display: none;
+}
+
+.chrono-route-nodes article {
+  background: rgba(248, 241, 227, .52);
+  border-color: rgba(151, 119, 78, .42);
+}
+
+.chrono-route-nodes article:focus-visible {
+  border-color: var(--cv-cinnabar-500);
+  outline: 2px solid rgba(166, 66, 53, .24);
+  outline-offset: 2px;
+}
+
+.chrono-route-node-kind {
+  padding: 2px 7px;
+  color: #7a5d37;
+  border: 1px solid #b79b70;
+  font-size: 9px;
+}
+
+.chrono-route-nodes li.flagship .chrono-route-node-kind {
+  color: var(--cv-cinnabar-500);
+  border-color: rgba(166, 66, 53, .45);
+}
+
+.chrono-lesson-masthead {
+  position: relative;
+  min-height: 260px;
+  overflow: hidden;
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 370px);
+  background:
+    radial-gradient(circle at 79% 20%, rgba(198, 162, 97, .17), transparent 27%),
+    var(--cv-ink-950);
+  border-color: var(--cv-ink-700);
+}
+
+.chrono-lesson-masthead::after {
+  position: absolute;
+  right: 28%;
+  bottom: -175px;
+  width: 380px;
+  height: 380px;
+  content: '';
+  opacity: .34;
+  border: 1px solid rgba(101, 170, 160, .22);
+  border-radius: 50%;
+  box-shadow: 0 0 0 34px rgba(198, 162, 97, .025), 0 0 0 68px rgba(101, 170, 160, .018);
+}
+
+.chrono-lesson-masthead-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(38px, 5vw, 70px);
+}
+
+.chrono-lesson-masthead-copy h1 {
+  margin: 0;
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(34px, 3.7vw, 54px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: .035em;
+}
+
+.chrono-lesson-masthead-copy > span {
+  order: -1;
+  margin-bottom: 12px;
+  color: var(--cv-bronze-400);
+  font: 600 10px 'IBM Plex Mono', Consolas, monospace;
+  letter-spacing: .1em;
+}
+
+.chrono-lesson-masthead-copy p {
+  max-width: 940px;
+  margin: 18px 0 0;
+  color: #a8b7b5;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.chrono-lesson-release {
+  position: relative;
+  z-index: 1;
+  align-self: stretch;
+  align-content: center;
+  padding: clamp(28px, 4vw, 50px);
+  background: rgba(16, 45, 55, .72);
+  border-left-color: rgba(198, 162, 97, .2);
+}
+
+.chrono-lesson-release-state {
+  grid-column: 2;
+  width: fit-content;
+  margin-top: 8px;
+  padding: 3px 8px;
+  color: #a6d0c9 !important;
+  border: 1px solid rgba(101, 170, 160, .5);
+  font-size: 9px !important;
+}
+
+.chrono-stage-rail {
+  position: sticky;
+  z-index: 60;
+  top: 72px;
+  background: #ead9b7;
+  border-color: #b99c70;
+  box-shadow: 0 8px 24px rgba(44, 31, 17, .08);
+}
+
+.chrono-stage-rail button {
+  min-height: 72px;
+  border-left-color: rgba(143, 105, 58, .32);
+}
+
+.chrono-stage-rail button.active {
+  color: var(--cv-paper-100);
+  background: var(--cv-ink-900);
+}
+
+.chrono-stage-rail button.active::after {
+  width: 10px;
+  height: 10px;
+  bottom: -5px;
+  background: var(--cv-ink-900);
+}
+
+.chrono-stage-rail .active .chrono-stage-number {
+  color: var(--cv-paper-100);
+  background: var(--cv-cinnabar-500);
+  border-color: var(--cv-cinnabar-500);
+}
+
+.chrono-lesson-workspace {
+  padding-top: 24px;
+}
+
+.chrono-stage-footer {
+  margin-top: 32px;
+  padding: 18px 0 6px;
+  border-top-color: var(--border-soft);
+}
+
+@media (max-width: 1180px) {
+  .chrono-atlas-frame .chrono-mapwrap {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .chrono-atlas-frame .chrono-erapanel {
+    padding: 28px 24px;
+  }
+
+  .chrono-course-grid-v2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .chrono-atlas-frame .chrono-mapwrap {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-atlas-frame .chrono-mapstage {
+    min-height: 460px;
+    aspect-ratio: 4 / 3;
+  }
+
+  .chrono-atlas-frame .chrono-erapanel {
+    border-top: 0;
+    border-left: 1px solid #8f7149;
+  }
+
+  .chrono-atlas-timeline {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .chrono-atlas-timeline::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chrono-atlas-timeline .chrono-eratl {
+    min-width: 680px;
+  }
+
+  .chrono-course-route-hero-v2,
+  .chrono-lesson-masthead {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-course-route-hero-v2 > aside,
+  .chrono-lesson-release {
+    border-top: 1px solid rgba(198, 162, 97, .2);
+    border-left: 0;
+  }
+
+  .chrono-stage-rail {
+    top: 64px;
+  }
+}
+
+@media (max-width: 640px) {
+  .chrono-atlas-heading {
+    padding: 42px 22px 26px;
+  }
+
+  .chrono-atlas-heading h1 {
+    font-size: 36px;
+  }
+
+  .chrono-atlas-frame {
+    padding: 0 7px 7px;
+  }
+
+  .chrono-atlas-frame .chrono-mapstage {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    aspect-ratio: 1 / 1;
+  }
+
+  .chrono-atlas-frame .chrono-eramap-subera {
+    right: 74px;
+    max-height: 78px;
+    overflow-y: auto;
+  }
+
+  .chrono-atlas-frame .chrono-subera-chip {
+    padding: 5px 8px;
+    font-size: 9px;
+  }
+
+  .chrono-atlas-frame .chrono-chip-period {
+    display: none;
+  }
+
+  .chrono-atlas-frame .chrono-eramap-zoom {
+    padding-right: 4px;
+  }
+
+  .chrono-atlas-frame .chrono-eramap-zoom-level {
+    display: none;
+  }
+
+  .chrono-course-catalogue {
+    padding: 64px 18px 80px;
+  }
+
+  .chrono-course-catalogue > header > .anticon {
+    display: none;
+  }
+
+  .chrono-filter-line {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .chrono-course-grid-v2 {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-course-entry {
+    grid-template-rows: 150px minmax(128px, auto);
+  }
+
+  .chrono-course-route-hero-v2 .chrono-course-route-copy,
+  .chrono-lesson-masthead-copy {
+    padding: 38px 24px;
+  }
+
+  .chrono-route-stage-plan {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-route-stage-plan article {
+    min-height: auto;
+    border-top-color: var(--cv-ink-700);
+    border-left: 0;
+  }
+
+  .chrono-stage-rail {
+    position: static;
+  }
+}

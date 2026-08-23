@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Alert, Button, Spin, Tag } from 'antd';
+import { Alert, Button, Spin } from 'antd';
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
@@ -118,9 +118,9 @@ export default function LessonPage() {
       </button>
 
       <header className="chrono-lesson-masthead">
-        <div>
-          <span className="chrono-eyebrow">{lesson.num} · {lesson.era || lesson.unit}</span>
+        <div className="chrono-lesson-masthead-copy">
           <h1>{lesson.title}</h1>
+          <span>{lesson.num} · {lesson.era || lesson.unit}</span>
           <p>{lesson.abstract}</p>
         </div>
         <div className="chrono-lesson-release">
@@ -128,15 +128,15 @@ export default function LessonPage() {
             <>
               <SafetyCertificateOutlined />
               <div>
-                <strong>课程发布 #{presentation.release_no}</strong>
-                <span>课包、关卡、证据与展示资源已精确绑定</span>
+                <strong>正式课堂资料</strong>
+                <span>课文、短片、情境与依据已完成校验</span>
               </div>
-              <Tag color="green">校验通过</Tag>
+              <span className="chrono-lesson-release-state">可学习</span>
             </>
           ) : (
             <>
               <ClockCircleOutlined />
-              <div><strong>兼容课时</strong><span>沿用看、练、问、创学习流程</span></div>
+              <div><strong>基础课堂资料</strong><span>沿用四阶段学习流程</span></div>
             </>
           )}
         </div>

@@ -49,7 +49,19 @@ STANDARD_METADATA_MARKERS = (
     "> **更新者**：",
     "## 目录",
 )
-REQUIRED_PLAN_TASKS = tuple(range(1, 12))
+REQUIRED_TASK_IDS = (
+    "UI-001",
+    "MAP-001",
+    "ART-002",
+    "FE-009",
+    "AI-003",
+    "GAME-002",
+    "AI-004",
+    "FE-010",
+    "BE-009",
+    "OPS-007",
+    "QA-005",
+)
 REQUIRED_BRANCH_ROLES = ("`main`", "`houduan`", "`class`", "`qianduan`", "`backup/v*`")
 
 
@@ -126,11 +138,11 @@ def validate_project_docs(project_root: Path) -> list[str]:
         errors.append("development history does not declare the committed baseline")
 
     project_plan = documents.get(Path("doc/02-项目规划.md"), "")
-    for task_number in REQUIRED_PLAN_TASKS:
-        task_marker = f"**任务 {task_number}｜"
-        if project_plan and task_marker not in project_plan:
+    task_corpus = f"{project_plan}\n{release_history}"
+    for task_id in REQUIRED_TASK_IDS:
+        if task_corpus and task_id not in task_corpus:
             errors.append(
-                f"project plan is missing current task marker: task {task_number}"
+                f"project plan/history is missing task marker: {task_id}"
             )
 
     project_overview = documents.get(Path("doc/00-项目总纲.md"), "")

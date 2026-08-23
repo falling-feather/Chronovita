@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Progress, Spin, Tag } from 'antd';
+import { Button, Progress, Spin } from 'antd';
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
@@ -55,23 +55,23 @@ export default function CourseDetailPage() {
         <ArrowLeftOutlined /> 返回课程中心
       </button>
 
-      <header className="chrono-course-route-hero">
-        <div>
-          <span className="chrono-eyebrow">{course.section} · {course.era_id}</span>
+      <header className="chrono-course-route-hero chrono-course-route-hero-v2">
+        <div className="chrono-course-route-copy">
           <h1>{course.title}</h1>
           <p className="chrono-course-subtitle">{course.subtitle}</p>
+          <p className="chrono-course-identity">{course.section} · 历史主题课程</p>
           <p>{data.intro}</p>
         </div>
         <aside>
           <ClockCircleOutlined />
-          <strong>35–45 分钟 / 旗舰课</strong>
-          <span>{flagshipCount} 门正式旗舰课 · 四阶段课堂闭环</span>
+          <strong>{data.lessons.length} 个课时节点</strong>
+          <span>{flagshipCount} 门旗舰课 · 每门约 35—45 分钟</span>
           {firstFlagship ? (
             <Button
               type="primary"
               onClick={() => nav(`/courses/${course.id}/lessons/${firstFlagship.id}?layer=watch`)}
             >
-              从第一门旗舰课开始 <ArrowRightOutlined />
+              从旗舰课开始 <ArrowRightOutlined />
             </Button>
           ) : null}
         </aside>
@@ -92,10 +92,9 @@ export default function CourseDetailPage() {
       <section className="chrono-route-board" aria-labelledby="route-heading">
         <div className="chrono-route-board-heading">
           <div>
-            <span>课程节点</span>
             <h2 id="route-heading">沿着早期国家形成的线索前进</h2>
           </div>
-          <p>双旗舰节点提供正式史实稿、六回合关卡、课程内 RAG 与史官卷宗。</p>
+          <p>每个节点都从踏勘材料开始，经过抉择和追问，最后留下自己的历史解释。</p>
         </div>
         <div className="chrono-route-contours" aria-hidden="true" />
         <ol className="chrono-route-nodes">
@@ -109,10 +108,20 @@ export default function CourseDetailPage() {
                 <div className="chrono-route-marker">
                   {percent === 100 ? <CheckOutlined /> : <span>{String(index + 1).padStart(2, '0')}</span>}
                 </div>
-                <article onClick={() => nav(`/courses/${course.id}/lessons/${lesson.id}?layer=${item?.last_layer ?? 'watch'}`)}>
+                <article
+                  role="link"
+                  tabIndex={0}
+                  aria-label={`${item ? '继续' : '进入'}课时：${lesson.title}`}
+                  onClick={() => nav(`/courses/${course.id}/lessons/${lesson.id}?layer=${item?.last_layer ?? 'watch'}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      nav(`/courses/${course.id}/lessons/${lesson.id}?layer=${item?.last_layer ?? 'watch'}`);
+                    }
+                  }}
+                >
                   <div className="chrono-route-node-meta">
                     <span>{lesson.num}</span>
-                    {flagship ? <Tag color="gold">旗舰课堂</Tag> : <Tag>课程节点</Tag>}
+                    <span className="chrono-route-node-kind">{flagship ? '旗舰课堂' : '课程节点'}</span>
                     <span><ClockCircleOutlined /> {lesson.duration}</span>
                   </div>
                   <h3>{lesson.title}</h3>
@@ -120,7 +129,7 @@ export default function CourseDetailPage() {
                     ? '踏勘材料、完成六回合抉择、召见人物并生成史官卷宗。'
                     : '沿用课程目录内容，可继续使用看、练、问、创兼容学习流程。'}</p>
                   <div className="chrono-route-node-progress">
-                    <Progress percent={percent} showInfo={false} strokeColor="#54AFA8" />
+                    <Progress percent={percent} showInfo={false} strokeColor="#65AAA0" />
                     <span>{item ? `已完成 ${completedStages} / 4 阶段` : '尚未开始'}</span>
                     <Button type="link">
                       {item ? '继续学习' : '进入课时'} <ArrowRightOutlined />
