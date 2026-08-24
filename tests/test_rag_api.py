@@ -217,6 +217,22 @@ class RagApiTests(unittest.TestCase):
             "角色化教学表达，不是史料原话。",
         )
 
+        identity = self.client.post(
+            "/api/v1/practice/ask/rag",
+            headers=self.student_headers,
+            json={
+                "course_id": "C-prequin-state",
+                "lesson_id": "L103",
+                "persona_mode": "person",
+                "person_id": "person-c797c18e",
+                "question": "您到底是谁？",
+            },
+        )
+        self.assertEqual(identity.status_code, 200, identity.text)
+        self.assertEqual(identity.json()["answer_source"], "extractive")
+        self.assertIn("我是“商鞅”", identity.json()["body"])
+        self.assertTrue(identity.json()["citations"])
+
     def test_unsupported_injection_and_missing_release_fail_closed(self) -> None:
         injection = self.client.post(
             "/api/v1/practice/ask/rag",

@@ -82,6 +82,66 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
+    async def test_person_identity_uses_published_profile_and_cited_person_scope(self):
+        answer = await self.service.ask(
+            RagAskRequestV1(
+                course_id="C-prequin-state",
+                lesson_id="L103",
+                persona_mode="person",
+                person_id="person-c797c18e",
+                question="您到底是谁？",
+            )
+        )
+        self.assertEqual(answer.answer_source, "extractive")
+        self.assertEqual(answer.role_disclaimer, ROLE_DISCLAIMER)
+        self.assertIn("我是“商鞅”", answer.body)
+        self.assertIn("改革主持者", answer.body)
+        self.assertTrue(answer.citations)
+        resources = workflow.get_published_lesson_resources(
+            "C-prequin-state",
+            "L103",
+        )
+        passages = {
+            passage.passage_id: passage
+            for passage in resources.evidence_corpus.passages
+        }
+        self.assertTrue(
+            all(
+                "person-c797c18e" in passages[passage_id].person_ids
+                for passage_id in answer.retrieved_passage_ids
+            )
+        )
+
+    async def test_natural_archaeology_question_reaches_name_evidence_boundary(self):
+        answer = await self.service.ask(
+            RagAskRequestV1(
+                course_id="C-prequin-state",
+                lesson_id="L101",
+                persona_mode="expert",
+                question="考古真的挖到大禹名字了吗？",
+            )
+        )
+        self.assertNotEqual(answer.answer_source, "insufficient_evidence")
+        self.assertIn(
+            "dayu-p026",
+            {citation.passage_id for citation in answer.citations},
+        )
+
+    async def test_extractive_answer_does_not_dump_weakly_related_top_results(self):
+        answer = await self.service.ask(
+            RagAskRequestV1(
+                course_id="C-prequin-state",
+                lesson_id="L103",
+                persona_mode="expert",
+                question="搬根木头就能让老百姓信法律吗？",
+            )
+        )
+        self.assertEqual(
+            [citation.passage_id for citation in answer.citations],
+            ["shangyang-p005"],
+        )
+        self.assertNotIn("睡虎地", answer.body)
+
     async def test_unknown_person_is_rejected_from_server_release(self):
         with self.assertRaises(RagPersonNotFound):
             await self.service.ask(
@@ -190,6 +250,7 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
         )
         prompt = "\n".join(item["content"] for item in captured_messages)
         self.assertIn("QUESTION_UNTRUSTED", prompt)
+        self.assertIn("QUESTION_INTENT=evidence_boundary", prompt)
         self.assertIn("EVIDENCE_JSON", prompt)
         self.assertIn("不得使用模型常识", prompt)
 

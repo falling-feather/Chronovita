@@ -14,6 +14,7 @@ from services.contracts.evidence_v1 import (
     RagCitationV1,
 )
 from services.contracts.v1 import ContractId, PersonV1
+from .query import RagQueryPlan, plan_rag_query
 from .retrieval import HybridEvidenceRetriever, RetrievalBatch, RetrievedPassage
 
 
@@ -63,20 +64,46 @@ class RagAnswerService:
             request.lesson_id,
         )
         person = self._resolve_person(resources.course_package.people, request)
-        batch = await asyncio.to_thread(
-            self.retriever.retrieve,
+        query_plan = plan_rag_query(
             resources,
             request.question,
+            person=person,
+        )
+        batch = await asyncio.to_thread(
+            self.retriever.retrieve_many,
+            resources,
+            query_plan.retrieval_queries,
             person_id=person.person_id if person is not None else None,
             limit=8,
         )
+        if query_plan.blocked:
+            return self._insufficient(resources, request, batch)
+
+        if (
+            query_plan.intent == "identity"
+            and person is not None
+            and batch.passages
+        ):
+            return self._extractive_answer(
+                resources,
+                request,
+                person,
+                batch,
+                query_plan,
+            )
         if not batch.supported:
             return self._insufficient(resources, request, batch)
 
         if generator is not None:
             try:
                 draft = await generator(
-                    _generation_messages(resources, request, person, batch)
+                    _generation_messages(
+                        resources,
+                        request,
+                        person,
+                        batch,
+                        query_plan,
+                    )
                 )
                 answer = self._model_answer(
                     resources,
@@ -90,7 +117,13 @@ class RagAnswerService:
                 # Provider, timeout, schema and citation failures all degrade to the
                 # same locally grounded answer. No provider detail reaches students.
                 pass
-        return self._extractive_answer(resources, request, person, batch)
+        return self._extractive_answer(
+            resources,
+            request,
+            person,
+            batch,
+            query_plan,
+        )
 
     @staticmethod
     def _resolve_person(
@@ -134,20 +167,50 @@ class RagAnswerService:
         request: RagAskRequestV1,
         person: PersonV1 | None,
         batch: RetrievalBatch,
+        query_plan: RagQueryPlan,
     ) -> RagAnswerV1:
-        selected = list(batch.passages[:3])
-        evidence_lines = [
-            f"{item.passage.summary}（边界：{item.passage.chronology_note}）"
+        selected = (
+            list(batch.passages[:2])
+            if query_plan.intent == "identity"
+            else _select_extractive_passages(batch)
+        )
+        summaries = [
+            item.passage.summary.rstrip("。；; ")
             for item in selected
         ]
-        if person is None:
-            body = "依据本课已发布证据：" + "；".join(evidence_lines)
+        chronology_notes = list(
+            dict.fromkeys(
+                item.passage.chronology_note.rstrip("。；; ")
+                for item in selected
+                if item.passage.chronology_note
+            )
+        )
+        if query_plan.intent == "identity" and person is not None:
+            boundary = (
+                person.boundaries[0]
+                if person.boundaries
+                else "我的回答只限本课已发布内容。"
+            )
+            body = (
+                f"我是“{person.name}”。在本课中，我的身份是{person.role or '课程人物'}。"
+                f"{person.summary} 我的回答只限本课发布证据；{boundary}"
+            )
+        elif person is None:
+            body = "本课证据可以支持：" + "；".join(summaries) + "。"
+            if chronology_notes:
+                body += "需要保留的年代与材料边界：" + "；".join(
+                    chronology_notes[:2]
+                )
         else:
-            boundary = person.boundaries[0] if person.boundaries else "回答仅限本课证据。"
+            boundary = (
+                person.boundaries[0]
+                if person.boundaries
+                else "回答仅限本课证据。"
+            )
             body = (
                 f"以“{person.name}”的课堂角色回应："
-                + "；".join(evidence_lines)
-                + f" 我必须同时说明：{boundary}"
+                + "；".join(summaries)
+                + f"。我的知识边界是：{boundary}"
             )
         uncertainty: Literal["low", "medium", "high"] = (
             "low"
@@ -222,6 +285,7 @@ def _generation_messages(
     request: RagAskRequestV1,
     person: PersonV1 | None,
     batch: RetrievalBatch,
+    query_plan: RagQueryPlan,
 ) -> list[dict[str, str]]:
     persona_payload = (
         {
@@ -270,6 +334,7 @@ def _generation_messages(
             "content": "\n".join(
                 (
                     f"COURSE_TITLE={resources.course_package.title}",
+                    f"QUESTION_INTENT={query_plan.intent}",
                     "PERSONA_JSON="
                     + json.dumps(persona_payload, ensure_ascii=False, separators=(",", ":")),
                     "EVIDENCE_JSON="
@@ -328,6 +393,26 @@ def _answer_contract(
         evidence_checksum=resources.evidence_corpus.checksum,
         uncertainty=uncertainty,
     )
+
+
+def _select_extractive_passages(
+    batch: RetrievalBatch,
+    *,
+    limit: int = 3,
+) -> list[RetrievedPassage]:
+    candidates = list(batch.passages[:5])
+    if not candidates:
+        return []
+    peak_matches = max(item.matched_signal_count for item in candidates)
+    if peak_matches <= 0:
+        return candidates[:limit]
+    threshold = 1 if peak_matches < 4 else max(2, (peak_matches + 1) // 2)
+    focused = [
+        item
+        for item in candidates
+        if item.matched_signal_count >= threshold
+    ]
+    return (focused or candidates[:1])[:limit]
 
 
 __all__ = [

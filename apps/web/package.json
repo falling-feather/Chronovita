@@ -1,6 +1,6 @@
 {
   "name": "@chronovita/web",
-  "version": "0.10.23",
+  "version": "0.10.24",
   "private": true,
   "type": "module",
   "scripts": {

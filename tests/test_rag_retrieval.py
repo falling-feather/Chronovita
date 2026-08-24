@@ -10,10 +10,14 @@ from services.rag.retrieval import (
     EvidenceIntegrityError,
     HybridEvidenceRetriever,
 )
+from services.rag.query import plan_rag_query
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BENCHMARK_PATH = REPO_ROOT / "tests" / "fixtures" / "rag_benchmark_v1.json"
+NATURAL_BENCHMARK_PATH = (
+    REPO_ROOT / "tests" / "fixtures" / "rag_natural_benchmark_v1.json"
+)
 
 
 class _DeterministicVectorizer:
@@ -84,6 +88,59 @@ class RagRetrievalTests(unittest.TestCase):
             hits / len(benchmark["cases"]),
             0.90,
             missed,
+        )
+
+    def test_40_natural_questions_have_top_five_hit_and_support_above_90_percent(self):
+        benchmark = json.loads(NATURAL_BENCHMARK_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(
+            benchmark["schema_version"],
+            "rag-natural-benchmark/v1",
+        )
+        self.assertEqual(len(benchmark["cases"]), 40)
+        self.assertEqual(
+            [item["lesson_id"] for item in benchmark["cases"]].count("L101"),
+            20,
+        )
+        retriever = HybridEvidenceRetriever(self.index_path)
+        hits = 0
+        supported = 0
+        missed = []
+        unsupported = []
+        for item in benchmark["cases"]:
+            resources = self.resources[item["lesson_id"]]
+            person = next(
+                (
+                    candidate
+                    for candidate in resources.course_package.people
+                    if candidate.name == item.get("persona_name")
+                ),
+                None,
+            )
+            plan = plan_rag_query(
+                resources,
+                item["question"],
+                person=person,
+            )
+            result = retriever.retrieve_many(
+                resources,
+                plan.retrieval_queries,
+                person_id=person.person_id if person is not None else None,
+                limit=5,
+            )
+            actual = {entry.passage.passage_id for entry in result.passages}
+            if actual.intersection(item["expected_passage_ids"]):
+                hits += 1
+            else:
+                missed.append((item["question"], sorted(actual), plan.retrieval_queries))
+            if result.supported or (plan.intent == "identity" and result.passages):
+                supported += 1
+            else:
+                unsupported.append((item["question"], plan.retrieval_queries))
+        self.assertGreaterEqual(hits / len(benchmark["cases"]), 0.90, missed)
+        self.assertGreaterEqual(
+            supported / len(benchmark["cases"]),
+            0.90,
+            unsupported,
         )
 
     def test_index_is_scoped_by_release_and_rebuilds_corrupted_derived_rows(self):
@@ -214,6 +271,23 @@ class RagRetrievalTests(unittest.TestCase):
         )
         self.assertTrue(repaired.vector_used)
         self.assertEqual(vectorizer.passage_calls, 2)
+
+    def test_multi_query_fuses_original_and_published_alias_rewrite(self):
+        plan = plan_rag_query(
+            self.resources["L101"],
+            "考古真的挖到大禹名字了吗？",
+        )
+        result = HybridEvidenceRetriever(self.index_path).retrieve_many(
+            self.resources["L101"],
+            plan.retrieval_queries,
+            limit=5,
+        )
+        self.assertTrue(result.supported)
+        self.assertIn(
+            "dayu-p026",
+            {item.passage.passage_id for item in result.passages},
+        )
+        self.assertTrue(any(item.lexical_rank for item in result.passages))
 
     def test_missing_vector_model_falls_back_to_fts(self):
         vectorizer = _DeterministicVectorizer(available=False)

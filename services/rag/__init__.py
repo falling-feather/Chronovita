@@ -14,6 +14,12 @@ from .retrieval import (
     RetrievedPassage,
     Vectorizer,
 )
+from .query import (
+    QUERY_PLANNER_VERSION,
+    QueryIntent,
+    RagQueryPlan,
+    plan_rag_query,
+)
 from .service import (
     ROLE_DISCLAIMER,
     RagAnswerService,
@@ -70,10 +76,13 @@ __all__ = [
     "EvidenceIntegrityError",
     "FastEmbedVectorizer",
     "HybridEvidenceRetriever",
+    "QUERY_PLANNER_VERSION",
+    "QueryIntent",
     "ROLE_DISCLAIMER",
     "RagAnswerService",
     "RagIndexUnavailable",
     "RagPersonNotFound",
+    "RagQueryPlan",
     "RagRetrievalError",
     "RagServiceUnavailable",
     "RetrievalBatch",
@@ -81,6 +90,7 @@ __all__ = [
     "Vectorizer",
     "configure_rag",
     "get_rag_service",
+    "plan_rag_query",
     "shutdown_rag",
     "structured_model_generator",
 ]

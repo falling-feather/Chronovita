@@ -312,6 +312,122 @@ class HybridEvidenceRetriever:
             vector_used=bool(vector),
         )
 
+    def retrieve_many(
+        self,
+        resources: PublishedLessonResources,
+        questions: Sequence[str],
+        *,
+        person_id: str | None = None,
+        limit: int = 8,
+    ) -> RetrievalBatch:
+        """Retrieve several deterministic rewrites and fuse their rankings.
+
+        The first query is the student's original wording. Later queries may add
+        only published canonical terms selected by the query planner. Each path
+        still runs through the same release/person scope and support threshold.
+        """
+
+        normalized = tuple(
+            dict.fromkeys(question.strip() for question in questions if question.strip())
+        )
+        if not normalized:
+            raise ValueError("questions must contain at least one non-empty query")
+        if len(normalized) > 4:
+            raise ValueError("questions cannot contain more than four query variants")
+        if not 1 <= limit <= 20:
+            raise ValueError("limit must be between 1 and 20")
+        if len(normalized) == 1:
+            return self.retrieve(
+                resources,
+                normalized[0],
+                person_id=person_id,
+                limit=limit,
+            )
+
+        per_query_limit = min(20, max(limit, 12))
+        batches = tuple(
+            self.retrieve(
+                resources,
+                question,
+                person_id=person_id,
+                limit=per_query_limit,
+            )
+            for question in normalized
+        )
+        scope_key = batches[0].scope_key
+        if any(batch.scope_key != scope_key for batch in batches):
+            raise EvidenceIntegrityError("Multi-query retrieval crossed release scopes.")
+
+        fused_scores: dict[str, float] = {}
+        best_rows: dict[str, RetrievedPassage] = {}
+        all_rows: dict[str, list[RetrievedPassage]] = {}
+        has_supported_variant = any(batch.supported for batch in batches)
+        for query_index, batch in enumerate(batches):
+            if has_supported_variant and not batch.supported:
+                continue
+            query_weight = 1.20 if query_index == 0 else 1.0
+            for rank, row in enumerate(batch.passages, 1):
+                passage_id = row.passage.passage_id
+                fused_scores[passage_id] = fused_scores.get(passage_id, 0.0) + (
+                    query_weight / (RRF_K + rank)
+                )
+                all_rows.setdefault(passage_id, []).append(row)
+                current = best_rows.get(passage_id)
+                if current is None or row.relevance > current.relevance:
+                    best_rows[passage_id] = row
+
+        ranked_ids = sorted(
+            fused_scores,
+            key=lambda passage_id: (-fused_scores[passage_id], passage_id),
+        )
+        maximum = fused_scores[ranked_ids[0]] if ranked_ids else 1.0
+        fused: list[RetrievedPassage] = []
+        for passage_id in ranked_ids[:limit]:
+            best = best_rows[passage_id]
+            variants = all_rows[passage_id]
+            lexical_ranks = [
+                item.lexical_rank for item in variants if item.lexical_rank is not None
+            ]
+            vector_ranks = [
+                item.vector_rank for item in variants if item.vector_rank is not None
+            ]
+            similarities = [
+                item.vector_similarity
+                for item in variants
+                if item.vector_similarity is not None
+            ]
+            fused.append(
+                RetrievedPassage(
+                    passage=best.passage,
+                    source=best.source,
+                    score=fused_scores[passage_id],
+                    relevance=min(
+                        1.0,
+                        max(0.0, fused_scores[passage_id] / maximum),
+                    ),
+                    lexical_rank=min(lexical_ranks) if lexical_ranks else None,
+                    vector_rank=min(vector_ranks) if vector_ranks else None,
+                    matched_signal_count=max(
+                        item.matched_signal_count for item in variants
+                    ),
+                    query_signal_coverage=max(
+                        item.query_signal_coverage for item in variants
+                    ),
+                    vector_similarity=max(similarities) if similarities else None,
+                )
+            )
+
+        return RetrievalBatch(
+            scope_key=scope_key,
+            passages=tuple(fused),
+            supported=any(batch.supported for batch in batches),
+            vector_used=any(
+                batch.vector_used
+                for batch in batches
+                if batch.supported or not has_supported_variant
+            ),
+        )
+
     def _query_index(
         self,
         resources: PublishedLessonResources,
