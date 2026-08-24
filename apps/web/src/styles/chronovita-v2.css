@@ -4372,3 +4372,1315 @@ select {
     transition: none;
   }
 }
+
+/* V0.10.23 历史情景推演：场景舞台、回合史卷与议事席 */
+.chrono-adventure {
+  --adventure-accent: #70aaa4;
+  --adventure-accent-deep: #315f5f;
+  --adventure-cinnabar: #a64436;
+  --adventure-night: #07171c;
+  --adventure-paper: #eee1c6;
+  --adventure-paper-dark: #cfb98e;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 760px;
+  padding: clamp(18px, 2.2vw, 34px);
+  color: #f4ead8;
+  border: 1px solid rgba(196, 158, 96, .38);
+  background: var(--adventure-night);
+  box-shadow:
+    0 30px 80px rgba(3, 13, 17, .24),
+    inset 0 0 0 1px rgba(244, 224, 186, .06);
+}
+
+.chrono-adventure-qin {
+  --adventure-accent: #c39a59;
+  --adventure-accent-deep: #75512f;
+  --adventure-cinnabar: #a94132;
+  --adventure-night: #17130f;
+  --adventure-paper: #ead9b8;
+  --adventure-paper-dark: #c6aa77;
+}
+
+.chrono-adventure-generic {
+  --adventure-accent: #b99b68;
+  --adventure-accent-deep: #665239;
+}
+
+.chrono-adventure-scene,
+.chrono-adventure-scene img,
+.chrono-adventure-vignette {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.chrono-adventure-scene {
+  z-index: -3;
+  overflow: hidden;
+}
+
+.chrono-adventure-scene img {
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(.88) contrast(1.04);
+  transform: scale(1.012);
+  transition: transform 9s cubic-bezier(.2, .7, .2, 1);
+}
+
+.chrono-adventure:hover .chrono-adventure-scene img {
+  transform: scale(1.035);
+}
+
+.chrono-adventure-vignette {
+  z-index: -2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(4, 15, 19, .28), rgba(4, 15, 19, .05) 46%, rgba(4, 15, 19, .18)),
+    linear-gradient(180deg, rgba(3, 12, 16, .68), transparent 25%, transparent 69%, rgba(3, 12, 16, .82)),
+    radial-gradient(circle at 52% 42%, transparent 0 28%, rgba(3, 12, 16, .18) 68%, rgba(3, 12, 16, .5) 100%);
+}
+
+.chrono-adventure-qin .chrono-adventure-vignette {
+  background:
+    linear-gradient(90deg, rgba(16, 11, 7, .2), rgba(16, 11, 7, .04) 48%, rgba(16, 11, 7, .2)),
+    linear-gradient(180deg, rgba(15, 10, 6, .72), transparent 27%, transparent 66%, rgba(15, 10, 6, .86)),
+    radial-gradient(circle at 53% 43%, transparent 0 27%, rgba(17, 11, 7, .16) 68%, rgba(17, 11, 7, .55) 100%);
+}
+
+.chrono-adventure-header {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: clamp(14px, 2vw, 28px);
+  align-items: center;
+  margin-bottom: clamp(18px, 2vw, 28px);
+  padding: 14px 16px 14px 20px;
+  border: 1px solid rgba(226, 198, 146, .2);
+  background: rgba(3, 17, 22, .68);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .18);
+  backdrop-filter: blur(14px) saturate(.9);
+}
+
+.chrono-adventure-qin .chrono-adventure-header {
+  background: rgba(27, 18, 11, .72);
+}
+
+.chrono-adventure-header::before {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: -1px;
+  width: 4px;
+  background: var(--adventure-accent);
+  content: '';
+}
+
+.chrono-adventure-place {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.chrono-adventure-place > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--adventure-accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.chrono-adventure-place > strong {
+  overflow: hidden;
+  color: #f2e6cf;
+  font: 600 clamp(18px, 2vw, 28px)/1.28 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  letter-spacing: .04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-adventure-place > small {
+  color: rgba(225, 222, 208, .6);
+  font-size: 10px;
+  letter-spacing: .04em;
+}
+
+.chrono-adventure-round-seal {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  min-width: 78px;
+  padding: 7px 12px 8px;
+  color: #f7ebd5;
+  border: 1px solid rgba(207, 167, 103, .36);
+  background: rgba(0, 0, 0, .18);
+}
+
+.chrono-adventure-round-seal > span {
+  grid-column: 1 / -1;
+  color: var(--adventure-accent);
+  font-size: 9px;
+  letter-spacing: .22em;
+}
+
+.chrono-adventure-round-seal > strong {
+  font: 600 23px/1 'Noto Serif SC', 'Songti SC', serif;
+}
+
+.chrono-adventure-round-seal > small {
+  align-self: end;
+  margin: 0 0 1px 3px;
+  color: rgba(255, 244, 222, .55);
+  font-size: 10px;
+}
+
+.chrono-adventure-restart.ant-btn {
+  height: 38px;
+  color: #eadfc9;
+  border-color: rgba(222, 196, 148, .28);
+  background: rgba(13, 27, 29, .54);
+  box-shadow: none;
+}
+
+.chrono-adventure-restart.ant-btn:hover {
+  color: #fff4dc !important;
+  border-color: var(--adventure-accent) !important;
+  background: rgba(17, 37, 39, .78) !important;
+}
+
+.chrono-adventure-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(242px, 22vw, 310px);
+  gap: clamp(16px, 2vw, 28px);
+  align-items: start;
+}
+
+.chrono-adventure-scroll {
+  position: relative;
+  min-width: 0;
+  padding: clamp(22px, 3vw, 40px) clamp(20px, 3.4vw, 52px) clamp(28px, 3.4vw, 48px);
+  color: #2c2923;
+  border: 1px solid rgba(96, 70, 36, .4);
+  background:
+    linear-gradient(90deg, rgba(121, 87, 48, .055) 1px, transparent 1px),
+    linear-gradient(rgba(121, 87, 48, .032) 1px, transparent 1px),
+    radial-gradient(circle at 90% 6%, rgba(151, 111, 56, .12), transparent 26%),
+    linear-gradient(112deg, rgba(255, 255, 255, .5), transparent 28%),
+    var(--adventure-paper);
+  background-size: 27px 100%, 100% 27px, auto, auto, auto;
+  box-shadow:
+    0 22px 58px rgba(0, 0, 0, .3),
+    inset 0 0 80px rgba(105, 70, 30, .12),
+    inset 0 1px rgba(255, 255, 255, .7);
+}
+
+.chrono-adventure-scroll::before,
+.chrono-adventure-scroll::after {
+  position: absolute;
+  right: 14px;
+  left: 14px;
+  height: 6px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(104, 72, 34, .25) 8% 92%, transparent);
+  content: '';
+}
+
+.chrono-adventure-scroll::before {
+  top: 5px;
+}
+
+.chrono-adventure-scroll::after {
+  bottom: 5px;
+}
+
+.chrono-adventure-scroll-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 13px;
+  background:
+    linear-gradient(90deg, rgba(94, 63, 31, .35), rgba(255, 250, 231, .48) 48%, rgba(92, 59, 28, .18) 70%, transparent);
+  box-shadow: 4px 0 12px rgba(75, 48, 21, .14);
+}
+
+.chrono-adventure-brief {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 5px 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(117, 83, 43, .28);
+}
+
+.chrono-adventure-brief > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--adventure-cinnabar);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.chrono-adventure-brief > strong {
+  color: #34291d;
+  font: 600 15px/1.5 'Noto Serif SC', 'Songti SC', serif;
+}
+
+.chrono-adventure-brief > p {
+  grid-column: 1 / -1;
+  margin: 3px 0 0;
+  color: #665846;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.chrono-adventure-turns {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  overflow-x: auto;
+  margin: 18px 0 16px;
+  padding: 2px 0 7px;
+  scrollbar-width: none;
+}
+
+.chrono-adventure-turns::-webkit-scrollbar {
+  display: none;
+}
+
+.chrono-adventure-turns::before {
+  width: 20px;
+  height: 1px;
+  flex: 0 0 20px;
+  background: rgba(120, 83, 41, .42);
+  content: '';
+}
+
+.chrono-adventure-turns > button,
+.chrono-adventure-turns > span.future {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  margin-right: 21px;
+  padding: 0;
+  color: #6f604d;
+  border: 1px solid rgba(105, 73, 36, .36);
+  border-radius: 50%;
+  background: rgba(255, 252, 240, .34);
+  font: 600 11px/1 'Noto Serif SC', serif;
+}
+
+.chrono-adventure-turns > button::after,
+.chrono-adventure-turns > span.future::after {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  width: 22px;
+  height: 1px;
+  background: rgba(120, 83, 41, .42);
+  content: '';
+}
+
+.chrono-adventure-turns > button {
+  cursor: pointer;
+  transition: border-color .18s ease, color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.chrono-adventure-turns > button:hover,
+.chrono-adventure-turns > button:focus-visible {
+  color: var(--adventure-cinnabar);
+  border-color: var(--adventure-cinnabar);
+  outline: none;
+}
+
+.chrono-adventure-turns > button.active {
+  color: #fff4dd;
+  border-color: var(--adventure-cinnabar);
+  background: var(--adventure-cinnabar);
+  box-shadow: 0 5px 12px rgba(117, 43, 33, .24);
+  transform: translateY(-1px);
+}
+
+.chrono-adventure-turns > button > small {
+  position: absolute;
+  top: 39px;
+  left: 50%;
+  display: none;
+  width: max-content;
+  color: #776650;
+  font-size: 9px;
+  transform: translateX(-50%);
+}
+
+.chrono-adventure-turns > button.active > small {
+  display: block;
+}
+
+.chrono-adventure-turns > span.future {
+  color: rgba(105, 86, 64, .46);
+  border-style: dashed;
+  background: transparent;
+}
+
+.chrono-adventure-narrative {
+  position: relative;
+  min-height: 220px;
+  padding: clamp(20px, 2.2vw, 30px);
+  border: 1px solid rgba(115, 78, 37, .24);
+  background:
+    linear-gradient(90deg, rgba(155, 112, 56, .05), transparent 24%, transparent 76%, rgba(155, 112, 56, .05)),
+    rgba(255, 252, 240, .34);
+  animation: chrono-adventure-page-in .34s ease-out both;
+}
+
+@keyframes chrono-adventure-page-in {
+  from {
+    opacity: .45;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chrono-adventure-narrative > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.chrono-adventure-narrative > header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.chrono-adventure-narrative > header span {
+  color: var(--adventure-cinnabar);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .2em;
+}
+
+.chrono-adventure-narrative > header strong {
+  color: #3a2c1f;
+  font: 600 17px/1.4 'Noto Serif SC', 'Songti SC', serif;
+}
+
+.chrono-adventure-narrative > header > button {
+  padding: 4px 8px;
+  color: #77644c;
+  border: 0;
+  border-bottom: 1px solid rgba(119, 100, 76, .45);
+  background: transparent;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.chrono-adventure-narrative blockquote {
+  position: relative;
+  margin: 0 0 18px;
+  padding: 12px 16px 12px 20px;
+  border: 0;
+  border-left: 3px solid var(--adventure-cinnabar);
+  background: rgba(150, 72, 49, .075);
+}
+
+.chrono-adventure-narrative blockquote > span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--adventure-cinnabar);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+
+.chrono-adventure-narrative blockquote p {
+  margin: 0;
+  color: #4a3b2a;
+  font-size: 13px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.chrono-adventure-narrator {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.chrono-adventure-narrator > .anticon {
+  margin-top: 5px;
+  color: var(--adventure-cinnabar);
+  font-size: 18px;
+}
+
+.chrono-adventure-narrator > p {
+  margin: 0;
+  color: #332d24;
+  font: 500 clamp(14px, 1.28vw, 17px)/2 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  letter-spacing: .025em;
+  white-space: pre-wrap;
+}
+
+.chrono-adventure-thinking {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  align-items: center;
+  color: #594b39;
+  background: rgba(239, 226, 199, .9);
+  backdrop-filter: blur(4px);
+  font-size: 12px;
+}
+
+.chrono-adventure-feedback {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 10px 13px;
+  color: #66523a;
+  border-left: 3px solid var(--adventure-accent-deep);
+  background: rgba(77, 108, 95, .075);
+  font-size: 11px;
+}
+
+.chrono-adventure-feedback > strong {
+  color: var(--adventure-accent-deep);
+}
+
+.chrono-adventure-feedback > small {
+  color: #8a7559;
+  white-space: nowrap;
+}
+
+.chrono-adventure-alert {
+  margin-top: 12px;
+}
+
+.chrono-adventure-decisions {
+  margin-top: clamp(20px, 2.4vw, 32px);
+  padding-top: 20px;
+  border-top: 1px solid rgba(115, 78, 37, .3);
+}
+
+.chrono-adventure-decisions > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.chrono-adventure-decisions > header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.chrono-adventure-decisions > header span {
+  color: var(--adventure-cinnabar);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+
+.chrono-adventure-decisions > header h3 {
+  margin: 0;
+  color: #362a1d;
+  font: 600 clamp(20px, 2vw, 27px)/1.4 'Noto Serif SC', 'Songti SC', serif;
+}
+
+.chrono-adventure-decisions > header > small {
+  color: #75644f;
+  font-size: 10px;
+}
+
+.chrono-adventure-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.chrono-adventure-choices > button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 2px 11px;
+  min-height: 72px;
+  padding: 12px 14px;
+  color: #3c3022;
+  text-align: left;
+  border: 1px solid rgba(111, 75, 36, .3);
+  background:
+    linear-gradient(90deg, rgba(154, 109, 52, .08), transparent 35%),
+    rgba(255, 252, 238, .34);
+  cursor: pointer;
+  animation: chrono-adventure-choice-in .28s ease-out both;
+  transition: color .18s ease, border-color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.chrono-adventure-choices > button:nth-child(2) { animation-delay: 35ms; }
+.chrono-adventure-choices > button:nth-child(3) { animation-delay: 70ms; }
+.chrono-adventure-choices > button:nth-child(4) { animation-delay: 105ms; }
+.chrono-adventure-choices > button:nth-child(5) { animation-delay: 140ms; }
+.chrono-adventure-choices > button:nth-child(6) { animation-delay: 175ms; }
+.chrono-adventure-choices > button:nth-child(n + 7) { animation-delay: 210ms; }
+
+@keyframes chrono-adventure-choice-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chrono-adventure-choices > button::after {
+  position: absolute;
+  inset: 4px;
+  pointer-events: none;
+  border: 1px solid transparent;
+  content: '';
+  transition: border-color .18s ease;
+}
+
+.chrono-adventure-choices > button > span {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--adventure-cinnabar);
+  border: 1px solid rgba(153, 62, 48, .38);
+  border-radius: 50%;
+  font: 600 13px/1 'Noto Serif SC', serif;
+}
+
+.chrono-adventure-choices > button > strong {
+  align-self: end;
+  font: 600 13px/1.45 'Noto Serif SC', 'Songti SC', serif;
+}
+
+.chrono-adventure-choices > button > small {
+  color: #81705a;
+  font-size: 9px;
+}
+
+.chrono-adventure-choices > button:hover:not(:disabled),
+.chrono-adventure-choices > button:focus-visible:not(:disabled) {
+  color: #6f241d;
+  border-color: var(--adventure-cinnabar);
+  outline: none;
+  background: rgba(255, 250, 230, .7);
+  box-shadow: 0 8px 18px rgba(100, 61, 25, .12);
+  transform: translateY(-2px);
+}
+
+.chrono-adventure-choices > button:hover::after,
+.chrono-adventure-choices > button:focus-visible::after {
+  border-color: rgba(152, 61, 47, .2);
+}
+
+.chrono-adventure-choices > button:disabled {
+  cursor: wait;
+  opacity: .5;
+}
+
+.chrono-adventure-free-input {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr) auto;
+  gap: 9px 12px;
+  align-items: start;
+  margin-top: 16px;
+  padding: 15px;
+  border: 1px solid rgba(94, 74, 48, .24);
+  background: rgba(236, 223, 195, .64);
+}
+
+.chrono-adventure-free-input > label {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding-top: 8px;
+  color: #5b4630;
+}
+
+.chrono-adventure-free-input > label > .anticon {
+  margin-top: 2px;
+  color: var(--adventure-cinnabar);
+}
+
+.chrono-adventure-free-input > label > span {
+  display: grid;
+  gap: 1px;
+}
+
+.chrono-adventure-free-input > label strong {
+  font: 600 13px/1.4 'Noto Serif SC', serif;
+}
+
+.chrono-adventure-free-input > label small {
+  color: #88755c;
+  font-size: 9px;
+}
+
+.chrono-adventure-free-input .ant-input-textarea {
+  min-width: 0;
+}
+
+.chrono-adventure-free-input .ant-input {
+  color: #362c20;
+  border-color: rgba(103, 76, 44, .3);
+  border-radius: 0;
+  background: rgba(255, 253, 243, .75);
+  box-shadow: none;
+  font-size: 12px;
+  line-height: 1.7;
+  resize: none;
+}
+
+.chrono-adventure-free-input .ant-input:focus {
+  border-color: var(--adventure-cinnabar);
+  box-shadow: 0 0 0 2px rgba(166, 68, 54, .08);
+}
+
+.chrono-adventure-free-input .ant-input-data-count {
+  color: #94816a;
+  font-size: 9px;
+}
+
+.chrono-adventure-free-input > .ant-btn {
+  height: 42px;
+  margin-top: 0;
+  border-radius: 0;
+  background: var(--adventure-cinnabar);
+  box-shadow: none;
+}
+
+.chrono-adventure-free-input > p {
+  grid-column: 2 / -1;
+  margin: 0;
+  color: #806f58;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.chrono-adventure-free-notice {
+  margin-top: 10px;
+  padding: 12px 14px;
+  color: #5f4d38;
+  border-left: 3px solid #b88a45;
+  background: rgba(255, 244, 215, .64);
+}
+
+.chrono-adventure-free-notice > strong {
+  color: #765222;
+  font: 600 12px/1.5 'Noto Serif SC', serif;
+}
+
+.chrono-adventure-free-notice > p {
+  margin: 4px 0 8px;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.chrono-adventure-free-notice > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 9px;
+}
+
+.chrono-adventure-free-notice button {
+  padding: 4px 8px;
+  color: #6d3a27;
+  border: 1px solid rgba(139, 76, 46, .32);
+  background: rgba(255, 253, 239, .62);
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.chrono-adventure-ending {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+  margin-top: 26px;
+  padding: clamp(18px, 2.4vw, 30px);
+  border: 1px solid rgba(116, 79, 39, .32);
+  background: rgba(255, 251, 234, .46);
+}
+
+.chrono-adventure-ending.positive {
+  border-color: rgba(55, 112, 93, .45);
+  background: rgba(218, 235, 218, .5);
+}
+
+.chrono-adventure-ending.negative {
+  border-color: rgba(151, 61, 49, .4);
+  background: rgba(239, 213, 198, .45);
+}
+
+.chrono-adventure-ending-seal {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  color: #f6e6c8;
+  border: 2px solid rgba(255, 240, 214, .68);
+  outline: 1px solid var(--adventure-cinnabar);
+  outline-offset: 2px;
+  background: var(--adventure-cinnabar);
+  font-size: 20px;
+}
+
+.chrono-adventure-ending.positive .chrono-adventure-ending-seal {
+  outline-color: #356d5c;
+  background: #356d5c;
+}
+
+.chrono-adventure-ending-copy > span {
+  color: var(--adventure-cinnabar);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.chrono-adventure-ending.positive .chrono-adventure-ending-copy > span {
+  color: #356d5c;
+}
+
+.chrono-adventure-ending-copy h3 {
+  margin: 4px 0 8px;
+  color: #392b1e;
+  font: 600 clamp(20px, 2vw, 28px)/1.35 'Noto Serif SC', 'Songti SC', serif;
+}
+
+.chrono-adventure-ending-copy p {
+  margin: 0;
+  color: #5e4e3b;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.chrono-adventure-ending-copy ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 18px;
+  margin: 12px 0 0;
+  padding: 0;
+  color: #735e45;
+  list-style: none;
+  font-size: 10px;
+}
+
+.chrono-adventure-ending-copy li::before {
+  margin-right: 5px;
+  color: var(--adventure-cinnabar);
+  content: '·';
+}
+
+.chrono-adventure-ending-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chrono-adventure-ending-actions .ant-btn {
+  border-radius: 0;
+}
+
+.chrono-adventure-ending-actions .ant-btn-primary {
+  background: var(--adventure-cinnabar);
+  box-shadow: none;
+}
+
+.chrono-adventure-council {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  color: #e7dfd1;
+}
+
+.chrono-adventure-council > section,
+.chrono-adventure-save-state {
+  border: 1px solid rgba(218, 190, 142, .2);
+  background: rgba(3, 17, 21, .76);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .18);
+  backdrop-filter: blur(13px) saturate(.88);
+}
+
+.chrono-adventure-qin .chrono-adventure-council > section,
+.chrono-adventure-qin .chrono-adventure-save-state {
+  background: rgba(28, 19, 12, .79);
+}
+
+.chrono-adventure-save-state {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 11px 13px;
+  color: var(--adventure-accent);
+}
+
+.chrono-adventure-save-state > span {
+  display: grid;
+  gap: 1px;
+}
+
+.chrono-adventure-save-state strong {
+  color: #eee4d2;
+  font-size: 10px;
+}
+
+.chrono-adventure-save-state small {
+  color: rgba(224, 218, 204, .52);
+  font-size: 9px;
+}
+
+.chrono-adventure-state,
+.chrono-adventure-people,
+.chrono-adventure-deltas {
+  padding: 14px;
+}
+
+.chrono-adventure-state > header,
+.chrono-adventure-people > header,
+.chrono-adventure-deltas > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 11px;
+  padding-bottom: 8px;
+  color: #f0e4cf;
+  border-bottom: 1px solid rgba(218, 190, 142, .16);
+  font: 600 12px/1.4 'Noto Serif SC', serif;
+}
+
+.chrono-adventure-state > header small,
+.chrono-adventure-people > header small {
+  color: rgba(224, 216, 199, .5);
+  font: 400 8px/1 sans-serif;
+  letter-spacing: .12em;
+}
+
+.chrono-adventure-state > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px 28px;
+  gap: 4px 7px;
+  align-items: center;
+  margin-bottom: 9px;
+}
+
+.chrono-adventure-state > div:last-child {
+  margin-bottom: 0;
+}
+
+.chrono-adventure-state > div > span {
+  overflow: hidden;
+  color: rgba(235, 225, 208, .72);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-adventure-state > div > strong {
+  color: #f1e5d0;
+  font-size: 10px;
+  text-align: right;
+}
+
+.chrono-adventure-state > div > em {
+  font-size: 8px;
+  font-style: normal;
+  text-align: right;
+}
+
+.chrono-adventure-state > div > i {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  height: 3px;
+  background: rgba(255, 255, 255, .1);
+}
+
+.chrono-adventure-state > div > i > b {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--adventure-accent-deep), var(--adventure-accent));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--adventure-accent) 60%, transparent);
+  transition: width .5s ease;
+}
+
+.chrono-adventure-people > header > span {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.chrono-adventure-people > div {
+  display: grid;
+  gap: 7px;
+}
+
+.chrono-adventure-people article {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 24px;
+  gap: 8px;
+  align-items: center;
+  min-height: 48px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(218, 190, 142, .1);
+}
+
+.chrono-adventure-people article:last-child {
+  border-bottom: 0;
+}
+
+.chrono-adventure-people picture,
+.chrono-adventure-person-fallback {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 40px;
+  height: 48px;
+  border-bottom: 1px solid rgba(208, 167, 101, .42);
+  background: radial-gradient(circle at 50% 75%, rgba(196, 156, 92, .28), transparent 66%);
+}
+
+.chrono-adventure-people picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, .38));
+}
+
+.chrono-adventure-person-fallback {
+  display: grid;
+  place-items: center;
+  color: var(--adventure-accent);
+  font: 600 16px/1 'Noto Serif SC', serif;
+}
+
+.chrono-adventure-people article > div {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.chrono-adventure-people article > div > strong {
+  overflow: hidden;
+  color: #f1e7d5;
+  font: 600 10px/1.4 'Noto Serif SC', serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-adventure-people article > div > small {
+  overflow: hidden;
+  color: rgba(232, 223, 206, .48);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-adventure-people article > b {
+  color: var(--adventure-accent);
+  font-size: 10px;
+  text-align: right;
+}
+
+.chrono-adventure-people article > em {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  font-size: 7px;
+  font-style: normal;
+}
+
+.chrono-adventure-deltas > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.chrono-adventure-deltas > div > span {
+  padding: 4px 6px;
+  color: rgba(235, 226, 210, .7);
+  border: 1px solid rgba(218, 190, 142, .12);
+  background: rgba(255, 255, 255, .035);
+  font-size: 8px;
+}
+
+.chrono-adventure-deltas b {
+  margin-left: 4px;
+}
+
+.chrono-adventure .positive {
+  color: #74b6a0 !important;
+}
+
+.chrono-adventure .negative {
+  color: #d47b6e !important;
+}
+
+.chrono-adventure-loading {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  min-height: 520px;
+  color: #f2e6cf;
+  background: #07171c;
+}
+
+.chrono-adventure-loading > img {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .55;
+}
+
+.chrono-adventure-loading::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: rgba(3, 14, 18, .58);
+  content: '';
+}
+
+.chrono-adventure-loading > div {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 20px;
+  border: 1px solid rgba(222, 194, 146, .26);
+  background: rgba(3, 15, 19, .72);
+  font-size: 12px;
+}
+
+@media (max-width: 1120px) {
+  .chrono-adventure {
+    padding: 20px;
+  }
+
+  .chrono-adventure-body {
+    grid-template-columns: minmax(0, 1fr) 250px;
+  }
+
+  .chrono-adventure-scroll {
+    padding-inline: 30px;
+  }
+
+  .chrono-adventure-free-input {
+    grid-template-columns: 1fr auto;
+  }
+
+  .chrono-adventure-free-input > label {
+    grid-column: 1 / -1;
+    padding-top: 0;
+  }
+
+  .chrono-adventure-free-input > p {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .chrono-adventure {
+    min-height: 0;
+  }
+
+  .chrono-adventure-body {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-adventure-council {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chrono-adventure-save-state,
+  .chrono-adventure-deltas {
+    grid-column: 1 / -1;
+  }
+
+  .chrono-adventure-state,
+  .chrono-adventure-people {
+    min-height: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .chrono-adventure {
+    margin-inline: -16px;
+    padding: 10px;
+    border-right: 0;
+    border-left: 0;
+  }
+
+  .chrono-adventure-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 9px;
+    padding: 11px 10px 11px 15px;
+  }
+
+  .chrono-adventure-place > strong {
+    font-size: 17px;
+  }
+
+  .chrono-adventure-place > small {
+    display: none;
+  }
+
+  .chrono-adventure-round-seal {
+    min-width: 60px;
+    padding-inline: 9px;
+  }
+
+  .chrono-adventure-restart.ant-btn {
+    grid-column: 1 / -1;
+    justify-self: end;
+    height: 32px;
+    font-size: 10px;
+  }
+
+  .chrono-adventure-scroll {
+    padding: 20px 17px 24px 25px;
+  }
+
+  .chrono-adventure-brief {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-adventure-brief > p {
+    grid-column: 1;
+  }
+
+  .chrono-adventure-turns > button,
+  .chrono-adventure-turns > span.future {
+    margin-right: 14px;
+  }
+
+  .chrono-adventure-turns > button::after,
+  .chrono-adventure-turns > span.future::after {
+    width: 15px;
+  }
+
+  .chrono-adventure-narrative {
+    min-height: 230px;
+    padding: 18px 15px;
+  }
+
+  .chrono-adventure-narrator {
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .chrono-adventure-narrator > p {
+    font-size: 14px;
+    line-height: 1.85;
+  }
+
+  .chrono-adventure-feedback {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-adventure-decisions > header {
+    align-items: start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .chrono-adventure-choices {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-adventure-free-input {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .chrono-adventure-free-input > label,
+  .chrono-adventure-free-input > p {
+    grid-column: 1;
+  }
+
+  .chrono-adventure-free-input > .ant-btn {
+    width: 100%;
+  }
+
+  .chrono-adventure-ending {
+    grid-template-columns: 44px minmax(0, 1fr);
+    padding: 17px 14px;
+  }
+
+  .chrono-adventure-ending-seal {
+    width: 40px;
+    height: 40px;
+  }
+
+  .chrono-adventure-ending-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .chrono-adventure-council {
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-adventure-save-state,
+  .chrono-adventure-deltas {
+    grid-column: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrono-adventure-narrative,
+  .chrono-adventure-choices > button {
+    animation: none;
+  }
+
+  .chrono-adventure-scene img,
+  .chrono-adventure-choices > button,
+  .chrono-adventure-turns > button,
+  .chrono-adventure-state > div > i > b {
+    transition: none;
+  }
+
+  .chrono-adventure:hover .chrono-adventure-scene img {
+    transform: scale(1.012);
+  }
+}
