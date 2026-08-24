@@ -110,10 +110,11 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
 
   await expect(page).toHaveURL(`${BASE_URL}${lessonPath}`);
   await expect(page.getByRole('heading', { name: lesson.title, level: 1 })).toBeVisible();
-  await expect(page.locator('.chrono-local-video video')).toBeVisible();
-  await expect(page.getByText('展示资源与当前发布 checksum 精确绑定')).toBeVisible();
+  await expect(page.locator('.chrono-cinema-screen video')).toBeVisible();
+  await expect(page.getByText('正式课堂资料')).toBeVisible();
+  await expect(page.getByText('课文、短片、情境与依据已完成校验')).toBeVisible();
 
-  const videoSource = await page.locator('.chrono-local-video source').getAttribute('src');
+  const videoSource = await page.locator('.chrono-cinema-screen source').getAttribute('src');
   expect(videoSource).toBeTruthy();
   const media = await page.request.get(new URL(videoSource!, BASE_URL).href, {
     headers: { Range: 'bytes=0-1023' },
@@ -123,8 +124,8 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
   expect(media.headers()['cache-control']).toContain('immutable');
   expect(media.headers().etag).toBeTruthy();
 
-  await page.getByRole('button', { name: '读取文字稿' }).click();
-  await expect(page.getByRole('button', { name: /可访问文字稿/ })).toBeVisible();
+  await page.getByRole('button', { name: '阅读文字稿' }).click();
+  await expect(page.getByText('无障碍文字稿')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   await page.reload();
@@ -133,38 +134,45 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
   await expect(page).not.toHaveURL(/\/login$/);
 
   await openStage(page, '抉择');
-  await expect(page.getByRole('region', { name: '历史抉择关卡' })).toBeVisible();
-  const progress = page.locator('.chrono-game-progress strong');
-  await expect(progress).toHaveText('0 / 6');
+  await expect(page.getByRole('region', { name: '历史情景推演' })).toBeVisible();
+  const progress = page.locator('.chrono-adventure-round-seal strong');
+  await expect(progress).toHaveText('0');
 
   await page.getByLabel('自拟历史行动').fill(lesson.freeInput);
-  await page.locator('.chrono-game-free-input').getByRole('button', { name: '提交' }).click();
-  await expect(progress).toHaveText('1 / 6');
+  await page.locator('.chrono-adventure-free-input').getByRole('button', { name: '呈上议策' }).click();
+  await expect(progress).toHaveText('1');
 
   for (let turn = 2; turn <= 6; turn += 1) {
-    await page.locator('.chrono-game-actions button').first().click();
-    await expect(progress).toHaveText(`${turn} / 6`);
+    await page.locator('.chrono-adventure-choices button').first().click();
+    await expect(progress).toHaveText(`${turn}`);
     if (turn === 3) {
       await page.reload();
-      await expect(progress).toHaveText('3 / 6');
-      await expect(page.getByText('已恢复学习记录')).toBeVisible();
+      await expect(progress).toHaveText('3');
+      await expect(page.getByText('已续接上次议事')).toBeVisible();
     }
   }
-  await expect(page.getByText('本次推演已完成')).toBeVisible();
+  await expect(page.locator('.chrono-adventure-ending')).toBeVisible();
+  await expect(page.getByRole('button', { name: '整理史官卷宗' })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   await openStage(page, '召见');
   if (lesson.personMode) {
-    await page.getByText('课程人物 / 群体', { exact: true }).click();
-    await expect(page.getByRole('combobox', { name: '选择课程人物' })).toBeVisible();
+    await page.locator('.chrono-ask-person-picker > summary').click();
+    await page.locator('.chrono-ask-person-menu button').first().click();
+    await expect(page.locator('.chrono-ask-person-picker')).toHaveClass(/active/);
   }
-  const question = page.getByPlaceholder('追问史料边界、选择代价或人物立场');
+  const question = page.getByPlaceholder('写下你真正想追问的事…');
   await question.fill(lesson.question);
-  await page.locator('.chrono-consult-composer').getByRole('button', { name: '提问' }).click();
-  const answer = page.getByRole('article', { name: '课程证据回答' });
+  await page.locator('.chrono-ask-composer').getByRole('button', { name: '发问' }).click();
+  const answer = page.locator('.chrono-ask-turn .chrono-ask-answer').last();
   await expect(answer).toBeVisible();
-  await expect(answer.locator('.chrono-rag-citations blockquote').first()).toBeVisible();
-  await expect(answer.getByText(/本地抽取式回答|模型据证据组织/)).toBeVisible();
+  await expect(answer.locator('.chrono-ask-citations blockquote').first()).toBeVisible();
+  await expect(answer.getByText(/据本课材料/)).toBeVisible();
+  await expect(page.getByText(/混合检索|词法回退|证据库 v|校验 [a-f0-9]{8}/)).toHaveCount(0);
+  await answer.getByRole('button', { name: /据何而答/ }).click();
+  await expect(answer.locator('.chrono-ask-citations')).toHaveCount(0);
+  await answer.getByRole('button', { name: /据何而答/ }).click();
+  await expect(answer.locator('.chrono-ask-citations blockquote').first()).toBeVisible();
   if (lesson.personMode) {
     await expect(answer.getByText('角色化教学表达，不是史料原话。')).toBeVisible();
   }
@@ -197,6 +205,7 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
 
 for (const lesson of FLAGSHIPS) {
   test(`${lesson.lessonId} ${lesson.title} completes the offline classroom chain`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'ask-mobile-390x844', 'The mobile project has a focused ask-page journey.');
     await exerciseFlagship(page, lesson, testInfo);
   });
 }

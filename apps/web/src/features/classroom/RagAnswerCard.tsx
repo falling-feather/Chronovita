@@ -1,94 +1,110 @@
-import { Alert, Tag } from 'antd';
+import { useEffect, useId, useState } from 'react';
 import {
-  BookOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  FileSearchOutlined,
+  DownOutlined,
+  FileTextOutlined,
+  UpOutlined,
 } from '@ant-design/icons';
 import type { RagAnswer, RagCitation } from '../../utils/api';
-
-const SOURCE_LABEL: Record<RagAnswer['answer_source'], string> = {
-  model: '模型据证据组织',
-  extractive: '本地抽取式回答',
-  insufficient_evidence: '依据不足',
-};
-
-const UNCERTAINTY_LABEL: Record<RagAnswer['uncertainty'], string> = {
-  low: '较低', medium: '中等', high: '较高',
-};
+import {
+  answerBoundaryNote,
+  evidenceDisclosureLabel,
+  studentAnswerOrigin,
+} from './askPresentation';
 
 const CERTAINTY_LABEL: Record<RagCitation['certainty'], string> = {
   consensus: '通行认识',
   interpretation: '教学解释',
   legend: '传说叙事',
-  disputed: '存在争议',
+  disputed: '仍有争议',
 };
 
 export default function RagAnswerCard({
   answer,
   compact = false,
+  speakerName = '课程学者',
+  speakerRole = '依据本课材料作答',
+  defaultCitationsOpen = false,
 }: {
   answer: RagAnswer;
   compact?: boolean;
+  speakerName?: string;
+  speakerRole?: string;
+  defaultCitationsOpen?: boolean;
 }) {
+  const citationRegionId = useId();
+  const [citationsOpen, setCitationsOpen] = useState(defaultCitationsOpen);
   const insufficient = answer.answer_source === 'insufficient_evidence';
+  const citations = compact ? answer.citations.slice(0, 2) : answer.citations;
+
+  useEffect(() => {
+    setCitationsOpen(defaultCitationsOpen);
+  }, [answer.evidence_checksum, answer.body, defaultCitationsOpen]);
+
+  if (compact) {
+    return (
+      <article className={`chrono-ask-answer compact${insufficient ? ' is-insufficient' : ''}`} aria-label="课程材料回答">
+        <header className="chrono-ask-answer-speaker">
+          <span aria-hidden="true">{insufficient ? '？' : '史'}</span>
+          <div>
+            <strong>{speakerName}</strong>
+            <small>{studentAnswerOrigin(answer)}</small>
+          </div>
+        </header>
+        <p className="chrono-ask-answer-body">{answer.body}</p>
+        {answer.role_disclaimer ? <p className="chrono-ask-role-note">{answer.role_disclaimer}</p> : null}
+        <footer><FileTextOutlined /> {answer.citations.length} 条本课材料</footer>
+      </article>
+    );
+  }
+
   return (
-    <article className={`chrono-rag-answer${compact ? ' compact' : ''}`} aria-label="课程证据回答">
-      <header>
+    <article className={`chrono-ask-answer${insufficient ? ' is-insufficient' : ''}`} aria-label={`${speakerName}的课程材料回答`}>
+      <header className="chrono-ask-answer-speaker">
+        <span aria-hidden="true">{insufficient ? '？' : '史'}</span>
         <div>
-          {insufficient ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />}
-          <strong>{compact
-            ? (insufficient ? '当前材料暂不能回答' : '依据本课材料')
-            : SOURCE_LABEL[answer.answer_source]}</strong>
-          {!compact ? (
-            <Tag color={answer.retrieval_mode === 'hybrid' ? 'cyan' : 'default'}>
-              {answer.retrieval_mode === 'hybrid' ? '混合检索' : '词法回退'}
-            </Tag>
-          ) : null}
+          <strong>{speakerName}</strong>
+          <small>{speakerRole} · {studentAnswerOrigin(answer)}</small>
         </div>
-        {!compact ? (
-          <Tag color={answer.uncertainty === 'high' ? 'orange' : answer.uncertainty === 'low' ? 'green' : 'gold'}>
-            不确定性 {UNCERTAINTY_LABEL[answer.uncertainty]}
-          </Tag>
-        ) : null}
       </header>
 
-      <p className="chrono-rag-body">{answer.body}</p>
+      <p className="chrono-ask-answer-body">{answer.body}</p>
+
+      <p className={`chrono-ask-boundary${insufficient ? ' is-insufficient' : ''}`}>
+        {answerBoundaryNote(answer)}
+      </p>
 
       {answer.role_disclaimer ? (
-        <Alert
-          className="chrono-rag-disclaimer"
-          type="info"
-          showIcon
-          message={answer.role_disclaimer}
-        />
+        <p className="chrono-ask-role-note">{answer.role_disclaimer}</p>
       ) : null}
 
-      {answer.citations.length > 0 ? (
-        <section className="chrono-rag-citations" aria-label="引用片段">
-          <h3><FileSearchOutlined /> 引用片段</h3>
-          {answer.citations.slice(0, compact ? 2 : undefined).map((citation, index) => (
+      <button
+        type="button"
+        className="chrono-ask-citation-toggle"
+        aria-expanded={citationsOpen}
+        aria-controls={citationRegionId}
+        disabled={citations.length === 0}
+        onClick={() => setCitationsOpen((open) => !open)}
+      >
+        <span><FileTextOutlined /> {evidenceDisclosureLabel(citations.length)}</span>
+        {citations.length > 0 ? (citationsOpen ? <UpOutlined /> : <DownOutlined />) : null}
+      </button>
+
+      {citationsOpen && citations.length > 0 ? (
+        <section id={citationRegionId} className="chrono-ask-citations" aria-label="本次回答采用的材料">
+          {citations.map((citation, index) => (
             <blockquote key={citation.citation_id}>
-              <div>
-                <span>[{index + 1}] {citation.source_title}</span>
-                <Tag>{CERTAINTY_LABEL[citation.certainty]}</Tag>
-              </div>
+              <header>
+                <span>{index + 1}</span>
+                <div>
+                  <strong>{citation.source_title}</strong>
+                  <small>{CERTAINTY_LABEL[citation.certainty]}{citation.locator ? ` · ${citation.locator}` : ''}</small>
+                </div>
+              </header>
               <p>{citation.excerpt}</p>
-              {citation.locator ? <cite>{citation.locator}</cite> : null}
             </blockquote>
           ))}
         </section>
       ) : null}
-
-      {compact ? (
-        <footer><span><BookOutlined /> {answer.citations.length} 条课程依据</span></footer>
-      ) : (
-        <footer>
-          <span><BookOutlined /> 发布 #{answer.release_no}</span>
-          <span>证据库 v{answer.evidence_version}</span>
-          <code title={answer.evidence_checksum}>校验 {answer.evidence_checksum.slice(0, 10)}</code>
-        </footer>
-      )}
     </article>
   );
 }

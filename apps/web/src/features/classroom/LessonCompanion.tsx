@@ -25,6 +25,7 @@ import {
   type CompanionPortraitAsset,
 } from './companionPortraitAssets';
 import RagAnswerCard from './RagAnswerCard';
+import { friendlyAskError } from './askPresentation';
 import {
   TEMPORARY_NOTEBOOK_EVENT,
   TEMPORARY_NOTEBOOK_MAX_LENGTH,
@@ -175,9 +176,7 @@ export default function LessonCompanion({
       });
       setAnswer(result);
     } catch (askError) {
-      setError(askError instanceof Error
-        ? askError.message.replace(/^\d{3}\s+/, '')
-        : '当前问答暂不可用，请稍后再试。');
+      setError(friendlyAskError(askError));
     } finally {
       setLoading(false);
     }
@@ -310,7 +309,14 @@ export default function LessonCompanion({
                   {selectedPerson ? <small className="chrono-companion-role-note">角色化教学表达，不是史料原话。</small> : null}
                   {error ? <Alert type="warning" showIcon message={error} /> : null}
                   <div className="chrono-companion-answer" aria-live="polite">
-                    {answer ? <RagAnswerCard answer={answer} compact /> : null}
+                    {answer ? (
+                      <RagAnswerCard
+                        answer={answer}
+                        compact
+                        speakerName={selectedName}
+                        speakerRole={selectedPerson?.role || '不采用人物口吻'}
+                      />
+                    ) : null}
                   </div>
                   <button
                     type="button"

@@ -186,14 +186,20 @@ class RagAnswerService:
             )
         )
         if query_plan.intent == "identity" and person is not None:
+            summary = (
+                person.summary.rstrip("。；; ")
+                if person.summary
+                else "课程档案未提供更多身份说明"
+            )
             boundary = (
-                person.boundaries[0]
+                person.boundaries[0].rstrip("。；; ")
                 if person.boundaries
-                else "我的回答只限本课已发布内容。"
+                else "只限本课已发布内容"
             )
             body = (
                 f"我是“{person.name}”。在本课中，我的身份是{person.role or '课程人物'}。"
-                f"{person.summary} 我的回答只限本课发布证据；{boundary}"
+                f"{summary}。"
+                f"本课中，我只依据已发布材料作答。知识边界：{boundary}。"
             )
         elif person is None:
             body = "本课证据可以支持：" + "；".join(summaries) + "。"

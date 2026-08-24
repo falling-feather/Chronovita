@@ -30,5 +30,9 @@ export default defineConfig({
       name: 'classroom-1920x1080',
       use: { viewport: { width: 1920, height: 1080 } },
     },
+    {
+      name: 'ask-mobile-390x844',
+      use: { viewport: { width: 390, height: 844 } },
+    },
   ],
 });

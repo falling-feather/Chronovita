@@ -96,6 +96,9 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(answer.role_disclaimer, ROLE_DISCLAIMER)
         self.assertIn("我是“商鞅”", answer.body)
         self.assertIn("改革主持者", answer.body)
+        self.assertIn("我只依据已发布材料作答", answer.body)
+        self.assertIn("知识边界：", answer.body)
+        self.assertNotIn("发布证据；只依据", answer.body)
         self.assertTrue(answer.citations)
         resources = workflow.get_published_lesson_resources(
             "C-prequin-state",

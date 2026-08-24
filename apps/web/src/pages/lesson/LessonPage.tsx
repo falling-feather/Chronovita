@@ -113,7 +113,7 @@ export default function LessonPage() {
   }
 
   return (
-    <div className="chrono-lesson-classroom">
+    <div className={`chrono-lesson-classroom layer-${layer}`}>
       <button className="chrono-back-link" type="button" onClick={() => nav(`/courses/${courseId}`)}>
         <ArrowLeftOutlined /> 返回课程路线
       </button>
