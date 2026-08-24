@@ -4,9 +4,9 @@ const BASE_URL = (process.env.CHRONO_E2E_BASE_URL || 'http://127.0.0.1:8765').re
 const USER_PASSWORD = process.env.CHRONO_E2E_USER_PASSWORD || '';
 
 async function login(page: Page) {
-  await page.getByLabel('账号').fill('student.guard.laptop');
-  await page.getByLabel('密码').fill(USER_PASSWORD);
-  await page.getByRole('button', { name: '进入我的工作区' }).click();
+  await page.getByLabel('课堂账号', { exact: true }).fill('student.guard.laptop');
+  await page.getByLabel('密码', { exact: true }).fill(USER_PASSWORD);
+  await page.getByRole('button', { name: '进入课堂' }).click();
 }
 
 test('问史卷在 390 × 844 下保持完整提问与据何而答链路', async ({ page }, testInfo) => {

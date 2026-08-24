@@ -8,9 +8,9 @@ function desktopSuffix(projectName: string) {
 }
 
 async function login(page: Page, projectName: string) {
-  await page.getByLabel('账号').fill(`student.guard.${desktopSuffix(projectName)}`);
-  await page.getByLabel('密码').fill(USER_PASSWORD);
-  await page.getByRole('button', { name: '进入我的工作区' }).click();
+  await page.getByLabel('课堂账号', { exact: true }).fill(`student.guard.${desktopSuffix(projectName)}`);
+  await page.getByLabel('密码', { exact: true }).fill(USER_PASSWORD);
+  await page.getByRole('button', { name: '进入课堂' }).click();
 }
 
 function collectRuntimeIssues(page: Page) {
@@ -38,13 +38,27 @@ test('桌面首页减弱动态且山河图可完整键盘操作', async ({ page 
 
   await page.goto('/');
   await expect(page).toHaveURL(/\/login$/);
+  await expect(page.locator('.chrono-login-gallery')).toBeVisible();
+  await expect(page.locator('.chrono-login-gallery-column')).toHaveCount(3);
+  await expect(page.locator('.chrono-login-paper')).toBeVisible();
+  const loginDimensions = await page.evaluate(() => ({
+    clientHeight: document.documentElement.clientHeight,
+    scrollHeight: document.documentElement.scrollHeight,
+  }));
+  expect(loginDimensions.scrollHeight).toBeLessThanOrEqual(loginDimensions.clientHeight + 1);
   await login(page, testInfo.project.name);
   await expect(page).toHaveURL(`${BASE_URL}/`);
 
   await expect(page.getByRole('heading', { name: '拨动天光，进入历史现场' })).toBeVisible();
+  await expect(page.locator('.chrono-home-era-rail')).toBeVisible();
   await expect(page.locator('.chrono-sundial-scene')).toHaveClass(/is-fallback/);
   await expect(page.locator('.chrono-sundial-fallback')).toBeVisible();
   expect(requestedScripts.some((url) => url.includes('three.module-'))).toBe(false);
+  const homeDimensions = await page.evaluate(() => ({
+    clientHeight: document.documentElement.clientHeight,
+    scrollHeight: document.documentElement.scrollHeight,
+  }));
+  expect(homeDimensions.scrollHeight).toBeLessThanOrEqual(homeDimensions.clientHeight + 1);
 
   await page.getByRole('button', { name: '浏览课程' }).click();
   await expect(page).toHaveURL(`${BASE_URL}/courses`);

@@ -5684,3 +5684,1220 @@ select {
     transform: scale(1.012);
   }
 }
+
+/* V0.10.30 登录入口：异速历史画卷与单张宣纸登录笺 */
+.chrono-login-page {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 68fr) minmax(390px, 32fr);
+  width: 100%;
+  height: 100svh;
+  min-height: 620px;
+  color: var(--cv-paper-100);
+  background: var(--cv-ink-950);
+}
+
+.chrono-login-gallery {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  background: #030b11;
+}
+
+.chrono-login-brand {
+  position: absolute;
+  z-index: 7;
+  top: clamp(24px, 4vw, 56px);
+  left: clamp(24px, 4vw, 58px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--cv-paper-100);
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, .45));
+}
+
+.chrono-login-gallery-tracks {
+  position: absolute;
+  inset: -12vh -2vw;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(6px, .7vw, 12px);
+  transform: rotate(-.8deg) scale(1.03);
+  transform-origin: center;
+}
+
+.chrono-login-gallery-column {
+  overflow: hidden;
+  min-width: 0;
+  border-inline: 1px solid rgba(198, 162, 97, .28);
+  background: #07131b;
+}
+
+.chrono-login-gallery-column.is-column-2 {
+  transform: translateY(-11vh);
+}
+
+.chrono-login-gallery-column.is-column-3 {
+  transform: translateY(7vh);
+}
+
+.chrono-login-gallery-track {
+  display: grid;
+  grid-auto-rows: clamp(430px, 67vh, 760px);
+  animation: chrono-login-scroll-up 58s linear infinite;
+  will-change: transform;
+}
+
+.chrono-login-gallery-column.is-column-2 .chrono-login-gallery-track {
+  animation-name: chrono-login-scroll-down;
+  animation-duration: 69s;
+}
+
+.chrono-login-gallery-column.is-column-3 .chrono-login-gallery-track {
+  animation-duration: 62s;
+}
+
+.chrono-login-page.is-gallery-paused .chrono-login-gallery-track,
+.chrono-login-gallery:hover .chrono-login-gallery-track {
+  animation-play-state: paused;
+}
+
+.chrono-login-gallery-track figure {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  margin: 0;
+  border-bottom: 7px solid #06131c;
+  background: #0a1821;
+}
+
+.chrono-login-gallery-track figure::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background:
+    linear-gradient(180deg, rgba(2, 8, 12, .03) 46%, rgba(2, 8, 12, .9) 100%),
+    linear-gradient(90deg, rgba(4, 12, 17, .24), transparent 26%, transparent 76%, rgba(4, 12, 17, .24));
+  pointer-events: none;
+}
+
+.chrono-login-gallery-track img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(.82) contrast(1.04) brightness(.8);
+  transition: transform 1.1s cubic-bezier(.2, .7, .2, 1), filter .8s ease;
+}
+
+.chrono-login-gallery-track figure:hover img {
+  transform: scale(1.045);
+  filter: saturate(.94) contrast(1.05) brightness(.92);
+}
+
+.chrono-login-gallery-track figcaption {
+  position: absolute;
+  z-index: 2;
+  right: 22px;
+  bottom: 22px;
+  left: 22px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  letter-spacing: .08em;
+}
+
+.chrono-login-gallery-track figcaption strong {
+  font-size: clamp(15px, 1.4vw, 22px);
+  font-weight: 600;
+}
+
+.chrono-login-gallery-track figcaption span {
+  color: var(--cv-bronze-400);
+  font-size: 11px;
+}
+
+.chrono-login-gallery-shade {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(2, 9, 14, .12), transparent 30%, transparent 72%, #06131c 100%),
+    linear-gradient(180deg, rgba(2, 9, 14, .46), transparent 24%, transparent 76%, rgba(2, 9, 14, .66));
+  pointer-events: none;
+}
+
+.chrono-login-gallery-boundary {
+  position: absolute;
+  z-index: 7;
+  bottom: 36px;
+  left: clamp(70px, 7vw, 116px);
+  margin: 0;
+  color: rgba(242, 231, 207, .62);
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+.chrono-login-gallery-toggle {
+  position: absolute;
+  z-index: 8;
+  bottom: 27px;
+  left: clamp(24px, 4vw, 58px);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--cv-paper-100);
+  background: rgba(6, 19, 28, .72);
+  border: 1px solid rgba(198, 162, 97, .55);
+  border-radius: 50%;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.chrono-login-gallery-toggle:hover,
+.chrono-login-gallery-toggle:focus-visible {
+  color: var(--cv-ink-950);
+  background: var(--cv-bronze-400);
+  outline: 2px solid rgba(242, 231, 207, .86);
+  outline-offset: 3px;
+}
+
+.chrono-login-panel {
+  position: relative;
+  z-index: 9;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(18px, 2.8vw, 42px);
+  background:
+    radial-gradient(circle at 0 50%, rgba(198, 162, 97, .13), transparent 36%),
+    #06131c;
+  box-shadow: -28px 0 70px rgba(0, 0, 0, .34);
+}
+
+.chrono-login-paper {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  align-content: center;
+  gap: 16px;
+  width: min(100%, 510px);
+  height: min(88svh, 860px);
+  min-height: 560px;
+  padding: clamp(46px, 6vh, 72px) clamp(34px, 4.2vw, 64px);
+  color: #211c17;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(121, 84, 42, .07), transparent 28%),
+    repeating-linear-gradient(7deg, rgba(93, 64, 35, .025) 0 1px, transparent 1px 11px),
+    #efe3c6;
+  clip-path: polygon(1.2% 0, 98.8% .7%, 100% 12%, 99.1% 28%, 100% 47%, 99.2% 69%, 100% 100%, 2% 99.3%, 0 82%, .9% 63%, 0 39%, .8% 18%);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .42);
+}
+
+.chrono-login-paper::before {
+  position: absolute;
+  z-index: -1;
+  inset: 17px;
+  content: '';
+  border: 1px solid rgba(108, 75, 38, .15);
+  pointer-events: none;
+}
+
+.chrono-login-paper-mark {
+  position: absolute;
+  top: clamp(30px, 5vh, 54px);
+  right: clamp(28px, 3vw, 48px);
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: rgba(166, 66, 53, .72);
+  border: 2px solid rgba(166, 66, 53, .58);
+  font: 700 24px 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  transform: rotate(-6deg);
+}
+
+.chrono-login-paper > header {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 4px;
+}
+
+.chrono-login-paper-brand {
+  color: #7f6544;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 13px;
+  letter-spacing: .2em;
+}
+
+.chrono-login-paper h1 {
+  margin: 0;
+  color: #211c17;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(34px, 3vw, 46px);
+  font-weight: 600;
+  letter-spacing: .08em;
+}
+
+.chrono-login-paper h1::after {
+  display: block;
+  width: 68px;
+  height: 2px;
+  margin-top: 14px;
+  content: '';
+  background: var(--cv-cinnabar-500);
+  box-shadow: 28px 0 0 rgba(166, 66, 53, .24);
+}
+
+.chrono-login-return {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #7c6547;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-login-return .anticon {
+  color: var(--cv-cinnabar-500);
+}
+
+.chrono-login-alert.ant-alert {
+  padding: 9px 11px;
+  border-radius: 0;
+  font-size: 12px;
+}
+
+.chrono-login-form {
+  margin-top: 3px;
+}
+
+.chrono-login-form .ant-form-item {
+  margin-bottom: 17px;
+}
+
+.chrono-login-form .ant-form-item-label > label {
+  color: #3b3024;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.chrono-login-form .ant-input-affix-wrapper {
+  min-height: 46px;
+  padding-inline: 14px;
+  color: #241f1a;
+  background: rgba(255, 253, 247, .5);
+  border-color: rgba(91, 66, 38, .48);
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .32);
+}
+
+.chrono-login-form .ant-input-affix-wrapper:hover,
+.chrono-login-form .ant-input-affix-wrapper-focused {
+  border-color: var(--cv-cinnabar-500);
+  box-shadow: 0 0 0 2px rgba(166, 66, 53, .14);
+}
+
+.chrono-login-form .ant-input {
+  color: #241f1a;
+  font-size: 14px;
+}
+
+.chrono-login-form .ant-input::placeholder {
+  color: #9a8a75;
+}
+
+.chrono-login-form .ant-btn-primary {
+  height: 48px;
+  margin-top: 5px;
+  color: #fff7e6;
+  background: var(--cv-cinnabar-500);
+  border-color: #7f2f28;
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 1px rgba(255, 238, 207, .24), 0 9px 22px rgba(104, 36, 30, .2);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.chrono-login-form .ant-btn-primary:hover {
+  background: #b44d3e !important;
+  border-color: #85362e !important;
+}
+
+.chrono-login-security,
+.chrono-login-footnote {
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+}
+
+.chrono-login-security {
+  color: #61766e;
+  letter-spacing: .08em;
+}
+
+.chrono-login-footnote {
+  color: #7d705f;
+}
+
+@keyframes chrono-login-scroll-up {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, -50%, 0); }
+}
+
+@keyframes chrono-login-scroll-down {
+  from { transform: translate3d(0, -50%, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+/* V0.10.30 首页：单屏历史壁画、浑天日晷与时代卷 */
+.chrono-shell-layout.is-home {
+  overflow: hidden;
+  height: 100svh;
+  min-height: 0 !important;
+}
+
+.chrono-shell-layout.is-home .chrono-shell-header {
+  flex: 0 0 72px;
+}
+
+.chrono-shell-layout.is-home .chrono-shell-content.is-home {
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.chrono-home-v3 {
+  --chrono-era-angle: 0deg;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  height: calc(100svh - 72px);
+  min-height: 0;
+  color: var(--cv-paper-100);
+  background: var(--cv-ink-950);
+}
+
+.chrono-home-panorama,
+.chrono-home-time-wash,
+.chrono-home-depth-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.chrono-home-panorama {
+  z-index: -4;
+  overflow: hidden;
+}
+
+.chrono-home-panorama img {
+  width: 108%;
+  height: 108%;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(.64) contrast(1.08) brightness(.7);
+  transform: translate3d(-2%, -3%, 0) scale(1.035);
+  transition: transform 1.1s cubic-bezier(.2, .7, .2, 1), filter .8s ease;
+}
+
+.chrono-home-v3[data-active-era='qinhan'] .chrono-home-panorama img { transform: translate3d(-2.8%, -3%, 0) scale(1.04); }
+.chrono-home-v3[data-active-era='weijin'] .chrono-home-panorama img { transform: translate3d(-3.6%, -3%, 0) scale(1.045); }
+.chrono-home-v3[data-active-era='suitang'] .chrono-home-panorama img { transform: translate3d(-4.4%, -3%, 0) scale(1.05); }
+.chrono-home-v3[data-active-era='songyuan'] .chrono-home-panorama img { transform: translate3d(-5.2%, -3%, 0) scale(1.055); }
+.chrono-home-v3[data-active-era='mingqing'] .chrono-home-panorama img { transform: translate3d(-6%, -3%, 0) scale(1.06); }
+
+.chrono-home-time-wash {
+  z-index: -3;
+  background:
+    linear-gradient(90deg, rgba(3, 12, 18, .96) 0%, rgba(4, 14, 20, .86) 28%, rgba(4, 14, 20, .34) 58%, rgba(4, 13, 18, .12) 78%, rgba(3, 11, 16, .34) 100%),
+    linear-gradient(180deg, rgba(2, 8, 12, .18), rgba(2, 8, 12, .24) 62%, rgba(2, 8, 12, .76));
+}
+
+.chrono-home-v3[data-solar-period='dawn'] .chrono-home-time-wash {
+  background:
+    linear-gradient(90deg, rgba(4, 16, 23, .95), rgba(8, 20, 25, .76) 35%, rgba(61, 43, 31, .18) 78%, rgba(107, 62, 40, .18)),
+    linear-gradient(180deg, rgba(16, 38, 45, .12), rgba(3, 10, 15, .74));
+}
+
+.chrono-home-v3[data-solar-period='day'] .chrono-home-time-wash {
+  background:
+    linear-gradient(90deg, rgba(3, 14, 21, .95), rgba(5, 17, 22, .78) 34%, rgba(17, 35, 38, .15) 75%, rgba(87, 67, 35, .08)),
+    linear-gradient(180deg, rgba(11, 34, 40, .04), rgba(3, 10, 15, .7));
+}
+
+.chrono-home-v3[data-solar-period='dusk'] .chrono-home-time-wash {
+  background:
+    linear-gradient(90deg, rgba(7, 14, 21, .96), rgba(15, 19, 24, .8) 34%, rgba(100, 51, 35, .17) 78%, rgba(125, 67, 37, .15)),
+    linear-gradient(180deg, rgba(33, 34, 37, .08), rgba(4, 9, 14, .76));
+}
+
+.chrono-home-depth-lines {
+  z-index: -2;
+  left: 42%;
+  display: grid;
+  place-items: center;
+  opacity: .5;
+}
+
+.chrono-home-depth-lines span {
+  position: absolute;
+  width: min(55vw, 920px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(198, 162, 97, .14);
+  border-radius: 50%;
+  transform: rotateX(64deg) rotateZ(var(--chrono-era-angle));
+  transition: transform .8s ease;
+}
+
+.chrono-home-depth-lines span:nth-child(2) { width: min(43vw, 720px); border-color: rgba(101, 170, 160, .13); }
+.chrono-home-depth-lines span:nth-child(3) { width: min(32vw, 540px); border-color: rgba(198, 162, 97, .2); }
+
+.chrono-home-stage {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(420px, 42fr) minmax(560px, 58fr);
+  width: 100%;
+  height: calc(100% - 118px);
+  min-height: 0;
+}
+
+.chrono-home-copy-v3 {
+  position: relative;
+  z-index: 5;
+  align-self: center;
+  width: min(680px, 100%);
+  padding: clamp(30px, 5.4vh, 72px) 24px clamp(26px, 4.6vh, 62px) clamp(38px, 6.4vw, 120px);
+}
+
+.chrono-home-copy-v3 h1 {
+  max-width: 650px;
+  margin: 0;
+  color: var(--cv-paper-100);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(48px, 4.6vw, 76px);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: .05em;
+  text-wrap: balance;
+  text-shadow: 0 14px 48px rgba(0, 0, 0, .54);
+}
+
+.chrono-home-copy-v3 > p {
+  max-width: 600px;
+  margin: clamp(17px, 2.5vh, 28px) 0 0;
+  color: #c5cfca;
+  font-size: clamp(14px, 1.1vw, 18px);
+  line-height: 1.8;
+  letter-spacing: .1em;
+  text-shadow: 0 5px 20px rgba(0, 0, 0, .52);
+}
+
+.chrono-home-actions-v3 {
+  display: flex;
+  gap: 12px;
+  margin-top: clamp(22px, 3.4vh, 38px);
+}
+
+.chrono-home-actions-v3 .ant-btn {
+  min-width: 156px;
+  height: 50px;
+  padding-inline: 24px;
+  border-radius: 1px;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
+.chrono-home-actions-v3 .ant-btn-primary {
+  color: #fff7e6;
+  background: var(--cv-cinnabar-500);
+  border-color: #87332c;
+  box-shadow: inset 0 0 0 1px rgba(255, 236, 197, .22), 0 12px 28px rgba(65, 18, 16, .32);
+}
+
+.chrono-home-actions-v3 .ant-btn-primary:hover {
+  background: #b44d3e !important;
+  border-color: #8a372f !important;
+}
+
+.chrono-home-actions-v3 .ant-btn-default {
+  color: var(--cv-paper-100);
+  background: rgba(4, 14, 20, .38);
+  border-color: rgba(198, 162, 97, .7);
+  backdrop-filter: blur(8px);
+}
+
+.chrono-home-resume-v3 {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 22px;
+  max-width: 560px;
+  margin-top: 17px;
+  color: #9eaaa6;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-home-resume-v3 .anticon {
+  flex: 0 0 auto;
+  color: var(--cv-bronze-400);
+}
+
+.chrono-home-resume-v3 span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chrono-home-stages-v3 {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: clamp(18px, 3vh, 34px) 0 0;
+  padding: 0;
+  color: #b8c5c0;
+  list-style: none;
+}
+
+.chrono-home-stages-v3 li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-right: clamp(20px, 2.7vw, 42px);
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+
+.chrono-home-stages-v3 li:not(:last-child)::after {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: clamp(8px, 1.5vw, 24px);
+  height: 1px;
+  content: '';
+  background: linear-gradient(90deg, var(--cv-bronze-400), transparent);
+}
+
+.chrono-home-stages-v3 span {
+  color: var(--cv-bronze-400);
+  font: 600 9px 'IBM Plex Mono', Consolas, monospace;
+}
+
+.chrono-home-stages-v3 strong {
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-weight: 600;
+}
+
+.chrono-home-chronoscope {
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+  min-height: 0;
+}
+
+.chrono-chronoscope-scene {
+  position: absolute;
+  inset: clamp(-18px, -1.5vh, 0px) clamp(-80px, -3.5vw, -28px) clamp(-45px, -5vh, -18px) clamp(-100px, -5vw, -34px);
+}
+
+.chrono-chronoscope-canvas,
+.chrono-chronoscope-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.chrono-chronoscope-canvas {
+  z-index: 2;
+  opacity: 0;
+  transition: opacity .7s ease;
+}
+
+.chrono-chronoscope-scene.is-ready .chrono-chronoscope-canvas {
+  opacity: 1;
+}
+
+.chrono-chronoscope-fallback {
+  z-index: 1;
+  object-fit: contain;
+  opacity: .88;
+  filter: drop-shadow(0 26px 32px rgba(0, 0, 0, .45));
+  transition: opacity .5s ease;
+}
+
+.chrono-chronoscope-scene.is-ready .chrono-chronoscope-fallback {
+  opacity: 0;
+}
+
+.chrono-home-local-time {
+  position: absolute;
+  z-index: 6;
+  top: clamp(20px, 4vh, 46px);
+  right: clamp(24px, 3vw, 58px);
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 2px 9px;
+  padding: 9px 0 9px 14px;
+  color: #a9b6b1;
+  border-left: 1px solid rgba(198, 162, 97, .58);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, .7);
+}
+
+.chrono-home-local-time .anticon {
+  color: var(--cv-bronze-400);
+}
+
+.chrono-home-local-time time {
+  color: var(--cv-paper-100);
+  font: 500 14px 'IBM Plex Mono', Consolas, monospace;
+}
+
+.chrono-home-local-time span {
+  grid-column: 1 / -1;
+  color: var(--cv-bronze-400);
+}
+
+.chrono-home-installation-note {
+  position: absolute;
+  z-index: 6;
+  right: clamp(24px, 3vw, 58px);
+  bottom: 18px;
+  margin: 0;
+  color: rgba(242, 231, 207, .58);
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-shadow: 0 3px 12px #000;
+}
+
+.chrono-home-era-rail {
+  position: absolute;
+  z-index: 9;
+  right: clamp(16px, 2.4vw, 46px);
+  bottom: 0;
+  left: clamp(16px, 2.4vw, 46px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 134px;
+  height: 118px;
+  color: #261f18;
+  background: #cfb888;
+  border: 1px solid #7f623d;
+  border-bottom: 0;
+  box-shadow: 0 -18px 46px rgba(0, 0, 0, .38);
+}
+
+.chrono-home-era-rail::before,
+.chrono-home-era-rail::after {
+  position: absolute;
+  z-index: 5;
+  top: -7px;
+  bottom: -2px;
+  width: 18px;
+  content: '';
+  background: linear-gradient(90deg, #6f4d29, #c39b5a 42%, #6b4828 100%);
+  border: 1px solid #604225;
+  box-shadow: inset 0 0 0 3px rgba(239, 213, 164, .2);
+}
+
+.chrono-home-era-rail::before { left: -10px; }
+.chrono-home-era-rail::after { right: -10px; }
+
+.chrono-home-era-rail ol {
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chrono-home-era-rail li {
+  min-width: 0;
+  border-right: 1px solid rgba(68, 48, 29, .34);
+}
+
+.chrono-home-era-rail li button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  color: #f2e7cf;
+  background: #1a2424;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.chrono-home-era-rail li button::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: '';
+  background: linear-gradient(180deg, rgba(4, 11, 15, .12), rgba(4, 11, 15, .82));
+  transition: background .35s ease;
+}
+
+.chrono-home-era-rail li img {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(.55) contrast(1.05);
+  opacity: .62;
+  transition: transform .55s cubic-bezier(.2, .7, .2, 1), opacity .35s ease, filter .35s ease;
+}
+
+.chrono-home-era-rail li button > span {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  display: grid;
+  gap: 3px;
+}
+
+.chrono-home-era-rail li strong {
+  overflow: hidden;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(14px, 1.18vw, 20px);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-home-era-rail li small {
+  overflow: hidden;
+  color: rgba(242, 231, 207, .68);
+  font: 500 8px 'IBM Plex Mono', Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-home-era-rail li.is-current button,
+.chrono-home-era-rail li button:hover,
+.chrono-home-era-rail li button:focus-visible {
+  outline: none;
+  box-shadow: inset 0 4px 0 var(--cv-cinnabar-500);
+}
+
+.chrono-home-era-rail li.is-current img,
+.chrono-home-era-rail li button:hover img,
+.chrono-home-era-rail li button:focus-visible img {
+  opacity: .88;
+  filter: saturate(.82) contrast(1.08);
+  transform: scale(1.045);
+}
+
+.chrono-home-era-rail li.is-current strong {
+  color: #ffd8ae;
+}
+
+.chrono-home-open-scroll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  color: #2d241b;
+  background:
+    repeating-linear-gradient(8deg, rgba(96, 66, 34, .035) 0 1px, transparent 1px 10px),
+    #d6c090;
+  border: 0;
+  cursor: pointer;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.chrono-home-open-scroll .anticon {
+  color: var(--cv-cinnabar-500);
+}
+
+.chrono-home-open-scroll:hover,
+.chrono-home-open-scroll:focus-visible {
+  color: var(--cv-cinnabar-500);
+  background-color: #ead5a7;
+  outline: 2px solid var(--cv-cinnabar-500);
+  outline-offset: -4px;
+}
+
+@media (max-width: 1180px) {
+  .chrono-login-page {
+    grid-template-columns: minmax(0, 62fr) minmax(390px, 38fr);
+  }
+
+  .chrono-home-stage {
+    grid-template-columns: minmax(400px, 47fr) minmax(470px, 53fr);
+  }
+
+  .chrono-home-copy-v3 {
+    padding-left: 48px;
+  }
+
+  .chrono-home-copy-v3 h1 {
+    font-size: clamp(44px, 5.3vw, 64px);
+  }
+
+  .chrono-home-chronoscope {
+    opacity: .92;
+  }
+}
+
+@media (max-width: 980px) {
+  .chrono-login-page {
+    display: block;
+    min-height: 560px;
+  }
+
+  .chrono-login-gallery {
+    position: absolute;
+    inset: 0;
+  }
+
+  .chrono-login-gallery-tracks {
+    right: -10vw;
+    left: -10vw;
+    grid-template-columns: minmax(0, 1fr) minmax(0, .74fr);
+  }
+
+  .chrono-login-gallery-column.is-column-3 {
+    display: none;
+  }
+
+  .chrono-login-gallery-shade {
+    background: linear-gradient(90deg, rgba(2, 9, 14, .52), rgba(2, 9, 14, .72) 46%, rgba(2, 9, 14, .92));
+  }
+
+  .chrono-login-panel {
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: min(520px, 58vw);
+    padding: 16px;
+    background: linear-gradient(90deg, transparent, rgba(6, 19, 28, .7) 12%, #06131c 36%);
+    box-shadow: none;
+  }
+
+  .chrono-login-paper {
+    height: min(91svh, 800px);
+  }
+
+  .chrono-home-stage {
+    grid-template-columns: minmax(370px, 52fr) minmax(390px, 48fr);
+  }
+
+  .chrono-home-copy-v3 {
+    padding-left: 36px;
+  }
+
+  .chrono-home-stages-v3 li {
+    padding-right: 24px;
+  }
+
+  .chrono-home-chronoscope {
+    opacity: .76;
+  }
+
+  .chrono-home-era-rail {
+    grid-template-columns: minmax(0, 1fr) 104px;
+  }
+}
+
+@media (max-width: 680px) {
+  .chrono-login-brand {
+    top: 18px;
+    left: 18px;
+  }
+
+  .chrono-login-brand .chrono-logo-cn,
+  .chrono-login-brand .chrono-logo-en {
+    display: block;
+  }
+
+  .chrono-login-gallery-tracks {
+    right: -26vw;
+    left: -18vw;
+    grid-template-columns: 1fr;
+  }
+
+  .chrono-login-gallery-column.is-column-2 {
+    display: none;
+  }
+
+  .chrono-login-gallery-track {
+    grid-auto-rows: 76svh;
+  }
+
+  .chrono-login-gallery-boundary,
+  .chrono-login-gallery-toggle {
+    display: none;
+  }
+
+  .chrono-login-panel {
+    top: 76px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    align-items: center;
+    padding: 12px;
+    background: linear-gradient(180deg, transparent, rgba(6, 19, 28, .74) 12%, rgba(6, 19, 28, .94) 76%, #06131c);
+  }
+
+  .chrono-login-paper {
+    width: min(100%, 430px);
+    height: auto;
+    min-height: 0;
+    max-height: calc(100svh - 96px);
+    padding: 42px 28px 34px;
+  }
+
+  .chrono-login-paper-mark {
+    top: 28px;
+    right: 26px;
+    width: 38px;
+    height: 38px;
+    font-size: 19px;
+  }
+
+  .chrono-login-paper h1 {
+    font-size: 32px;
+  }
+
+  .chrono-login-form .ant-form-item {
+    margin-bottom: 13px;
+  }
+
+  .chrono-shell-layout.is-home .chrono-shell-header {
+    flex-basis: 64px;
+  }
+
+  .chrono-home-v3 {
+    height: calc(100svh - 64px);
+  }
+
+  .chrono-home-stage {
+    display: block;
+    height: calc(100% - 96px);
+  }
+
+  .chrono-home-copy-v3 {
+    position: relative;
+    z-index: 6;
+    width: min(92%, 520px);
+    padding: clamp(34px, 7vh, 64px) 20px 20px;
+  }
+
+  .chrono-home-copy-v3 h1 {
+    max-width: 480px;
+    font-size: clamp(40px, 12vw, 56px);
+    line-height: 1.16;
+  }
+
+  .chrono-home-copy-v3 > p {
+    max-width: 420px;
+    margin-top: 15px;
+    font-size: 13px;
+    letter-spacing: .04em;
+  }
+
+  .chrono-home-actions-v3 {
+    width: min(290px, 100%);
+    margin-top: 22px;
+  }
+
+  .chrono-home-actions-v3 .ant-btn {
+    min-width: 0;
+    height: 44px;
+    padding-inline: 16px;
+    font-size: 13px;
+  }
+
+  .chrono-home-resume-v3 {
+    width: min(340px, 90vw);
+    margin-top: 13px;
+  }
+
+  .chrono-home-stages-v3 {
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .chrono-home-stages-v3 li {
+    gap: 3px;
+    padding-right: 0;
+    font-size: 11px;
+  }
+
+  .chrono-home-stages-v3 li::after,
+  .chrono-home-stages-v3 li span {
+    display: none;
+  }
+
+  .chrono-home-chronoscope {
+    position: absolute;
+    z-index: 2;
+    top: 8%;
+    right: -42%;
+    bottom: 3%;
+    width: 112%;
+    opacity: .5;
+    pointer-events: none;
+  }
+
+  .chrono-home-panorama img {
+    width: 138%;
+    object-position: 43% center;
+    transform: translate3d(-16%, -3%, 0) scale(1.04) !important;
+  }
+
+  .chrono-home-time-wash {
+    background: linear-gradient(90deg, rgba(3, 12, 18, .93), rgba(4, 14, 20, .72) 72%, rgba(3, 11, 16, .35));
+  }
+
+  .chrono-home-local-time,
+  .chrono-home-installation-note {
+    display: none;
+  }
+
+  .chrono-home-era-rail {
+    right: 8px;
+    left: 8px;
+    grid-template-columns: minmax(0, 1fr) 76px;
+    height: 96px;
+  }
+
+  .chrono-home-era-rail ol {
+    overflow-x: auto;
+    grid-template-columns: repeat(6, 116px);
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .chrono-home-era-rail ol::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chrono-home-era-rail li button > span {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+  }
+
+  .chrono-home-era-rail li strong {
+    font-size: 14px;
+  }
+
+  .chrono-home-open-scroll {
+    gap: 4px;
+    padding: 7px;
+    font-size: 11px;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 681px) {
+  .chrono-login-paper {
+    height: calc(100svh - 28px);
+    min-height: 0;
+    padding-top: 36px;
+    padding-bottom: 30px;
+  }
+
+  .chrono-login-paper-mark {
+    top: 28px;
+  }
+
+  .chrono-login-paper h1 {
+    font-size: 32px;
+  }
+
+  .chrono-login-form .ant-form-item {
+    margin-bottom: 12px;
+  }
+
+  .chrono-home-stage {
+    height: calc(100% - 102px);
+  }
+
+  .chrono-home-era-rail {
+    height: 102px;
+  }
+
+  .chrono-home-copy-v3 {
+    padding-top: 24px;
+    padding-bottom: 18px;
+  }
+
+  .chrono-home-copy-v3 h1 {
+    font-size: clamp(42px, 4.4vw, 58px);
+  }
+
+  .chrono-home-copy-v3 > p {
+    margin-top: 14px;
+  }
+
+  .chrono-home-actions-v3 {
+    margin-top: 18px;
+  }
+
+  .chrono-home-stages-v3 {
+    margin-top: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrono-login-gallery-track {
+    animation: none !important;
+    transform: translate3d(0, -18%, 0);
+  }
+
+  .chrono-login-gallery-track img,
+  .chrono-home-panorama img,
+  .chrono-home-era-rail li img,
+  .chrono-home-depth-lines span {
+    transition: none !important;
+  }
+
+  .chrono-login-gallery-track figure:hover img,
+  .chrono-home-era-rail li button:hover img {
+    transform: none;
+  }
+
+  .chrono-chronoscope-canvas {
+    display: none;
+  }
+
+  .chrono-chronoscope-fallback {
+    opacity: .9 !important;
+  }
+}

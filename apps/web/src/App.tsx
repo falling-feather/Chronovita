@@ -276,6 +276,7 @@ function ForbiddenPage() {
 function ShellLayout() {
   const auth = useAuth();
   const location = useLocation();
+  const isHome = location.pathname === '/';
   const navItems = useMemo<ShellNavItem[]>(() => {
     const items: ShellNavItem[] = [];
     if (auth.mode === 'legacy-local' || auth.principal?.roles.includes('student')) {
@@ -300,7 +301,10 @@ function ShellLayout() {
   }, [auth.can, auth.mode, auth.principal]);
 
   return (
-    <Layout style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
+    <Layout
+      className={isHome ? 'chrono-shell-layout is-home' : 'chrono-shell-layout'}
+      style={{ minHeight: '100vh', background: 'var(--bg-page)' }}
+    >
       <Header className="chrono-shell-header">
         <Logo />
         <Menu
@@ -313,14 +317,16 @@ function ShellLayout() {
         <div className="chrono-header-spacer" />
         <UserSlot />
       </Header>
-      <Content className={`chrono-shell-content${location.pathname === '/' ? ' is-home' : ''}`}>
+      <Content className={`chrono-shell-content${isHome ? ' is-home' : ''}`}>
         <Suspense fallback={<AuthLoadingScreen />}>
           <Outlet />
         </Suspense>
       </Content>
-      <Footer className="chrono-shell-footer">
-        Chronovita · {APP_VERSION_LABEL} · 本地课堂
-      </Footer>
+      {!isHome && (
+        <Footer className="chrono-shell-footer">
+          Chronovita · {APP_VERSION_LABEL} · 本地课堂
+        </Footer>
+      )}
     </Layout>
   );
 }

@@ -46,9 +46,9 @@ function studentUsername(lessonId: FlagshipLesson['lessonId'], testInfo: TestInf
 }
 
 async function login(page: Page, username: string, password: string) {
-  await page.getByLabel('账号').fill(username);
-  await page.getByLabel('密码').fill(password);
-  await page.getByRole('button', { name: '进入我的工作区' }).click();
+  await page.getByLabel('课堂账号', { exact: true }).fill(username);
+  await page.getByLabel('密码', { exact: true }).fill(password);
+  await page.getByRole('button', { name: '进入课堂' }).click();
 }
 
 function observeRuntimeHealth(page: Page) {
