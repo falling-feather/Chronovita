@@ -42,6 +42,7 @@ import {
   groupAdventureRounds,
   roundLabel,
 } from './gamePresentation';
+import { emitLearningEvent } from '../../features/classroom/learningLedger';
 
 interface FreeInputNotice {
   kind: 'clarification_required' | 'rejected' | 'provider_unavailable';
@@ -204,6 +205,8 @@ function PinnedGamePlayer({
 
   const chooseAction = async (actionId: string) => {
     if (!session || session.status !== 'active' || acting) return;
+    const actionIndex = session.available_action_ids.indexOf(actionId);
+    const actionLabel = session.available_choices[actionIndex] || actionId;
     setActingMode('fixed');
     setError('');
     setFreeInputNotice(null);
@@ -218,6 +221,18 @@ function PinnedGamePlayer({
       setSelectedTurnNo(result.session.current_turn);
       setLastFeedback(result.action_feedback);
       setLastEventIds(result.triggered_event_ids);
+      emitLearningEvent({
+        course_id: lesson.course_id,
+        lesson_id: lesson.id,
+        kind: 'decision_completed',
+        title: `第 ${result.session.current_turn} 回合：${actionLabel}`,
+        summary: result.action_feedback || result.session.summary || '局势已经推进。',
+        metadata: {
+          turn: result.session.current_turn,
+          action_source: 'fixed',
+          completed: result.session.status === 'completed',
+        },
+      });
     } catch (actionError) {
       await restoreSession(session.session_id);
       setError(errorMessage(actionError));
@@ -246,6 +261,18 @@ function PinnedGamePlayer({
         setFreeInput('');
         setLastFeedback(response.result.action_feedback);
         setLastEventIds(response.result.triggered_event_ids);
+        emitLearningEvent({
+          course_id: lesson.course_id,
+          lesson_id: lesson.id,
+          kind: 'decision_completed',
+          title: `第 ${response.result.session.current_turn} 回合：自由陈策`,
+          summary: `${rawInput}\n${response.result.action_feedback || response.result.session.summary || '局势已经推进。'}`,
+          metadata: {
+            turn: response.result.session.current_turn,
+            action_source: 'free_input',
+            completed: response.result.session.status === 'completed',
+          },
+        });
       } else {
         setFreeInputNotice({
           kind: response.kind,

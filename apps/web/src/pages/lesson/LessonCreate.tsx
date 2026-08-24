@@ -16,14 +16,18 @@ import 'reactflow/dist/style.css';
 import { Alert, Button, Input, Spin, Tag, Tooltip, message } from 'antd';
 import {
   ApartmentOutlined,
+  BookOutlined,
   CheckCircleFilled,
   CloudSyncOutlined,
+  DeleteOutlined,
   EditOutlined,
   ExclamationCircleFilled,
   FileDoneOutlined,
+  HistoryOutlined,
   PlusOutlined,
   ReloadOutlined,
   SafetyCertificateOutlined,
+  SaveOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import type {
@@ -51,6 +55,23 @@ import {
   temporaryNotebookStorageKey,
   type TemporaryNotebookIdentity,
 } from '../../features/classroom/temporaryNotebook';
+import {
+  LEARNING_LEDGER_UPDATED,
+  listLearningEvents,
+  readLearningDeskDraft,
+  writeLearningDeskDraft,
+  type LearningDeskDraftRecord,
+  type LearningDeskStickyNote,
+  type LearningDeskStroke,
+  type LearningEventRecord,
+} from '../../features/classroom/learningLedger';
+import {
+  buildLearningDeskSeed,
+  markdownToSafeHtml,
+} from '../../features/classroom/learningDeskDocument';
+import LearningDeskEditor from '../../features/classroom/LearningDeskEditor';
+import LearningDeskDrawing from '../../features/classroom/LearningDeskDrawing';
+import './LessonCreate.css';
 
 interface CanvasNodeData {
   label: string;
@@ -75,6 +96,8 @@ type CanvasNode = Node<CanvasNodeData>;
 type CanvasEdge = Edge<CanvasEdgeData>;
 type CanvasPhase = 'loading' | 'ready' | 'error' | 'conflict';
 type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+type DeskTool = 'write' | 'draw' | 'map' | 'trail';
+type DeskSaveStatus = 'loading' | 'idle' | 'saving' | 'saved' | 'error';
 type DossierState =
   | { phase: 'idle' }
   | { phase: 'loading' }
@@ -350,6 +373,19 @@ export default function LessonCreate({
   );
   const [temporaryNote, setTemporaryNote] = useState('');
   const [temporaryNoteUpdatedAt, setTemporaryNoteUpdatedAt] = useState('');
+  const [temporaryNoteLoadedKey, setTemporaryNoteLoadedKey] = useState('');
+  const [deskTool, setDeskTool] = useState<DeskTool>('write');
+  const [deskDraft, setDeskDraft] = useState<LearningDeskDraftRecord | null>(null);
+  const [deskTitle, setDeskTitle] = useState('');
+  const [deskBodyHtml, setDeskBodyHtml] = useState('');
+  const [deskBodyMarkdown, setDeskBodyMarkdown] = useState('');
+  const [stickyNotes, setStickyNotes] = useState<LearningDeskStickyNote[]>([]);
+  const [drawingStrokes, setDrawingStrokes] = useState<LearningDeskStroke[]>([]);
+  const [learningEvents, setLearningEvents] = useState<LearningEventRecord[]>([]);
+  const [deskSaveStatus, setDeskSaveStatus] = useState<DeskSaveStatus>('loading');
+  const [deskSavedAt, setDeskSavedAt] = useState<Date | null>(null);
+  const [deskDirtyToken, setDeskDirtyToken] = useState(0);
+  const [deskHydrated, setDeskHydrated] = useState(false);
   const [nodes, setNodes, applyNodeChanges] = useNodesState<CanvasNodeData>([]);
   const [edges, setEdges, applyEdgeChanges] = useEdgesState<CanvasEdgeData>([]);
   const [newLabel, setNewLabel] = useState('');
@@ -373,12 +409,15 @@ export default function LessonCreate({
   const editVersionRef = useRef(0);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const errorNotifiedRef = useRef(false);
+  const deskSaveTimerRef = useRef<number | null>(null);
+  const deskLoadGenerationRef = useRef(0);
 
   useEffect(() => {
     const refresh = () => {
       const record = readTemporaryNotebook(window.localStorage, temporaryNoteIdentity);
       setTemporaryNote(record?.body ?? '');
       setTemporaryNoteUpdatedAt(record?.body.trim() ? record.updated_at : '');
+      setTemporaryNoteLoadedKey(temporaryNoteKey);
     };
     const onStorage = (event: StorageEvent) => {
       if (event.key === temporaryNoteKey) refresh();
@@ -393,6 +432,100 @@ export default function LessonCreate({
   }, [temporaryNoteIdentity, temporaryNoteKey]);
 
   useEffect(() => {
+    if (temporaryNoteLoadedKey !== temporaryNoteKey) return undefined;
+    const generation = deskLoadGenerationRef.current + 1;
+    deskLoadGenerationRef.current = generation;
+    if (deskSaveTimerRef.current !== null) {
+      window.clearTimeout(deskSaveTimerRef.current);
+      deskSaveTimerRef.current = null;
+    }
+    setDeskHydrated(false);
+    setDeskSaveStatus('loading');
+    setDeskDirtyToken(0);
+
+    Promise.all([
+      readLearningDeskDraft(temporaryNoteIdentity),
+      listLearningEvents(temporaryNoteIdentity),
+    ]).then(([record, events]) => {
+      if (deskLoadGenerationRef.current !== generation) return;
+      const seed = buildLearningDeskSeed({
+        lessonTitle: lesson.title,
+        temporaryNote,
+        dossier: null,
+      });
+      setDeskDraft(record);
+      setDeskTitle(record?.title ?? seed.title);
+      setDeskBodyHtml(record?.body_html ?? seed.bodyHtml);
+      setDeskBodyMarkdown(record?.body_markdown ?? seed.bodyMarkdown);
+      setStickyNotes(record?.sticky_notes ?? seed.stickyNotes);
+      setDrawingStrokes(record?.drawing_strokes ?? []);
+      setLearningEvents(events);
+      setDeskSavedAt(record ? new Date(record.updated_at) : null);
+      setDeskSaveStatus(record ? 'saved' : 'idle');
+      setDeskHydrated(true);
+    }).catch(() => {
+      if (deskLoadGenerationRef.current !== generation) return;
+      setDeskSaveStatus('error');
+      setDeskHydrated(true);
+    });
+
+    return () => {
+      deskLoadGenerationRef.current += 1;
+      if (deskSaveTimerRef.current !== null) {
+        window.clearTimeout(deskSaveTimerRef.current);
+        deskSaveTimerRef.current = null;
+      }
+    };
+  }, [lesson.title, temporaryNoteIdentity, temporaryNoteKey, temporaryNoteLoadedKey]);
+
+  useEffect(() => {
+    const refresh = () => {
+      void listLearningEvents(temporaryNoteIdentity).then(setLearningEvents);
+    };
+    window.addEventListener(LEARNING_LEDGER_UPDATED, refresh);
+    return () => window.removeEventListener(LEARNING_LEDGER_UPDATED, refresh);
+  }, [temporaryNoteIdentity]);
+
+  useEffect(() => {
+    if (!deskHydrated || deskDirtyToken === 0) return undefined;
+    setDeskSaveStatus('saving');
+    if (deskSaveTimerRef.current !== null) window.clearTimeout(deskSaveTimerRef.current);
+    const generation = deskLoadGenerationRef.current;
+    deskSaveTimerRef.current = window.setTimeout(() => {
+      deskSaveTimerRef.current = null;
+      void writeLearningDeskDraft(temporaryNoteIdentity, {
+        title: deskTitle,
+        body_html: deskBodyHtml,
+        body_markdown: deskBodyMarkdown,
+        sticky_notes: stickyNotes,
+        drawing_strokes: drawingStrokes,
+      }, deskDraft).then((saved) => {
+        if (deskLoadGenerationRef.current !== generation) return;
+        setDeskDraft(saved);
+        setDeskSavedAt(new Date(saved.updated_at));
+        setDeskSaveStatus('saved');
+      }).catch(() => {
+        if (deskLoadGenerationRef.current === generation) setDeskSaveStatus('error');
+      });
+    }, 520);
+    return () => {
+      if (deskSaveTimerRef.current !== null) {
+        window.clearTimeout(deskSaveTimerRef.current);
+        deskSaveTimerRef.current = null;
+      }
+    };
+  }, [
+    deskBodyHtml,
+    deskBodyMarkdown,
+    deskDirtyToken,
+    deskHydrated,
+    deskTitle,
+    drawingStrokes,
+    stickyNotes,
+    temporaryNoteIdentity,
+  ]);
+
+  useEffect(() => {
     nodesRef.current = nodes;
   }, [nodes]);
 
@@ -402,7 +535,7 @@ export default function LessonCreate({
 
   useEffect(() => {
     setFlowReady(false);
-    if (!active || canvasPhase === 'loading' || canvasPhase === 'error') return;
+    if (!active || deskTool !== 'map' || canvasPhase === 'loading' || canvasPhase === 'error') return;
 
     const stage = canvasStageRef.current;
     if (!stage) return;
@@ -416,7 +549,7 @@ export default function LessonCreate({
     const observer = new ResizeObserver(updateReadiness);
     observer.observe(stage);
     return () => observer.disconnect();
-  }, [active, canvasPhase]);
+  }, [active, canvasPhase, deskTool]);
 
   const loadCanvas = useCallback(async () => {
     const pendingSaves = saveQueueRef.current;
@@ -873,6 +1006,130 @@ export default function LessonCreate({
     ? isDossierImported(dossier, nodes, edges)
     : false;
 
+  const markDeskDirty = useCallback(() => {
+    setDeskDirtyToken((current) => current + 1);
+    setDeskSaveStatus('saving');
+  }, []);
+
+  const changeDeskTitle = (value: string) => {
+    setDeskTitle(value);
+    markDeskDirty();
+  };
+
+  const changeDeskDocument = (next: { html: string; markdown: string }) => {
+    setDeskBodyHtml(next.html);
+    setDeskBodyMarkdown(next.markdown);
+    markDeskDirty();
+  };
+
+  const changeDrawing = (next: LearningDeskStroke[]) => {
+    setDrawingStrokes(next);
+    markDeskDirty();
+  };
+
+  const addStickyNote = () => {
+    const colors: LearningDeskStickyNote['color'][] = ['ochre', 'jade', 'cinnabar'];
+    setStickyNotes((current) => [...current, {
+      note_id: `note:${Date.now().toString(36)}:${Math.random().toString(36).slice(2)}`,
+      body: '',
+      color: colors[current.length % colors.length],
+    }]);
+    markDeskDirty();
+  };
+
+  const updateStickyNote = (noteId: string, body: string) => {
+    setStickyNotes((current) => current.map(
+      (note) => note.note_id === noteId ? { ...note, body } : note,
+    ));
+    markDeskDirty();
+  };
+
+  const removeStickyNote = (noteId: string) => {
+    setStickyNotes((current) => current.filter((note) => note.note_id !== noteId));
+    markDeskDirty();
+  };
+
+  const temporaryNoteImported = Boolean(temporaryNote.trim()) && stickyNotes.some(
+    (note) => note.body.trim() === temporaryNote.trim(),
+  );
+
+  const importTemporaryNote = () => {
+    const body = temporaryNote.trim();
+    if (!body || temporaryNoteImported) return;
+    const nextMarkdown = `${deskBodyMarkdown.trim()}\n\n## 临时笔记\n${body}`.trim();
+    setDeskBodyMarkdown(nextMarkdown);
+    setDeskBodyHtml(markdownToSafeHtml(nextMarkdown));
+    setStickyNotes((current) => [...current, {
+      note_id: `temporary:${temporaryNoteUpdatedAt || Date.now().toString(36)}`,
+      body: body.slice(0, 1000),
+      color: 'ochre',
+    }]);
+    markDeskDirty();
+    setDeskTool('write');
+  };
+
+  const dossierInDesk = Boolean(dossier) && stickyNotes.some(
+    (note) => note.note_id === `dossier:${dossier?.dossier_id}`,
+  );
+
+  const importDossierToDesk = () => {
+    if (!dossier || dossierInDesk) return;
+    const choiceLines = dossier.key_choices.map(
+      (choice) => `- 第 ${choice.turn_no} 回合：${choice.choice}${choice.consequence ? `——${choice.consequence}` : ''}`,
+    );
+    const parts = [
+      deskBodyMarkdown.trim(),
+      `## 推演回看：${dossier.title}`,
+      dossier.strategy_summary,
+      ...choiceLines,
+      '## 历史解释',
+      dossier.historical_explanation,
+    ].filter(Boolean);
+    const nextMarkdown = parts.join('\n\n');
+    setDeskBodyMarkdown(nextMarkdown);
+    setDeskBodyHtml(markdownToSafeHtml(nextMarkdown));
+    setStickyNotes((current) => [...current, {
+      note_id: `dossier:${dossier.dossier_id}`,
+      body: dossier.strategy_summary.slice(0, 1000),
+      color: 'jade',
+    }]);
+    markDeskDirty();
+    setDeskTool('write');
+  };
+
+  const saveDeskNow = async () => {
+    if (!deskHydrated) return;
+    if (deskSaveTimerRef.current !== null) {
+      window.clearTimeout(deskSaveTimerRef.current);
+      deskSaveTimerRef.current = null;
+    }
+    setDeskSaveStatus('saving');
+    try {
+      const saved = await writeLearningDeskDraft(temporaryNoteIdentity, {
+        title: deskTitle,
+        body_html: deskBodyHtml,
+        body_markdown: deskBodyMarkdown,
+        sticky_notes: stickyNotes,
+        drawing_strokes: drawingStrokes,
+      }, deskDraft);
+      setDeskDraft(saved);
+      setDeskSavedAt(new Date(saved.updated_at));
+      setDeskSaveStatus('saved');
+    } catch {
+      setDeskSaveStatus('error');
+    }
+  };
+
+  const deskSaveLabel = deskSaveStatus === 'loading'
+    ? '正在展开书案…'
+    : deskSaveStatus === 'saving'
+      ? '正在保存本机草稿…'
+      : deskSaveStatus === 'error'
+        ? '本机保存失败'
+        : deskSaveStatus === 'saved' && deskSavedAt
+          ? `本机已保存 ${formatHm(deskSavedAt)}`
+          : '尚未产生修改';
+
   const renderSaveStatus = () => {
     if (canvasPhase === 'loading') {
       return <span className="chrono-canvas-save-status">加载中...</span>;
@@ -922,6 +1179,219 @@ export default function LessonCreate({
 
   return (
     <div className="chrono-create-layout">
+      <section className="chrono-learning-desk" aria-labelledby="chrono-learning-desk-title">
+        <header className="chrono-learning-desk-masthead">
+          <div>
+            <span className="chrono-learning-desk-seal" aria-hidden="true">录</span>
+            <div>
+              <p>第四阶段 · 你的历史学习成果</p>
+              <h2 id="chrono-learning-desk-title">学习书案</h2>
+              <span>正文、便签、手绘、导图与前三阶段留痕，在这里汇成一份可继续修改的个人卷宗。</span>
+            </div>
+          </div>
+          <div className={`chrono-desk-save-state ${deskSaveStatus}`} aria-live="polite">
+            {deskSaveStatus === 'saving' ? <CloudSyncOutlined spin /> : <SaveOutlined />}
+            <span>{deskSaveLabel}</span>
+            {deskSaveStatus === 'error' ? (
+              <Button size="small" type="link" onClick={() => void saveDeskNow()}>重试</Button>
+            ) : null}
+          </div>
+        </header>
+
+        <div className="chrono-learning-desk-shell">
+          <aside className="chrono-desk-inbox" aria-label="本课材料匣">
+            <header>
+              <span>材料匣</span>
+              <strong>{learningEvents.length} 条学习留痕</strong>
+            </header>
+
+            <article className={temporaryNote.trim() ? '' : 'is-empty'}>
+              <div><EditOutlined /><strong>临时笔记</strong></div>
+              <p>{temporaryNote.trim() || '助教浮窗中的随手记会出现在这里。'}</p>
+              {temporaryNoteUpdatedAt ? <time>{formatHm(new Date(temporaryNoteUpdatedAt))} 更新</time> : null}
+              <Button
+                size="small"
+                disabled={!temporaryNote.trim() || temporaryNoteImported}
+                onClick={importTemporaryNote}
+              >{temporaryNoteImported ? '已收入正文' : '收入正文'}</Button>
+            </article>
+
+            <article className={dossier ? '' : 'is-empty'}>
+              <div><FileDoneOutlined /><strong>推演卷宗</strong></div>
+              <p>{dossier?.strategy_summary || '完成历史抉择后，可把选择与解释整理进正文。'}</p>
+              <Button
+                size="small"
+                disabled={!dossier || dossierInDesk}
+                onClick={importDossierToDesk}
+              >{dossierInDesk ? '已收入正文' : '整理进正文'}</Button>
+            </article>
+
+            <article>
+              <div><ApartmentOutlined /><strong>知识导图</strong></div>
+              <p>{nodes.length} 个节点，{edges.length} 条关系。导图继续同步到后端学习资产。</p>
+              {renderSaveStatus()}
+            </article>
+          </aside>
+
+          <div className="chrono-desk-workspace">
+            <nav className="chrono-desk-tools" aria-label="书案工具">
+              {([
+                ['write', '正文与便签', <BookOutlined key="write-icon" />],
+                ['draw', '手写与绘图', <EditOutlined key="draw-icon" />],
+                ['map', '知识导图', <ApartmentOutlined key="map-icon" />],
+                ['trail', '学习轨迹', <HistoryOutlined key="trail-icon" />],
+              ] as const).map(([tool, label, icon]) => (
+                <button
+                  type="button"
+                  key={tool}
+                  className={deskTool === tool ? 'active' : ''}
+                  aria-pressed={deskTool === tool}
+                  onClick={() => setDeskTool(tool)}
+                >
+                  {icon}<span>{label}</span>
+                </button>
+              ))}
+            </nav>
+
+            {!deskHydrated ? (
+              <div className="chrono-create-loading"><Spin /><span>正在展开你的书案…</span></div>
+            ) : deskTool === 'write' ? (
+              <div className="chrono-desk-writing-layout">
+                <LearningDeskEditor
+                  title={deskTitle}
+                  html={deskBodyHtml}
+                  markdown={deskBodyMarkdown}
+                  onTitleChange={changeDeskTitle}
+                  onDocumentChange={changeDeskDocument}
+                />
+                <aside className="chrono-desk-stickies" aria-label="书案便签">
+                  <header>
+                    <div><strong>便签</strong><span>拖思路之前，先把它写下来</span></div>
+                    <Button size="small" icon={<PlusOutlined />} onClick={addStickyNote}>新便签</Button>
+                  </header>
+                  <div>
+                    {stickyNotes.length > 0 ? stickyNotes.map((note) => (
+                      <article className={note.color} key={note.note_id}>
+                        <Input.TextArea
+                          aria-label="便签内容"
+                          value={note.body}
+                          maxLength={1000}
+                          autoSize={{ minRows: 4 }}
+                          onChange={(event) => updateStickyNote(note.note_id, event.target.value)}
+                        />
+                        <Button
+                          type="text"
+                          size="small"
+                          danger
+                          aria-label="删除便签"
+                          icon={<DeleteOutlined />}
+                          onClick={() => removeStickyNote(note.note_id)}
+                        />
+                      </article>
+                    )) : (
+                      <button type="button" className="chrono-desk-empty-sticky" onClick={addStickyNote}>
+                        <PlusOutlined /> 添加第一张便签
+                      </button>
+                    )}
+                  </div>
+                </aside>
+              </div>
+            ) : deskTool === 'draw' ? (
+              <LearningDeskDrawing strokes={drawingStrokes} onChange={changeDrawing} />
+            ) : deskTool === 'trail' ? (
+              <section className="chrono-learning-trail" aria-label="前三阶段学习轨迹">
+                <header>
+                  <div><span>自动留痕</span><h3>这份判断是怎样形成的</h3></div>
+                  <p>这里只记录当前账号在本课中的学习动作，不记录登录凭据，也不会替你编写结论。</p>
+                </header>
+                {learningEvents.length > 0 ? (
+                  <ol>
+                    {[...learningEvents].reverse().map((event) => (
+                      <li className={`kind-${event.kind}`} key={event.event_id}>
+                        <time>{formatHm(new Date(event.occurred_at))}</time>
+                        <span aria-hidden="true" />
+                        <div><strong>{event.title}</strong><p>{event.summary}</p></div>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <div className="chrono-learning-trail-empty">回到踏勘、抉择或召见进行学习，这里会自动形成轨迹。</div>
+                )}
+              </section>
+            ) : canvasPhase === 'error' ? (
+              <Alert
+                type="error"
+                showIcon
+                message="知识导图未能安全载入"
+                description={canvasError}
+                action={<Button icon={<ReloadOutlined />} onClick={() => void loadCanvas()}>重试</Button>}
+              />
+            ) : (
+              <section className="chrono-canvas-tool" aria-label="知识画板">
+                {canvasPhase === 'conflict' ? (
+                  <Alert
+                    banner
+                    type="warning"
+                    showIcon
+                    message="检测到其他页面保存的新版本，本页改动尚未写入。"
+                    description={canvasError}
+                    action={<Button size="small" icon={<ReloadOutlined />} onClick={() => void loadCanvas()}>载入最新版本</Button>}
+                  />
+                ) : null}
+                <div className="chrono-canvas-toolbar">
+                  <div className="chrono-canvas-add">
+                    <Input
+                      aria-label="新节点名称"
+                      value={newLabel}
+                      placeholder="新节点名称"
+                      disabled={canvasPhase !== 'ready'}
+                      onChange={(event) => setNewLabel(event.target.value)}
+                      onPressEnter={addNode}
+                    />
+                    <Tooltip title="添加知识节点">
+                      <Button
+                        icon={<PlusOutlined />}
+                        disabled={canvasPhase !== 'ready' || !newLabel.trim()}
+                        onClick={addNode}
+                      >添加</Button>
+                    </Tooltip>
+                  </div>
+                  <Button
+                    icon={<ThunderboltOutlined />}
+                    loading={generating}
+                    disabled={canvasPhase !== 'ready'}
+                    onClick={() => void aiGenerate()}
+                  >AI 扩充</Button>
+                  <div className="chrono-canvas-toolbar-spacer" />
+                  {renderSaveStatus()}
+                </div>
+                <div ref={canvasStageRef} className="chrono-canvas-stage">
+                  {canvasPhase === 'loading' || !flowReady ? (
+                    <div className="chrono-create-loading"><Spin /></div>
+                  ) : (
+                    <ReactFlow
+                      nodes={nodes}
+                      edges={edges}
+                      nodesDraggable={canvasPhase === 'ready'}
+                      nodesConnectable={canvasPhase === 'ready'}
+                      elementsSelectable={canvasPhase === 'ready'}
+                      onNodesChange={onNodesChange}
+                      onEdgesChange={onEdgesChange}
+                      onConnect={onConnect}
+                      fitView
+                    >
+                      <Background gap={20} color="#E5E7EB" />
+                      <Controls />
+                      <MiniMap pannable />
+                    </ReactFlow>
+                  )}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+      </section>
+
       <DossierPanel
         state={dossierState}
         canvasPhase={canvasPhase}
@@ -930,106 +1400,6 @@ export default function LessonCreate({
         onRetry={() => void loadDossier()}
         onOpenPractice={onOpenPractice}
       />
-
-      <section className={`chrono-temporary-note-handoff${temporaryNote.trim() ? '' : ' is-empty'}`} aria-label="本课临时笔记">
-        <header>
-          <div>
-            <EditOutlined />
-            <span>随手记 · 已带入卷宗</span>
-          </div>
-          {temporaryNoteUpdatedAt ? <time>本机保存 {formatHm(new Date(temporaryNoteUpdatedAt))}</time> : null}
-        </header>
-        {temporaryNote.trim() ? (
-          <p>{temporaryNote}</p>
-        ) : (
-          <p>本课还没有临时笔记。可随时打开右下角助教，在“临时笔记”中记录。</p>
-        )}
-      </section>
-
-      {canvasPhase === 'error' ? (
-        <Alert
-          type="error"
-          showIcon
-          message="知识画板未能安全载入"
-          description={canvasError}
-          action={(
-            <Button icon={<ReloadOutlined />} onClick={() => void loadCanvas()}>
-              重试
-            </Button>
-          )}
-        />
-      ) : (
-        <section className="chrono-canvas-tool" aria-label="知识画板">
-          {canvasPhase === 'conflict' ? (
-            <Alert
-              banner
-              type="warning"
-              showIcon
-              message="检测到其他页面保存的新版本，本页改动尚未写入。"
-              description={canvasError}
-              action={(
-                <Button size="small" icon={<ReloadOutlined />} onClick={() => void loadCanvas()}>
-                  载入最新版本
-                </Button>
-              )}
-            />
-          ) : null}
-          <div className="chrono-canvas-toolbar">
-            <div className="chrono-canvas-add">
-              <Input
-                aria-label="新节点名称"
-                value={newLabel}
-                placeholder="新节点名称"
-                disabled={canvasPhase !== 'ready'}
-                onChange={(event) => setNewLabel(event.target.value)}
-                onPressEnter={addNode}
-              />
-              <Tooltip title="添加知识节点">
-                <Button
-                  icon={<PlusOutlined />}
-                  disabled={canvasPhase !== 'ready' || !newLabel.trim()}
-                  onClick={addNode}
-                >
-                  添加
-                </Button>
-              </Tooltip>
-            </div>
-            <Button
-              icon={<ThunderboltOutlined />}
-              loading={generating}
-              disabled={canvasPhase !== 'ready'}
-              onClick={() => void aiGenerate()}
-            >
-              AI 扩充
-            </Button>
-            <div className="chrono-canvas-toolbar-spacer" />
-            {renderSaveStatus()}
-          </div>
-          <div ref={canvasStageRef} className="chrono-canvas-stage">
-            {canvasPhase === 'loading' || !flowReady ? (
-              <div className="chrono-create-loading">
-                <Spin />
-              </div>
-            ) : (
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                nodesDraggable={canvasPhase === 'ready'}
-                nodesConnectable={canvasPhase === 'ready'}
-                elementsSelectable={canvasPhase === 'ready'}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                fitView
-              >
-                <Background gap={20} color="#E5E7EB" />
-                <Controls />
-                <MiniMap pannable />
-              </ReactFlow>
-            )}
-          </div>
-        </section>
-      )}
     </div>
   );
 }
@@ -1088,7 +1458,7 @@ function DossierPanel({
   const projection = projectDossierKnowledge(dossier);
   const hasKnowledge = projection.nodes.length > 0;
   return (
-    <section className="chrono-dossier-band" aria-label="史官卷宗">
+    <section className="chrono-dossier-band chrono-dossier-archive" aria-label="史官卷宗">
       <header className="chrono-dossier-header">
         <div>
           <Tag color="gold" icon={<FileDoneOutlined />}>史官卷宗</Tag>
@@ -1105,51 +1475,56 @@ function DossierPanel({
           {imported ? '已导入画板' : '导入知识节点'}
         </Button>
       </header>
+      <details>
+        <summary>
+          <span>展开完整史官卷宗</span>
+          <small>{dossier.key_choices.length} 项选择 · {projection.nodes.length} 个知识节点 · {dossier.follow_up_questions.length} 个追问</small>
+        </summary>
+        <div className="chrono-dossier-grid">
+          <div className="chrono-dossier-section">
+            <h3>关键选择</h3>
+            {dossier.key_choices.length > 0 ? (
+              <ol className="chrono-dossier-choices">
+                {dossier.key_choices.map((choice) => (
+                  <li key={choice.turn_id}>
+                    <span>第 {choice.turn_no} 回合</span>
+                    <strong>{choice.choice}</strong>
+                    {choice.consequence ? <p>{choice.consequence}</p> : null}
+                  </li>
+                ))}
+              </ol>
+            ) : <p className="chrono-dossier-muted">本次卷宗没有关键选择记录。</p>}
+          </div>
 
-      <div className="chrono-dossier-grid">
-        <div className="chrono-dossier-section">
-          <h3>关键选择</h3>
-          {dossier.key_choices.length > 0 ? (
-            <ol className="chrono-dossier-choices">
-              {dossier.key_choices.map((choice) => (
-                <li key={choice.turn_id}>
-                  <span>第 {choice.turn_no} 回合</span>
-                  <strong>{choice.choice}</strong>
-                  {choice.consequence ? <p>{choice.consequence}</p> : null}
-                </li>
-              ))}
-            </ol>
-          ) : <p className="chrono-dossier-muted">本次卷宗没有关键选择记录。</p>}
-        </div>
+          <div className="chrono-dossier-section">
+            <h3>历史解释</h3>
+            <p>{dossier.historical_explanation || '教师尚未配置本结局的历史解释。'}</p>
+            {dossier.major_costs.length > 0 ? (
+              <div className="chrono-dossier-costs">
+                <span>主要代价</span>
+                {dossier.major_costs.map((cost) => <Tag key={cost}>{cost}</Tag>)}
+              </div>
+            ) : null}
+          </div>
 
-        <div className="chrono-dossier-section">
-          <h3>历史解释</h3>
-          <p>{dossier.historical_explanation || '教师尚未配置本结局的历史解释。'}</p>
-          {dossier.major_costs.length > 0 ? (
-            <div className="chrono-dossier-costs">
-              <span>主要代价</span>
-              {dossier.major_costs.map((cost) => <Tag key={cost}>{cost}</Tag>)}
+          <div className="chrono-dossier-section">
+            <h3>继续追问</h3>
+            {dossier.follow_up_questions.length > 0 ? (
+              <ul className="chrono-dossier-questions">
+                {dossier.follow_up_questions.map((question) => (
+                  <li key={question}>{question}</li>
+                ))}
+              </ul>
+            ) : <p className="chrono-dossier-muted">本次卷宗没有追加追问。</p>}
+            <div className="chrono-dossier-knowledge-count">
+              <ApartmentOutlined />
+              {hasKnowledge
+                ? `${projection.nodes.length} 个知识节点，${projection.edges.length} 条关系${projection.derived ? '（由封卷内容整理）' : ''}`
+                : '本次卷宗没有可导入的知识节点'}
             </div>
-          ) : null}
-        </div>
-
-        <div className="chrono-dossier-section">
-          <h3>继续追问</h3>
-          {dossier.follow_up_questions.length > 0 ? (
-            <ul className="chrono-dossier-questions">
-              {dossier.follow_up_questions.map((question) => (
-                <li key={question}>{question}</li>
-              ))}
-            </ul>
-          ) : <p className="chrono-dossier-muted">本次卷宗没有追加追问。</p>}
-          <div className="chrono-dossier-knowledge-count">
-            <ApartmentOutlined />
-            {hasKnowledge
-              ? `${projection.nodes.length} 个知识节点，${projection.edges.length} 条关系${projection.derived ? '（由封卷内容整理）' : ''}`
-              : '本次卷宗没有可导入的知识节点'}
           </div>
         </div>
-      </div>
+      </details>
     </section>
   );
 }

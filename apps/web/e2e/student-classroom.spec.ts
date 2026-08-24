@@ -181,6 +181,11 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
   await openStage(page, '卷宗');
   await expect(page.getByRole('region', { name: '史官卷宗' })).toBeVisible();
   await expect(page.getByText('已封卷')).toBeVisible();
+  await expect(page.getByRole('region', { name: '学习书案' })).toBeVisible();
+  const deskTitle = page.getByRole('textbox', { name: '学习卷宗标题' });
+  await expect(deskTitle).toBeVisible();
+  await deskTitle.fill(`${lesson.title} · 我的学习卷宗`);
+  await expect(page.locator('.chrono-desk-save-state')).toContainText('本机已保存');
   const importButton = page.getByRole('button', { name: /导入知识节点|已导入画板/ });
   await expect(importButton).toBeVisible();
   const alreadyImported = (await importButton.innerText()).includes('已导入画板');
@@ -189,10 +194,14 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
   await expect(page.locator('.chrono-canvas-save-status')).toContainText(
     alreadyImported ? /已保存|画板已就绪/ : '已保存',
   );
+  await page.locator('.chrono-desk-tools button').filter({ hasText: '学习轨迹' }).click();
+  await expect(page.getByRole('region', { name: '前三阶段学习轨迹' })).toContainText('自由陈策');
 
   await page.reload();
   await expect(page.getByRole('button', { name: '已导入画板' })).toBeVisible();
   await expect(page.locator('.chrono-canvas-save-status')).toContainText(/已保存|画板已就绪/);
+  await expect(page.getByRole('textbox', { name: '学习卷宗标题' }))
+    .toHaveValue(`${lesson.title} · 我的学习卷宗`);
   await expectNoHorizontalOverflow(page);
 
   await page.goto('/admin/accounts');

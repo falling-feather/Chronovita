@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Input } from 'antd';
 import {
   BookOutlined,
@@ -35,6 +35,7 @@ import {
   writeTemporaryNotebook,
   type TemporaryNotebookIdentity,
 } from './temporaryNotebook';
+import { emitLearningEvent } from './learningLedger';
 
 const EXPERT_VALUE = '__expert__';
 type CompanionPane = 'ask' | 'notebook';
@@ -104,6 +105,8 @@ export default function LessonCompanion({
   const [note, setNote] = useState('');
   const [noteStatus, setNoteStatus] = useState<NoteStatus>('idle');
   const [loadedNoteKey, setLoadedNoteKey] = useState('');
+  const emittedNoteVersionRef = useRef('');
+  const persistedNoteBodyRef = useRef('');
 
   const selectedPerson = people.find((person) => person.person_id === speaker) ?? null;
   const selectedAsset = selectedPerson ? companionPortraitFor(lesson.id, selectedPerson) : null;
@@ -121,25 +124,40 @@ export default function LessonCompanion({
   useEffect(() => {
     const record = readTemporaryNotebook(window.localStorage, noteIdentity);
     setNote(record?.body ?? '');
+    persistedNoteBodyRef.current = record?.body ?? '';
     setNoteStatus(record ? 'saved' : 'idle');
     setLoadedNoteKey(noteIdentityKey);
   }, [noteIdentity, noteIdentityKey]);
 
   useEffect(() => {
     if (loadedNoteKey !== noteIdentityKey) return undefined;
+    if (note === persistedNoteBodyRef.current) return undefined;
     setNoteStatus('saving');
     const timer = window.setTimeout(() => {
       if (!note.trim()) {
         const cleared = clearTemporaryNotebook(window.localStorage, noteIdentity);
+        persistedNoteBodyRef.current = '';
         setNoteStatus(cleared ? 'idle' : 'error');
         window.dispatchEvent(new CustomEvent(TEMPORARY_NOTEBOOK_EVENT));
         return;
       }
       const result = writeTemporaryNotebook(window.localStorage, noteIdentity, note);
+      if (result.persisted) persistedNoteBodyRef.current = result.record.body;
       setNoteStatus(result.persisted ? 'saved' : 'error');
       window.dispatchEvent(new CustomEvent(TEMPORARY_NOTEBOOK_EVENT, {
         detail: result.record,
       }));
+      if (result.persisted && emittedNoteVersionRef.current !== result.record.updated_at) {
+        emittedNoteVersionRef.current = result.record.updated_at;
+        emitLearningEvent({
+          course_id: lesson.course_id,
+          lesson_id: lesson.id,
+          kind: 'temporary_note_saved',
+          title: '更新临时笔记',
+          summary: result.record.body.slice(0, 1200),
+          metadata: { character_count: result.record.body.length },
+        });
+      }
     }, 260);
     return () => window.clearTimeout(timer);
   }, [loadedNoteKey, note, noteIdentity, noteIdentityKey]);

@@ -25,6 +25,7 @@ import {
   companionPortraitUrl,
 } from '../../features/classroom/companionPortraitAssets';
 import RagAnswerCard from '../../features/classroom/RagAnswerCard';
+import { emitLearningEvent } from '../../features/classroom/learningLedger';
 import './LessonAsk.css';
 
 interface LegacyMessage { role: 'user' | 'assistant'; content: string }
@@ -152,6 +153,19 @@ function EvidenceLessonAsk({
         question: prompt,
       });
       setAnswers((current) => [...current, { question: prompt, answer }]);
+      const speaker = answerSpeaker(answer, people);
+      emitLearningEvent({
+        course_id: lesson.course_id,
+        lesson_id: lesson.id,
+        kind: 'question_answered',
+        title: `问${speaker.name}：${prompt}`,
+        summary: answer.body,
+        metadata: {
+          persona: answer.persona_mode,
+          citation_count: answer.citations.length,
+          supported: answer.answer_source !== 'insufficient_evidence',
+        },
+      });
       setQuestion('');
       window.requestAnimationFrame(() => inputRef.current?.focus());
     } catch (askError) {

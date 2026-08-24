@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import type { Keyword, Lesson, LessonPresentationResponse } from '../../utils/api';
 import { parseContentBlock, parseContentMarkup, type InlineMark } from '../../utils/contentMarkup';
+import { emitLearningEvent } from '../../features/classroom/learningLedger';
 import { normalizeReadingKeywords, splitReadingText } from './lessonReadingModel';
 
 const READING_LENSES = [
@@ -199,6 +200,15 @@ export default function LessonWatch({ lesson }: { lesson: Lesson }) {
 
   const selectKeyword = (keyword: Keyword) => {
     setSelectedWord(keyword.word);
+    if (selectedWord === keyword.word) return;
+    emitLearningEvent({
+      course_id: lesson.course_id,
+      lesson_id: lesson.id,
+      kind: 'keyword_opened',
+      title: `展开词条：${keyword.word}`,
+      summary: keyword.gloss,
+      metadata: { keyword: keyword.word },
+    });
   };
 
   return (

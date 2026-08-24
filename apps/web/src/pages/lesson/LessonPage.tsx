@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Alert, Button, Spin } from 'antd';
 import {
@@ -20,6 +20,15 @@ import CourseCoverPicture from '../../features/courses/CourseCoverPicture';
 import LessonWatch, { LessonWatchMedia } from './LessonWatch';
 import LessonAsk from './LessonAsk';
 import LessonPractice from './LessonPractice';
+import { useAuth } from '../../auth/AuthContext';
+import {
+  LEARNING_EVENT_REQUEST,
+  LEARNING_LEDGER_UPDATED,
+  appendLearningEvent,
+  isLearningEventRequest,
+  type LearningEventRequest,
+  type LearningScopeIdentity,
+} from '../../features/classroom/learningLedger';
 
 const LessonCreate = lazy(() => import('./LessonCreate'));
 const VALID_LAYERS = new Set(CLASSROOM_STAGES.map((stage) => stage.layer));
@@ -30,10 +39,64 @@ export default function LessonPage() {
   const requestedLayer = params.get('layer');
   const layer = (VALID_LAYERS.has(requestedLayer as ClassroomLayer) ? requestedLayer : 'watch') as ClassroomLayer;
   const nav = useNavigate();
+  const auth = useAuth();
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [presentation, setPresentation] = useState<LessonPresentationResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const enteredStagesRef = useRef(new Set<string>());
+
+  const learningIdentity = useMemo<LearningScopeIdentity | null>(() => {
+    const ownerId = auth.principal?.user_id
+      ?? (auth.mode === 'legacy-local' ? 'legacy-local' : '');
+    if (!ownerId || !courseId || !lessonId) return null;
+    return { ownerId, courseId, lessonId };
+  }, [auth.mode, auth.principal?.user_id, courseId, lessonId]);
+
+  const persistLearningEvent = useCallback(async (request: LearningEventRequest) => {
+    if (!learningIdentity) return;
+    try {
+      const record = await appendLearningEvent(learningIdentity, request);
+      window.dispatchEvent(new CustomEvent(LEARNING_LEDGER_UPDATED, { detail: record }));
+    } catch {
+      // 学习留痕是本地增强层，存储不可用不能阻断正式课堂流程。
+    }
+  }, [learningIdentity]);
+
+  useEffect(() => {
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail;
+      if (!isLearningEventRequest(detail)) return;
+      if (detail.course_id !== courseId || detail.lesson_id !== lessonId) return;
+      void persistLearningEvent(detail);
+    };
+    window.addEventListener(LEARNING_EVENT_REQUEST, receive);
+    return () => window.removeEventListener(LEARNING_EVENT_REQUEST, receive);
+  }, [courseId, lessonId, persistLearningEvent]);
+
+  useEffect(() => {
+    if (!lesson || !learningIdentity) return;
+    const key = `${learningIdentity.ownerId}:${courseId}:${lessonId}:${layer}`;
+    if (enteredStagesRef.current.has(key)) return;
+    enteredStagesRef.current.add(key);
+    try {
+      const storageKey = `chronovita.learning.stage.v1.${encodeURIComponent(key)}`;
+      const lastEnteredAt = Number(window.sessionStorage.getItem(storageKey) || 0);
+      if (Date.now() - lastEnteredAt < 30 * 60 * 1000) return;
+      window.sessionStorage.setItem(storageKey, String(Date.now()));
+    } catch {
+      // sessionStorage 不可用时仍依赖组件内去重。
+    }
+    const stage = classroomStage(layer);
+    void persistLearningEvent({
+      course_id: courseId,
+      lesson_id: lessonId,
+      kind: 'stage_entered',
+      title: `进入${stage.title}`,
+      summary: stage.purpose,
+      metadata: { layer },
+    });
+  }, [courseId, layer, learningIdentity, lesson, lessonId, persistLearningEvent]);
 
   useEffect(() => {
     let active = true;
