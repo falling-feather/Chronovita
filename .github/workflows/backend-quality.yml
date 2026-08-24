@@ -51,6 +51,7 @@ jobs:
         run: |
           npm test
           npm run build
+          npm run check:release-ui
           npm audit --audit-level=moderate
 
       - name: Install pinned API dependencies

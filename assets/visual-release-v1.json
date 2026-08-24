@@ -1,0 +1,101 @@
+{
+  "schema": "chronovita-visual-release/v1",
+  "release_version": "0.10.29",
+  "policy": {
+    "student_visuals": "Product visuals are original generated illustrations, project-authored procedural graphics, or explicitly attributed public-domain reference data.",
+    "historical_boundary": "Decorative images are teaching illustrations, never primary evidence, historical photographs, or claims of exact reconstruction.",
+    "runtime": "All required visual assets are local and the classroom makes no external media requests."
+  },
+  "families": [
+    {
+      "id": "course-covers",
+      "manifest_path": "apps/web/public/assets/courses/covers/manifest.json",
+      "manifest_schema": "chronovita-course-cover-assets/v1",
+      "manifest_bytes": 19528,
+      "manifest_sha256": "bea3f0c9aff60df3ed5a11e38c4d955bf6aae6d2e3ff74a26eb52cb28b044ac7",
+      "output_count": 60,
+      "output_bytes": 7088900,
+      "source_type": "project-original-generated",
+      "rights_note": "Original image-generation outputs created for Chronovita; no source photograph or third-party illustration is redistributed."
+    },
+    {
+      "id": "companion-portraits",
+      "manifest_path": "apps/web/public/assets/companions/portraits/manifest.json",
+      "manifest_schema": "chronovita-companion-portrait-assets/v1",
+      "manifest_bytes": 11263,
+      "manifest_sha256": "7889a253630203f4a6239515e669cead65a13eb0339a5a9be882e64c785285ef",
+      "output_count": 22,
+      "output_bytes": 823692,
+      "source_type": "project-original-generated",
+      "rights_note": "Original image-generation outputs created for Chronovita and presented as role-based teaching illustrations, not portraits from historical evidence."
+    },
+    {
+      "id": "game-scenes",
+      "manifest_path": "apps/web/public/assets/game-scenes/manifest.json",
+      "manifest_schema": "chronovita-game-scene-assets/v1",
+      "manifest_bytes": 2560,
+      "manifest_sha256": "a042a4278d8d8698e96d4b5497a2d214dd7b5a9b6669cae19ac88d5d8f7b1b7e",
+      "output_count": 4,
+      "output_bytes": 482928,
+      "source_type": "project-original-generated",
+      "rights_note": "Original image-generation outputs created for Chronovita; each scene is a teaching atmosphere image rather than a reconstructed historical site."
+    },
+    {
+      "id": "ask-paper",
+      "manifest_path": "apps/web/public/assets/ui/ask/manifest.json",
+      "manifest_schema": "chronovita-ask-paper-asset/v1",
+      "manifest_bytes": 751,
+      "manifest_sha256": "c1f67a7fab187cfb07b0716e89d6ead7eec17519e2877aee3957572ce61a8770",
+      "output_count": 1,
+      "output_bytes": 65950,
+      "source_type": "project-original-generated",
+      "rights_note": "Original neutral paper texture generated for Chronovita without copied text, marks, objects, or logos."
+    }
+  ],
+  "standalone_assets": [
+    {
+      "id": "terrain-atlas",
+      "path": "apps/web/public/assets/maps/chronovita-terrain-atlas-v1.webp",
+      "bytes": 575152,
+      "sha256": "6504ac5abb86c42c9feeabdd750610388ccc0a1efd2144f8ed5ac5e002405696",
+      "source_type": "project-original-generated",
+      "rights_note": "Original decoration generated for Chronovita; it contains no borders, labels, people, buildings, or asserted measurements."
+    },
+    {
+      "id": "modern-reference-outline",
+      "path": "apps/web/src/pages/courses/chinaReferencePath.ts",
+      "bytes": 9680,
+      "sha256": "d62c9f7cb0674cbcb6674dfe81b19d828034976386515cac6c8c76d5ea7bc039",
+      "source_type": "public-domain-derived-data",
+      "rights_note": "Derived by the repository script from Natural Earth 1:50m Admin 0 public-domain data; used only as a low-contrast modern location reference."
+    }
+  ],
+  "procedural_assets": [
+    {
+      "id": "sundial-scene",
+      "source_files": [
+        {
+          "path": "apps/web/src/features/visual/SundialScene.tsx",
+          "bytes": 10009,
+          "sha256": "d0ca7cf9120b3e787619b39773a3338d1ad4be859f5860edbea773d06a681ec1"
+        },
+        {
+          "path": "apps/web/src/features/visual/sundialModel.ts",
+          "bytes": 1100,
+          "sha256": "aa0297e4b1f472c5727fb2a9e98f4013c37da683789eedb22af8e76d88c10341"
+        }
+      ],
+      "runtime": "three@0.185.1",
+      "runtime_license": "MIT",
+      "fallback": "Inline SVG with equivalent decorative meaning; enabled for reduced motion, unavailable WebGL, or failed dynamic import."
+    }
+  ],
+  "budgets": {
+    "public_visual_assets_bytes": 10000000,
+    "dist_total_bytes": 12500000,
+    "initial_entry_raw_bytes": 1000000,
+    "largest_non_three_js_chunk_bytes": 260000,
+    "three_chunk_bytes": 530000,
+    "largest_css_chunk_bytes": 180000
+  }
+}

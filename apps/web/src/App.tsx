@@ -44,17 +44,17 @@ import {
   type UserRole,
 } from './auth/types';
 import { APP_VERSION_LABEL } from './version';
-import HomePage from './pages/HomePage';
-import CoursesPage from './pages/CoursesPage';
-import CourseDetailPage from './pages/CourseDetailPage';
-import LessonPage from './pages/lesson/LessonPage';
-import LearningPage from './pages/LearningPage';
-import PracticePage from './pages/PracticePage';
-import ProfilePage from './pages/ProfilePage';
-import LoginPage from './pages/LoginPage';
 import { bindMessage } from './utils/toast';
 import { toast } from './utils/toast';
 
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const HomePage = lazy(() => import('./pages/HomePage'));
+const CoursesPage = lazy(() => import('./pages/CoursesPage'));
+const CourseDetailPage = lazy(() => import('./pages/CourseDetailPage'));
+const LessonPage = lazy(() => import('./pages/lesson/LessonPage'));
+const LearningPage = lazy(() => import('./pages/LearningPage'));
+const PracticePage = lazy(() => import('./pages/PracticePage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const AdminContentPage = lazy(() => import('./pages/AdminContentPage'));
 const AdminContentPreviewPage = lazy(() => import('./pages/AdminContentPreviewPage'));
 const AdminAccountsPage = lazy(() => import('./pages/AdminAccountsPage'));
@@ -327,38 +327,40 @@ function ShellLayout() {
 
 function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/workspace" element={<RoleHome />} />
-      <Route element={<ShellLayout />}>
-        <Route path="/forbidden" element={<ForbiddenPage />} />
+    <Suspense fallback={<AuthLoadingScreen />}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/workspace" element={<RoleHome />} />
+        <Route element={<ShellLayout />}>
+          <Route path="/forbidden" element={<ForbiddenPage />} />
 
-        <Route element={<RequireRoles roles={STUDENT_ROLES} />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/courses" element={<CoursesPage />} />
-          <Route path="/courses/:courseId" element={<CourseDetailPage />} />
-          <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
-          <Route path="/learning" element={<LearningPage />} />
-          <Route path="/practice" element={<PracticePage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route element={<RequireRoles roles={STUDENT_ROLES} />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+            <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
+            <Route path="/learning" element={<LearningPage />} />
+            <Route path="/practice" element={<PracticePage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
+
+          <Route element={<RequireRoles roles={CONTENT_ROLES} />}>
+            <Route path="/admin/content" element={<AdminContentPage />} />
+            <Route path="/admin/content/preview" element={<AdminContentPreviewPage />} />
+          </Route>
+
+          <Route element={<RequireRoles roles={TEACHER_ROLES} allowLegacy={false} />}>
+            <Route path="/teacher/learning" element={<TeacherLearningReviewPage />} />
+          </Route>
+
+          <Route element={<RequireRoles roles={ADMIN_ROLES} allowLegacy={false} />}>
+            <Route path="/admin/accounts" element={<AdminAccountsPage />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/workspace" replace />} />
         </Route>
-
-        <Route element={<RequireRoles roles={CONTENT_ROLES} />}>
-          <Route path="/admin/content" element={<AdminContentPage />} />
-          <Route path="/admin/content/preview" element={<AdminContentPreviewPage />} />
-        </Route>
-
-        <Route element={<RequireRoles roles={TEACHER_ROLES} allowLegacy={false} />}>
-          <Route path="/teacher/learning" element={<TeacherLearningReviewPage />} />
-        </Route>
-
-        <Route element={<RequireRoles roles={ADMIN_ROLES} allowLegacy={false} />}>
-          <Route path="/admin/accounts" element={<AdminAccountsPage />} />
-        </Route>
-
-        <Route path="*" element={<Navigate to="/workspace" replace />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }
 
