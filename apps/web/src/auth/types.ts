@@ -6,6 +6,7 @@ export type AuthPermission =
   | 'content.author'
   | 'content.review'
   | 'content.publish'
+  | 'student.feedback'
   | 'student.summary'
   | 'audit.review'
   | 'auth.manage_users'
@@ -53,7 +54,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 const ROLE_PERMISSIONS: Record<UserRole, readonly AuthPermission[]> = {
   student: ['student.own'],
-  teacher: ['content.read', 'content.author', 'student.summary'],
+  teacher: ['content.read', 'content.author', 'student.summary', 'student.feedback'],
   reviewer: ['content.read', 'content.review', 'audit.review'],
   admin: [
     'auth.manage_users',
@@ -62,6 +63,7 @@ const ROLE_PERMISSIONS: Record<UserRole, readonly AuthPermission[]> = {
     'content.author',
     'content.review',
     'content.publish',
+    'student.feedback',
     'student.summary',
   ],
 };

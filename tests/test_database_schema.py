@@ -105,7 +105,7 @@ class DatabaseSchemaTests(unittest.TestCase):
                 ).mappings().all()
 
             self.assertTrue(first.is_current)
-            self.assertEqual(first.current_version, 3)
+            self.assertEqual(first.current_version, 4)
             self.assertEqual(second, first)
             self.assertEqual(second_rows, first_rows)
             self.assertFalse(
@@ -113,7 +113,7 @@ class DatabaseSchemaTests(unittest.TestCase):
             )
             self.assertEqual(
                 [row["version"] for row in second_rows],
-                [1, 2, 3],
+                [1, 2, 3, 4],
             )
         finally:
             engine.dispose()
@@ -380,7 +380,7 @@ class DatabaseSchemaTests(unittest.TestCase):
                         schema_migrations_table.c.version
                     )
                 ).scalars().all()
-            self.assertEqual(versions, [1, 2, 3])
+            self.assertEqual(versions, [1, 2, 3, 4])
         finally:
             for engine in engines:
                 engine.dispose()
@@ -421,6 +421,7 @@ class DatabaseSchemaTests(unittest.TestCase):
                 "ef442876bcc86dde1d951c12c7fd7b9112ac47d635bdff4b51f580b4f3834230",
                 "6088af90a040f4890eb682d9528bb443458af2d8ef467662fd9a0a0a9538912d",
                 "94d49ee4d1e5e05bad4fc0f69cd394298c3789c1461df9f2b6205b69bb8652fe",
+                "f8b9d55fc2d251d447e29d7922099fc67b94023f7f21cef229f635e03d6bb304",
             ),
         )
 
@@ -534,9 +535,9 @@ class DatabaseSchemaTests(unittest.TestCase):
         with engine.begin() as connection:
             connection.execute(
                 insert(schema_migrations_table).values(
-                    version=4,
-                    migration_id="future-v4",
-                    contract_checksum="4" * 64,
+                    version=5,
+                    migration_id="future-v5",
+                    contract_checksum="5" * 64,
                     applied_at=NOW,
                     app_version="99.0.0",
                 )
@@ -553,7 +554,7 @@ class DatabaseSchemaTests(unittest.TestCase):
         with engine.begin() as connection:
             connection.execute(
                 delete(schema_migrations_table).where(
-                    schema_migrations_table.c.version.in_((2, 3))
+                    schema_migrations_table.c.version.in_((2, 3, 4))
                 )
             )
 

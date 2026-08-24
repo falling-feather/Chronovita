@@ -110,7 +110,9 @@ class AuditEvent(AuthModel):
 
 PERMISSIONS_BY_ROLE: dict[UserRole, frozenset[str]] = {
     "student": frozenset({"student.own"}),
-    "teacher": frozenset({"content.read", "content.author", "student.summary"}),
+    "teacher": frozenset(
+        {"content.read", "content.author", "student.summary", "student.feedback"}
+    ),
     "reviewer": frozenset({"content.read", "content.review", "audit.review"}),
     "admin": frozenset(
         {
@@ -120,6 +122,7 @@ PERMISSIONS_BY_ROLE: dict[UserRole, frozenset[str]] = {
             "content.author",
             "content.review",
             "content.publish",
+            "student.feedback",
             "student.summary",
         }
     ),

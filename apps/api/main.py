@@ -30,6 +30,7 @@ from services import content, persistence, rag, saga
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
+from services.learning_assets import configure_learning_assets, shutdown_learning_assets
 from services.operations import (
     LoginRateLimitMiddleware,
     RequestBodyLimitMiddleware,
@@ -93,6 +94,7 @@ async def lifespan(app: FastAPI):
             catalog_path=settings.game_catalog_path,
             engine=engine,
         )
+        configure_learning_assets(engine)
         rag.configure_rag(
             index_path=settings.rag_index_path,
             model_root=settings.rag_model_root,
@@ -107,6 +109,7 @@ async def lifespan(app: FastAPI):
         app.state.database_engine = None
         saga.clear_states()
         rag.shutdown_rag()
+        shutdown_learning_assets()
         shutdown_game_runtime()
         shutdown_identity()
         persistence.close_engine()
