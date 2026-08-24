@@ -51,9 +51,9 @@ test('桌面首页减弱动态且山河图可完整键盘操作', async ({ page 
 
   await expect(page.getByRole('heading', { name: '拨动天光，进入历史现场' })).toBeVisible();
   await expect(page.locator('.chrono-home-era-rail')).toBeVisible();
-  await expect(page.locator('.chrono-sundial-scene')).toHaveClass(/is-fallback/);
-  await expect(page.locator('.chrono-sundial-fallback')).toBeVisible();
-  expect(requestedScripts.some((url) => url.includes('three.module-'))).toBe(false);
+  await expect(page.locator('.chrono-home-v4')).toHaveAttribute('data-intro-renderer', 'skipped');
+  await expect(page.locator('.chrono-home-intro')).toHaveCount(0);
+  expect(requestedScripts.some((url) => url.includes('three'))).toBe(false);
   const homeDimensions = await page.evaluate(() => ({
     clientHeight: document.documentElement.clientHeight,
     scrollHeight: document.documentElement.scrollHeight,
@@ -72,8 +72,7 @@ test('桌面首页减弱动态且山河图可完整键盘操作', async ({ page 
   await expect(page.locator('.chrono-eramap-zoom-level')).toHaveText('100%');
 
   const firstCity = page.locator('.chrono-city-node').first();
-  await firstCity.focus();
-  await page.keyboard.press('Enter');
+  await firstCity.press('Enter');
   await expect(page.locator('.chrono-map-city-card.is-visible')).toBeVisible();
 
   const dimensions = await page.evaluate(() => ({
@@ -84,9 +83,10 @@ test('桌面首页减弱动态且山河图可完整键盘操作', async ({ page 
   expect(issues).toEqual([]);
 });
 
-test('WebGL 不可用时日晷静态降级且旗舰课入口不受阻', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'classroom-1366x768', 'One desktop project is sufficient for WebGL failure injection.');
+test('WebGPU 与 WebGL2 不可用时日晷静态降级且旗舰课入口不受阻', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'classroom-1366x768', 'One desktop project is sufficient for renderer failure injection.');
   await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'gpu', { configurable: true, value: undefined });
     const originalGetContext = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function getContext(type: string, ...args: unknown[]) {
       if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') return null;
@@ -99,8 +99,8 @@ test('WebGL 不可用时日晷静态降级且旗舰课入口不受阻', async ({
   await login(page, testInfo.project.name);
   await expect(page).toHaveURL(`${BASE_URL}/`);
 
-  await expect(page.locator('.chrono-sundial-scene')).toHaveClass(/is-fallback/);
-  await expect(page.locator('.chrono-sundial-fallback')).toBeVisible();
-  await expect(page.getByRole('button', { name: /进入旗舰课堂|继续上次学习/ })).toBeEnabled();
+  await expect(page.locator('.chrono-chronodial-scene')).toHaveClass(/is-fallback/, { timeout: 2_200 });
+  await expect(page.locator('.chrono-chronodial-fallback')).toBeVisible();
+  await expect(page.getByRole('button', { name: /进入旗舰课堂|继续学习/ })).toBeEnabled();
   await expect(page.getByRole('button', { name: '浏览课程' })).toBeEnabled();
 });

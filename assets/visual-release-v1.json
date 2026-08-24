@@ -1,6 +1,6 @@
 {
   "schema": "chronovita-visual-release/v1",
-  "release_version": "0.10.30",
+  "release_version": "0.10.31",
   "policy": {
     "student_visuals": "Product visuals are original generated illustrations, project-authored procedural graphics, or explicitly attributed public-domain reference data.",
     "historical_boundary": "Decorative images are teaching illustrations, never primary evidence, historical photographs, or claims of exact reconstruction.",
@@ -61,6 +61,28 @@
       "output_bytes": 1362564,
       "source_type": "project-original-generated",
       "rights_note": "Original image-generation outputs created for Chronovita entry presentation; all scenes are labelled teaching illustrations rather than evidence, photographs, portraits, or exact reconstructions."
+    },
+    {
+      "id": "home-era-subjects",
+      "manifest_path": "apps/web/public/assets/home-era/manifest.json",
+      "manifest_schema": "chronovita-home-era-assets/v1",
+      "manifest_bytes": 8843,
+      "manifest_sha256": "c024d3093de0ddb22c2b20a2fc8f48ac6c47016828ba619c28e31bd028ed1294",
+      "output_count": 12,
+      "output_bytes": 2543938,
+      "source_type": "project-original-generated",
+      "rights_note": "Original transparent teaching subjects generated for Chronovita and deterministically alpha-extracted; they are era cues rather than portraits, excavation records, or exact reconstructions."
+    },
+    {
+      "id": "home-chronodial-materials",
+      "manifest_path": "apps/web/public/assets/home-chronodial/manifest.json",
+      "manifest_schema": "chronovita-home-chronodial-assets/v1",
+      "manifest_bytes": 1791,
+      "manifest_sha256": "a239ea3899363c8c4f7851749e49c07c2d71bfd67f255775c1b101ef4e2fadba",
+      "output_count": 3,
+      "output_bytes": 1371566,
+      "source_type": "project-original-generated",
+      "rights_note": "Original fictional bronze chronodial surface transformed into aligned albedo, bump and roughness maps; it is a teaching interface material, not an excavated-object reconstruction."
     }
   ],
   "standalone_assets": [
@@ -87,26 +109,21 @@
       "source_files": [
         {
           "path": "apps/web/src/features/visual/ChronoscopeScene.tsx",
-          "bytes": 21601,
-          "sha256": "bb47ec81236a56ba0b044b7fa1f789a9d5aa49d71184fc5664479a9231b31ca6"
-        },
-        {
-          "path": "apps/web/src/features/visual/sundialModel.ts",
-          "bytes": 1100,
-          "sha256": "aa0297e4b1f472c5727fb2a9e98f4013c37da683789eedb22af8e76d88c10341"
+          "bytes": 7864,
+          "sha256": "a44ea0e45f683eaebcde73a1653edb51bce8869b8508e496727f66511cab46cf"
         }
       ],
       "runtime": "three@0.185.1",
       "runtime_license": "MIT",
-      "fallback": "Inline SVG with equivalent decorative meaning; enabled for reduced motion, unavailable WebGL, or failed dynamic import."
+      "fallback": "Reduced motion skips the intro entirely; otherwise the aligned high-quality albedo poster and CSS hand preserve the dial meaning when WebGPU/WebGL2 is unavailable or the dynamic import fails."
     }
   ],
   "budgets": {
-    "public_visual_assets_bytes": 10750000,
-    "dist_total_bytes": 13500000,
+    "public_visual_assets_bytes": 15000000,
+    "dist_total_bytes": 18000000,
     "initial_entry_raw_bytes": 1000000,
     "largest_non_three_js_chunk_bytes": 260000,
-    "three_chunk_bytes": 575000,
-    "largest_css_chunk_bytes": 180000
+    "three_chunk_bytes": 800000,
+    "largest_css_chunk_bytes": 200000
   }
 }

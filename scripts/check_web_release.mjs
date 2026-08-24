@@ -93,6 +93,12 @@ for (const family of ledger.families) {
   const manifest = JSON.parse(checked.bytes.toString('utf8'));
   assertEqual(manifest.schema, family.manifest_schema, `${family.id} manifest schema`);
   const outputs = collectOutputs(manifest);
+  if (family.id === 'home-era-subjects') {
+    for (const output of outputs) {
+      assertEqual(output.alpha?.min, 0, `${family.id}/${output.file} alpha min`);
+      assertEqual(output.alpha?.max, 255, `${family.id}/${output.file} alpha max`);
+    }
+  }
   assertEqual(outputs.length, family.output_count, `${family.id} output count`);
   const manifestDirectory = path.dirname(checked.absolutePath);
   let outputBytes = 0;
@@ -176,7 +182,7 @@ if (initialEntryBytes > ledger.budgets.initial_entry_raw_bytes) {
 
 const jsRows = distRows.filter((row) => row.file.endsWith('.js'));
 const cssRows = distRows.filter((row) => row.file.endsWith('.css'));
-const threeRows = jsRows.filter((row) => path.basename(row.file).startsWith('three.module-'));
+const threeRows = jsRows.filter((row) => /^three\.(?:module|webgpu)-/.test(path.basename(row.file)));
 assertEqual(threeRows.length, 1, 'lazy Three.js chunk count');
 for (const row of threeRows) {
   if (row.bytes > ledger.budgets.three_chunk_bytes) {

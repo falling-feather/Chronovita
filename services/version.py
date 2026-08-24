@@ -1,4 +1,4 @@
-APP_VERSION = "0.10.30"
+APP_VERSION = "0.10.31"
 
 
 __all__ = ["APP_VERSION"]
