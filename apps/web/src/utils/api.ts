@@ -722,6 +722,77 @@ export interface CanvasGeneratedGraph {
   nodes: CanvasGeneratedNode[]; edges: CanvasGeneratedEdge[];
 }
 
+export type LearningCompletionStatus = 'in_review' | 'changes_requested' | 'completed';
+export interface LearningStickyNote {
+  note_id: string; body: string; color: 'ochre' | 'jade' | 'cinnabar';
+}
+export interface LearningDrawingStroke {
+  stroke_id: string; color: string; width: number; mode: 'ink' | 'erase';
+  points: Array<{ x: number; y: number }>;
+}
+export interface LearningEventSnapshot {
+  event_id: string;
+  kind: 'stage_entered' | 'keyword_opened' | 'decision_completed' | 'question_answered' | 'temporary_note_saved';
+  title: string; summary: string;
+  metadata?: Record<string, string | number | boolean | null>;
+  occurred_at: string;
+}
+export interface LearningCanvasSnapshot {
+  schema_version: 'learning-canvas-snapshot/v1'; found: boolean; revision: number;
+  nodes: unknown[]; edges: unknown[];
+}
+export interface LearningSubmissionRequest {
+  schema_version: 'learning-submission-request/v1';
+  client_submission_id: string; course_id: string; lesson_id: string;
+  title: string; body_markdown: string;
+  sticky_notes: LearningStickyNote[]; drawing_strokes: LearningDrawingStroke[];
+  learning_events: LearningEventSnapshot[]; local_draft_updated_at: string;
+}
+export interface LearningSubmission {
+  schema_version: 'learning-submission/v1';
+  submission_id: string; client_submission_id: string; student_id: string;
+  course_id: string; lesson_id: string; version: number; title: string;
+  body_markdown: string; sticky_notes: LearningStickyNote[];
+  drawing_strokes: LearningDrawingStroke[]; learning_events: LearningEventSnapshot[];
+  canvas: LearningCanvasSnapshot; local_draft_updated_at: string; submitted_at: string;
+  source_payload_checksum: string; checksum: string;
+}
+export interface LearningFeedback {
+  schema_version: 'learning-feedback/v1'; feedback_id: string;
+  client_feedback_id: string; submission_id: string; sequence: number;
+  teacher_id: string; teacher_display_name: string;
+  completion_status: LearningCompletionStatus; comment: string;
+  created_at: string; source_payload_checksum: string; checksum: string;
+}
+export interface LearningSubmissionListItem {
+  submission_id: string; student_id: string; student_display_name: string;
+  student_username?: string | null; course_id: string; lesson_id: string;
+  version: number; title: string; body_excerpt: string;
+  sticky_note_count: number; stroke_count: number; event_count: number;
+  canvas_node_count: number; submitted_at: string; checksum: string;
+  latest_feedback?: LearningFeedback | null;
+}
+export interface LearningSubmissionDetail {
+  submission: LearningSubmission; student_display_name: string;
+  student_username?: string | null; feedback: LearningFeedback[];
+}
+export interface LearningFeedbackRequest {
+  schema_version: 'learning-feedback-request/v1'; client_feedback_id: string;
+  completion_status: LearningCompletionStatus; comment: string;
+}
+
+function learningSubmissionQuery(params: {
+  student_id?: string; course_id?: string; lesson_id?: string; limit?: number;
+}): string {
+  const query = new URLSearchParams();
+  if (params.student_id) query.set('student_id', params.student_id);
+  if (params.course_id) query.set('course_id', params.course_id);
+  if (params.lesson_id) query.set('lesson_id', params.lesson_id);
+  if (params.limit) query.set('limit', String(params.limit));
+  const rendered = query.toString();
+  return rendered ? `?${rendered}` : '';
+}
+
 export const api = {
   eras: () => jsonFetch<{ items: Era[] }>('/courses/eras'),
   courses: (params: { era?: string; section?: string; q?: string } = {}) => {
@@ -784,6 +855,33 @@ export const api = {
   progressGet: (lesson_id: string) => jsonFetch<{ item: ProgressItem | null }>(`/learning/progress/${lesson_id}`),
   progressTouch: (body: { lesson_id: string; layer: string; completed?: boolean }) =>
     jsonFetch<{ ok: boolean; item: ProgressItem }>(`/learning/progress/touch`, { method: 'POST', body: JSON.stringify(body) }),
+  learningSubmissions: (params: { course_id?: string; lesson_id?: string; limit?: number } = {}) =>
+    jsonFetch<{ items: LearningSubmissionListItem[] }>(
+      `/learning/submissions${learningSubmissionQuery(params)}`,
+    ),
+  learningSubmission: (submissionId: string) =>
+    jsonFetch<LearningSubmissionDetail>(
+      `/learning/submissions/${encodeURIComponent(submissionId)}`,
+    ),
+  learningSubmit: (body: LearningSubmissionRequest) =>
+    jsonFetch<{ submission: LearningSubmission; reused: boolean }>(
+      '/learning/submissions',
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
+  learningReviewSubmissions: (params: {
+    student_id?: string; course_id?: string; lesson_id?: string; limit?: number;
+  } = {}) => jsonFetch<{ items: LearningSubmissionListItem[] }>(
+    `/learning/review/submissions${learningSubmissionQuery(params)}`,
+  ),
+  learningReviewSubmission: (submissionId: string) =>
+    jsonFetch<LearningSubmissionDetail>(
+      `/learning/review/submissions/${encodeURIComponent(submissionId)}`,
+    ),
+  learningReviewFeedback: (submissionId: string, body: LearningFeedbackRequest) =>
+    jsonFetch<{ feedback: LearningFeedback; reused: boolean }>(
+      `/learning/review/submissions/${encodeURIComponent(submissionId)}/feedback`,
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
   adminContentTemplate: (token: string) => adminFetch<LessonContentPackage>(token, '/admin/content/template'),
   adminContentSourceLessons: (token: string) => adminFetch<{ items: LessonSourceRecord[] }>(token, '/admin/content/source-lessons'),
   adminContentSourceLesson: (token: string, lesson_id: string) =>

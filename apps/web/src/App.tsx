@@ -58,10 +58,12 @@ import { toast } from './utils/toast';
 const AdminContentPage = lazy(() => import('./pages/AdminContentPage'));
 const AdminContentPreviewPage = lazy(() => import('./pages/AdminContentPreviewPage'));
 const AdminAccountsPage = lazy(() => import('./pages/AdminAccountsPage'));
+const TeacherLearningReviewPage = lazy(() => import('./pages/TeacherLearningReviewPage'));
 
 const { Header, Content, Footer } = Layout;
 const STUDENT_ROLES: UserRole[] = ['student'];
 const CONTENT_ROLES: UserRole[] = ['teacher', 'reviewer', 'admin'];
+const TEACHER_ROLES: UserRole[] = ['teacher', 'admin'];
 const ADMIN_ROLES: UserRole[] = ['admin'];
 
 interface ShellNavItem {
@@ -288,6 +290,9 @@ function ShellLayout() {
     if (auth.mode === 'legacy-local' || auth.can('content.read')) {
       items.push({ key: '/admin/content', label: <Link to="/admin/content">内容工作台</Link> });
     }
+    if (auth.mode === 'accounts' && auth.can('student.summary')) {
+      items.push({ key: '/teacher/learning', label: <Link to="/teacher/learning">成果批阅</Link> });
+    }
     if (auth.mode === 'accounts' && auth.can('auth.manage_users')) {
       items.push({ key: '/admin/accounts', label: <Link to="/admin/accounts">账户管理</Link> });
     }
@@ -341,6 +346,10 @@ function AppRoutes() {
         <Route element={<RequireRoles roles={CONTENT_ROLES} />}>
           <Route path="/admin/content" element={<AdminContentPage />} />
           <Route path="/admin/content/preview" element={<AdminContentPreviewPage />} />
+        </Route>
+
+        <Route element={<RequireRoles roles={TEACHER_ROLES} allowLegacy={false} />}>
+          <Route path="/teacher/learning" element={<TeacherLearningReviewPage />} />
         </Route>
 
         <Route element={<RequireRoles roles={ADMIN_ROLES} allowLegacy={false} />}>

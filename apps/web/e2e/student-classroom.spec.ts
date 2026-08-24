@@ -202,6 +202,14 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
   await expect(page.locator('.chrono-canvas-save-status')).toContainText(/已保存|画板已就绪/);
   await expect(page.getByRole('textbox', { name: '学习卷宗标题' }))
     .toHaveValue(`${lesson.title} · 我的学习卷宗`);
+  const submitButton = page.getByRole('button', { name: /提交本次成果|提交新版本|重试上次提交/ });
+  await submitButton.click();
+  await page.getByRole('button', { name: '确认提交' }).click();
+  await expect(page.locator('.chrono-desk-submit-state')).toContainText('教师可见');
+  await page.getByRole('button', { name: '版本记录' }).click();
+  await expect(page.getByText('教师只会看到这些版本')).toBeVisible();
+  await expect(page.locator('.chrono-submission-viewer')).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).click();
   await expectNoHorizontalOverflow(page);
 
   await page.goto('/admin/accounts');
@@ -218,6 +226,57 @@ for (const lesson of FLAGSHIPS) {
     await exerciseFlagship(page, lesson, testInfo);
   });
 }
+
+test('teacher reviews only an explicitly submitted learning version', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'classroom-1366x768', 'The feedback chain needs one browser viewport.');
+  const suffix = projectSuffix(testInfo);
+  const submissionTitle = `E2E 学习成果 ${Date.now()}`;
+  const studentContext = await browser.newContext({ baseURL: BASE_URL });
+  try {
+    const studentPage = await studentContext.newPage();
+    await studentPage.goto('/login');
+    await login(studentPage, `student.guard.${suffix}`, USER_PASSWORD);
+    await expect(studentPage).toHaveURL(`${BASE_URL}/`);
+    const submitted = await studentContext.request.post(`${BASE_URL}/api/v1/learning/submissions`, {
+      headers: { Origin: BASE_URL },
+      data: {
+        schema_version: 'learning-submission-request/v1',
+        client_submission_id: `submit-e2e-${Date.now()}`,
+        course_id: COURSE_ID,
+        lesson_id: 'L101',
+        title: submissionTitle,
+        body_markdown: '## 我的判断\n疏导、协作与责任必须放在同一条因果链中理解。',
+        sticky_notes: [{ note_id: 'e2e-note', body: '比较工程路径与组织代价', color: 'ochre' }],
+        drawing_strokes: [],
+        learning_events: [],
+        local_draft_updated_at: new Date().toISOString(),
+      },
+    });
+    expect(submitted.status(), await submitted.text()).toBe(201);
+  } finally {
+    await studentContext.close();
+  }
+
+  const teacherContext = await browser.newContext({ baseURL: BASE_URL });
+  try {
+    const page = await teacherContext.newPage();
+    const issues = observeRuntimeHealth(page);
+    await page.goto('/login');
+    await login(page, `teacher.e2e.${suffix}`, USER_PASSWORD);
+    await expect(page).toHaveURL(/\/teacher\/learning$/);
+    await expect(page.getByTestId('learning-review')).toBeVisible();
+    await page.locator('.chrono-review-queue-list > button').filter({ hasText: submissionTitle }).click();
+    await expect(page.locator('.chrono-submission-viewer')).toContainText(submissionTitle);
+    await page.getByLabel('教师反馈编辑器').getByText('确认完成', { exact: true }).click();
+    const feedback = `证据与因果链已经清楚，可继续比较不同治理路径的代价。${Date.now()}`;
+    await page.getByPlaceholder(/指出证据使用/).fill(feedback);
+    await page.getByRole('button', { name: '追加反馈' }).click();
+    await expect(page.locator('.chrono-submission-feedback')).toContainText(feedback);
+    expect(issues).toEqual([]);
+  } finally {
+    await teacherContext.close();
+  }
+});
 
 async function verifyRoleWorkspace(
   browser: Browser,
@@ -247,8 +306,8 @@ test('teacher, reviewer and administrator land only in their permitted workspace
     browser,
     `teacher.e2e.${suffix}`,
     USER_PASSWORD,
-    /\/admin\/content$/,
-    'admin-content-editor',
+    /\/teacher\/learning$/,
+    'learning-review',
   );
   await verifyRoleWorkspace(
     browser,

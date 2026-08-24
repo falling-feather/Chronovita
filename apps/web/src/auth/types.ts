@@ -85,9 +85,8 @@ export function hasPermission(
 export function principalLandingPath(principal: Principal | null): string {
   if (!principal) return '/login';
   if (principal.roles.includes('admin')) return '/admin/accounts';
-  if (principal.roles.some((role) => role === 'teacher' || role === 'reviewer')) {
-    return '/admin/content';
-  }
+  if (principal.roles.includes('teacher')) return '/teacher/learning';
+  if (principal.roles.includes('reviewer')) return '/admin/content';
   return '/';
 }
 
@@ -110,6 +109,9 @@ export function roleCompatibleReturnPath(
     return roles.some((role) => role === 'teacher' || role === 'reviewer' || role === 'admin')
       ? candidate
       : null;
+  }
+  if (candidate === '/teacher/learning' || candidate.startsWith('/teacher/learning/')) {
+    return roles.some((role) => role === 'teacher' || role === 'admin') ? candidate : null;
   }
   if (
     candidate === '/'

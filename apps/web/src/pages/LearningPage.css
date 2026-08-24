@@ -1,0 +1,98 @@
+.chrono-learning-page { max-width: 1392px; margin: 0 auto; }
+.chrono-learning-page > .ant-alert { margin-bottom: 16px; }
+
+.chrono-learning-hero {
+  position: relative;
+  display: grid;
+  min-height: 220px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(20px, 3vw, 42px);
+  margin-bottom: 20px;
+  padding: clamp(28px, 4vw, 52px);
+  overflow: hidden;
+  color: #f3ead7;
+  background: radial-gradient(circle at 11% 24%, rgba(222, 183, 103, .17), transparent 24%), linear-gradient(118deg, #122d2b, #24443e 64%, #12262b);
+  box-shadow: 0 24px 60px rgba(29, 41, 39, .14);
+}
+
+.chrono-learning-hero::after {
+  position: absolute;
+  right: -80px;
+  bottom: -180px;
+  width: 520px;
+  height: 390px;
+  border: 1px solid rgba(225, 188, 113, .12);
+  border-radius: 50%;
+  box-shadow: 0 0 0 42px rgba(225, 188, 113, .025), 0 0 0 90px rgba(225, 188, 113, .018);
+  content: '';
+  transform: rotate(-16deg);
+}
+
+.chrono-learning-hero-mark { position: relative; z-index: 1; display: grid; width: 78px; height: 78px; place-items: center; border: 1px solid rgba(232, 200, 134, .48); color: #e6bd6d; box-shadow: inset 0 0 0 5px rgba(232, 200, 134, .06); }
+.chrono-learning-hero-mark span { font-family: STKaiti, KaiTi, serif; font-size: 42px; }
+.chrono-learning-hero-copy { position: relative; z-index: 1; }
+.chrono-learning-hero-copy p { margin: 0; color: #d6aa5c; font-size: 10px; font-weight: 700; letter-spacing: .22em; }
+.chrono-learning-hero-copy h1 { margin: 6px 0 7px; font-family: STKaiti, KaiTi, serif; font-size: clamp(30px, 4vw, 46px); font-weight: 500; }
+.chrono-learning-hero-copy span { color: rgba(243, 234, 215, .65); font-size: 12px; }
+.chrono-learning-hero dl { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, minmax(70px, 1fr)); margin: 0; }
+.chrono-learning-hero dl div { padding: 10px 16px; border-left: 1px solid rgba(233, 201, 137, .15); text-align: center; }
+.chrono-learning-hero dt { color: #e2b760; font-family: Georgia, serif; font-size: 30px; }
+.chrono-learning-hero dd { margin: 3px 0 0; color: rgba(243, 234, 215, .58); font-size: 10px; white-space: nowrap; }
+
+.chrono-learning-tabs { display: flex; gap: 6px; margin-bottom: 18px; padding: 6px; border: 1px solid rgba(86, 71, 48, .13); background: rgba(244, 238, 223, .7); }
+.chrono-learning-tabs button { display: flex; align-items: center; gap: 7px; padding: 10px 16px; border: 0; background: transparent; color: #6f685c; cursor: pointer; }
+.chrono-learning-tabs button.active { background: #173834; color: #f1e4c8; }
+.chrono-learning-tabs button > span:last-child { display: grid; min-width: 20px; height: 20px; place-items: center; border-radius: 10px; background: rgba(197, 151, 75, .15); font-size: 10px; }
+.chrono-learning-tabs button.active > span:last-child { background: rgba(229, 190, 112, .18); color: #e3ba68; }
+.chrono-learning-loading { display: flex; min-height: 400px; align-items: center; justify-content: center; gap: 10px; color: #7a7165; }
+
+.chrono-learning-progress-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.chrono-learning-progress-grid article { display: grid; min-height: 220px; grid-template-columns: 42% minmax(0, 1fr); overflow: hidden; border: 1px solid rgba(77, 65, 47, .15); background: rgba(255, 253, 247, .9); box-shadow: 0 12px 28px rgba(61, 50, 35, .06); }
+.chrono-learning-progress-grid picture,
+.chrono-learning-progress-grid picture img { width: 100%; height: 100%; object-fit: cover; }
+.chrono-learning-progress-grid article > div { display: flex; min-width: 0; flex-direction: column; padding: 20px; }
+.chrono-learning-progress-grid article p { margin: 0; color: #a06c2f; font-size: 10px; }
+.chrono-learning-progress-grid article h2 { margin: 7px 0 14px; font-family: STKaiti, KaiTi, serif; font-size: 20px; font-weight: 600; line-height: 1.35; }
+.chrono-learning-stage-marks { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+.chrono-learning-stage-marks span { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px; background: #efede7; color: #8a8275; font-size: 9px; }
+.chrono-learning-stage-marks span.done { background: #e1ebe3; color: #457161; }
+.chrono-learning-progress-grid footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+.chrono-learning-progress-grid footer time { color: #91887a; font-size: 10px; }
+
+.chrono-learning-submission-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.chrono-learning-submission-grid article { position: relative; display: flex; min-width: 0; min-height: 330px; flex-direction: column; padding: 22px; overflow: hidden; border: 1px solid rgba(91, 70, 43, .18); background: linear-gradient(145deg, #fbf6e9, #f1e4c8); box-shadow: 0 13px 32px rgba(62, 50, 32, .08); }
+.chrono-learning-submission-grid article::after { position: absolute; right: -34px; bottom: -42px; color: rgba(137, 77, 48, .05); content: '卷'; font-family: STKaiti, KaiTi, serif; font-size: 160px; }
+.chrono-learning-submission-grid header,
+.chrono-learning-submission-grid footer { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.chrono-learning-submission-grid header > span { color: #9e662b; font-size: 11px; font-weight: 700; }
+.chrono-learning-submission-grid h2 { position: relative; z-index: 1; margin: 18px 0 6px; font-family: STKaiti, KaiTi, serif; font-size: 22px; }
+.chrono-learning-submission-grid article > p { position: relative; z-index: 1; margin: 0; color: #746b5d; font-size: 11px; }
+.chrono-learning-submission-grid blockquote { position: relative; z-index: 1; display: -webkit-box; min-height: 62px; margin: 18px 0; overflow: hidden; color: #5f574b; font-family: STKaiti, KaiTi, serif; line-height: 1.7; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.chrono-learning-submission-grid dl { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, 1fr); margin: auto 0 18px; border-block: 1px solid rgba(93, 72, 43, .12); }
+.chrono-learning-submission-grid dl div { padding: 9px 4px; text-align: center; }
+.chrono-learning-submission-grid dt { color: #385f55; font-family: Georgia, serif; font-size: 19px; }
+.chrono-learning-submission-grid dd { margin: 2px 0 0; color: #81786a; font-size: 9px; }
+.chrono-learning-submission-grid footer time { color: #8b8274; font-size: 9px; }
+
+@media (max-width: 1100px) {
+  .chrono-learning-hero { grid-template-columns: auto minmax(0, 1fr); }
+  .chrono-learning-hero dl { grid-column: 1 / -1; width: 100%; }
+  .chrono-learning-submission-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .chrono-learning-hero { grid-template-columns: 1fr; }
+  .chrono-learning-hero-mark { display: none; }
+  .chrono-learning-hero dl { grid-template-columns: repeat(2, 1fr); }
+  .chrono-learning-progress-grid,
+  .chrono-learning-submission-grid { grid-template-columns: 1fr; }
+  .chrono-learning-progress-grid article { grid-template-columns: 1fr; }
+  .chrono-learning-progress-grid picture { height: 180px; }
+}
+
+@media (max-width: 480px) {
+  .chrono-learning-hero { padding: 24px 18px; }
+  .chrono-learning-tabs { overflow-x: auto; }
+  .chrono-learning-tabs button { flex: 1 0 auto; justify-content: center; }
+}

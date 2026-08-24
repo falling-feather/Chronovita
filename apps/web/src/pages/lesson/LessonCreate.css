@@ -733,6 +733,148 @@
   margin: 22px;
 }
 
+.chrono-desk-publish-control {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-width: min(460px, 44vw);
+  gap: 8px;
+}
+
+.chrono-desk-publish-control .chrono-desk-save-state {
+  justify-content: flex-end;
+  padding: 5px 0;
+  border: 0;
+  background: transparent;
+}
+
+.chrono-desk-submit-state {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.chrono-desk-submit-state > div:first-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.chrono-desk-submit-state strong {
+  color: #f0d9a3;
+  font-size: 12px;
+}
+
+.chrono-desk-submit-state > div:first-child span {
+  max-width: 260px;
+  overflow: hidden;
+  color: rgba(244, 234, 212, .62);
+  font-size: 10px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-desk-submit-state > div:last-child {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 7px;
+}
+
+.chrono-desk-submit-state .ant-btn-primary {
+  color: #162625;
+  border-color: #dfb866;
+  background: #dfb866;
+  box-shadow: none;
+}
+
+.chrono-submission-history {
+  display: grid;
+  min-height: calc(100vh - 150px);
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.chrono-submission-history > aside {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 14px;
+  border-right: 1px solid rgba(74, 61, 44, .13);
+}
+
+.chrono-submission-history-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 7px;
+  padding: 12px;
+  border-left: 3px solid #ad803c;
+  background: #f7f0df;
+}
+
+.chrono-submission-history-intro span,
+.chrono-submission-history-empty {
+  color: #797165;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.chrono-submission-history > aside > button {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 13px;
+  border: 1px solid rgba(83, 68, 48, .13);
+  background: #fffdf8;
+  color: #273534;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.chrono-submission-history > aside > button:hover,
+.chrono-submission-history > aside > button.active {
+  border-color: #b28847;
+  box-shadow: 0 8px 20px rgba(62, 50, 34, .08);
+  transform: translateX(2px);
+}
+
+.chrono-submission-history > aside > button span {
+  color: #9a682a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.chrono-submission-history > aside > button strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-submission-history > aside > button small {
+  color: #8b8376;
+}
+
+.chrono-submission-history > aside > button .ant-tag {
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  margin: 0;
+  font-size: 9px;
+}
+
+.chrono-submission-history > main {
+  min-width: 0;
+}
+
 @media (max-width: 1050px) {
   .chrono-learning-desk-shell {
     grid-template-columns: 205px minmax(0, 1fr);
@@ -765,6 +907,23 @@
     align-self: stretch;
     justify-content: center;
   }
+  .chrono-desk-publish-control {
+    width: 100%;
+    min-width: 0;
+  }
+  .chrono-desk-publish-control .chrono-desk-save-state {
+    justify-content: flex-start;
+  }
+  .chrono-desk-submit-state {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .chrono-desk-submit-state > div:first-child {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .chrono-desk-submit-state > div:first-child span { max-width: 100%; }
+  .chrono-submission-history { grid-template-columns: 180px minmax(0, 1fr); }
   .chrono-learning-desk-shell {
     display: flex;
     flex-direction: column;
@@ -892,6 +1051,26 @@
     align-items: flex-start;
     flex-direction: column;
   }
+  .chrono-desk-submit-state > div:last-child {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .chrono-desk-submit-state > div:last-child .ant-btn {
+    flex: 1 1 138px;
+  }
+  .chrono-submission-history {
+    display: flex;
+    flex-direction: column;
+  }
+  .chrono-submission-history > aside {
+    overflow-x: auto;
+    flex-direction: row;
+    padding: 0 0 10px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(74, 61, 44, .13);
+  }
+  .chrono-submission-history-intro { min-width: 190px; margin: 0; }
+  .chrono-submission-history > aside > button { min-width: 170px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

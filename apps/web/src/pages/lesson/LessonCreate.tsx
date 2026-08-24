@@ -13,7 +13,7 @@ import ReactFlow, {
   type NodeChange,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Alert, Button, Input, Spin, Tag, Tooltip, message } from 'antd';
+import { Alert, Button, Drawer, Input, Popconfirm, Spin, Tag, Tooltip, message } from 'antd';
 import {
   ApartmentOutlined,
   BookOutlined,
@@ -24,10 +24,12 @@ import {
   ExclamationCircleFilled,
   FileDoneOutlined,
   HistoryOutlined,
+  ReadOutlined,
   PlusOutlined,
   ReloadOutlined,
   SafetyCertificateOutlined,
   SaveOutlined,
+  SendOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import type {
@@ -37,6 +39,9 @@ import type {
   GameDossier,
   GameDossierKnowledgeNode,
   Lesson,
+  LearningSubmissionDetail,
+  LearningSubmissionListItem,
+  LearningSubmissionRequest,
 } from '../../utils/api';
 import { api } from '../../utils/api';
 import { useAuth } from '../../auth/AuthContext';
@@ -71,6 +76,13 @@ import {
 } from '../../features/classroom/learningDeskDocument';
 import LearningDeskEditor from '../../features/classroom/LearningDeskEditor';
 import LearningDeskDrawing from '../../features/classroom/LearningDeskDrawing';
+import LearningSubmissionViewer from '../../features/classroom/LearningSubmissionViewer';
+import {
+  buildLearningSubmissionRequest,
+  clearPendingSubmission,
+  readPendingSubmission,
+  writePendingSubmission,
+} from '../../features/classroom/learningSubmission';
 import './LessonCreate.css';
 
 interface CanvasNodeData {
@@ -98,6 +110,7 @@ type CanvasPhase = 'loading' | 'ready' | 'error' | 'conflict';
 type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 type DeskTool = 'write' | 'draw' | 'map' | 'trail';
 type DeskSaveStatus = 'loading' | 'idle' | 'saving' | 'saved' | 'error';
+type SubmissionStatus = 'idle' | 'preparing' | 'submitting' | 'error';
 type DossierState =
   | { phase: 'idle' }
   | { phase: 'loading' }
@@ -386,6 +399,14 @@ export default function LessonCreate({
   const [deskSavedAt, setDeskSavedAt] = useState<Date | null>(null);
   const [deskDirtyToken, setDeskDirtyToken] = useState(0);
   const [deskHydrated, setDeskHydrated] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('idle');
+  const [submissionError, setSubmissionError] = useState('');
+  const [submissionItems, setSubmissionItems] = useState<LearningSubmissionListItem[]>([]);
+  const [submissionListLoading, setSubmissionListLoading] = useState(false);
+  const [submissionHistoryOpen, setSubmissionHistoryOpen] = useState(false);
+  const [submissionDetail, setSubmissionDetail] = useState<LearningSubmissionDetail | null>(null);
+  const [submissionDetailLoading, setSubmissionDetailLoading] = useState(false);
+  const [pendingSubmission, setPendingSubmission] = useState<LearningSubmissionRequest | null>(null);
   const [nodes, setNodes, applyNodeChanges] = useNodesState<CanvasNodeData>([]);
   const [edges, setEdges, applyEdgeChanges] = useEdgesState<CanvasEdgeData>([]);
   const [newLabel, setNewLabel] = useState('');
@@ -411,6 +432,41 @@ export default function LessonCreate({
   const errorNotifiedRef = useRef(false);
   const deskSaveTimerRef = useRef<number | null>(null);
   const deskLoadGenerationRef = useRef(0);
+
+  const loadSubmissions = useCallback(async () => {
+    if (auth.mode !== 'accounts') {
+      setSubmissionItems([]);
+      return [];
+    }
+    setSubmissionListLoading(true);
+    try {
+      const response = await api.learningSubmissions({
+        course_id: lesson.course_id,
+        lesson_id: lesson.id,
+        limit: 50,
+      });
+      setSubmissionItems(response.items);
+      return response.items;
+    } catch (error) {
+      setSubmissionError(errorMessage(error));
+      return [];
+    } finally {
+      setSubmissionListLoading(false);
+    }
+  }, [auth.mode, lesson.course_id, lesson.id]);
+
+  useEffect(() => {
+    if (auth.mode !== 'accounts') {
+      setPendingSubmission(null);
+      return;
+    }
+    try {
+      setPendingSubmission(readPendingSubmission(window.localStorage, temporaryNoteIdentity));
+    } catch {
+      setPendingSubmission(null);
+    }
+    void loadSubmissions();
+  }, [auth.mode, loadSubmissions, temporaryNoteIdentity]);
 
   useEffect(() => {
     const refresh = () => {
@@ -969,13 +1025,13 @@ export default function LessonCreate({
     }
   };
 
-  const saveNow = async () => {
-    if (canvasPhase !== 'ready') return;
+  const saveNow = async (): Promise<boolean> => {
+    if (canvasPhase !== 'ready') return false;
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-    await performSave(
+    return performSave(
       nodesRef.current,
       edgesRef.current,
       editVersionRef.current,
@@ -1097,8 +1153,8 @@ export default function LessonCreate({
     setDeskTool('write');
   };
 
-  const saveDeskNow = async () => {
-    if (!deskHydrated) return;
+  const saveDeskNow = async (): Promise<LearningDeskDraftRecord | null> => {
+    if (!deskHydrated) return null;
     if (deskSaveTimerRef.current !== null) {
       window.clearTimeout(deskSaveTimerRef.current);
       deskSaveTimerRef.current = null;
@@ -1115,8 +1171,105 @@ export default function LessonCreate({
       setDeskDraft(saved);
       setDeskSavedAt(new Date(saved.updated_at));
       setDeskSaveStatus('saved');
+      return saved;
     } catch {
       setDeskSaveStatus('error');
+      return null;
+    }
+  };
+
+  const openSubmissionDetail = async (submissionId: string) => {
+    setSubmissionDetailLoading(true);
+    try {
+      const detail = await api.learningSubmission(submissionId);
+      setSubmissionDetail(detail);
+    } catch (error) {
+      message.error(`成果版本读取失败：${errorMessage(error)}`);
+    } finally {
+      setSubmissionDetailLoading(false);
+    }
+  };
+
+  const openSubmissionHistory = async () => {
+    setSubmissionHistoryOpen(true);
+    const items = await loadSubmissions();
+    const first = items[0] ?? submissionItems[0];
+    if (first) await openSubmissionDetail(first.submission_id);
+  };
+
+  const submitLearningWork = async () => {
+    if (submissionStatus === 'preparing' || submissionStatus === 'submitting') return;
+    if (auth.mode !== 'accounts') {
+      setSubmissionStatus('error');
+      setSubmissionError('请使用统一账户登录后提交；本机草稿仍然保留。');
+      return;
+    }
+
+    setSubmissionError('');
+    let request = pendingSubmission;
+    try {
+      if (!request) {
+        setSubmissionStatus('preparing');
+        const savedDraft = await saveDeskNow();
+        if (!savedDraft) throw new Error('本机草稿尚未保存成功，请先重试保存。');
+        if (canvasPhase === 'loading') throw new Error('知识导图仍在载入，请稍候再提交。');
+        if (canvasPhase === 'conflict' || canvasPhase === 'error') {
+          throw new Error('知识导图尚未安全同步，请先恢复画板再提交。');
+        }
+        if (canvasPhase === 'ready' && !(await saveNow())) {
+          throw new Error('知识导图尚未安全同步，请先重试保存。');
+        }
+        const latestEvents = await listLearningEvents(temporaryNoteIdentity);
+        setLearningEvents(latestEvents);
+        request = buildLearningSubmissionRequest(savedDraft, latestEvents);
+        setPendingSubmission(request);
+        try {
+          writePendingSubmission(window.localStorage, temporaryNoteIdentity, request);
+        } catch {
+          // The in-memory retry snapshot is still enough for this page session.
+        }
+      }
+
+      setSubmissionStatus('submitting');
+      const result = await api.learningSubmit(request);
+      try {
+        clearPendingSubmission(window.localStorage, temporaryNoteIdentity);
+      } catch {
+        // Storage cleanup cannot invalidate a server-confirmed submission.
+      }
+      setPendingSubmission(null);
+      setSubmissionStatus('idle');
+      const items = await loadSubmissions();
+      const submitted = items.find(
+        (item) => item.submission_id === result.submission.submission_id,
+      );
+      if (!submitted) {
+        setSubmissionItems((current) => [{
+          submission_id: result.submission.submission_id,
+          student_id: result.submission.student_id,
+          student_display_name: auth.principal?.display_name ?? '我',
+          student_username: auth.principal?.username,
+          course_id: result.submission.course_id,
+          lesson_id: result.submission.lesson_id,
+          version: result.submission.version,
+          title: result.submission.title,
+          body_excerpt: result.submission.body_markdown.replace(/\s+/g, ' ').slice(0, 180),
+          sticky_note_count: result.submission.sticky_notes.length,
+          stroke_count: result.submission.drawing_strokes.length,
+          event_count: result.submission.learning_events.length,
+          canvas_node_count: result.submission.canvas.nodes.length,
+          submitted_at: result.submission.submitted_at,
+          checksum: result.submission.checksum,
+          latest_feedback: null,
+        }, ...current]);
+      }
+      setSubmissionError('');
+      message.success(result.reused
+        ? `已确认第 ${result.submission.version} 版成果，无需重复提交`
+        : `第 ${result.submission.version} 版学习成果已提交给教师`);
+    } catch (error) {
+      setSubmissionStatus('error');
+      setSubmissionError(errorMessage(error));
     }
   };
 
@@ -1129,6 +1282,13 @@ export default function LessonCreate({
         : deskSaveStatus === 'saved' && deskSavedAt
           ? `本机已保存 ${formatHm(deskSavedAt)}`
           : '尚未产生修改';
+  const latestSubmission = submissionItems[0] ?? null;
+  const submissionBusy = submissionStatus === 'preparing' || submissionStatus === 'submitting';
+  const submissionButtonLabel = pendingSubmission
+    ? '重试上次提交'
+    : latestSubmission
+      ? '提交新版本'
+      : '提交本次成果';
 
   const renderSaveStatus = () => {
     if (canvasPhase === 'loading') {
@@ -1189,14 +1349,62 @@ export default function LessonCreate({
               <span>正文、便签、手绘、导图与前三阶段留痕，在这里汇成一份可继续修改的个人卷宗。</span>
             </div>
           </div>
-          <div className={`chrono-desk-save-state ${deskSaveStatus}`} aria-live="polite">
-            {deskSaveStatus === 'saving' ? <CloudSyncOutlined spin /> : <SaveOutlined />}
-            <span>{deskSaveLabel}</span>
-            {deskSaveStatus === 'error' ? (
-              <Button size="small" type="link" onClick={() => void saveDeskNow()}>重试</Button>
-            ) : null}
+          <div className="chrono-desk-publish-control">
+            <div className={`chrono-desk-save-state ${deskSaveStatus}`} aria-live="polite">
+              {deskSaveStatus === 'saving' ? <CloudSyncOutlined spin /> : <SaveOutlined />}
+              <span>{deskSaveLabel}</span>
+              {deskSaveStatus === 'error' ? (
+                <Button size="small" type="link" onClick={() => void saveDeskNow()}>重试</Button>
+              ) : null}
+            </div>
+            <div className="chrono-desk-submit-state">
+              <div>
+                <strong>{latestSubmission ? `教师可见 · 第 ${latestSubmission.version} 版` : '尚未提交给教师'}</strong>
+                <span>{latestSubmission
+                  ? `${formatHm(new Date(latestSubmission.submitted_at))} 提交${latestSubmission.latest_feedback ? ' · 已有反馈' : ' · 等待反馈'}`
+                  : '本机自动保存不等于提交，只有你确认后教师才能看到。'}</span>
+              </div>
+              <div>
+                <Button
+                  ghost
+                  icon={<ReadOutlined />}
+                  loading={submissionListLoading}
+                  onClick={() => void openSubmissionHistory()}
+                >版本记录</Button>
+                <Popconfirm
+                  title={pendingSubmission ? '重试被冻结的上次提交？' : '确认提交当前学习成果？'}
+                  description={pendingSubmission
+                    ? '将原样重试上次内容，避免网络中断产生重复版本。'
+                    : '提交后生成不可变版本；你仍可继续编辑并提交下一版。'}
+                  okText="确认提交"
+                  cancelText="继续编辑"
+                  onConfirm={() => submitLearningWork()}
+                >
+                  <Button
+                    type="primary"
+                    icon={<SendOutlined />}
+                    loading={submissionBusy}
+                    disabled={!deskHydrated || auth.mode !== 'accounts'}
+                  >{submissionButtonLabel}</Button>
+                </Popconfirm>
+              </div>
+            </div>
           </div>
         </header>
+
+        {submissionError ? (
+          <Alert
+            banner
+            closable
+            type="warning"
+            message={pendingSubmission ? '上次提交尚未获得服务器确认，本机保留了完全相同的重试副本。' : '学习成果暂未提交，本机草稿保持不变。'}
+            description={submissionError}
+            onClose={() => {
+              setSubmissionError('');
+              if (submissionStatus === 'error') setSubmissionStatus('idle');
+            }}
+          />
+        ) : null}
 
         <div className="chrono-learning-desk-shell">
           <aside className="chrono-desk-inbox" aria-label="本课材料匣">
@@ -1400,6 +1608,48 @@ export default function LessonCreate({
         onRetry={() => void loadDossier()}
         onOpenPractice={onOpenPractice}
       />
+
+      <Drawer
+        title="我的成果版本"
+        width="min(1080px, 96vw)"
+        open={submissionHistoryOpen}
+        onClose={() => setSubmissionHistoryOpen(false)}
+      >
+        <div className="chrono-submission-history">
+          <aside aria-label="成果版本列表">
+            <div className="chrono-submission-history-intro">
+              <strong>教师只会看到这些版本</strong>
+              <span>本机草稿与失败的提交不会出现在教师队列。</span>
+            </div>
+            {submissionListLoading ? <Spin size="small" /> : submissionItems.length > 0 ? (
+              submissionItems.map((item) => (
+                <button
+                  type="button"
+                  key={item.submission_id}
+                  className={submissionDetail?.submission.submission_id === item.submission_id ? 'active' : ''}
+                  onClick={() => void openSubmissionDetail(item.submission_id)}
+                >
+                  <span>第 {item.version} 版</span>
+                  <strong>{item.title}</strong>
+                  <small>{new Date(item.submitted_at).toLocaleString('zh-CN')}</small>
+                  {item.latest_feedback ? <Tag color={item.latest_feedback.completion_status === 'completed' ? 'green' : 'gold'}>已有反馈</Tag> : null}
+                </button>
+              ))
+            ) : (
+              <div className="chrono-submission-history-empty">还没有提交版本。</div>
+            )}
+          </aside>
+          <main>
+            {submissionDetailLoading ? (
+              <div className="chrono-create-loading"><Spin /><span>正在展开成果版本…</span></div>
+            ) : submissionDetail ? (
+              <LearningSubmissionViewer detail={submissionDetail} showStudent={false} />
+            ) : (
+              <div className="chrono-submission-history-empty">选择一个版本查看完整内容与教师反馈。</div>
+            )}
+          </main>
+        </div>
+      </Drawer>
     </div>
   );
 }

@@ -32,6 +32,7 @@ describe('role policy', () => {
     expect(hasPermission(student, 'student.own')).toBe(true);
     expect(hasPermission(student, 'content.read')).toBe(false);
     expect(hasPermission(teacher, 'content.author')).toBe(true);
+    expect(hasPermission(teacher, 'student.feedback')).toBe(true);
     expect(hasPermission(teacher, 'content.review')).toBe(false);
     expect(hasPermission(reviewer, 'content.review')).toBe(true);
     expect(hasPermission(reviewer, 'content.author')).toBe(false);
@@ -42,7 +43,7 @@ describe('role policy', () => {
 
   it('selects a role workspace and rejects mismatched route groups', () => {
     expect(principalLandingPath(principal('student'))).toBe('/');
-    expect(principalLandingPath(principal('teacher'))).toBe('/admin/content');
+    expect(principalLandingPath(principal('teacher'))).toBe('/teacher/learning');
     expect(principalLandingPath(principal('reviewer'))).toBe('/admin/content');
     expect(principalLandingPath(principal('admin'))).toBe('/admin/accounts');
     expect(hasAnyRole(principal('student'), ['teacher', 'reviewer', 'admin'])).toBe(false);
@@ -67,6 +68,8 @@ describe('login return path', () => {
     expect(roleCompatibleReturnPath('/admin/accounts', ['student'])).toBeNull();
     expect(roleCompatibleReturnPath('/admin/accounts', ['admin'])).toBe('/admin/accounts');
     expect(roleCompatibleReturnPath('/admin/content', ['reviewer'])).toBe('/admin/content');
+    expect(roleCompatibleReturnPath('/teacher/learning', ['teacher'])).toBe('/teacher/learning');
+    expect(roleCompatibleReturnPath('/teacher/learning', ['reviewer'])).toBeNull();
   });
 });
 
