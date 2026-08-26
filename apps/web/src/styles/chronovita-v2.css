@@ -6903,6 +6903,20 @@ select {
 }
 
 /* V0.10.31 首页：WebGPU 材质历史仪、时代主体与无缝时间带 */
+.chrono-static-preview-tag {
+  margin-inline-end: 4px;
+  border-color: rgba(101, 198, 186, .5);
+  background: rgba(12, 50, 57, .72);
+  color: #bcebe4;
+  letter-spacing: .04em;
+}
+
+.chrono-static-preview-notice {
+  max-width: 1440px;
+  margin: 18px auto 0;
+  border: 1px solid rgba(54, 125, 122, .25);
+}
+
 .chrono-shell-layout.is-home {
   position: relative;
   overflow: hidden;

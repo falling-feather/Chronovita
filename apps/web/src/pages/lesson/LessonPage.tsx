@@ -29,6 +29,7 @@ import {
   type LearningEventRequest,
   type LearningScopeIdentity,
 } from '../../features/classroom/learningLedger';
+import { IS_STATIC_PREVIEW } from '../../runtime';
 
 const LessonCreate = lazy(() => import('./LessonCreate'));
 const VALID_LAYERS = new Set(CLASSROOM_STAGES.map((stage) => stage.layer));
@@ -37,7 +38,9 @@ export default function LessonPage() {
   const { courseId = '', lessonId = '' } = useParams();
   const [params, setParams] = useSearchParams();
   const requestedLayer = params.get('layer');
-  const layer = (VALID_LAYERS.has(requestedLayer as ClassroomLayer) ? requestedLayer : 'watch') as ClassroomLayer;
+  const layer = (IS_STATIC_PREVIEW
+    ? 'watch'
+    : VALID_LAYERS.has(requestedLayer as ClassroomLayer) ? requestedLayer : 'watch') as ClassroomLayer;
   const nav = useNavigate();
   const auth = useAuth();
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -225,6 +228,8 @@ export default function LessonPage() {
               type="button"
               className={`${active ? 'active' : ''}${visited ? ' visited' : ''}`}
               aria-current={active ? 'step' : undefined}
+              disabled={IS_STATIC_PREVIEW && stage.layer !== 'watch'}
+              title={IS_STATIC_PREVIEW && stage.layer !== 'watch' ? '完整交互请使用本地课堂版' : undefined}
               onClick={() => openLayer(stage.layer)}
             >
               <span className="chrono-stage-number">{visited ? <CheckCircleOutlined /> : stage.index}</span>
@@ -235,15 +240,27 @@ export default function LessonPage() {
         })}
       </nav>
 
+      {IS_STATIC_PREVIEW ? (
+        <Alert
+          className="chrono-static-preview-notice"
+          type="info"
+          showIcon
+          message="纯前端内容预览"
+          description="当前公开页面可浏览课程、课文、关键词与两门旗舰课短片；登录、历史推演、RAG 问答、卷宗保存和教师功能仍只在本地课堂服务中运行。"
+        />
+      ) : null}
+
       <div className={`chrono-lesson-workspace companion-floating${layer === 'ask' ? ' consult-wide' : ''}${layer === 'watch' ? ' observe-wide' : ''}`}>
         <main>{content}</main>
       </div>
 
-      <LessonCompanion
-        lesson={lesson}
-        presentation={presentation}
-        onOpenConsult={(question, personId) => openLayer('ask', { question, personId })}
-      />
+      {!IS_STATIC_PREVIEW ? (
+        <LessonCompanion
+          lesson={lesson}
+          presentation={presentation}
+          onOpenConsult={(question, personId) => openLayer('ask', { question, personId })}
+        />
+      ) : null}
 
       <footer className="chrono-stage-footer">
         <div>
@@ -256,7 +273,7 @@ export default function LessonPage() {
               <ArrowLeftOutlined /> {previousStage.title}
             </Button>
           ) : null}
-          {nextStage ? (
+          {nextStage && !IS_STATIC_PREVIEW ? (
             <Button type="primary" onClick={() => openLayer(nextStage.layer)}>
               进入{nextStage.title} <ArrowRightOutlined />
             </Button>

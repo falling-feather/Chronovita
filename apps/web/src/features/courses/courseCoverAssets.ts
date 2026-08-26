@@ -1,3 +1,5 @@
+import { publicAssetUrl } from '../../runtime';
+
 export const COURSE_COVER_IDS = [
   'C-prequin-state',
   'C-prequin-thought',
@@ -49,5 +51,5 @@ export function isCourseCoverId(courseId: string): courseId is CourseCoverId {
 }
 
 export function courseCoverUrl(courseId: CourseCoverId, width: CourseCoverWidth, format: 'avif' | 'webp') {
-  return `${COURSE_COVER_ROOT}/${courseId}-${width}.${format}`;
+  return publicAssetUrl(`${COURSE_COVER_ROOT}/${courseId}-${width}.${format}`);
 }

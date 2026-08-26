@@ -25,6 +25,7 @@ import {
   nextHomeEraIndex,
   type HomeEraPresentation,
 } from '../features/visual/homeEraModel';
+import { publicAssetSrcSet, publicAssetUrl } from '../runtime';
 
 const FLAGSHIP_COURSE_ID = 'C-prequin-state';
 const AUTO_ERA_INTERVAL_MS = 7_000;
@@ -268,8 +269,8 @@ export default function HomePage() {
     >
       <div className="chrono-home-panorama" aria-hidden="true">
         <img
-          src="/assets/entry/home-history-panorama-1366.webp"
-          srcSet="/assets/entry/home-history-panorama-1366.webp 1366w, /assets/entry/home-history-panorama-1920.webp 1920w"
+          src={publicAssetUrl('/assets/entry/home-history-panorama-1366.webp')}
+          srcSet={publicAssetSrcSet('/assets/entry/home-history-panorama-1366.webp 1366w, /assets/entry/home-history-panorama-1920.webp 1920w')}
           sizes="100vw"
           alt=""
           decoding="async"

@@ -1,6 +1,6 @@
 {
   "schema": "chronovita-visual-release/v1",
-  "release_version": "0.10.31",
+  "release_version": "0.10.32",
   "policy": {
     "student_visuals": "Product visuals are original generated illustrations, project-authored procedural graphics, or explicitly attributed public-domain reference data.",
     "historical_boundary": "Decorative images are teaching illustrations, never primary evidence, historical photographs, or claims of exact reconstruction.",
@@ -109,8 +109,8 @@
       "source_files": [
         {
           "path": "apps/web/src/features/visual/ChronoscopeScene.tsx",
-          "bytes": 7864,
-          "sha256": "a44ea0e45f683eaebcde73a1653edb51bce8869b8508e496727f66511cab46cf"
+          "bytes": 7928,
+          "sha256": "5f08e6c19ad78ea49184b21c6d3deb8ccc5bf0037fce2ce7efc8a68129cea879"
         }
       ],
       "runtime": "three@0.185.1",

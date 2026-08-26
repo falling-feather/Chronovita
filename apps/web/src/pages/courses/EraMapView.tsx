@@ -30,6 +30,7 @@ import {
   zoomEraMapAt,
   type EraMapViewport,
 } from './eraMapViewport';
+import { publicAssetUrl } from '../../runtime';
 
 interface Props {
   era: EraOverlay;
@@ -55,7 +56,7 @@ interface PinchState {
   view: EraMapViewport;
 }
 
-const TERRAIN_ASSET = '/assets/maps/chronovita-terrain-atlas-v1.webp';
+const TERRAIN_ASSET = publicAssetUrl('/assets/maps/chronovita-terrain-atlas-v1.webp');
 
 function cityKey(city: EraMapCity): string {
   return `${city.dynasty ?? '_'}-${city.name}-${city.modern ?? ''}`;

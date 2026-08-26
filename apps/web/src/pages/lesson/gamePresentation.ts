@@ -1,4 +1,5 @@
 import type { GameNarrativeMessage, GameSession } from '../../utils/api';
+import { publicAssetUrl } from '../../runtime';
 
 export interface GameSceneAsset {
   lessonId: string;
@@ -28,8 +29,8 @@ const GAME_SCENES: Record<string, GameSceneAsset> = {
     place: '洪泛平原与低地聚落',
     time: '约公元前21世纪的课堂情境',
     alt: '暴雨后的河道、低地聚落与协作治水现场教学插画',
-    source960: `${GAME_SCENE_ROOT}/L101-flood-council-960.webp`,
-    source1600: `${GAME_SCENE_ROOT}/L101-flood-council-1600.webp`,
+    source960: publicAssetUrl(`${GAME_SCENE_ROOT}/L101-flood-council-960.webp`),
+    source1600: publicAssetUrl(`${GAME_SCENE_ROOT}/L101-flood-council-1600.webp`),
     palette: 'flood',
   },
   L103: {
@@ -38,8 +39,8 @@ const GAME_SCENES: Record<string, GameSceneAsset> = {
     place: '战国秦国的改革议事空间',
     time: '公元前4世纪的课堂情境',
     alt: '战国秦土木议事空间、简牍与农田城墙教学插画',
-    source960: `${GAME_SCENE_ROOT}/L103-qin-reform-council-960.webp`,
-    source1600: `${GAME_SCENE_ROOT}/L103-qin-reform-council-1600.webp`,
+    source960: publicAssetUrl(`${GAME_SCENE_ROOT}/L103-qin-reform-council-960.webp`),
+    source1600: publicAssetUrl(`${GAME_SCENE_ROOT}/L103-qin-reform-council-1600.webp`),
     palette: 'qin',
   },
 };

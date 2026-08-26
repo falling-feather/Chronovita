@@ -1,5 +1,6 @@
 # 依赖与构建产物
 node_modules/
+apps/web/public/preview/media/
 dist/
 build/
 .pnpm-store/

@@ -46,6 +46,7 @@ import {
 import { APP_VERSION_LABEL } from './version';
 import { bindMessage } from './utils/toast';
 import { toast } from './utils/toast';
+import { IS_STATIC_PREVIEW } from './runtime';
 
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -80,7 +81,7 @@ function selectedKey(pathname: string, items: ShellNavItem[]): string {
 
 function Logo() {
   return (
-    <Link to="/workspace" className="chrono-logo" aria-label="返回角色工作区">
+    <Link to={IS_STATIC_PREVIEW ? '/' : '/workspace'} className="chrono-logo" aria-label="返回角色工作区">
       <div className="chrono-logo-mark">历</div>
       <div>
         <div className="chrono-logo-cn">历史未来课堂</div>
@@ -96,6 +97,10 @@ function UserSlot() {
   const [q, setQ] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const isStudent = auth.mode === 'legacy-local' || auth.principal?.roles.includes('student');
+
+  if (IS_STATIC_PREVIEW) {
+    return <Tag className="chrono-static-preview-tag" color="cyan">GitHub Pages · 只读预览</Tag>;
+  }
 
   const submitSearch = () => {
     const keyword = q.trim();
@@ -278,6 +283,12 @@ function ShellLayout() {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const navItems = useMemo<ShellNavItem[]>(() => {
+    if (IS_STATIC_PREVIEW) {
+      return [
+        { key: '/', label: <Link to="/">首页</Link> },
+        { key: '/courses', label: <Link to="/courses">课程中心</Link> },
+      ];
+    }
     const items: ShellNavItem[] = [];
     if (auth.mode === 'legacy-local' || auth.principal?.roles.includes('student')) {
       items.push(
@@ -324,7 +335,7 @@ function ShellLayout() {
       </Content>
       {!isHome && (
         <Footer className="chrono-shell-footer">
-          Chronovita · {APP_VERSION_LABEL} · 本地课堂
+          Chronovita · {APP_VERSION_LABEL} · {IS_STATIC_PREVIEW ? 'GitHub Pages 只读内容预览' : '本地课堂'}
         </Footer>
       )}
     </Layout>

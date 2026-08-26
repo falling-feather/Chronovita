@@ -18,6 +18,7 @@ import {
 } from '../auth/types';
 import { ApiError } from '../utils/api';
 import { APP_VERSION_LABEL } from '../version';
+import { publicAssetSrcSet, publicAssetUrl } from '../runtime';
 
 interface LoginValues {
   username: string;
@@ -37,29 +38,29 @@ const LOGIN_GALLERY_SCENES: readonly LoginGalleryScene[] = [
     id: 'flood',
     era: '先秦',
     title: '治水齐心',
-    src: '/assets/entry/login-flood-420.webp',
-    srcSet: '/assets/entry/login-flood-420.webp 420w, /assets/entry/login-flood-640.webp 640w',
+    src: publicAssetUrl('/assets/entry/login-flood-420.webp'),
+    srcSet: publicAssetSrcSet('/assets/entry/login-flood-420.webp 420w, /assets/entry/login-flood-640.webp 640w'),
   },
   {
     id: 'qin-reform',
     era: '战国秦',
     title: '制度之辩',
-    src: '/assets/entry/login-qin-reform-420.webp',
-    srcSet: '/assets/entry/login-qin-reform-420.webp 420w, /assets/entry/login-qin-reform-640.webp 640w',
+    src: publicAssetUrl('/assets/entry/login-qin-reform-420.webp'),
+    srcSet: publicAssetSrcSet('/assets/entry/login-qin-reform-420.webp 420w, /assets/entry/login-qin-reform-640.webp 640w'),
   },
   {
     id: 'han-caravan',
     era: '汉',
     title: '西行交往',
-    src: '/assets/entry/login-han-caravan-420.webp',
-    srcSet: '/assets/entry/login-han-caravan-420.webp 420w, /assets/entry/login-han-caravan-640.webp 640w',
+    src: publicAssetUrl('/assets/entry/login-han-caravan-420.webp'),
+    srcSet: publicAssetSrcSet('/assets/entry/login-han-caravan-420.webp 420w, /assets/entry/login-han-caravan-640.webp 640w'),
   },
   {
     id: 'tang-city',
     era: '唐',
     title: '长安万象',
-    src: '/assets/entry/login-tang-city-420.webp',
-    srcSet: '/assets/entry/login-tang-city-420.webp 420w, /assets/entry/login-tang-city-640.webp 640w',
+    src: publicAssetUrl('/assets/entry/login-tang-city-420.webp'),
+    srcSet: publicAssetSrcSet('/assets/entry/login-tang-city-420.webp 420w, /assets/entry/login-tang-city-640.webp 640w'),
   },
 ] as const;
 

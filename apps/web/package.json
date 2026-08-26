@@ -1,11 +1,12 @@
 {
   "name": "@chronovita/web",
-  "version": "0.10.31",
+  "version": "0.10.32",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/clean-pages-preview.mjs && tsc -b && vite build",
+    "build:pages": "node scripts/prepare-pages-preview.mjs && tsc -b && vite build --mode pages",
     "check:release-ui": "node ../../scripts/check_web_release.mjs",
     "test": "vitest run",
     "test:e2e": "playwright test --config playwright.config.ts",

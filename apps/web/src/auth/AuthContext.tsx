@@ -16,6 +16,7 @@ import {
   type Principal,
   type SessionResponse,
 } from './types';
+import { IS_STATIC_PREVIEW } from '../runtime';
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous' | 'legacy' | 'unavailable';
 
@@ -48,6 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const restore = useCallback(async () => {
     setStatus('loading');
+    if (IS_STATIC_PREVIEW) {
+      setMode('legacy-local');
+      setPrincipal(null);
+      setLastSession(null);
+      setStatus('legacy');
+      return;
+    }
     let resolvedMode: AuthMode | null = null;
     try {
       const runtime = await authApi.runtime();

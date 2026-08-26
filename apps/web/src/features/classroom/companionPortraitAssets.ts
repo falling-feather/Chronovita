@@ -1,4 +1,5 @@
 import type { PersonCard } from '../../utils/api';
+import { publicAssetUrl } from '../../runtime';
 
 export const COMPANION_PORTRAIT_ROOT = '/assets/companions/portraits';
 
@@ -42,5 +43,5 @@ export function companionPortraitFor(
 }
 
 export function companionPortraitUrl(asset: CompanionPortraitAsset, width: 256 | 512): string {
-  return `${COMPANION_PORTRAIT_ROOT}/${asset.lessonId}-${asset.slug}-${width}.webp`;
+  return publicAssetUrl(`${COMPANION_PORTRAIT_ROOT}/${asset.lessonId}-${asset.slug}-${width}.webp`);
 }

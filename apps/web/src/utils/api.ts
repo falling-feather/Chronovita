@@ -1,4 +1,7 @@
 // 统一的 API 客户端 · v0.2.0
+import { IS_STATIC_PREVIEW } from '../runtime';
+import { staticPreviewJsonFetch } from '../preview/staticPreview';
+
 const BASE = '/api/v1';
 
 // Accounts 模式以这个非秘密哨兵表示“使用浏览器 HttpOnly Cookie”。旧的
@@ -57,6 +60,7 @@ export async function apiResponseError(response: Response): Promise<ApiError> {
 }
 
 async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  if (IS_STATIC_PREVIEW) return staticPreviewJsonFetch<T>(path, init);
   const r = await fetch(BASE + path, {
     ...init,
     credentials: 'include',

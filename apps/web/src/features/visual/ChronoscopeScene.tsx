@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { publicAssetUrl } from '../../runtime';
 
 type RenderState = 'loading' | 'webgpu' | 'webgl2' | 'fallback';
 
@@ -6,7 +7,7 @@ interface ChronoscopeSceneProps {
   onReady?: (state: Exclude<RenderState, 'loading'>) => void;
 }
 
-const MAP_ROOT = '/assets/home-chronodial';
+const MAP_ROOT = publicAssetUrl('/assets/home-chronodial');
 
 export default function ChronoscopeScene({ onReady }: ChronoscopeSceneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
