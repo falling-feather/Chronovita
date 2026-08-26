@@ -58,6 +58,8 @@
             "sealed-lesson",
             "course-package",
             "scenario-template",
+            "evidence-corpus",
+            "lesson-presentation",
             "format-layer",
             "teacher-markdown",
             "preview-html"
@@ -296,7 +298,8 @@
     "release_schema_version": {
       "enum": [
         "course-release/v1",
-        "course-release/v2"
+        "course-release/v2",
+        "course-release/v3"
       ],
       "title": "Release Schema Version",
       "type": "string"

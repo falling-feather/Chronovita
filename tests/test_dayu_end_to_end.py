@@ -37,6 +37,7 @@ class DayuEndToEndTests(unittest.TestCase):
             "admin_actor": settings.admin_actor,
             "llm_provider": settings.llm_provider,
             "deepseek_api_key": settings.deepseek_api_key,
+            "auth_mode": settings.auth_mode,
         }
         settings.content_root = str(self.content_root)
         settings.game_catalog_path = "scenarios/catalog.v1.json"
@@ -46,6 +47,7 @@ class DayuEndToEndTests(unittest.TestCase):
         settings.admin_actor = "dayu-e2e-reviewer"
         settings.llm_provider = "mock"
         settings.deepseek_api_key = ""
+        settings.auth_mode = "legacy-local"
         self.headers = {"X-Admin-Token": settings.admin_token}
         persistence.close_engine()
         shutdown_game_runtime()

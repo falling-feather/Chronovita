@@ -3051,7 +3051,10 @@ def _lesson_from_content(snapshot: PublishedCourseSnapshot) -> Lesson:
         )
         for item in pkg.scenario_refs
         if item.checksum is not None
-    ] if snapshot.release_schema_version == "course-release/v2" else []
+    ] if snapshot.release_schema_version in {
+        "course-release/v2",
+        "course-release/v3",
+    } else []
     return _project_content_model(
         Lesson,
         f"lesson:{pkg.lesson_id}",

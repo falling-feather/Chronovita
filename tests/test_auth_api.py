@@ -120,6 +120,81 @@ class AuthApiTests(unittest.TestCase):
         except OSError:
             pass
 
+    def test_browser_runtime_config_exposes_mode_without_secrets(self):
+        response = self.client.get("/api/v1/auth/config")
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(
+            response.json(),
+            {
+                "mode": "accounts",
+                "browser_transport": "http-only-cookie",
+            },
+        )
+        self.assertEqual(response.headers["cache-control"], "no-store")
+        self.assertNotIn("token", response.text.lower())
+        self.assertNotIn("cookie_name", response.text.lower())
+
+        settings.auth_mode = "legacy-local"
+        try:
+            legacy = self.client.get("/api/v1/auth/config")
+        finally:
+            settings.auth_mode = "accounts"
+        self.assertEqual(legacy.status_code, 200, legacy.text)
+        self.assertEqual(legacy.json()["mode"], "legacy-local")
+
+    def test_role_action_matrix_for_browser_workspaces(self):
+        admin = self._login("root.admin", "Root password 123!")
+        admin_headers = {"Authorization": f"Bearer {admin['access_token']}"}
+        accounts = (
+            ("student.browser", "Student browser 123!", "student"),
+            ("teacher.browser", "Teacher browser 123!", "teacher"),
+            ("reviewer.browser", "Reviewer browser 123!", "reviewer"),
+        )
+        created: dict[str, tuple[str, str]] = {}
+        for username, password, role in accounts:
+            response = self.client.post(
+                "/api/v1/auth/users",
+                headers=admin_headers,
+                json={
+                    "username": username,
+                    "password": password,
+                    "display_name": role.title(),
+                    "roles": [role],
+                },
+            )
+            self.assertEqual(response.status_code, 201, response.text)
+            created[role] = (response.json()["user_id"], password)
+
+        self.client.cookies.clear()
+        tokens = {
+            role: self._login(f"{role}.browser", password)["access_token"]
+            for role, (_, password) in created.items()
+        }
+        self.client.cookies.clear()
+
+        for role, token in tokens.items():
+            response = self.client.get(
+                "/api/v1/auth/users",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            self.assertEqual(response.status_code, 403, f"{role}: {response.text}")
+
+        allowed = self.client.get("/api/v1/auth/users", headers=admin_headers)
+        self.assertEqual(allowed.status_code, 200, allowed.text)
+
+        target_id = created["student"][0]
+        denied = self.client.patch(
+            f"/api/v1/auth/users/{target_id}",
+            headers={"Authorization": f"Bearer {tokens['teacher']}"},
+            json={"enabled": False},
+        )
+        self.assertEqual(denied.status_code, 403, denied.text)
+        revoked = self.client.post(
+            f"/api/v1/auth/users/{target_id}/sessions/revoke",
+            headers=admin_headers,
+        )
+        self.assertEqual(revoked.status_code, 200, revoked.text)
+
     def test_cookie_and_bearer_sessions_are_transport_bound(self):
         denied = self.client.post(
             "/api/v1/auth/token",

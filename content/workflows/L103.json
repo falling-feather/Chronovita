@@ -1,0 +1,123 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L103",
+  "course_id": "C-prequin-state",
+  "state": "published",
+  "revision": 8,
+  "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+  "validation": {
+    "schema_version": "content-validation/v1",
+    "validator_version": "course-minimum/v1",
+    "lesson_id": "L103",
+    "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+    "valid": true,
+    "issues": [],
+    "validated_at": "2026-08-13T02:32:38.927375Z",
+    "validated_by": "content-publisher-admin"
+  },
+  "sealed_version": 1,
+  "sealed_checksum": "d6e55dfac0486d0f167921d125aa53959cbd104741c0f9e10a414086dd9a2dd5",
+  "published_course_id": "C-prequin-state",
+  "published_version": 1,
+  "published_release_id": "rel-28b5624648-0005",
+  "updated_at": "2026-08-14T02:58:26.449332Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "content-author-shangyang",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-08-13T02:32:38.876480Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "validation_passed",
+      "from_state": "draft",
+      "to_state": "validated",
+      "actor": "content-author-shangyang",
+      "note": "Minimum content validation passed.",
+      "occurred_at": "2026-08-13T02:32:38.893346Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 3,
+      "action": "submit_review",
+      "from_state": "validated",
+      "to_state": "in_review",
+      "actor": "content-author-shangyang",
+      "note": "L103 正文、史实边界、人物、地图与课堂结构已完成，申请独立审校。",
+      "occurred_at": "2026-08-13T02:32:38.903664Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 4,
+      "action": "approve",
+      "from_state": "in_review",
+      "to_state": "approved",
+      "actor": "content-reviewer-shangyang",
+      "note": "已核对后世记载、同时代器物、较晚秦简、文本层次和制度代价，批准封存。",
+      "occurred_at": "2026-08-13T02:32:38.914597Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 5,
+      "action": "seal",
+      "from_state": "approved",
+      "to_state": "sealed",
+      "actor": "content-publisher-admin",
+      "note": "Sealed immutable source version 1.",
+      "occurred_at": "2026-08-13T02:32:38.941386Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": 1,
+      "release_id": null
+    },
+    {
+      "sequence": 6,
+      "action": "publish",
+      "from_state": "sealed",
+      "to_state": "published",
+      "actor": "content-publisher-admin",
+      "note": "发布 L103 商鞅变法正式旗舰课：课程、节点式六回合关卡、证据库与导读资源精确绑定。",
+      "occurred_at": "2026-08-13T02:32:39.385551Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0003"
+    },
+    {
+      "sequence": 7,
+      "action": "publish",
+      "from_state": "published",
+      "to_state": "published",
+      "actor": "content-publisher-admin",
+      "note": "发布 L101 大禹治水 HyperFrames 课堂短片：保留课程、关卡与证据版本，将展示资源升级并精确绑定至 v002。",
+      "occurred_at": "2026-08-14T02:58:25.527244Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0004"
+    },
+    {
+      "sequence": 8,
+      "action": "publish",
+      "from_state": "published",
+      "to_state": "published",
+      "actor": "content-publisher-admin",
+      "note": "发布 L103 商鞅变法 HyperFrames 课堂短片：保留课程、关卡与证据版本，将展示资源升级并精确绑定至 v002。",
+      "occurred_at": "2026-08-14T02:58:26.449332Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0005"
+    }
+  ],
+  "checksum": "b32fd994fdd7cea03f4b3d936237514527a5e18731eea0ffa630f0b0f2bfd179"
+}

@@ -60,8 +60,10 @@ class AdminContentApiTests(unittest.TestCase):
         self.previous_actor = settings.admin_actor
         self.previous_github_enabled = settings.github_publication_enabled
         self.previous_github_token = settings.github_publication_token
+        self.previous_auth_mode = settings.auth_mode
         settings.admin_token = "test-admin-token"
         settings.admin_actor = "trusted-admin"
+        settings.auth_mode = "legacy-local"
         app = FastAPI()
         app.include_router(admin_content.router, prefix="/api/v1/admin/content")
         app.include_router(courses_router.router, prefix="/api/v1/courses")
@@ -74,6 +76,7 @@ class AdminContentApiTests(unittest.TestCase):
         settings.admin_actor = self.previous_actor
         settings.github_publication_enabled = self.previous_github_enabled
         settings.github_publication_token = self.previous_github_token
+        settings.auth_mode = self.previous_auth_mode
         persistence.close_engine()
         shutil.rmtree(self.tmp_root, ignore_errors=True)
         try:

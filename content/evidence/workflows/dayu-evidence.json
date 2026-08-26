@@ -1,0 +1,91 @@
+{
+  "schema_version": "evidence-workflow/v1",
+  "corpus_id": "dayu-evidence",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L101",
+  "state": "sealed",
+  "revision": 5,
+  "draft_revision": 1,
+  "draft_fingerprint": "771e6a1a41c4bc013029d85919b5d36ec6b515a2468ba1ab7daeb062d5561f22",
+  "validation": {
+    "schema_version": "evidence-validation/v1",
+    "validator_version": "evidence-publication/v1",
+    "corpus_id": "dayu-evidence",
+    "course_id": "C-prequin-state",
+    "lesson_id": "L101",
+    "draft_revision": 1,
+    "draft_fingerprint": "771e6a1a41c4bc013029d85919b5d36ec6b515a2468ba1ab7daeb062d5561f22",
+    "valid": true,
+    "issues": [],
+    "source_count": 12,
+    "passage_count": 30,
+    "validated_at": "2026-08-13T01:57:23.572614Z",
+    "validated_by": "content-publisher-admin"
+  },
+  "sealed_version": 1,
+  "sealed_checksum": "ae736fd34b31fc99907e0a33b518dd2fd360530af95d2717e3a54832b2c1ff49",
+  "updated_at": "2026-08-13T01:57:23.585783Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "content-author-dayu",
+      "note": "",
+      "occurred_at": "2026-08-13T01:57:23.514004Z",
+      "draft_revision": 1,
+      "draft_fingerprint": "771e6a1a41c4bc013029d85919b5d36ec6b515a2468ba1ab7daeb062d5561f22",
+      "sealed_version": null
+    },
+    {
+      "sequence": 2,
+      "action": "validation_passed",
+      "from_state": "draft",
+      "to_state": "validated",
+      "actor": "content-author-dayu",
+      "note": "",
+      "occurred_at": "2026-08-13T01:57:23.537300Z",
+      "draft_revision": 1,
+      "draft_fingerprint": "771e6a1a41c4bc013029d85919b5d36ec6b515a2468ba1ab7daeb062d5561f22",
+      "sealed_version": null
+    },
+    {
+      "sequence": 3,
+      "action": "submit_review",
+      "from_state": "validated",
+      "to_state": "in_review",
+      "actor": "content-author-dayu",
+      "note": "12 项来源与 30 个稳定片段已逐项绑定课程事实，申请独立审校。",
+      "occurred_at": "2026-08-13T01:57:23.547815Z",
+      "draft_revision": 1,
+      "draft_fingerprint": "771e6a1a41c4bc013029d85919b5d36ec6b515a2468ba1ab7daeb062d5561f22",
+      "sealed_version": null
+    },
+    {
+      "sequence": 4,
+      "action": "approve",
+      "from_state": "in_review",
+      "to_state": "approved",
+      "actor": "content-reviewer-dayu",
+      "note": "来源年代、权利说明、事实与人物绑定及争议标记均已核对。",
+      "occurred_at": "2026-08-13T01:57:23.559116Z",
+      "draft_revision": 1,
+      "draft_fingerprint": "771e6a1a41c4bc013029d85919b5d36ec6b515a2468ba1ab7daeb062d5561f22",
+      "sealed_version": null
+    },
+    {
+      "sequence": 5,
+      "action": "seal",
+      "from_state": "approved",
+      "to_state": "sealed",
+      "actor": "content-publisher-admin",
+      "note": "Sealed immutable evidence corpus version 1.",
+      "occurred_at": "2026-08-13T01:57:23.585783Z",
+      "draft_revision": 1,
+      "draft_fingerprint": "771e6a1a41c4bc013029d85919b5d36ec6b515a2468ba1ab7daeb062d5561f22",
+      "sealed_version": 1
+    }
+  ],
+  "checksum": "5bc297060fba1c5c8fe5cc7d4e0c6faae657687c6060204c486eca1f6f07bf6a"
+}

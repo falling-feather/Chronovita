@@ -31,21 +31,29 @@ import {
   type ContentAssetRecord,
   type ContentFileRecord,
   type CourseReleaseItemV2,
+  type CourseReleaseItemV3,
   type CourseReleaseManifest,
+  type EvidenceReleaseSelection,
   type KeywordProfilePackage,
   type LessonContentPackage,
   type LessonSourceRecord,
   type PersonProfilePackage,
   type RuntimeScenarioRecord,
+  type RuntimeEvidenceRecord,
+  type RuntimePresentationRecord,
+  type PresentationReleaseSelection,
   type ScenarioReleaseSelection,
 } from '../utils/api';
 import { ADMIN_CONTENT_PREVIEW_KEY } from '../utils/adminContentStorage';
 import { parseContentBlock, parseContentMarkup, renderMarkupHtml, stripInlineMarkup } from '../utils/contentMarkup';
 import { toast } from '../utils/toast';
 import ScenarioRuleEditor from './admin/ScenarioRuleEditor';
+import EvidenceStudio from './admin/EvidenceStudio';
 import ArchivePublicationPanel from './admin/ArchivePublicationPanel';
 import AssetPublicationPanel from './admin/AssetPublicationPanel';
 import { runtimeScenarioKey } from './admin/scenarioRuleModel';
+import { useAuth } from '../auth/AuthContext';
+import { COOKIE_AUTH_CREDENTIAL } from '../utils/api';
 
 const { TextArea } = Input;
 const TOKEN_KEY = 'chrono.admin.token';
@@ -54,8 +62,9 @@ const LOCAL_PERSON_KEY = 'chrono.admin.content.person.v1';
 const LOCAL_KEYWORD_KEY = 'chrono.admin.content.keyword.v1';
 const EDITOR_MODE_KEY = 'chrono.admin.content.mode.v1';
 
-type EditorMode = 'lesson' | 'person' | 'keyword' | 'scenario';
+type EditorMode = 'lesson' | 'person' | 'keyword' | 'scenario' | 'evidence';
 type ScenarioBindingMode = 'preserve' | 'replace' | 'clear';
+type SupplementBindingMode = 'preserve' | 'replace';
 type BodyInlineFormat = 'bold' | 'highlight' | 'keyword' | 'red' | 'blue' | 'gold' | 'large' | 'small';
 type BodyBlockFormat = 'paragraph' | 'heading1' | 'heading2' | 'heading3' | 'focus' | 'question' | 'goal';
 
@@ -282,7 +291,8 @@ function newKeywordEditor(): KeywordEditorState {
 
 function readEditorMode(): EditorMode {
   const saved = localStorage.getItem(EDITOR_MODE_KEY);
-  return saved === 'lesson' || saved === 'person' || saved === 'keyword' || saved === 'scenario'
+  return saved === 'lesson' || saved === 'person' || saved === 'keyword'
+    || saved === 'scenario' || saved === 'evidence'
     ? saved
     : 'lesson';
 }
@@ -764,10 +774,32 @@ function releaseItemV2(
   return item && 'scenarios' in item ? item : null;
 }
 
+function releaseItemV3(
+  release: CourseReleaseManifest | null,
+  lessonId: string,
+): CourseReleaseItemV3 | null {
+  const item = release?.items.find((candidate) => candidate.lesson_id === lessonId);
+  return item && 'evidence_corpus' in item ? item : null;
+}
+
+function supplementRuntimeKey(
+  item: RuntimeEvidenceRecord | RuntimePresentationRecord,
+): string {
+  const descriptor = item.descriptor;
+  return `${descriptor.artifact_id}@${descriptor.version}:${descriptor.checksum}`;
+}
+
 export default function AdminContentPage() {
   const navigate = useNavigate();
+  const auth = useAuth();
   const [editorMode, setEditorMode] = useState<EditorMode>(() => readEditorMode());
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || import.meta.env.VITE_ADMIN_TOKEN || '');
+  const [legacyToken, setLegacyToken] = useState(() => auth.mode === 'legacy-local'
+    ? sessionStorage.getItem(TOKEN_KEY) || import.meta.env.VITE_ADMIN_TOKEN || ''
+    : '');
+  const token = auth.mode === 'accounts' ? COOKIE_AUTH_CREDENTIAL : legacyToken;
+  const canAuthor = auth.can('content.author');
+  const canReview = auth.can('content.review');
+  const canPublish = auth.can('content.publish');
   const [editor, setEditor] = useState<EditorState>(() => readLocalEditor());
   const [personEditor, setPersonEditor] = useState<PersonEditorState>(() => readLocalPersonEditor());
   const [keywordEditor, setKeywordEditor] = useState<KeywordEditorState>(() => readLocalKeywordEditor());
@@ -781,9 +813,14 @@ export default function AdminContentPage() {
   const [sourceLessons, setSourceLessons] = useState<LessonSourceRecord[]>([]);
   const [assets, setAssets] = useState<ContentAssetRecord[]>([]);
   const [runtimeScenarios, setRuntimeScenarios] = useState<RuntimeScenarioRecord[]>([]);
+  const [runtimeEvidence, setRuntimeEvidence] = useState<RuntimeEvidenceRecord[]>([]);
+  const [runtimePresentations, setRuntimePresentations] = useState<RuntimePresentationRecord[]>([]);
   const [scenarioBindingMode, setScenarioBindingMode] = useState<ScenarioBindingMode>('preserve');
+  const [supplementBindingMode, setSupplementBindingMode] = useState<SupplementBindingMode>('preserve');
   const [selectedScenarioKeys, setSelectedScenarioKeys] = useState<string[]>([]);
   const [primaryScenarioKey, setPrimaryScenarioKey] = useState<string>();
+  const [selectedEvidenceKey, setSelectedEvidenceKey] = useState<string>();
+  const [selectedPresentationKey, setSelectedPresentationKey] = useState<string>();
   const [selectedDraft, setSelectedDraft] = useState<string>();
   const [selectedSourceLesson, setSelectedSourceLesson] = useState<string>();
   const [selectedPersonAsset, setSelectedPersonAsset] = useState<string>();
@@ -821,6 +858,20 @@ export default function AdminContentPage() {
     () => releaseItemV2(activeRelease, editor.lesson_id),
     [activeRelease, editor.lesson_id],
   );
+  const activeReleaseItemV3 = useMemo(
+    () => releaseItemV3(activeRelease, editor.lesson_id),
+    [activeRelease, editor.lesson_id],
+  );
+  const lessonRuntimeEvidence = useMemo(
+    () => runtimeEvidence.filter((item) => item.descriptor.course_id === editor.course_id
+      && item.descriptor.lesson_id === editor.lesson_id),
+    [editor.course_id, editor.lesson_id, runtimeEvidence],
+  );
+  const lessonRuntimePresentations = useMemo(
+    () => runtimePresentations.filter((item) => item.descriptor.course_id === editor.course_id
+      && item.descriptor.lesson_id === editor.lesson_id),
+    [editor.course_id, editor.lesson_id, runtimePresentations],
+  );
   const selectedRuntimeScenarios = useMemo(() => {
     const selected = new Set(selectedScenarioKeys);
     return lessonRuntimeScenarios.filter((item) => selected.has(runtimeScenarioKey(item)));
@@ -841,6 +892,35 @@ export default function AdminContentPage() {
     value: runtimeScenarioKey(item),
     label: `${item.title} · v${item.descriptor.version}`,
   })), [selectedRuntimeScenarios]);
+  const selectedRuntimeEvidence = useMemo(
+    () => lessonRuntimeEvidence.find((item) => supplementRuntimeKey(item) === selectedEvidenceKey),
+    [lessonRuntimeEvidence, selectedEvidenceKey],
+  );
+  const selectedRuntimePresentation = useMemo(
+    () => lessonRuntimePresentations.find((item) => supplementRuntimeKey(item) === selectedPresentationKey),
+    [lessonRuntimePresentations, selectedPresentationKey],
+  );
+  const evidenceVersionOptions = useMemo(() => lessonRuntimeEvidence.map((item) => ({
+    value: supplementRuntimeKey(item),
+    label: `${item.title} · v${item.descriptor.version} · ${item.source_count} 来源 / ${item.passage_count} 片段 · ${item.descriptor.checksum.slice(0, 8)}`,
+  })), [lessonRuntimeEvidence]);
+  const presentationVersionOptions = useMemo(() => lessonRuntimePresentations.map((item) => ({
+    value: supplementRuntimeKey(item),
+    label: `${item.title} · v${item.descriptor.version} · ${item.video_duration_seconds}s · ${item.descriptor.checksum.slice(0, 8)}`,
+  })), [lessonRuntimePresentations]);
+
+  useEffect(() => {
+    if (auth.mode === 'accounts') {
+      // 清理旧版本遗留凭证；accounts 模式从不读取或写入浏览器令牌存储。
+      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
+      setLegacyToken('');
+      return;
+    }
+    if (auth.mode === 'legacy-local') {
+      setLegacyToken(sessionStorage.getItem(TOKEN_KEY) || import.meta.env.VITE_ADMIN_TOKEN || '');
+    }
+  }, [auth.mode]);
 
   const rememberEditorMode = (value: EditorMode) => {
     setEditorMode(value);
@@ -880,6 +960,29 @@ export default function AdminContentPage() {
           ? keys[0]
           : undefined
     ));
+  };
+
+  const changeSupplementBindingMode = (value: SupplementBindingMode) => {
+    setSupplementBindingMode(value);
+    if (value !== 'replace') return;
+    if (!selectedEvidenceKey) {
+      const active = lessonRuntimeEvidence.find((item) => (
+        item.descriptor.artifact_id === activeReleaseItemV3?.evidence_corpus.artifact_id
+        && item.descriptor.version === activeReleaseItemV3?.evidence_corpus.version
+        && item.descriptor.checksum === activeReleaseItemV3?.evidence_corpus.checksum
+      ));
+      const fallback = active || (lessonRuntimeEvidence.length === 1 ? lessonRuntimeEvidence[0] : undefined);
+      setSelectedEvidenceKey(fallback ? supplementRuntimeKey(fallback) : undefined);
+    }
+    if (!selectedPresentationKey) {
+      const active = lessonRuntimePresentations.find((item) => (
+        item.descriptor.artifact_id === activeReleaseItemV3?.lesson_presentation.artifact_id
+        && item.descriptor.version === activeReleaseItemV3?.lesson_presentation.version
+        && item.descriptor.checksum === activeReleaseItemV3?.lesson_presentation.checksum
+      ));
+      const fallback = active || (lessonRuntimePresentations.length === 1 ? lessonRuntimePresentations[0] : undefined);
+      setSelectedPresentationKey(fallback ? supplementRuntimeKey(fallback) : undefined);
+    }
   };
 
   const currentPayload = useMemo(() => {
@@ -932,8 +1035,11 @@ export default function AdminContentPage() {
 
   useEffect(() => {
     setScenarioBindingMode('preserve');
+    setSupplementBindingMode('preserve');
     setSelectedScenarioKeys([]);
     setPrimaryScenarioKey(undefined);
+    setSelectedEvidenceKey(undefined);
+    setSelectedPresentationKey(undefined);
   }, [editor.course_id, editor.lesson_id]);
 
   useEffect(() => {
@@ -941,6 +1047,13 @@ export default function AdminContentPage() {
     setSelectedScenarioKeys((current) => current.filter((key) => available.has(key)));
     setPrimaryScenarioKey((current) => current && available.has(current) ? current : undefined);
   }, [lessonRuntimeScenarios]);
+
+  useEffect(() => {
+    const availableEvidence = new Set(lessonRuntimeEvidence.map(supplementRuntimeKey));
+    const availablePresentations = new Set(lessonRuntimePresentations.map(supplementRuntimeKey));
+    setSelectedEvidenceKey((current) => current && availableEvidence.has(current) ? current : undefined);
+    setSelectedPresentationKey((current) => current && availablePresentations.has(current) ? current : undefined);
+  }, [lessonRuntimeEvidence, lessonRuntimePresentations]);
 
   useEffect(() => {
     localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(editor));
@@ -962,13 +1075,18 @@ export default function AdminContentPage() {
     setSourceLessons([]);
     setAssets([]);
     setRuntimeScenarios([]);
+    setRuntimeEvidence([]);
+    setRuntimePresentations([]);
     setPersonValidation(null);
     setKeywordValidation(null);
     setPersonVersions([]);
     setKeywordVersions([]);
     setScenarioBindingMode('preserve');
+    setSupplementBindingMode('preserve');
     setSelectedScenarioKeys([]);
     setPrimaryScenarioKey(undefined);
+    setSelectedEvidenceKey(undefined);
+    setSelectedPresentationKey(undefined);
     if (!token) {
       return;
     }
@@ -978,12 +1096,16 @@ export default function AdminContentPage() {
         api.adminContentSourceLessons(token),
         api.adminContentAssets(token),
         api.adminRuntimeScenarios(token),
-      ]).then(([draftResult, sourceResult, assetResult, scenarioResult]) => {
+        api.adminRuntimeEvidence(token),
+        api.adminLessonPresentations(token),
+      ]).then(([draftResult, sourceResult, assetResult, scenarioResult, evidenceResult, presentationResult]) => {
         if (tokenRefreshSequenceRef.current !== sequence) return;
         setDrafts(draftResult.items);
         setSourceLessons(sourceResult.items);
         setAssets(assetResult.items);
         setRuntimeScenarios(scenarioResult.items);
+        setRuntimeEvidence(evidenceResult.items);
+        setRuntimePresentations(presentationResult.items);
       }).catch((error: any) => {
         if (tokenRefreshSequenceRef.current === sequence) {
           toast.error(error?.message || '管理员内容库读取失败');
@@ -1011,8 +1133,8 @@ export default function AdminContentPage() {
     editorLoadSequenceRef.current += 1;
     tokenRefreshSequenceRef.current += 1;
     workflowRefreshSequenceRef.current += 1;
-    setToken(value);
-    localStorage.setItem(TOKEN_KEY, value);
+    setLegacyToken(value);
+    if (auth.mode === 'legacy-local') sessionStorage.setItem(TOKEN_KEY, value);
   };
 
   const updateEditor = (patch: Partial<EditorState>) => {
@@ -1204,6 +1326,28 @@ export default function AdminContentPage() {
     } catch (err: any) {
       if (tokenRefreshSequenceRef.current === sequence) {
         toast.error(err?.message || '封存关卡读取失败');
+      }
+    }
+  };
+
+  const refreshSupplementArtifacts = async () => {
+    if (!token) {
+      setRuntimeEvidence([]);
+      setRuntimePresentations([]);
+      return;
+    }
+    const sequence = tokenRefreshSequenceRef.current;
+    try {
+      const [evidenceResult, presentationResult] = await Promise.all([
+        api.adminRuntimeEvidence(token),
+        api.adminLessonPresentations(token),
+      ]);
+      if (tokenRefreshSequenceRef.current !== sequence) return;
+      setRuntimeEvidence(evidenceResult.items);
+      setRuntimePresentations(presentationResult.items);
+    } catch (err: any) {
+      if (tokenRefreshSequenceRef.current === sequence) {
+        toast.error(err?.message || '证据与展示资源读取失败');
       }
     }
   };
@@ -1771,6 +1915,8 @@ export default function AdminContentPage() {
   const publishSealed = async () => {
     if (!activeWorkflow?.sealed_version) return;
     let scenarioSelections: ScenarioReleaseSelection[] | undefined;
+    let evidenceSelection: EvidenceReleaseSelection | undefined;
+    let presentationSelection: PresentationReleaseSelection | undefined;
     if (scenarioBindingMode === 'clear') {
       scenarioSelections = [];
     } else if (scenarioBindingMode === 'replace') {
@@ -1797,6 +1943,22 @@ export default function AdminContentPage() {
           primary: runtimeScenarioKey(item) === primaryScenarioKey,
         }));
     }
+    if (supplementBindingMode === 'replace') {
+      if (!selectedRuntimeEvidence || !selectedRuntimePresentation) {
+        toast.warning('V3 发布必须同时选择一份精确证据库和一份精确展示资源');
+        return;
+      }
+      evidenceSelection = {
+        corpus_id: selectedRuntimeEvidence.descriptor.artifact_id,
+        corpus_version: selectedRuntimeEvidence.descriptor.version,
+        corpus_checksum: selectedRuntimeEvidence.descriptor.checksum,
+      };
+      presentationSelection = {
+        presentation_id: selectedRuntimePresentation.descriptor.artifact_id,
+        presentation_version: selectedRuntimePresentation.descriptor.version,
+        presentation_checksum: selectedRuntimePresentation.descriptor.checksum,
+      };
+    }
     setBusy('publish');
     try {
       const res = await api.adminContentPublish(
@@ -1805,6 +1967,8 @@ export default function AdminContentPage() {
         activeWorkflow.sealed_version,
         reviewNote,
         scenarioSelections,
+        evidenceSelection,
+        presentationSelection,
       );
       if (res.workflow) setWorkflow(res.workflow);
       setCurrentRelease(res.release);
@@ -1815,8 +1979,11 @@ export default function AdminContentPage() {
         releaseHistoryRefreshed = false;
       }
       setScenarioBindingMode('preserve');
+      setSupplementBindingMode('preserve');
       setSelectedScenarioKeys([]);
       setPrimaryScenarioKey(undefined);
+      setSelectedEvidenceKey(undefined);
+      setSelectedPresentationKey(undefined);
       if (releaseHistoryRefreshed) {
         toast.success(`已发布课程版本 ${res.release.release_no}`);
       } else {
@@ -1897,6 +2064,13 @@ export default function AdminContentPage() {
           <h1 className="chrono-title" style={{ margin: 0 }}>内容编辑器</h1>
         </div>
         <Space wrap style={{ justifyContent: 'flex-end', maxWidth: '100%' }}>
+          {auth.mode === 'accounts' && auth.principal && (
+            <div className="chrono-admin-principal">
+              <strong>{auth.principal.display_name}</strong>
+              <span>{auth.principal.roles.join(' · ')}</span>
+            </div>
+          )}
+          {auth.mode === 'legacy-local' && (
           <Input.Password
             aria-label="Admin token"
             value={token}
@@ -1904,8 +2078,23 @@ export default function AdminContentPage() {
             onChange={(event) => rememberToken(event.target.value)}
             style={{ width: 220 }}
           />
+          )}
         </Space>
       </div>
+
+      {auth.mode === 'accounts' && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="当前职责"
+          description={[
+            canAuthor ? '可创作与送审' : '',
+            canReview ? '可独立审校' : '',
+            canPublish ? '可封存与发布' : '',
+          ].filter(Boolean).join(' · ') || '只读查看'}
+        />
+      )}
 
       <div className="chrono-card" style={{ padding: 12, marginBottom: 16 }}>
         <div className="chrono-course-eyeline" style={{ marginBottom: 8 }}>编辑对象</div>
@@ -1918,6 +2107,7 @@ export default function AdminContentPage() {
             { label: '人物档案', value: 'person' },
             { label: '关键词档案', value: 'keyword' },
             { label: '关卡规则', value: 'scenario' },
+            { label: '证据与展示', value: 'evidence' },
           ]}
         />
       </div>
@@ -2199,12 +2389,12 @@ export default function AdminContentPage() {
           </div>
 
           <Space wrap style={{ marginBottom: 12 }}>
-            <Button icon={<FileTextOutlined />} onClick={createNew}>新建</Button>
-            <Button icon={<FileTextOutlined />} loading={busy === 'template'} onClick={loadTemplate}>模板</Button>
+            <Button disabled={!canAuthor} icon={<FileTextOutlined />} onClick={createNew}>新建</Button>
+            <Button disabled={!canAuthor} icon={<FileTextOutlined />} loading={busy === 'template'} onClick={loadTemplate}>模板</Button>
             <Button icon={<BookOutlined />} onClick={() => setShowGuide((value) => !value)}>文档</Button>
             <Button icon={<ReloadOutlined />} onClick={parseFocusBlocks}>解析重点</Button>
             <Button icon={<EyeOutlined />} loading={busy === 'preview'} onClick={previewContent}>预览</Button>
-            <Button type="primary" icon={<SaveOutlined />} loading={busy === 'save'} onClick={saveDraft}>保存草稿</Button>
+            <Button disabled={!canAuthor} type="primary" icon={<SaveOutlined />} loading={busy === 'save'} onClick={saveDraft}>保存草稿</Button>
             <Button icon={<DownloadOutlined />} onClick={exportCurrent}>导出文件包</Button>
           </Space>
 
@@ -2327,10 +2517,90 @@ export default function AdminContentPage() {
               )}
             </div>
 
+            <div style={{ padding: '0 0 12px', marginBottom: 12, borderBottom: '1px solid var(--border-soft)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+                <div className="chrono-course-eyeline">本次发布的证据与展示绑定</div>
+                <Tooltip title="刷新封存证据与展示资源">
+                  <Button
+                    aria-label="刷新发布证据展示列表"
+                    type="text"
+                    icon={<ReloadOutlined />}
+                    onClick={refreshSupplementArtifacts}
+                  />
+                </Tooltip>
+              </div>
+
+              <div style={{ display: 'grid', gap: 6, marginBottom: 10 }}>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--text-mute)', fontSize: 12 }}>当前线上证据</span>
+                  {activeReleaseItemV3 ? (
+                    <Tag color="cyan">
+                      {activeReleaseItemV3.evidence_corpus.artifact_id} · v{activeReleaseItemV3.evidence_corpus.version} · {activeReleaseItemV3.evidence_corpus.checksum.slice(0, 8)}
+                    </Tag>
+                  ) : <Tag>V1/V2 未绑定</Tag>}
+                </div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--text-mute)', fontSize: 12 }}>当前线上展示</span>
+                  {activeReleaseItemV3 ? (
+                    <Tag color="gold">
+                      {activeReleaseItemV3.lesson_presentation.artifact_id} · v{activeReleaseItemV3.lesson_presentation.version} · {activeReleaseItemV3.lesson_presentation.checksum.slice(0, 8)}
+                    </Tag>
+                  ) : <Tag>V1/V2 未绑定</Tag>}
+                </div>
+              </div>
+
+              <Segmented
+                aria-label="证据展示绑定方式"
+                block
+                value={supplementBindingMode}
+                options={[
+                  { label: '保留精确版本', value: 'preserve' },
+                  { label: '替换为新版本', value: 'replace' },
+                ]}
+                onChange={(value) => changeSupplementBindingMode(value as SupplementBindingMode)}
+              />
+
+              {supplementBindingMode === 'preserve' ? (
+                <div style={{ color: 'var(--text-mute)', fontSize: 12, marginTop: 8 }}>
+                  沿用当前 release 中的 checksum；若当前仍是 V1/V2，请选择“替换”为该课时补齐 V3 资源。
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: 10, marginTop: 10 }}>
+                  <label>
+                    <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>精确证据库</div>
+                    <Select
+                      aria-label="选择发布证据库"
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder={lessonRuntimeEvidence.length ? '选择 corpus/version/checksum' : '当前课时暂无封存证据库'}
+                      value={selectedEvidenceKey}
+                      options={evidenceVersionOptions}
+                      onChange={setSelectedEvidenceKey}
+                      style={{ width: '100%' }}
+                    />
+                  </label>
+                  <label>
+                    <div className="chrono-course-eyeline" style={{ marginBottom: 6 }}>精确展示资源</div>
+                    <Select
+                      aria-label="选择发布展示资源"
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder={lessonRuntimePresentations.length ? '选择 presentation/version/checksum' : '当前课时暂无封存展示资源'}
+                      value={selectedPresentationKey}
+                      options={presentationVersionOptions}
+                      onChange={setSelectedPresentationKey}
+                      style={{ width: '100%' }}
+                    />
+                  </label>
+                </div>
+              )}
+            </div>
+
             <Space size={[6, 8]} wrap style={{ marginBottom: 10 }}>
               <Button
                 icon={<SafetyCertificateOutlined />}
                 loading={busy === 'validate'}
+                disabled={!canAuthor}
                 onClick={validateDraft}
               >
                 校验
@@ -2338,7 +2608,7 @@ export default function AdminContentPage() {
               <Button
                 icon={<SendOutlined />}
                 loading={busy === 'submit-review'}
-                disabled={!activeWorkflow || !['validated', 'changes_requested'].includes(activeWorkflow.state)}
+                disabled={!canAuthor || !activeWorkflow || !['validated', 'changes_requested'].includes(activeWorkflow.state)}
                 onClick={submitReview}
               >
                 提交审校
@@ -2346,7 +2616,7 @@ export default function AdminContentPage() {
               <Button
                 icon={<CheckCircleOutlined />}
                 loading={busy === 'approve'}
-                disabled={activeWorkflow?.state !== 'in_review'}
+                disabled={!canReview || activeWorkflow?.state !== 'in_review'}
                 onClick={() => reviewDraft('approve')}
               >
                 通过
@@ -2355,7 +2625,7 @@ export default function AdminContentPage() {
                 danger
                 icon={<CloseCircleOutlined />}
                 loading={busy === 'request-changes'}
-                disabled={activeWorkflow?.state !== 'in_review' || !reviewNote.trim()}
+                disabled={!canReview || activeWorkflow?.state !== 'in_review' || !reviewNote.trim()}
                 onClick={() => reviewDraft('changes_requested')}
               >
                 退回
@@ -2363,7 +2633,7 @@ export default function AdminContentPage() {
               <Button
                 icon={<LockOutlined />}
                 loading={busy === 'seal'}
-                disabled={activeWorkflow?.state !== 'approved'}
+                disabled={!canPublish || activeWorkflow?.state !== 'approved'}
                 onClick={sealDraft}
               >
                 封存
@@ -2372,7 +2642,7 @@ export default function AdminContentPage() {
                 type="primary"
                 icon={<RocketOutlined />}
                 loading={busy === 'publish'}
-                disabled={activeWorkflow?.state !== 'sealed' || !activeWorkflow.sealed_version}
+                disabled={!canPublish || activeWorkflow?.state !== 'sealed' || !activeWorkflow.sealed_version}
                 onClick={publishSealed}
               >
                 发布
@@ -2428,7 +2698,7 @@ export default function AdminContentPage() {
                 danger
                 icon={<RollbackOutlined />}
                 loading={busy === 'rollback'}
-                disabled={!selectedRelease || !activeWorkflow}
+                disabled={!canPublish || !selectedRelease || !activeWorkflow}
                 onClick={rollbackRelease}
               >
                 回滚
@@ -2437,6 +2707,7 @@ export default function AdminContentPage() {
 
             <ArchivePublicationPanel
               token={token}
+              canPublish={canPublish}
               courseId={editor.course_id}
               releases={releases}
               currentRelease={activeRelease}
@@ -2513,9 +2784,25 @@ export default function AdminContentPage() {
       {editorMode === 'scenario' && (
         <ScenarioRuleEditor
           token={token}
+          canAuthor={canAuthor}
+          canPublish={canPublish}
           sourceLessons={sourceLessons}
           runtimeScenarios={runtimeScenarios}
           onRefreshRuntimeScenarios={refreshRuntimeScenarios}
+        />
+      )}
+
+      {editorMode === 'evidence' && (
+        <EvidenceStudio
+          token={token}
+          canAuthor={canAuthor}
+          canReview={canReview}
+          canPublish={canPublish}
+          sourceLessons={sourceLessons}
+          courseDrafts={drafts}
+          runtimeEvidence={runtimeEvidence}
+          runtimePresentations={runtimePresentations}
+          onRefreshArtifacts={refreshSupplementArtifacts}
         />
       )}
 
@@ -2580,10 +2867,10 @@ export default function AdminContentPage() {
 
           <aside className="chrono-card" style={{ padding: 16 }}>
             <Space wrap style={{ marginBottom: 12 }}>
-              <Button disabled={Boolean(busy)} icon={<FileTextOutlined />} onClick={loadPersonTemplate} loading={busy === 'person-template'}>模板</Button>
-              <Button disabled={Boolean(busy)} type="primary" icon={<SaveOutlined />} onClick={savePersonAsset} loading={busy === 'person-save'}>保存草稿</Button>
-              <Button disabled={Boolean(busy)} icon={<SafetyCertificateOutlined />} onClick={validatePersonAsset} loading={busy === 'person-validate'}>校验</Button>
-              <Button disabled={Boolean(busy)} icon={<LockOutlined />} onClick={sealPersonAsset} loading={busy === 'person-seal'}>封存</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} icon={<FileTextOutlined />} onClick={loadPersonTemplate} loading={busy === 'person-template'}>模板</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} type="primary" icon={<SaveOutlined />} onClick={savePersonAsset} loading={busy === 'person-save'}>保存草稿</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} icon={<SafetyCertificateOutlined />} onClick={validatePersonAsset} loading={busy === 'person-validate'}>校验</Button>
+              <Button disabled={Boolean(busy) || !canPublish} icon={<LockOutlined />} onClick={sealPersonAsset} loading={busy === 'person-seal'}>封存</Button>
               <Button disabled={Boolean(busy)} icon={<DownloadOutlined />} onClick={exportCurrentPerson}>导出草稿</Button>
               <Button disabled={Boolean(busy)} icon={<ReloadOutlined />} onClick={refreshPersonAssetState} loading={busy === 'person-refresh'}>刷新</Button>
             </Space>
@@ -2658,6 +2945,7 @@ export default function AdminContentPage() {
             )}
             <AssetPublicationPanel
               token={token}
+              canPublish={canPublish}
               assetKind="person"
               assetId={personEditor.asset_id.trim()}
               assetTitle={personEditor.name.trim()}
@@ -2728,10 +3016,10 @@ export default function AdminContentPage() {
 
           <aside className="chrono-card" style={{ padding: 16 }}>
             <Space wrap style={{ marginBottom: 12 }}>
-              <Button disabled={Boolean(busy)} icon={<FileTextOutlined />} onClick={loadKeywordTemplate} loading={busy === 'keyword-template'}>模板</Button>
-              <Button disabled={Boolean(busy)} type="primary" icon={<SaveOutlined />} onClick={saveKeywordAsset} loading={busy === 'keyword-save'}>保存草稿</Button>
-              <Button disabled={Boolean(busy)} icon={<SafetyCertificateOutlined />} onClick={validateKeywordAsset} loading={busy === 'keyword-validate'}>校验</Button>
-              <Button disabled={Boolean(busy)} icon={<LockOutlined />} onClick={sealKeywordAsset} loading={busy === 'keyword-seal'}>封存</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} icon={<FileTextOutlined />} onClick={loadKeywordTemplate} loading={busy === 'keyword-template'}>模板</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} type="primary" icon={<SaveOutlined />} onClick={saveKeywordAsset} loading={busy === 'keyword-save'}>保存草稿</Button>
+              <Button disabled={Boolean(busy) || !canAuthor} icon={<SafetyCertificateOutlined />} onClick={validateKeywordAsset} loading={busy === 'keyword-validate'}>校验</Button>
+              <Button disabled={Boolean(busy) || !canPublish} icon={<LockOutlined />} onClick={sealKeywordAsset} loading={busy === 'keyword-seal'}>封存</Button>
               <Button disabled={Boolean(busy)} icon={<DownloadOutlined />} onClick={exportCurrentKeyword}>导出草稿</Button>
               <Button disabled={Boolean(busy)} icon={<ReloadOutlined />} onClick={refreshKeywordAssetState} loading={busy === 'keyword-refresh'}>刷新</Button>
             </Space>
@@ -2806,6 +3094,7 @@ export default function AdminContentPage() {
             )}
             <AssetPublicationPanel
               token={token}
+              canPublish={canPublish}
               assetKind="keyword"
               assetId={keywordEditor.asset_id.trim()}
               assetTitle={keywordEditor.word.trim()}

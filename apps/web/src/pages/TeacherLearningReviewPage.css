@@ -1,0 +1,178 @@
+.chrono-review-page {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.chrono-review-hero {
+  position: relative;
+  display: flex;
+  min-height: 210px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 18px;
+  padding: clamp(28px, 4vw, 52px);
+  overflow: hidden;
+  color: #f4ead5;
+  background:
+    radial-gradient(circle at 80% 15%, rgba(216, 173, 89, .2), transparent 26%),
+    linear-gradient(118deg, #102726, #173b38 62%, #0b1d22);
+  box-shadow: 0 22px 55px rgba(18, 34, 34, .16);
+}
+
+.chrono-review-hero::after {
+  position: absolute;
+  right: 36%;
+  bottom: 0;
+  width: 1px;
+  height: 66%;
+  background: linear-gradient(transparent, rgba(231, 196, 126, .36));
+  content: '';
+}
+
+.chrono-review-hero > div:nth-child(2) { position: relative; z-index: 2; max-width: 680px; }
+.chrono-review-hero p { margin: 0; color: #d9b263; font-size: 10px; font-weight: 700; letter-spacing: .24em; }
+.chrono-review-hero h1 { margin: 7px 0 8px; font-family: STKaiti, KaiTi, serif; font-size: clamp(34px, 5vw, 54px); font-weight: 500; letter-spacing: .08em; }
+.chrono-review-hero h1 + span { color: rgba(244, 234, 213, .68); font-size: 13px; line-height: 1.7; }
+
+.chrono-review-hero dl {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  min-width: 380px;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  border: 1px solid rgba(233, 200, 132, .19);
+  background: rgba(5, 18, 19, .28);
+}
+
+.chrono-review-hero dl div { padding: 18px 14px; border-right: 1px solid rgba(233, 200, 132, .14); text-align: center; }
+.chrono-review-hero dl div:last-child { border-right: 0; }
+.chrono-review-hero dt { color: #e7bd69; font-family: Georgia, serif; font-size: 28px; }
+.chrono-review-hero dd { margin: 4px 0 0; color: rgba(244, 234, 213, .6); font-size: 10px; }
+
+.chrono-review-orbit { position: absolute; inset: 0; pointer-events: none; }
+.chrono-review-orbit span { position: absolute; border: 1px solid rgba(225, 189, 112, .08); border-radius: 50%; }
+.chrono-review-orbit span:nth-child(1) { top: -160px; left: -80px; width: 450px; height: 450px; }
+.chrono-review-orbit span:nth-child(2) { top: -110px; left: -30px; width: 350px; height: 350px; }
+.chrono-review-orbit span:nth-child(3) { top: -30px; left: 50px; width: 190px; height: 190px; }
+
+.chrono-review-page > .ant-alert { margin-bottom: 14px; }
+
+.chrono-review-layout {
+  display: grid;
+  min-height: 720px;
+  grid-template-columns: 310px minmax(0, 1fr);
+  border: 1px solid rgba(74, 63, 45, .16);
+  background: rgba(249, 246, 238, .72);
+}
+
+.chrono-review-queue {
+  min-width: 0;
+  padding: 16px;
+  border-right: 1px solid rgba(74, 63, 45, .16);
+  background:
+    linear-gradient(rgba(238, 229, 208, .93), rgba(246, 240, 226, .96)),
+    repeating-linear-gradient(90deg, transparent 0 26px, rgba(84, 67, 44, .04) 27px 28px);
+}
+
+.chrono-review-queue > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.chrono-review-queue > header > div { display: flex; align-items: center; gap: 8px; }
+.chrono-review-queue > header strong { font-family: STKaiti, KaiTi, serif; font-size: 18px; }
+.chrono-review-queue-list { display: grid; gap: 9px; margin-top: 12px; }
+
+.chrono-review-queue-list > button {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid rgba(87, 69, 44, .15);
+  background: rgba(255, 253, 246, .82);
+  color: #293535;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.chrono-review-queue-list > button:hover,
+.chrono-review-queue-list > button.active {
+  border-color: #a87836;
+  box-shadow: 0 8px 20px rgba(59, 47, 31, .08);
+  transform: translateX(3px);
+}
+
+.chrono-review-queue-list > button.active::before {
+  position: absolute;
+  inset: -1px auto -1px -1px;
+  width: 4px;
+  background: #a87836;
+  content: '';
+}
+
+.chrono-review-queue-list button > div { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; }
+.chrono-review-queue-list button > div span { color: #875b25; font-size: 12px; font-weight: 700; }
+.chrono-review-queue-list button small { color: #92897b; font-size: 9px; }
+.chrono-review-queue-list button strong { max-width: 100%; overflow: hidden; font-family: STKaiti, KaiTi, serif; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.chrono-review-queue-list button p { margin: 0; color: #786f61; font-size: 10px; }
+.chrono-review-queue-list button .ant-tag { margin-top: 3px; font-size: 10px; }
+
+.chrono-review-workspace { min-width: 0; padding: clamp(16px, 2.5vw, 30px); background: rgba(255, 255, 255, .7); }
+.chrono-review-loading { display: flex; min-height: 140px; align-items: center; justify-content: center; gap: 9px; color: #7a7164; }
+.chrono-review-loading.is-large { min-height: 520px; }
+
+.chrono-review-feedback-composer {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid rgba(68, 100, 87, .2);
+  background: linear-gradient(125deg, rgba(231, 240, 232, .78), rgba(247, 242, 227, .88));
+}
+
+.chrono-review-feedback-title,
+.chrono-review-feedback-title > div,
+.chrono-review-feedback-composer > div:last-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.chrono-review-feedback-title > div { justify-content: flex-start; color: #315b4f; }
+.chrono-review-feedback-title > div > span { display: flex; flex-direction: column; }
+.chrono-review-feedback-title strong { color: #243331; font-family: STKaiti, KaiTi, serif; font-size: 17px; }
+.chrono-review-feedback-title small,
+.chrono-review-feedback-composer > div:last-child > span { color: #726d62; font-size: 10px; }
+.chrono-review-feedback-composer .ant-radio-group { display: flex; flex-wrap: wrap; }
+
+@media (max-width: 1050px) {
+  .chrono-review-hero { align-items: flex-start; flex-direction: column; }
+  .chrono-review-hero dl { width: 100%; min-width: 0; }
+  .chrono-review-hero::after { display: none; }
+  .chrono-review-layout { grid-template-columns: 260px minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .chrono-review-hero { padding: 28px 20px; }
+  .chrono-review-hero dl { grid-template-columns: repeat(2, 1fr); }
+  .chrono-review-hero dl div:nth-child(2) { border-right: 0; }
+  .chrono-review-hero dl div:nth-child(-n+2) { border-bottom: 1px solid rgba(233, 200, 132, .14); }
+  .chrono-review-layout { display: flex; flex-direction: column; }
+  .chrono-review-queue { border-right: 0; border-bottom: 1px solid rgba(74, 63, 45, .16); }
+  .chrono-review-queue-list { display: flex; overflow-x: auto; padding-bottom: 5px; }
+  .chrono-review-queue-list > button { min-width: 230px; }
+  .chrono-review-feedback-composer > div:last-child { align-items: stretch; flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrono-review-queue-list > button { transition: none; }
+}

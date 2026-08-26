@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from settings import secret_value, settings
+from static_web import mount_classroom_web
 from routers import (
     admin_content,
     auth,
@@ -25,10 +26,11 @@ from routers import (
     practice,
     profile,
 )
-from services import content, persistence, saga
+from services import content, persistence, rag, saga
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
+from services.learning_assets import configure_learning_assets, shutdown_learning_assets
 from services.operations import (
     LoginRateLimitMiddleware,
     RequestBodyLimitMiddleware,
@@ -92,6 +94,12 @@ async def lifespan(app: FastAPI):
             catalog_path=settings.game_catalog_path,
             engine=engine,
         )
+        configure_learning_assets(engine)
+        rag.configure_rag(
+            index_path=settings.rag_index_path,
+            model_root=settings.rag_model_root,
+            vector_enabled=settings.rag_vector_enabled,
+        )
         app.state.database_readiness = probe_database_readiness(engine)
         app.state.runtime_ready = True
         yield
@@ -100,6 +108,8 @@ async def lifespan(app: FastAPI):
         app.state.database_readiness = None
         app.state.database_engine = None
         saga.clear_states()
+        rag.shutdown_rag()
+        shutdown_learning_assets()
         shutdown_game_runtime()
         shutdown_identity()
         persistence.close_engine()
@@ -158,21 +168,24 @@ app.include_router(game.router, prefix=f"{API_PREFIX}/practice/game", tags=["gam
 app.include_router(profile.router, prefix=f"{API_PREFIX}/profile", tags=["profile"])
 
 
-@app.get("/", tags=["common"])
-async def root():
-    return {
-        "name": settings.app_name,
-        "version": settings.app_version,
-        "modules": [
-            "home",
-            "courses",
-            "learning",
-            "practice",
-            "game-runtime",
-            "profile",
-            "admin-content",
-        ],
-    }
+if not settings.serve_web_app:
+
+    @app.get("/", tags=["common"])
+    async def root():
+        return {
+            "name": settings.app_name,
+            "version": settings.app_version,
+            "modules": [
+                "home",
+                "courses",
+                "learning",
+                "practice",
+                "course-rag",
+                "game-runtime",
+                "profile",
+                "admin-content",
+            ],
+        }
 
 
 @app.get("/healthz", tags=["common"])
@@ -214,3 +227,7 @@ async def readyz(request: Request):
         "version": settings.app_version,
         "checks": readiness.public_checks(),
     }
+
+
+if settings.serve_web_app:
+    app.state.web_dist_root = mount_classroom_web(app, settings.web_dist_root)

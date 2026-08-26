@@ -23,9 +23,13 @@ from pydantic import (
 
 from services import content as content_data
 from services.content import runtime_artifacts
+from services.contracts.evidence_v1 import EvidenceCorpusV1, LessonPresentationV1
 from services.contracts.release_v2 import (
     CourseReleaseItemV2,
+    CourseReleaseItemV3,
     CourseReleaseManifestV2,
+    CourseReleaseManifestV3,
+    ReleaseSupplementDescriptorV1,
 )
 from services.contracts.v1 import (
     CoursePackageV1,
@@ -221,6 +225,18 @@ class ScenarioReleaseSelection(LifecycleModel):
     primary: bool = False
 
 
+class EvidenceReleaseSelection(LifecycleModel):
+    corpus_id: ContractId
+    corpus_version: int = Field(ge=1)
+    corpus_checksum: Checksum
+
+
+class PresentationReleaseSelection(LifecycleModel):
+    presentation_id: ContractId
+    presentation_version: int = Field(ge=1)
+    presentation_checksum: Checksum
+
+
 class CourseReleaseManifest(LifecycleModel):
     schema_version: Literal["course-release/v1"] = "course-release/v1"
     release_id: NonEmptyText
@@ -260,7 +276,7 @@ class CourseReleaseManifest(LifecycleModel):
 
 
 CourseReleaseManifestAny = Annotated[
-    CourseReleaseManifest | CourseReleaseManifestV2,
+    CourseReleaseManifest | CourseReleaseManifestV2 | CourseReleaseManifestV3,
     Field(discriminator="schema_version"),
 ]
 _COURSE_RELEASE_MANIFEST_ADAPTER = TypeAdapter(CourseReleaseManifestAny)
@@ -297,6 +313,7 @@ class PublishedCourseSnapshot(LifecycleModel):
     release_schema_version: Literal[
         "course-release/v1",
         "course-release/v2",
+        "course-release/v3",
     ] | None = None
     release_id: str | None = None
     release_no: int | None = Field(default=None, ge=1)
@@ -315,6 +332,18 @@ class PublishedCourseSnapshot(LifecycleModel):
         elif self.release_schema_version is None:
             raise ValueError("published snapshots require a release schema version")
         return self
+
+
+class PublishedLessonResources(LifecycleModel):
+    release_id: NonEmptyText
+    release_no: int = Field(ge=1)
+    release_checksum: Checksum
+    course_id: ContractId
+    lesson_id: ContractId
+    content_version: int = Field(ge=1)
+    course_package: CoursePackageV1
+    evidence_corpus: EvidenceCorpusV1
+    lesson_presentation: LessonPresentationV1
 
 
 class ReleaseTransactionJournal(LifecycleModel):
@@ -668,9 +697,22 @@ def publish_version(
     actor: str,
     note: str = "",
     scenario_selections: Sequence[ScenarioReleaseSelection] | None = None,
+    evidence_selection: EvidenceReleaseSelection | None = None,
+    presentation_selection: PresentationReleaseSelection | None = None,
 ) -> tuple[CourseReleaseManifestAny, ContentWorkflowRecord]:
     preflight_source = content_data.get_sealed_package(lesson_id, version)
     preflight_pointer = _load_pointer(preflight_source.course_id, required=False)
+    preflight_scenarios = _resolve_release_scenarios(
+        preflight_source,
+        current_item=_release_item_from_pointer(preflight_pointer, lesson_id),
+        selections=scenario_selections,
+    )
+    preflight_supplements = _resolve_release_supplements(
+        preflight_source,
+        current_item=_release_item_from_pointer(preflight_pointer, lesson_id),
+        evidence_selection=evidence_selection,
+        presentation_selection=presentation_selection,
+    )
     with _release_operation_lock():
         record = _load_workflow(lesson_id)
         observed_pointer = _load_pointer(record.course_id, required=False)
@@ -702,12 +744,17 @@ def publish_version(
             ),
             None,
         )
-        selected_scenarios = _resolve_release_scenarios(
-            sealed,
-            current_item=current_item,
-            selections=scenario_selections,
-        )
-        item = _materialize_release_item_v2(sealed, selected_scenarios)
+        base_item = _materialize_release_item_v2(sealed, preflight_scenarios)
+        item: CourseReleaseItemV2 | CourseReleaseItemV3
+        if preflight_supplements is None:
+            item = base_item
+        else:
+            evidence_descriptor, presentation_descriptor = preflight_supplements
+            item = CourseReleaseItemV3(
+                **base_item.model_dump(mode="json"),
+                evidence_corpus=evidence_descriptor,
+                lesson_presentation=presentation_descriptor,
+            )
         cleanup_paths: list[Path] = []
         if current is None:
             current, baseline_path = _write_release_manifest(
@@ -720,10 +767,33 @@ def publish_version(
             )
             cleanup_paths.append(baseline_path)
 
-        by_lesson = {
+        by_lesson: dict[
+            str,
+            CourseReleaseItemV2 | CourseReleaseItemV3,
+        ] = {
             existing.lesson_id: _upgrade_release_item(existing)
             for existing in current.items
         }
+        target_schema = (
+            "course-release/v3"
+            if isinstance(item, CourseReleaseItemV3)
+            else "course-release/v2"
+        )
+        incompatible = sorted(
+            lesson
+            for lesson, existing in by_lesson.items()
+            if lesson != lesson_id
+            and (
+                isinstance(existing, CourseReleaseItemV3)
+                != (target_schema == "course-release/v3")
+            )
+        )
+        if incompatible:
+            raise ContentConflict(
+                "A course release cannot mix V2 and V3 lesson bindings; publish "
+                "all lessons with evidence and presentation resources first: "
+                + ", ".join(incompatible)
+            )
         if by_lesson.get(lesson_id) == item:
             if cleanup_paths:
                 for path in cleanup_paths:
@@ -906,6 +976,29 @@ def get_release(course_id: str, release_id: str) -> CourseReleaseManifestAny:
     return manifest
 
 
+def _release_item_from_pointer(
+    pointer: ActiveReleasePointer | None,
+    lesson_id: str,
+) -> ReleaseItem | CourseReleaseItemV2 | CourseReleaseItemV3 | None:
+    if pointer is None:
+        return None
+    manifest_path = _resolve_content_path(pointer.manifest_path)
+    manifest = _read_release_manifest(manifest_path)
+    if (
+        manifest.course_id != pointer.course_id
+        or manifest.release_id != pointer.release_id
+        or manifest.release_no != pointer.release_no
+        or manifest.checksum != pointer.manifest_checksum
+    ):
+        raise content_data.ContentIntegrityError(
+            "Active pointer and release manifest disagree during preflight."
+        )
+    return next(
+        (item for item in manifest.items if item.lesson_id == lesson_id),
+        None,
+    )
+
+
 def list_releases(course_id: str | None = None) -> list[CourseReleaseManifestAny]:
     root = _manifest_root()
     paths = (
@@ -1024,6 +1117,41 @@ def load_published_packages() -> list[CoursePackageV1]:
     return [snapshot.package for snapshot in load_published_snapshots()]
 
 
+def get_published_lesson_resources(
+    course_id: str,
+    lesson_id: str,
+) -> PublishedLessonResources:
+    release = get_current_release(course_id)
+    if release is None or not isinstance(release, CourseReleaseManifestV3):
+        raise ContentNotFound(
+            f"No published V3 resources for {course_id}/{lesson_id}."
+        )
+    item = next(
+        (candidate for candidate in release.items if candidate.lesson_id == lesson_id),
+        None,
+    )
+    if item is None:
+        raise ContentNotFound(
+            f"Published lesson resources not found: {course_id}/{lesson_id}."
+        )
+    package = _load_release_item_v3(item)
+    evidence = runtime_artifacts.load_release_evidence(item.evidence_corpus)
+    presentation = runtime_artifacts.load_release_presentation(
+        item.lesson_presentation
+    )
+    return PublishedLessonResources(
+        release_id=release.release_id,
+        release_no=release.release_no,
+        release_checksum=release.checksum,
+        course_id=package.course_id,
+        lesson_id=package.lesson_id,
+        content_version=package.content_version,
+        course_package=package,
+        evidence_corpus=evidence,
+        lesson_presentation=presentation,
+    )
+
+
 def _current_draft_and_record(
     lesson_id: str,
     actor: str,
@@ -1132,16 +1260,20 @@ def _write_release_manifest(
     *,
     course_id: str,
     operation: Literal["bootstrap", "publish", "rollback"],
-    items: Sequence[CourseReleaseItemV2],
+    items: Sequence[CourseReleaseItemV2 | CourseReleaseItemV3],
     actor: str,
     note: str,
     parent: CourseReleaseManifestAny | None,
     restored_from_release_id: str | None = None,
-) -> tuple[CourseReleaseManifestV2, Path]:
+) -> tuple[CourseReleaseManifestV2 | CourseReleaseManifestV3, Path]:
     course_id = _validated_id(course_id)
     release_no = _next_release_no(course_id)
     release_id = _release_id(course_id, release_no)
-    manifest = CourseReleaseManifestV2(
+    has_v3 = any(isinstance(item, CourseReleaseItemV3) for item in items)
+    if has_v3 and not all(isinstance(item, CourseReleaseItemV3) for item in items):
+        raise ContentConflict("A course release cannot mix V2 and V3 lesson items.")
+    manifest_type = CourseReleaseManifestV3 if has_v3 else CourseReleaseManifestV2
+    manifest = manifest_type(
         release_id=release_id,
         release_no=release_no,
         course_id=course_id,
@@ -1154,7 +1286,7 @@ def _write_release_manifest(
         items=sorted(items, key=lambda item: item.lesson_id),
         checksum="0" * 64,
     )
-    manifest = _sign(manifest, CourseReleaseManifestV2)
+    manifest = _sign(manifest, manifest_type)
     manifest_path = _release_path(course_id, release_id)
     content_data._atomic_write_json(
         manifest_path,
@@ -1387,7 +1519,7 @@ def _assert_release_lesson_ids_are_globally_unique(
 def _release_scenario_ids(
     manifest: CourseReleaseManifestAny,
 ) -> set[str]:
-    if not isinstance(manifest, CourseReleaseManifestV2):
+    if not isinstance(manifest, (CourseReleaseManifestV2, CourseReleaseManifestV3)):
         return set()
     return {
         scenario.artifact_id
@@ -1594,11 +1726,14 @@ def _materialize_release_item(
 def _resolve_release_scenarios(
     sealed: content_data.LessonContentPackage,
     *,
-    current_item: ReleaseItem | CourseReleaseItemV2 | None,
+    current_item: ReleaseItem | CourseReleaseItemV2 | CourseReleaseItemV3 | None,
     selections: Sequence[ScenarioReleaseSelection] | None,
 ) -> tuple[tuple[ScenarioTemplateV1, bool], ...]:
     if selections is None:
-        if not isinstance(current_item, CourseReleaseItemV2):
+        if not isinstance(
+            current_item,
+            (CourseReleaseItemV2, CourseReleaseItemV3),
+        ):
             return ()
         preserved = tuple(
             (
@@ -1649,6 +1784,79 @@ def _resolve_release_scenarios(
     return tuple(sorted(resolved, key=lambda item: item[0].scenario_id))
 
 
+def _resolve_release_supplements(
+    sealed: content_data.LessonContentPackage,
+    *,
+    current_item: ReleaseItem | CourseReleaseItemV2 | CourseReleaseItemV3 | None,
+    evidence_selection: EvidenceReleaseSelection | None,
+    presentation_selection: PresentationReleaseSelection | None,
+) -> tuple[
+    ReleaseSupplementDescriptorV1,
+    ReleaseSupplementDescriptorV1,
+] | None:
+    if evidence_selection is None and presentation_selection is None:
+        if not isinstance(current_item, CourseReleaseItemV3):
+            return None
+        evidence = runtime_artifacts.load_release_evidence(
+            current_item.evidence_corpus
+        )
+        presentation = runtime_artifacts.load_release_presentation(
+            current_item.lesson_presentation
+        )
+        return (
+            runtime_artifacts.descriptor_for_evidence(evidence),
+            runtime_artifacts.descriptor_for_presentation(presentation),
+        )
+    if evidence_selection is None or presentation_selection is None:
+        raise ContentValidationFailed(
+            "V3 publication requires both evidence and presentation selections."
+        )
+
+    evidence, evidence_descriptor = runtime_artifacts.load_evidence_corpus(
+        course_id=sealed.course_id,
+        lesson_id=sealed.lesson_id,
+        corpus_id=evidence_selection.corpus_id,
+        corpus_version=evidence_selection.corpus_version,
+        corpus_checksum=evidence_selection.corpus_checksum,
+    )
+    presentation, presentation_descriptor = (
+        runtime_artifacts.load_lesson_presentation(
+            course_id=sealed.course_id,
+            lesson_id=sealed.lesson_id,
+            presentation_id=presentation_selection.presentation_id,
+            presentation_version=presentation_selection.presentation_version,
+            presentation_checksum=presentation_selection.presentation_checksum,
+        )
+    )
+    if (evidence.course_id, evidence.lesson_id) != (
+        sealed.course_id,
+        sealed.lesson_id,
+    ) or (presentation.course_id, presentation.lesson_id) != (
+        sealed.course_id,
+        sealed.lesson_id,
+    ):
+        raise ContentValidationFailed(
+            "Release supplements belong to another course or lesson."
+        )
+
+    package = course_package_from_legacy(sealed)
+    fact_ids = {item.fact_id for item in package.facts}
+    person_ids = {item.person_id for item in package.people}
+    for passage in evidence.passages:
+        missing_facts = sorted(set(passage.fact_ids) - fact_ids)
+        missing_people = sorted(set(passage.person_ids) - person_ids)
+        if missing_facts or missing_people:
+            details = [
+                *(f"fact:{item}" for item in missing_facts),
+                *(f"person:{item}" for item in missing_people),
+            ]
+            raise ContentValidationFailed(
+                f"Evidence passage {passage.passage_id} has stale course bindings: "
+                + ", ".join(details)
+            )
+    return evidence_descriptor, presentation_descriptor
+
+
 def _materialize_release_item_v2(
     sealed: content_data.LessonContentPackage,
     scenarios: Sequence[tuple[ScenarioTemplateV1, bool]],
@@ -1683,8 +1891,11 @@ def _materialize_release_item_v2(
 
 
 def _upgrade_release_item(
-    item: ReleaseItem | CourseReleaseItemV2,
-) -> CourseReleaseItemV2:
+    item: ReleaseItem | CourseReleaseItemV2 | CourseReleaseItemV3,
+) -> CourseReleaseItemV2 | CourseReleaseItemV3:
+    if isinstance(item, CourseReleaseItemV3):
+        _load_release_item_v3(item)
+        return item
     if isinstance(item, CourseReleaseItemV2):
         _load_release_item_v2(item)
         return item
@@ -1703,8 +1914,10 @@ def _upgrade_release_item(
 
 
 def _load_release_item(
-    item: ReleaseItem | CourseReleaseItemV2,
+    item: ReleaseItem | CourseReleaseItemV2 | CourseReleaseItemV3,
 ) -> CoursePackageV1:
+    if isinstance(item, CourseReleaseItemV3):
+        return _load_release_item_v3(item)
     if isinstance(item, CourseReleaseItemV2):
         return _load_release_item_v2(item)
     return _load_release_item_v1(item)
@@ -1779,6 +1992,49 @@ def _load_release_item_v2(item: CourseReleaseItemV2) -> CoursePackageV1:
         )
     for scenario in scenarios:
         RuntimeBundleV1(course=package, scenario=scenario)
+    return package
+
+
+def _load_release_item_v3(item: CourseReleaseItemV3) -> CoursePackageV1:
+    base = CourseReleaseItemV2(
+        lesson_id=item.lesson_id,
+        course_id=item.course_id,
+        content_version=item.content_version,
+        source_path=item.source_path,
+        source_checksum=item.source_checksum,
+        course_package=item.course_package,
+        scenarios=item.scenarios,
+        primary_scenario_id=item.primary_scenario_id,
+        audience=item.audience,
+    )
+    package = _load_release_item_v2(base)
+    evidence = runtime_artifacts.load_release_evidence(item.evidence_corpus)
+    presentation = runtime_artifacts.load_release_presentation(
+        item.lesson_presentation
+    )
+    if (
+        evidence.course_id,
+        evidence.lesson_id,
+        presentation.course_id,
+        presentation.lesson_id,
+    ) != (
+        item.course_id,
+        item.lesson_id,
+        item.course_id,
+        item.lesson_id,
+    ):
+        raise content_data.ContentIntegrityError(
+            "Release supplements do not match the V3 lesson identity."
+        )
+    facts = {fact.fact_id for fact in package.facts}
+    people = {person.person_id for person in package.people}
+    if any(
+        set(passage.fact_ids) - facts or set(passage.person_ids) - people
+        for passage in evidence.passages
+    ):
+        raise content_data.ContentIntegrityError(
+            "Release evidence bindings do not exist in the pinned course package."
+        )
     return package
 
 

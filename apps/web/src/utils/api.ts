@@ -1,5 +1,12 @@
 // 统一的 API 客户端 · v0.2.0
+import { IS_STATIC_PREVIEW } from '../runtime';
+import { staticPreviewJsonFetch } from '../preview/staticPreview';
+
 const BASE = '/api/v1';
+
+// Accounts 模式以这个非秘密哨兵表示“使用浏览器 HttpOnly Cookie”。旧的
+// legacy-local 模式仍可显式传入共享令牌，二者不会同时发送。
+export const COOKIE_AUTH_CREDENTIAL = '__chronovita_http_only_cookie__';
 
 interface ApiValidationIssue {
   loc?: Array<string | number>;
@@ -26,7 +33,7 @@ function localizeValidationMessage(message: string): string {
   return message.replace(/^Value error,\s*/i, '');
 }
 
-async function responseError(response: Response): Promise<Error> {
+export async function apiResponseError(response: Response): Promise<ApiError> {
   const raw = await response.text();
   let message = raw || response.statusText;
   let code: string | undefined;
@@ -53,34 +60,51 @@ async function responseError(response: Response): Promise<Error> {
 }
 
 async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  if (IS_STATIC_PREVIEW) return staticPreviewJsonFetch<T>(path, init);
   const r = await fetch(BASE + path, {
     ...init,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(init?.headers || {}),
     },
   });
   if (!r.ok) {
-    throw await responseError(r);
+    if (r.status === 401) {
+      window.dispatchEvent(new Event('chronovita:session-invalid'));
+    }
+    throw await apiResponseError(r);
   }
   return r.json() as Promise<T>;
 }
 
 async function adminFetch<T>(token: string, path: string, init?: RequestInit): Promise<T> {
+  const credentialHeaders: Record<string, string> = token === COOKIE_AUTH_CREDENTIAL
+    ? {}
+    : { Authorization: `Bearer ${token}` };
   return jsonFetch<T>(path, {
     ...init,
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...credentialHeaders,
       ...(init?.headers || {}),
     },
   });
 }
 
 async function adminFile(token: string, path: string): Promise<Blob> {
+  const credentialHeaders: Record<string, string> = token === COOKIE_AUTH_CREDENTIAL
+    ? {}
+    : { Authorization: `Bearer ${token}` };
   const response = await fetch(BASE + path, {
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
+    headers: credentialHeaders,
   });
-  if (!response.ok) throw await responseError(response);
+  if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new Event('chronovita:session-invalid'));
+    }
+    throw await apiResponseError(response);
+  }
   return response.blob();
 }
 
@@ -95,7 +119,8 @@ export interface CourseDetail {
 }
 export interface Keyword { word: string; pinyin: string; gloss: string }
 export interface PersonCard {
-  name: string; role?: string; summary?: string; persona?: string; boundaries?: string[];
+  person_id?: string; name: string; role?: string; summary?: string;
+  persona?: string; boundaries?: string[];
 }
 export interface MapPoint {
   label: string; region?: string; lat?: number | null; lng?: number | null; note?: string; kind?: string;
@@ -152,6 +177,12 @@ export interface RuntimeArtifactDescriptor {
   artifact_id: string; course_id: string; lesson_id: string;
   version: number; checksum: string; path: string;
 }
+export interface SupplementArtifactDescriptor {
+  kind: 'evidence-corpus' | 'lesson-presentation';
+  schema_version: 'evidence-corpus/v1' | 'lesson-presentation/v1';
+  artifact_id: string; course_id: string; lesson_id: string;
+  version: number; checksum: string; path: string;
+}
 export interface CourseReleaseItemV1 {
   lesson_id: string; course_id: string; content_version: number;
   source_path: string; source_checksum: string; package_path: string;
@@ -165,7 +196,11 @@ export interface CourseReleaseItemV2 {
   primary_scenario_id?: string | null;
   audience: 'published';
 }
-export type CourseReleaseItem = CourseReleaseItemV1 | CourseReleaseItemV2;
+export interface CourseReleaseItemV3 extends CourseReleaseItemV2 {
+  evidence_corpus: SupplementArtifactDescriptor;
+  lesson_presentation: SupplementArtifactDescriptor;
+}
+export type CourseReleaseItem = CourseReleaseItemV1 | CourseReleaseItemV2 | CourseReleaseItemV3;
 export interface CourseReleaseManifest {
   schema_version: string; release_id: string; release_no: number; course_id: string;
   operation: 'bootstrap' | 'publish' | 'rollback'; parent_release_id?: string | null;
@@ -177,6 +212,8 @@ export type ArchiveFileKind =
   | 'sealed-lesson'
   | 'course-package'
   | 'scenario-template'
+  | 'evidence-corpus'
+  | 'lesson-presentation'
   | 'format-layer'
   | 'teacher-markdown'
   | 'preview-html';
@@ -443,6 +480,128 @@ export interface Lesson {
   scenario_refs: LessonScenarioRef[]; primary_scenario_id: string | null;
 }
 
+export interface LessonPresentation {
+  schema_version: 'lesson-presentation/v1'; presentation_id: string;
+  course_id: string; lesson_id: string; presentation_version: number;
+  status: 'sealed'; title: string; estimated_minutes: number;
+  phase_minutes: {
+    observe: number; decide: number; consult: number; dossier: number;
+  };
+  video_path: string; poster_path: string; transcript_path: string;
+  video_duration_seconds: number; video_width: 1920; video_height: 1080;
+  video_fps: 30; video_sha256: string; poster_sha256: string;
+  transcript_sha256: string; skip_allowed: true; accessibility_note: string;
+  sealed_at: string; sealed_by: string; checksum: string;
+}
+export interface LessonPresentationResponse {
+  release_id: string; release_no: number; release_checksum: string;
+  presentation: LessonPresentation;
+  asset_urls: { video: string; poster: string; transcript: string };
+}
+
+export type EvidenceWorkflowState =
+  | 'draft'
+  | 'validated'
+  | 'in_review'
+  | 'changes_requested'
+  | 'approved'
+  | 'sealed';
+export type EvidenceSourceKind =
+  | 'curriculum'
+  | 'textbook'
+  | 'primary_source'
+  | 'archaeology'
+  | 'museum'
+  | 'research'
+  | 'other';
+export type EvidenceKind =
+  | 'curriculum_goal'
+  | 'transmitted_text'
+  | 'archaeological_evidence'
+  | 'scholarly_interpretation'
+  | 'teaching_explanation'
+  | 'boundary_note';
+export type EvidenceCertainty = 'consensus' | 'interpretation' | 'legend' | 'disputed';
+export interface EvidenceSource {
+  source_id: string; title: string; kind: EvidenceSourceKind;
+  author_or_institution: string; publisher: string; published_year: number | null;
+  url_or_path: string; locator: string; citation_note: string;
+  reliability: 'reviewed' | 'disputed'; rights_note: string;
+}
+export interface EvidencePassage {
+  passage_id: string; source_id: string; title: string; text: string; summary: string;
+  fact_ids: string[]; person_ids: string[]; keywords: string[];
+  evidence_kind: EvidenceKind; certainty: EvidenceCertainty;
+  chronology_note: string; teaching_note: string;
+}
+export interface EvidenceDraft {
+  schema_version: 'evidence-corpus-draft/v1'; corpus_id: string;
+  course_id: string; lesson_id: string; title: string; scope_note: string;
+  sources: EvidenceSource[]; passages: EvidencePassage[]; revision: number;
+  created_at: string | null; updated_at: string | null;
+  created_by: string | null; updated_by: string | null;
+}
+export interface EvidenceValidationIssue {
+  code: string; severity: 'error' | 'warning'; field: string; message: string;
+}
+export interface EvidenceValidationReport {
+  schema_version: 'evidence-validation/v1'; validator_version: string;
+  corpus_id: string; course_id: string; lesson_id: string;
+  draft_revision: number; draft_fingerprint: string; valid: boolean;
+  issues: EvidenceValidationIssue[]; source_count: number; passage_count: number;
+  validated_at: string; validated_by: string;
+}
+export interface EvidenceWorkflowEvent {
+  sequence: number; action: string; from_state: EvidenceWorkflowState;
+  to_state: EvidenceWorkflowState; actor: string; note: string;
+  occurred_at: string; draft_revision: number; draft_fingerprint: string;
+  sealed_version: number | null;
+}
+export interface EvidenceWorkflowRecord {
+  schema_version: 'evidence-workflow/v1'; corpus_id: string;
+  course_id: string; lesson_id: string; state: EvidenceWorkflowState;
+  revision: number; draft_revision: number; draft_fingerprint: string;
+  validation: EvidenceValidationReport | null; sealed_version: number | null;
+  sealed_checksum: string | null; updated_at: string;
+  history: EvidenceWorkflowEvent[]; checksum: string;
+}
+export interface RuntimeEvidenceRecord {
+  descriptor: SupplementArtifactDescriptor; title: string;
+  source_count: number; passage_count: number;
+}
+export interface RuntimePresentationRecord {
+  descriptor: SupplementArtifactDescriptor; title: string;
+  estimated_minutes: number; video_duration_seconds: number;
+}
+export interface EvidenceReleaseSelection {
+  corpus_id: string; corpus_version: number; corpus_checksum: string;
+}
+export interface PresentationReleaseSelection {
+  presentation_id: string; presentation_version: number; presentation_checksum: string;
+}
+
+export type RagPersonaMode = 'expert' | 'person';
+export interface RagAskRequest {
+  course_id: string; lesson_id: string; persona_mode: RagPersonaMode;
+  person_id?: string; question: string;
+}
+export interface RagCitation {
+  citation_id: string; passage_id: string; source_id: string;
+  source_title: string; locator: string; excerpt: string;
+  relevance: number; certainty: 'consensus' | 'interpretation' | 'legend' | 'disputed';
+}
+export interface RagAnswer {
+  schema_version: 'rag-answer/v1';
+  answer_source: 'model' | 'extractive' | 'insufficient_evidence';
+  retrieval_mode: 'hybrid' | 'lexical';
+  body: string; persona_mode: RagPersonaMode; person_id: string | null;
+  role_disclaimer: string | null; citations: RagCitation[];
+  retrieved_passage_ids: string[]; course_id: string; lesson_id: string;
+  release_id: string; release_no: number; release_checksum: string;
+  evidence_corpus_id: string; evidence_version: number; evidence_checksum: string;
+  uncertainty: 'low' | 'medium' | 'high';
+}
+
 export interface ScenarioReleasePin {
   release_id: string; release_no: number; release_checksum: string;
   course_id: string; lesson_id: string;
@@ -453,11 +612,39 @@ export interface GameScenarioSummary {
   scenario_id: string; scenario_version: number; scenario_checksum: string;
   course_id: string; lesson_id: string; title: string; scenario_type: string;
   student_role: string; objective: string; max_turns: number;
+  variables: Array<{
+    variable_id: string; label: string; description: string;
+    initial: number; minimum: number; maximum: number;
+  }>;
+  npcs: Array<{
+    person_id: string; display_name: string; role: string;
+    initial_attitude: number; initial_trust: number;
+  }>;
   audience: 'development' | 'published';
   release_id: string | null; release_no: number | null; release_checksum: string | null;
 }
 export interface GameNarrativeMessage {
   role: 'system' | 'player' | 'narrator'; text: string; turn_no: number;
+}
+export interface GameNpcState {
+  person_id: string; attitude: number; trust: number;
+  known_fact_refs: string[]; last_basis_refs: string[];
+  flags: Record<string, string | number | boolean>; updated_turn: number;
+}
+export interface GameStateChange {
+  variable_id: string; before: number; after: number; delta: number;
+}
+export interface GameNpcChange {
+  person_id: string; attitude_before: number; attitude_after: number;
+  trust_before: number; trust_after: number; revealed_fact_refs: string[];
+}
+export interface GameTurn {
+  turn_id: string; session_id: string; client_action_id: string; turn_no: number;
+  status: 'applied' | 'rejected' | 'failed'; raw_input: string;
+  action_source: 'fixed' | 'free_input' | 'fallback'; classified_action_id: string;
+  state_before: Record<string, number>; state_after: Record<string, number>;
+  state_changes: GameStateChange[]; npc_changes: GameNpcChange[];
+  triggered_event_ids: string[]; narrative: string; created_at: string;
 }
 export interface GameSession {
   session_id: string; user_id: string; course_id: string; lesson_id: string;
@@ -465,6 +652,7 @@ export interface GameSession {
   course_content_version: number; course_checksum: string; scenario_checksum: string;
   status: 'active' | 'completed' | 'abandoned' | 'failed';
   revision: number; current_turn: number; current_state: Record<string, number>;
+  npc_states: GameNpcState[]; turns: GameTurn[]; triggered_event_ids: string[];
   available_action_ids: string[]; available_choices: string[];
   summary: string; history: GameNarrativeMessage[]; ending_id: string | null;
   dossier_id: string | null;
@@ -538,6 +726,77 @@ export interface CanvasGeneratedGraph {
   nodes: CanvasGeneratedNode[]; edges: CanvasGeneratedEdge[];
 }
 
+export type LearningCompletionStatus = 'in_review' | 'changes_requested' | 'completed';
+export interface LearningStickyNote {
+  note_id: string; body: string; color: 'ochre' | 'jade' | 'cinnabar';
+}
+export interface LearningDrawingStroke {
+  stroke_id: string; color: string; width: number; mode: 'ink' | 'erase';
+  points: Array<{ x: number; y: number }>;
+}
+export interface LearningEventSnapshot {
+  event_id: string;
+  kind: 'stage_entered' | 'keyword_opened' | 'decision_completed' | 'question_answered' | 'temporary_note_saved';
+  title: string; summary: string;
+  metadata?: Record<string, string | number | boolean | null>;
+  occurred_at: string;
+}
+export interface LearningCanvasSnapshot {
+  schema_version: 'learning-canvas-snapshot/v1'; found: boolean; revision: number;
+  nodes: unknown[]; edges: unknown[];
+}
+export interface LearningSubmissionRequest {
+  schema_version: 'learning-submission-request/v1';
+  client_submission_id: string; course_id: string; lesson_id: string;
+  title: string; body_markdown: string;
+  sticky_notes: LearningStickyNote[]; drawing_strokes: LearningDrawingStroke[];
+  learning_events: LearningEventSnapshot[]; local_draft_updated_at: string;
+}
+export interface LearningSubmission {
+  schema_version: 'learning-submission/v1';
+  submission_id: string; client_submission_id: string; student_id: string;
+  course_id: string; lesson_id: string; version: number; title: string;
+  body_markdown: string; sticky_notes: LearningStickyNote[];
+  drawing_strokes: LearningDrawingStroke[]; learning_events: LearningEventSnapshot[];
+  canvas: LearningCanvasSnapshot; local_draft_updated_at: string; submitted_at: string;
+  source_payload_checksum: string; checksum: string;
+}
+export interface LearningFeedback {
+  schema_version: 'learning-feedback/v1'; feedback_id: string;
+  client_feedback_id: string; submission_id: string; sequence: number;
+  teacher_id: string; teacher_display_name: string;
+  completion_status: LearningCompletionStatus; comment: string;
+  created_at: string; source_payload_checksum: string; checksum: string;
+}
+export interface LearningSubmissionListItem {
+  submission_id: string; student_id: string; student_display_name: string;
+  student_username?: string | null; course_id: string; lesson_id: string;
+  version: number; title: string; body_excerpt: string;
+  sticky_note_count: number; stroke_count: number; event_count: number;
+  canvas_node_count: number; submitted_at: string; checksum: string;
+  latest_feedback?: LearningFeedback | null;
+}
+export interface LearningSubmissionDetail {
+  submission: LearningSubmission; student_display_name: string;
+  student_username?: string | null; feedback: LearningFeedback[];
+}
+export interface LearningFeedbackRequest {
+  schema_version: 'learning-feedback-request/v1'; client_feedback_id: string;
+  completion_status: LearningCompletionStatus; comment: string;
+}
+
+function learningSubmissionQuery(params: {
+  student_id?: string; course_id?: string; lesson_id?: string; limit?: number;
+}): string {
+  const query = new URLSearchParams();
+  if (params.student_id) query.set('student_id', params.student_id);
+  if (params.course_id) query.set('course_id', params.course_id);
+  if (params.lesson_id) query.set('lesson_id', params.lesson_id);
+  if (params.limit) query.set('limit', String(params.limit));
+  const rendered = query.toString();
+  return rendered ? `?${rendered}` : '';
+}
+
 export const api = {
   eras: () => jsonFetch<{ items: Era[] }>('/courses/eras'),
   courses: (params: { era?: string; section?: string; q?: string } = {}) => {
@@ -550,6 +809,13 @@ export const api = {
   },
   course: (id: string) => jsonFetch<CourseDetail>(`/courses/${id}`),
   lesson: (cid: string, lid: string) => jsonFetch<Lesson>(`/courses/${cid}/lessons/${lid}`),
+  lessonPresentation: (cid: string, lid: string) =>
+    jsonFetch<LessonPresentationResponse>(
+      `/courses/${encodeURIComponent(cid)}/lessons/${encodeURIComponent(lid)}/presentation`,
+    ),
+  ragAsk: (body: RagAskRequest) => jsonFetch<RagAnswer>('/practice/ask/rag', {
+    method: 'POST', body: JSON.stringify(body),
+  }),
   gameStart: (body: GameStartRequest) =>
     jsonFetch<GameStartResponse>('/practice/game/sessions', {
       method: 'POST', body: JSON.stringify(body),
@@ -593,6 +859,33 @@ export const api = {
   progressGet: (lesson_id: string) => jsonFetch<{ item: ProgressItem | null }>(`/learning/progress/${lesson_id}`),
   progressTouch: (body: { lesson_id: string; layer: string; completed?: boolean }) =>
     jsonFetch<{ ok: boolean; item: ProgressItem }>(`/learning/progress/touch`, { method: 'POST', body: JSON.stringify(body) }),
+  learningSubmissions: (params: { course_id?: string; lesson_id?: string; limit?: number } = {}) =>
+    jsonFetch<{ items: LearningSubmissionListItem[] }>(
+      `/learning/submissions${learningSubmissionQuery(params)}`,
+    ),
+  learningSubmission: (submissionId: string) =>
+    jsonFetch<LearningSubmissionDetail>(
+      `/learning/submissions/${encodeURIComponent(submissionId)}`,
+    ),
+  learningSubmit: (body: LearningSubmissionRequest) =>
+    jsonFetch<{ submission: LearningSubmission; reused: boolean }>(
+      '/learning/submissions',
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
+  learningReviewSubmissions: (params: {
+    student_id?: string; course_id?: string; lesson_id?: string; limit?: number;
+  } = {}) => jsonFetch<{ items: LearningSubmissionListItem[] }>(
+    `/learning/review/submissions${learningSubmissionQuery(params)}`,
+  ),
+  learningReviewSubmission: (submissionId: string) =>
+    jsonFetch<LearningSubmissionDetail>(
+      `/learning/review/submissions/${encodeURIComponent(submissionId)}`,
+    ),
+  learningReviewFeedback: (submissionId: string, body: LearningFeedbackRequest) =>
+    jsonFetch<{ feedback: LearningFeedback; reused: boolean }>(
+      `/learning/review/submissions/${encodeURIComponent(submissionId)}/feedback`,
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
   adminContentTemplate: (token: string) => adminFetch<LessonContentPackage>(token, '/admin/content/template'),
   adminContentSourceLessons: (token: string) => adminFetch<{ items: LessonSourceRecord[] }>(token, '/admin/content/source-lessons'),
   adminContentSourceLesson: (token: string, lesson_id: string) =>
@@ -642,6 +935,8 @@ export const api = {
     version: number,
     note: string,
     scenarios?: ScenarioReleaseSelection[] | null,
+    evidence?: EvidenceReleaseSelection | null,
+    presentation?: PresentationReleaseSelection | null,
   ) => adminFetch<ReleaseResponse>(
     token,
     `/admin/content/sealed/${lesson_id}/versions/${version}/publish`,
@@ -650,6 +945,8 @@ export const api = {
       body: JSON.stringify({
         note,
         ...(scenarios === undefined ? {} : { scenarios }),
+        ...(evidence === undefined ? {} : { evidence }),
+        ...(presentation === undefined ? {} : { presentation }),
       }),
     },
   ),
@@ -868,6 +1165,69 @@ export const api = {
       body: JSON.stringify({ expected_revision }),
     },
   ),
+  adminEvidenceDrafts: (token: string) =>
+    adminFetch<{ items: EvidenceDraft[] }>(token, '/admin/content/evidence-drafts'),
+  adminEvidenceDraft: (token: string, corpus_id: string) =>
+    adminFetch<{ item: EvidenceDraft; workflow: EvidenceWorkflowRecord | null }>(
+      token,
+      `/admin/content/evidence-drafts/${encodeURIComponent(corpus_id)}`,
+    ),
+  adminSaveEvidenceDraft: (token: string, body: EvidenceDraft) =>
+    adminFetch<{ item: EvidenceDraft; workflow: EvidenceWorkflowRecord }>(
+      token,
+      '/admin/content/evidence-drafts',
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
+  adminUpdateEvidenceDraft: (token: string, body: EvidenceDraft) =>
+    adminFetch<{ item: EvidenceDraft; workflow: EvidenceWorkflowRecord }>(
+      token,
+      `/admin/content/evidence-drafts/${encodeURIComponent(body.corpus_id)}`,
+      { method: 'PUT', body: JSON.stringify(body) },
+    ),
+  adminValidateEvidenceDraft: (token: string, corpus_id: string) =>
+    adminFetch<{ workflow: EvidenceWorkflowRecord; report: EvidenceValidationReport | null }>(
+      token,
+      `/admin/content/evidence-drafts/${encodeURIComponent(corpus_id)}/validate`,
+      { method: 'POST', body: JSON.stringify({}) },
+    ),
+  adminSubmitEvidenceReview: (token: string, corpus_id: string, note: string) =>
+    adminFetch<{ workflow: EvidenceWorkflowRecord; report: EvidenceValidationReport | null }>(
+      token,
+      `/admin/content/evidence-drafts/${encodeURIComponent(corpus_id)}/submit-review`,
+      { method: 'POST', body: JSON.stringify({ note }) },
+    ),
+  adminReviewEvidenceDraft: (
+    token: string,
+    corpus_id: string,
+    decision: 'approve' | 'changes_requested',
+    note: string,
+  ) => adminFetch<{ workflow: EvidenceWorkflowRecord; report: EvidenceValidationReport | null }>(
+    token,
+    `/admin/content/evidence-drafts/${encodeURIComponent(corpus_id)}/review`,
+    { method: 'POST', body: JSON.stringify({ decision, note }) },
+  ),
+  adminSealEvidenceDraft: (token: string, corpus_id: string) =>
+    adminFetch<{
+      item: Record<string, unknown>; record: RuntimeEvidenceRecord;
+      workflow: EvidenceWorkflowRecord; idempotent: boolean;
+    }>(
+      token,
+      `/admin/content/evidence-drafts/${encodeURIComponent(corpus_id)}/seal`,
+      { method: 'POST', body: JSON.stringify({}) },
+    ),
+  adminRuntimeEvidence: (token: string) =>
+    adminFetch<{ items: RuntimeEvidenceRecord[] }>(token, '/admin/content/runtime-evidence'),
+  adminLessonPresentations: (token: string) =>
+    adminFetch<{ items: RuntimePresentationRecord[] }>(
+      token,
+      '/admin/content/lesson-presentations',
+    ),
+  adminStageLessonPresentation: (token: string, body: LessonPresentation) =>
+    adminFetch<{ record: RuntimePresentationRecord }>(
+      token,
+      '/admin/content/lesson-presentations',
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
   adminScenarioTemplate: (token: string) =>
     adminFetch<ScenarioAuthorDraft>(token, '/admin/content/scenario-drafts/template'),
   adminScenarioDrafts: (token: string) =>

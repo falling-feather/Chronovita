@@ -277,10 +277,12 @@ class GameRuntimeStoreTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.db_path = Path(self.temp_dir.name) / "game-runtime.db"
         self.engines = []
+        content.configure(REPO_ROOT / "content")
 
     def tearDown(self):
         for engine in self.engines:
             engine.dispose()
+        content.configure()
         self.temp_dir.cleanup()
 
     def test_stale_record_from_another_connection_cannot_overwrite_a_turn(self):
@@ -501,6 +503,7 @@ class GameRuntimeStoreTests(unittest.TestCase):
     def test_missing_pinned_scenario_is_reported_as_session_integrity_failure(self):
         content_root = Path(self.temp_dir.name) / "content"
         shutil.copytree(REPO_ROOT / "content", content_root)
+        content.configure(content_root)
         store = GameRuntimeStore(self._engine())
         repository = self._repository(content_root)
         service = GameRuntimeService(repository, store)

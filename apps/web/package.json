@@ -1,11 +1,15 @@
 {
   "name": "@chronovita/web",
-  "version": "0.1.0",
+  "version": "0.10.32",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/clean-pages-preview.mjs && tsc -b && vite build",
+    "build:pages": "node scripts/prepare-pages-preview.mjs && tsc -b && vite build --mode pages",
+    "check:release-ui": "node ../../scripts/check_web_release.mjs",
+    "test": "vitest run",
+    "test:e2e": "playwright test --config playwright.config.ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -13,15 +17,20 @@
     "antd": "^5.21.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "7.18.0",
+    "react-router-dom": "7.18.2",
     "reactflow": "^11.11.4",
+    "three": "0.185.1",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "@types/node": "22.19.11",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
+    "@types/three": "0.185.4",
     "@vitejs/plugin-react": "6.0.4",
     "typescript": "^5.6.2",
-    "vite": "8.1.5"
+    "vite": "8.1.5",
+    "vitest": "4.1.10"
   }
 }

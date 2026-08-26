@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import stat as stat_module
@@ -10,9 +11,17 @@ from typing import Iterable
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from services import content as content_data
+from services.contracts.evidence_v1 import (
+    EvidenceCorpusV1,
+    LessonPresentationV1,
+    sign_evidence_contract,
+    verify_evidence_checksum,
+)
 from services.contracts.release_v2 import (
+    ReleaseSupplementDescriptorV1,
     RuntimeArtifactDescriptorV1,
     runtime_artifact_path,
+    supplement_artifact_path,
 )
 from services.contracts.v1 import (
     CoursePackageV1,
@@ -29,6 +38,9 @@ from services.game_runtime import (
 )
 
 
+MAX_PRESENTATION_ASSET_BYTES = 256 * 1024 * 1024
+
+
 class RuntimeArtifactError(content_data.ContentIntegrityError):
     pass
 
@@ -41,6 +53,229 @@ class RuntimeScenarioRecord(BaseModel):
     scenario_type: str
     student_role: str
     objective: str
+
+
+class RuntimeEvidenceRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    descriptor: ReleaseSupplementDescriptorV1
+    title: str
+    source_count: int
+    passage_count: int
+
+
+class RuntimePresentationRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    descriptor: ReleaseSupplementDescriptorV1
+    title: str
+    estimated_minutes: int
+    video_duration_seconds: float
+
+
+def stage_evidence_corpus(corpus: EvidenceCorpusV1) -> RuntimeEvidenceRecord:
+    """Store a sealed evidence corpus without making it student-visible."""
+
+    _validate_evidence_corpus(corpus)
+    descriptor = descriptor_for_evidence(corpus)
+    target = content_data.content_root() / Path(descriptor.path)
+    _assert_runtime_path(target, content_data.runtime_evidence_dir(), must_exist=False)
+    _require_unique_version(target, descriptor.version, "evidence corpus")
+    _write_immutable_json(target, corpus)
+    return _evidence_record(corpus, descriptor)
+
+
+def descriptor_for_evidence(
+    corpus: EvidenceCorpusV1,
+) -> ReleaseSupplementDescriptorV1:
+    _validate_evidence_corpus(corpus)
+    return ReleaseSupplementDescriptorV1(
+        kind="evidence-corpus",
+        schema_version="evidence-corpus/v1",
+        artifact_id=corpus.corpus_id,
+        course_id=corpus.course_id,
+        lesson_id=corpus.lesson_id,
+        version=corpus.corpus_version,
+        checksum=corpus.checksum,
+        path=supplement_artifact_path(
+            kind="evidence-corpus",
+            artifact_id=corpus.corpus_id,
+            course_id=corpus.course_id,
+            lesson_id=corpus.lesson_id,
+            version=corpus.corpus_version,
+            checksum=corpus.checksum,
+        ),
+    )
+
+
+def load_evidence_corpus(
+    *,
+    course_id: str,
+    lesson_id: str,
+    corpus_id: str,
+    corpus_version: int,
+    corpus_checksum: str,
+) -> tuple[EvidenceCorpusV1, ReleaseSupplementDescriptorV1]:
+    descriptor = ReleaseSupplementDescriptorV1(
+        kind="evidence-corpus",
+        schema_version="evidence-corpus/v1",
+        artifact_id=corpus_id,
+        course_id=course_id,
+        lesson_id=lesson_id,
+        version=corpus_version,
+        checksum=corpus_checksum,
+        path=supplement_artifact_path(
+            kind="evidence-corpus",
+            artifact_id=corpus_id,
+            course_id=course_id,
+            lesson_id=lesson_id,
+            version=corpus_version,
+            checksum=corpus_checksum,
+        ),
+    )
+    target = content_data.content_root() / Path(descriptor.path)
+    corpus, actual = load_evidence_corpus_path(target)
+    if actual != descriptor:
+        raise RuntimeArtifactError("evidence corpus descriptor changed while loading")
+    return corpus, descriptor
+
+
+def load_evidence_corpus_path(
+    path: Path,
+) -> tuple[EvidenceCorpusV1, ReleaseSupplementDescriptorV1]:
+    _assert_runtime_path(path, content_data.runtime_evidence_dir())
+    corpus = _read_contract(path, EvidenceCorpusV1)
+    _validate_evidence_corpus(corpus)
+    descriptor = descriptor_for_evidence(corpus)
+    expected = content_data.content_root() / Path(descriptor.path)
+    if path.absolute() != expected.absolute():
+        raise RuntimeArtifactError(
+            f"evidence corpus identity does not match its path: {path}"
+        )
+    return corpus, descriptor
+
+
+def list_staged_evidence(
+    *,
+    corpus_id: str | None = None,
+) -> list[RuntimeEvidenceRecord]:
+    records: list[RuntimeEvidenceRecord] = []
+    for path in _walk_runtime_json_files(content_data.runtime_evidence_dir()):
+        corpus, descriptor = load_evidence_corpus_path(path)
+        if corpus_id is None or descriptor.artifact_id == corpus_id:
+            records.append(_evidence_record(corpus, descriptor))
+    return sorted(records, key=_supplement_record_sort_key)
+
+
+def stage_lesson_presentation(
+    presentation: LessonPresentationV1,
+    *,
+    sealed_by: str | None = None,
+) -> RuntimePresentationRecord:
+    """Verify local media and store a sealed presentation descriptor."""
+
+    _validate_lesson_presentation(presentation)
+    if sealed_by is not None:
+        payload = presentation.model_dump(mode="json")
+        payload["sealed_by"] = sealed_by
+        payload["checksum"] = "0" * 64
+        presentation = sign_evidence_contract(
+            LessonPresentationV1.model_validate(payload)
+        )
+    descriptor = descriptor_for_presentation(presentation)
+    target = content_data.content_root() / Path(descriptor.path)
+    _assert_runtime_path(
+        target,
+        content_data.runtime_presentation_dir(),
+        must_exist=False,
+    )
+    _require_unique_version(target, descriptor.version, "lesson presentation")
+    _write_immutable_json(target, presentation)
+    return _presentation_record(presentation, descriptor)
+
+
+def descriptor_for_presentation(
+    presentation: LessonPresentationV1,
+) -> ReleaseSupplementDescriptorV1:
+    _validate_lesson_presentation(presentation)
+    return ReleaseSupplementDescriptorV1(
+        kind="lesson-presentation",
+        schema_version="lesson-presentation/v1",
+        artifact_id=presentation.presentation_id,
+        course_id=presentation.course_id,
+        lesson_id=presentation.lesson_id,
+        version=presentation.presentation_version,
+        checksum=presentation.checksum,
+        path=supplement_artifact_path(
+            kind="lesson-presentation",
+            artifact_id=presentation.presentation_id,
+            course_id=presentation.course_id,
+            lesson_id=presentation.lesson_id,
+            version=presentation.presentation_version,
+            checksum=presentation.checksum,
+        ),
+    )
+
+
+def load_lesson_presentation(
+    *,
+    course_id: str,
+    lesson_id: str,
+    presentation_id: str,
+    presentation_version: int,
+    presentation_checksum: str,
+) -> tuple[LessonPresentationV1, ReleaseSupplementDescriptorV1]:
+    descriptor = ReleaseSupplementDescriptorV1(
+        kind="lesson-presentation",
+        schema_version="lesson-presentation/v1",
+        artifact_id=presentation_id,
+        course_id=course_id,
+        lesson_id=lesson_id,
+        version=presentation_version,
+        checksum=presentation_checksum,
+        path=supplement_artifact_path(
+            kind="lesson-presentation",
+            artifact_id=presentation_id,
+            course_id=course_id,
+            lesson_id=lesson_id,
+            version=presentation_version,
+            checksum=presentation_checksum,
+        ),
+    )
+    target = content_data.content_root() / Path(descriptor.path)
+    presentation, actual = load_lesson_presentation_path(target)
+    if actual != descriptor:
+        raise RuntimeArtifactError(
+            "lesson presentation descriptor changed while loading"
+        )
+    return presentation, descriptor
+
+
+def load_lesson_presentation_path(
+    path: Path,
+) -> tuple[LessonPresentationV1, ReleaseSupplementDescriptorV1]:
+    _assert_runtime_path(path, content_data.runtime_presentation_dir())
+    presentation = _read_contract(path, LessonPresentationV1)
+    _validate_lesson_presentation(presentation)
+    descriptor = descriptor_for_presentation(presentation)
+    expected = content_data.content_root() / Path(descriptor.path)
+    if path.absolute() != expected.absolute():
+        raise RuntimeArtifactError(
+            f"lesson presentation identity does not match its path: {path}"
+        )
+    return presentation, descriptor
+
+
+def list_staged_presentations(
+    *,
+    presentation_id: str | None = None,
+) -> list[RuntimePresentationRecord]:
+    records: list[RuntimePresentationRecord] = []
+    for path in _walk_runtime_json_files(content_data.runtime_presentation_dir()):
+        presentation, descriptor = load_lesson_presentation_path(path)
+        if presentation_id is None or descriptor.artifact_id == presentation_id:
+            records.append(_presentation_record(presentation, descriptor))
+    return sorted(records, key=_supplement_record_sort_key)
 
 
 def stage_scenario(
@@ -357,6 +592,34 @@ def load_runtime_scenario(
     return scenario
 
 
+def load_release_evidence(
+    descriptor: ReleaseSupplementDescriptorV1,
+) -> EvidenceCorpusV1:
+    if descriptor.kind != "evidence-corpus":
+        raise RuntimeArtifactError("descriptor is not an evidence corpus")
+    corpus, actual = load_evidence_corpus_path(
+        content_data.content_root() / Path(descriptor.path)
+    )
+    if actual != descriptor:
+        raise RuntimeArtifactError("runtime evidence does not match its descriptor")
+    return corpus
+
+
+def load_release_presentation(
+    descriptor: ReleaseSupplementDescriptorV1,
+) -> LessonPresentationV1:
+    if descriptor.kind != "lesson-presentation":
+        raise RuntimeArtifactError("descriptor is not a lesson presentation")
+    presentation, actual = load_lesson_presentation_path(
+        content_data.content_root() / Path(descriptor.path)
+    )
+    if actual != descriptor:
+        raise RuntimeArtifactError(
+            "runtime presentation does not match its descriptor"
+        )
+    return presentation
+
+
 def _scenario_record(
     scenario: ScenarioTemplateV1,
     descriptor: RuntimeArtifactDescriptorV1,
@@ -373,6 +636,110 @@ def _scenario_record(
 def _validate_sealed_scenario(scenario: ScenarioTemplateV1) -> None:
     if scenario.status != "sealed" or not verify_contract_checksum(scenario):
         raise RuntimeArtifactError("scenario must be sealed and checksum-valid")
+
+
+def _validate_evidence_corpus(corpus: EvidenceCorpusV1) -> None:
+    if corpus.status != "sealed" or not verify_evidence_checksum(corpus):
+        raise RuntimeArtifactError(
+            "evidence corpus must be sealed and checksum-valid"
+        )
+
+
+def _validate_lesson_presentation(presentation: LessonPresentationV1) -> None:
+    if presentation.status != "sealed" or not verify_evidence_checksum(
+        presentation
+    ):
+        raise RuntimeArtifactError(
+            "lesson presentation must be sealed and checksum-valid"
+        )
+    for relative_path, expected_checksum in (
+        (presentation.video_path, presentation.video_sha256),
+        (presentation.poster_path, presentation.poster_sha256),
+        (presentation.transcript_path, presentation.transcript_sha256),
+    ):
+        path = content_data.content_root() / Path(relative_path)
+        _assert_runtime_path(path, content_data.lesson_media_dir())
+        if _hash_regular_file(
+            path,
+            root=content_data.lesson_media_dir(),
+            maximum_bytes=MAX_PRESENTATION_ASSET_BYTES,
+        ) != expected_checksum:
+            raise RuntimeArtifactError(
+                f"presentation asset checksum mismatch: {relative_path}"
+            )
+
+
+def _evidence_record(
+    corpus: EvidenceCorpusV1,
+    descriptor: ReleaseSupplementDescriptorV1,
+) -> RuntimeEvidenceRecord:
+    return RuntimeEvidenceRecord(
+        descriptor=descriptor,
+        title=corpus.title,
+        source_count=len(corpus.sources),
+        passage_count=len(corpus.passages),
+    )
+
+
+def _presentation_record(
+    presentation: LessonPresentationV1,
+    descriptor: ReleaseSupplementDescriptorV1,
+) -> RuntimePresentationRecord:
+    return RuntimePresentationRecord(
+        descriptor=descriptor,
+        title=presentation.title,
+        estimated_minutes=presentation.estimated_minutes,
+        video_duration_seconds=presentation.video_duration_seconds,
+    )
+
+
+def _supplement_record_sort_key(record) -> tuple[str, str, str, int, str]:
+    descriptor = record.descriptor
+    return (
+        descriptor.course_id,
+        descriptor.lesson_id,
+        descriptor.artifact_id,
+        descriptor.version,
+        descriptor.checksum,
+    )
+
+
+def _require_unique_version(path: Path, version: int, label: str) -> None:
+    if not path.parent.exists():
+        return
+    for sibling in path.parent.glob(f"v{version:03d}-*.json"):
+        if sibling.name != path.name:
+            raise FileExistsError(
+                f"{label} id and version already identify different content"
+            )
+
+
+def _walk_runtime_json_files(root: Path) -> list[Path]:
+    if not root.exists() and not root.is_symlink():
+        return []
+    if root.is_symlink() or not root.is_dir():
+        raise RuntimeArtifactError(
+            f"runtime supplement root must be a real directory: {root}"
+        )
+    paths: list[Path] = []
+    for current, directories, files in os.walk(
+        root,
+        followlinks=False,
+        onerror=_raise_walk_error,
+    ):
+        current_path = Path(current)
+        for directory in tuple(directories):
+            candidate = current_path / directory
+            if candidate.is_symlink():
+                raise RuntimeArtifactError(
+                    f"runtime supplement directory cannot be a symlink: {candidate}"
+                )
+        paths.extend(
+            current_path / filename
+            for filename in files
+            if filename.endswith(".json")
+        )
+    return sorted(paths)
 
 
 def _read_contract(path: Path, model: type[BaseModel]):
@@ -464,6 +831,54 @@ def _read_immutable_bytes(path: Path) -> bytes:
     return raw
 
 
+def _hash_regular_file(
+    path: Path,
+    *,
+    root: Path,
+    maximum_bytes: int,
+) -> str:
+    _assert_runtime_path(path, root)
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as handle:
+            opened_stat = os.fstat(handle.fileno())
+            if not stat_module.S_ISREG(opened_stat.st_mode):
+                raise RuntimeArtifactError(
+                    f"presentation asset is not a regular file: {path}"
+                )
+            if opened_stat.st_size > maximum_bytes:
+                raise RuntimeArtifactError(
+                    f"presentation asset exceeds {maximum_bytes} bytes: {path}"
+                )
+            remaining = maximum_bytes + 1
+            while remaining:
+                chunk = handle.read(min(1024 * 1024, remaining))
+                if not chunk:
+                    break
+                digest.update(chunk)
+                remaining -= len(chunk)
+            path_stat = os.lstat(path)
+            if stat_module.S_ISLNK(path_stat.st_mode):
+                raise RuntimeArtifactError(
+                    f"presentation asset path cannot be a symlink: {path}"
+                )
+            if not os.path.samestat(opened_stat, path_stat):
+                raise RuntimeArtifactError(
+                    f"presentation asset changed while being verified: {path}"
+                )
+    except RuntimeArtifactError:
+        raise
+    except OSError as exc:
+        raise RuntimeArtifactError(
+            f"cannot verify presentation asset: {path}"
+        ) from exc
+    if remaining == 0:
+        raise RuntimeArtifactError(
+            f"presentation asset exceeds {maximum_bytes} bytes: {path}"
+        )
+    return digest.hexdigest()
+
+
 def _raise_walk_error(exc: OSError) -> None:
     raise RuntimeArtifactError("cannot enumerate runtime scenarios") from exc
 
@@ -497,14 +912,26 @@ def _assert_not_symlink(path: Path) -> None:
 
 __all__ = [
     "RuntimeArtifactError",
+    "RuntimeEvidenceRecord",
+    "RuntimePresentationRecord",
     "RuntimeScenarioRecord",
     "bind_course_package",
+    "descriptor_for_evidence",
+    "descriptor_for_presentation",
     "descriptor_for_scenario",
+    "list_staged_evidence",
+    "list_staged_presentations",
     "list_staged_scenarios",
     "load_course_package",
+    "load_evidence_corpus",
+    "load_lesson_presentation",
+    "load_release_evidence",
+    "load_release_presentation",
     "load_runtime_scenario",
     "load_staged_scenario",
     "load_staged_scenario_bytes",
     "materialize_course_package",
+    "stage_evidence_corpus",
+    "stage_lesson_presentation",
     "stage_scenario",
 ]

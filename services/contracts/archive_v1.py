@@ -35,6 +35,8 @@ ArchiveFileKind = Literal[
     "sealed-lesson",
     "course-package",
     "scenario-template",
+    "evidence-corpus",
+    "lesson-presentation",
     "format-layer",
     "teacher-markdown",
     "preview-html",
@@ -62,7 +64,11 @@ PublicationStatus = Literal[
     "failed_retryable",
     "failed_terminal",
 ]
-ReleaseSchemaVersion = Literal["course-release/v1", "course-release/v2"]
+ReleaseSchemaVersion = Literal[
+    "course-release/v1",
+    "course-release/v2",
+    "course-release/v3",
+]
 ReleaseOperation = Literal["bootstrap", "publish", "rollback"]
 CredentialKind = Literal["github_app", "fine_grained_token"]
 
@@ -110,6 +116,8 @@ _MACHINE_FILE_KINDS = {
     "sealed-lesson",
     "course-package",
     "scenario-template",
+    "evidence-corpus",
+    "lesson-presentation",
 }
 _PUBLICATION_MODE_ORDER = {
     "pull_request": 0,
@@ -256,7 +264,6 @@ class CourseArchiveLessonV1(ArchiveContractModel):
             raise ValueError("a lesson with scenarios requires exactly one primary scenario")
         if not self.scenarios and primary_count:
             raise ValueError("a lesson without scenarios cannot identify a primary scenario")
-
         expected_files = list(lesson_archive_paths(self.lesson_id, self.title).values())
         expected_files.extend(
             scenario_archive_path(
@@ -266,8 +273,20 @@ class CourseArchiveLessonV1(ArchiveContractModel):
             )
             for scenario in self.scenarios
         )
-        expected = tuple(sorted(expected_files, key=str.casefold))
-        if self.files != expected:
+        expected = set(expected_files)
+        extra = set(self.files) - expected
+        evidence_prefix = f"lessons/{self.lesson_id}/evidence/"
+        presentation_prefix = f"lessons/{self.lesson_id}/presentation/"
+        if extra and (
+            len(extra) != 2
+            or sum(path.startswith(evidence_prefix) for path in extra) != 1
+            or sum(path.startswith(presentation_prefix) for path in extra) != 1
+        ):
+            raise ValueError(
+                "lesson supplemental files must contain one evidence corpus and one presentation"
+            )
+        expected.update(extra)
+        if self.files != tuple(sorted(expected, key=str.casefold)):
             raise ValueError("lesson files must exactly match deterministic archive paths")
         return self
 
@@ -291,6 +310,8 @@ class CourseArchiveFileV1(ArchiveContractModel):
             "sealed-lesson": "application/json",
             "course-package": "application/json",
             "scenario-template": "application/json",
+            "evidence-corpus": "application/json",
+            "lesson-presentation": "application/json",
             "format-layer": "application/json",
             "teacher-markdown": "text/markdown; charset=utf-8",
             "preview-html": "text/html; charset=utf-8",
@@ -460,6 +481,47 @@ class CourseArchivePayloadV1(ArchiveContractModel):
             ):
                 raise ValueError("scenario files must exactly match lesson scenario references")
             scenario_ids.extend(item.scenario_id for item in lesson.scenarios)
+
+            evidence_files = [
+                item for item in lesson_files if item.kind == "evidence-corpus"
+            ]
+            presentation_files = [
+                item for item in lesson_files if item.kind == "lesson-presentation"
+            ]
+            if self.release_schema_version == "course-release/v3":
+                if len(evidence_files) != 1 or len(presentation_files) != 1:
+                    raise ValueError(
+                        "V3 archive lessons require one evidence corpus and one presentation"
+                    )
+                evidence_file = evidence_files[0]
+                presentation_file = presentation_files[0]
+                if (
+                    evidence_file.schema_version != "evidence-corpus/v1"
+                    or presentation_file.schema_version != "lesson-presentation/v1"
+                ):
+                    raise ValueError(
+                        "V3 supplement archive schema identities are invalid"
+                    )
+                if evidence_file.path != supplement_archive_path(
+                    lesson.lesson_id,
+                    "evidence-corpus",
+                    evidence_file.artifact_id or "",
+                    evidence_file.artifact_version or 0,
+                ):
+                    raise ValueError(
+                        "evidence corpus must use its deterministic archive path"
+                    )
+                if presentation_file.path != supplement_archive_path(
+                    lesson.lesson_id,
+                    "lesson-presentation",
+                    presentation_file.artifact_id or "",
+                    presentation_file.artifact_version or 0,
+                ):
+                    raise ValueError(
+                        "lesson presentation must use its deterministic archive path"
+                    )
+            elif evidence_files or presentation_files:
+                raise ValueError("V1/V2 archives cannot contain V3 supplements")
 
             expected_paths = tuple(
                 sorted(file_paths_by_lesson[lesson.lesson_id], key=str.casefold)
@@ -1127,6 +1189,30 @@ def scenario_archive_path(
     )
 
 
+def supplement_archive_path(
+    lesson_id: str,
+    kind: Literal["evidence-corpus", "lesson-presentation"],
+    artifact_id: str,
+    version: int,
+) -> str:
+    checked_lesson_id = _contract_id(lesson_id)
+    checked_artifact_id = _contract_id(artifact_id)
+    if version < 1:
+        raise ValueError("supplement version must be at least 1")
+    segment = {
+        "evidence-corpus": "evidence",
+        "lesson-presentation": "presentation",
+    }[kind]
+    return _validated_archive_path(
+        PurePosixPath(
+            "lessons",
+            checked_lesson_id,
+            segment,
+            f"{checked_artifact_id}-v{version:03d}.json",
+        ).as_posix()
+    )
+
+
 def calculate_archive_payload_checksum(payload: CourseArchivePayloadV1) -> str:
     return _canonical_checksum(payload.model_dump(mode="json"))
 
@@ -1543,6 +1629,7 @@ __all__ = [
     "repository_archive_path",
     "safe_archive_filename",
     "scenario_archive_path",
+    "supplement_archive_path",
     "schema_document",
     "sign_archive_manifest",
     "sign_content_asset_archive_manifest",

@@ -11,8 +11,10 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from auth_dependencies import AuthContext, require_student_context
-from settings import settings
-from services import llm, persistence, sandbox, saga
+from settings import secret_value, settings
+from services import content, llm, persistence, rag, sandbox, saga
+from services.content import workflow as content_workflow
+from services.contracts.evidence_v1 import RagAnswerV1, RagAskRequestV1
 from services.contracts.v1 import ContractId
 from services.operations import ConcurrentCallLimiter, TokenBucketLimiter
 
@@ -329,6 +331,68 @@ async def canvas_generate(
 
 
 # ============= 「问」 跨时对话 =============
+
+
+@router.post("/ask/rag", response_model=RagAnswerV1)
+async def ask_rag(
+    req: RagAskRequestV1,
+    context: AuthContext = Depends(require_student_context),
+):
+    """Answer only from the exact evidence corpus pinned by the active V3 release."""
+
+    generator = None
+    release_llm_lease: Callable[[], None] | None = None
+    if (
+        settings.llm_provider.strip().casefold() == "deepseek"
+        and secret_value(settings.deepseek_api_key).strip()
+    ):
+        try:
+            limiter_key = _acquire_llm_lease(context)
+        except HTTPException:
+            # A busy or rate-limited online model must not break the local classroom path.
+            limiter_key = None
+        if limiter_key is not None:
+            release_llm_lease = _once(
+                lambda: _PRACTICE_LLM_CONCURRENCY_LIMITER.release(limiter_key),
+            )
+            generator = rag.structured_model_generator(
+                llm.StructuredLLMAdapter(),
+                model=settings.deepseek_model_pro,
+            )
+    try:
+        return await rag.get_rag_service().ask(req, generator=generator)
+    except content_workflow.ContentNotFound as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "rag_release_not_found",
+                "message": "当前课时尚未发布可用的证据库。",
+            },
+        ) from exc
+    except rag.RagPersonNotFound as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "rag_person_not_found",
+                "message": "当前发布课程中不存在该人物或群体。",
+            },
+        ) from exc
+    except (
+        content.ContentIntegrityError,
+        rag.RagRetrievalError,
+        rag.RagServiceUnavailable,
+    ) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "rag_content_unavailable",
+                "message": "课程证据服务暂不可用，请联系教师检查发布资源。",
+            },
+        ) from exc
+    finally:
+        if release_llm_lease is not None:
+            release_llm_lease()
+
 
 class AskHistoryItem(BaseModel):
     model_config = ConfigDict(extra="forbid")

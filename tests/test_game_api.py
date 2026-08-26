@@ -53,11 +53,13 @@ class GameApiTests(unittest.TestCase):
             "game_catalog_path": settings.game_catalog_path,
             "game_user_id": settings.game_user_id,
             "sqlite_path": settings.sqlite_path,
+            "auth_mode": settings.auth_mode,
         }
         settings.content_root = str(REPO_ROOT / "content")
         settings.game_catalog_path = "scenarios/catalog.v1.json"
         settings.game_user_id = "api-student"
         settings.sqlite_path = str(Path(self.temp_dir.name) / "chronovita.db")
+        settings.auth_mode = "legacy-local"
         self.client = TestClient(app)
         self.client.__enter__()
 
@@ -71,12 +73,63 @@ class GameApiTests(unittest.TestCase):
     def test_catalog_start_turn_get_and_complete_without_client_state(self):
         listed = self.client.get("/api/v1/practice/game/scenarios")
         self.assertEqual(listed.status_code, 200, listed.text)
-        self.assertEqual(len(listed.json()["items"]), 2)
+        items = listed.json()["items"]
+        items_by_id = {item["scenario_id"]: item for item in items}
+        self.assertEqual(len(items_by_id), len(items))
+        self.assertTrue(
+            {
+                "scenario-dayu-flood-control",
+                "scenario-shangyang-institutional-reform",
+                "dayu-crisis-governance",
+                "shangyang-institutional-reform",
+            }.issubset(items_by_id)
+        )
         self.assertEqual(listed.json()["session_storage"], "sqlite-json")
         self.assertEqual(
-            {item["audience"] for item in listed.json()["items"]},
-            {"development"},
+            items_by_id["scenario-dayu-flood-control"]["audience"],
+            "development",
         )
+        self.assertEqual(
+            items_by_id["scenario-shangyang-institutional-reform"]["audience"],
+            "development",
+        )
+        self.assertEqual(
+            items_by_id["dayu-crisis-governance"]["audience"],
+            "published",
+        )
+        self.assertEqual(
+            items_by_id["shangyang-institutional-reform"]["audience"],
+            "published",
+        )
+        dayu_summary = items_by_id["scenario-dayu-flood-control"]
+        self.assertGreaterEqual(len(dayu_summary["variables"]), 1)
+        self.assertGreaterEqual(len(dayu_summary["npcs"]), 1)
+        self.assertEqual(
+            {
+                "variable_id",
+                "label",
+                "description",
+                "initial",
+                "minimum",
+                "maximum",
+            },
+            set(dayu_summary["variables"][0]),
+        )
+        self.assertEqual(
+            {
+                "person_id",
+                "display_name",
+                "role",
+                "initial_attitude",
+                "initial_trust",
+            },
+            set(dayu_summary["npcs"][0]),
+        )
+        self.assertNotIn("actions", dayu_summary)
+        self.assertNotIn("events", dayu_summary)
+        self.assertNotIn("endings", dayu_summary)
+        self.assertNotIn("persona", dayu_summary["npcs"][0])
+        self.assertNotIn("fact_refs", dayu_summary["npcs"][0])
 
         started = self.client.post(
             "/api/v1/practice/game/sessions",

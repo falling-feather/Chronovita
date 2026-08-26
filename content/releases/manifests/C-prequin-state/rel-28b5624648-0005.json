@@ -1,0 +1,117 @@
+{
+  "schema_version": "course-release/v3",
+  "release_id": "rel-28b5624648-0005",
+  "release_no": 5,
+  "course_id": "C-prequin-state",
+  "operation": "publish",
+  "parent_release_id": "rel-28b5624648-0004",
+  "restored_from_release_id": null,
+  "created_at": "2026-08-14T02:58:26.415365Z",
+  "created_by": "content-publisher-admin",
+  "note": "发布 L103 商鞅变法 HyperFrames 课堂短片：保留课程、关卡与证据版本，将展示资源升级并精确绑定至 v002。",
+  "items": [
+    {
+      "lesson_id": "L101",
+      "course_id": "C-prequin-state",
+      "content_version": 1,
+      "source_path": "sealed/L101-v001.json",
+      "source_checksum": "49ca4556d2c840491f072bfceb7b294b2af854db6d5a6e67f4bf3496ef45c03e",
+      "course_package": {
+        "kind": "course-package",
+        "schema_version": "course-package/v1",
+        "artifact_id": "pkg-L101",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 1,
+        "checksum": "8bdd1ed01fd56b4ef92d6760dbca60b28b81dcaac8d15d2f4dbc5c92645b15f5",
+        "path": "runtime/v1/course-packages/C-prequin-state/L101/v001-8bdd1ed01fd56b4ef92d6760dbca60b28b81dcaac8d15d2f4dbc5c92645b15f5.json"
+      },
+      "scenarios": [
+        {
+          "kind": "scenario-template",
+          "schema_version": "scenario-template/v1",
+          "artifact_id": "dayu-crisis-governance",
+          "course_id": "C-prequin-state",
+          "lesson_id": "L101",
+          "version": 1,
+          "checksum": "8bd70a0e3f6dded9b6f6a24196ef79cd5009b0da9efc59c97fcd1a7926650d63",
+          "path": "runtime/v1/scenarios/C-prequin-state/L101/dayu-crisis-governance/v001-8bd70a0e3f6dded9b6f6a24196ef79cd5009b0da9efc59c97fcd1a7926650d63.json"
+        }
+      ],
+      "primary_scenario_id": "dayu-crisis-governance",
+      "evidence_corpus": {
+        "kind": "evidence-corpus",
+        "schema_version": "evidence-corpus/v1",
+        "artifact_id": "dayu-evidence",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 1,
+        "checksum": "ae736fd34b31fc99907e0a33b518dd2fd360530af95d2717e3a54832b2c1ff49",
+        "path": "runtime/v1/evidence/C-prequin-state/L101/dayu-evidence/v001-ae736fd34b31fc99907e0a33b518dd2fd360530af95d2717e3a54832b2c1ff49.json"
+      },
+      "lesson_presentation": {
+        "kind": "lesson-presentation",
+        "schema_version": "lesson-presentation/v1",
+        "artifact_id": "dayu-classroom-intro",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 2,
+        "checksum": "2c74590e1655f0bbfc0d632557a71b691d599d6ca858e3676938efd825608d17",
+        "path": "runtime/v1/presentations/C-prequin-state/L101/dayu-classroom-intro/v002-2c74590e1655f0bbfc0d632557a71b691d599d6ca858e3676938efd825608d17.json"
+      },
+      "audience": "published"
+    },
+    {
+      "lesson_id": "L103",
+      "course_id": "C-prequin-state",
+      "content_version": 1,
+      "source_path": "sealed/L103-v001.json",
+      "source_checksum": "d6e55dfac0486d0f167921d125aa53959cbd104741c0f9e10a414086dd9a2dd5",
+      "course_package": {
+        "kind": "course-package",
+        "schema_version": "course-package/v1",
+        "artifact_id": "pkg-L103",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L103",
+        "version": 1,
+        "checksum": "149560ce57cd86b4f12ee75293f62dca27b9f0e15242b568b1a19c9338f6536f",
+        "path": "runtime/v1/course-packages/C-prequin-state/L103/v001-149560ce57cd86b4f12ee75293f62dca27b9f0e15242b568b1a19c9338f6536f.json"
+      },
+      "scenarios": [
+        {
+          "kind": "scenario-template",
+          "schema_version": "scenario-template/v1",
+          "artifact_id": "shangyang-institutional-reform",
+          "course_id": "C-prequin-state",
+          "lesson_id": "L103",
+          "version": 1,
+          "checksum": "eddb9370bc7ad0cd8080784c68f15db25ecba11ffed4f2d272e8588d10f87cbd",
+          "path": "runtime/v1/scenarios/C-prequin-state/L103/shangyang-institutional-reform/v001-eddb9370bc7ad0cd8080784c68f15db25ecba11ffed4f2d272e8588d10f87cbd.json"
+        }
+      ],
+      "primary_scenario_id": "shangyang-institutional-reform",
+      "evidence_corpus": {
+        "kind": "evidence-corpus",
+        "schema_version": "evidence-corpus/v1",
+        "artifact_id": "shangyang-evidence",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L103",
+        "version": 1,
+        "checksum": "06ab368e3f54051f21e56e4047ab9efb8f447cb81e2ef68620105995db4ce633",
+        "path": "runtime/v1/evidence/C-prequin-state/L103/shangyang-evidence/v001-06ab368e3f54051f21e56e4047ab9efb8f447cb81e2ef68620105995db4ce633.json"
+      },
+      "lesson_presentation": {
+        "kind": "lesson-presentation",
+        "schema_version": "lesson-presentation/v1",
+        "artifact_id": "shangyang-classroom-intro",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L103",
+        "version": 2,
+        "checksum": "8d45b2d666afff7da6ca394c6e02ebffebae099f28107f07803250e331f2b89a",
+        "path": "runtime/v1/presentations/C-prequin-state/L103/shangyang-classroom-intro/v002-8d45b2d666afff7da6ca394c6e02ebffebae099f28107f07803250e331f2b89a.json"
+      },
+      "audience": "published"
+    }
+  ],
+  "checksum": "0832401240d688a215ede128fc6898f467029244ac4ebcfe8c9a331d1346b1a5"
+}

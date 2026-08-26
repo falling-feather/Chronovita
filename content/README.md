@@ -5,11 +5,15 @@ This directory is the file-based content handoff area for the current admin cont
 - `drafts/`: editable JSON drafts saved by `/api/v1/admin/content/drafts`.
 - `sealed/`: versioned JSON files created by `/api/v1/admin/content/drafts/{lesson_id}/seal`.
 - `workflows/`: signed per-lesson review state, validation report and audit events.
-- `packages/v1/`: immutable legacy-compatibility `CoursePackageV1` mirrors; active V2 readers use the manifest's content-addressed runtime package instead.
-- `schemas/releases/v2/`: generated JSON Schema for the joint course/runtime release manifest.
-- `examples/releases/v2/`: development-only V2 release fixture; it is never scanned as published content.
+- `packages/v1/`: immutable legacy-compatibility `CoursePackageV1` mirrors; active V2/V3 readers use the manifest's content-addressed runtime package instead.
+- `schemas/releases/v2/` and `schemas/releases/v3/`: generated JSON Schema for joint course/runtime releases.
+- `examples/releases/v2/` and `examples/releases/v3/`: development-only contract fixtures; they are never scanned as published content.
 - `runtime/v1/course-packages/`: immutable content-addressed course packages bound to exact scenario refs.
-- `runtime/v1/scenarios/`: sealed scenario staging area and immutable artifacts referenced by V2 releases; file presence alone never publishes a scenario.
+- `runtime/v1/scenarios/`: sealed scenario staging area and immutable artifacts referenced by V2/V3 releases; file presence alone never publishes a scenario.
+- `runtime/v1/evidence/`: immutable reviewed `EvidenceCorpusV1` artifacts referenced by V3 releases.
+- `runtime/v1/presentations/`: immutable `LessonPresentationV1` metadata after local media checksum verification.
+- `evidence/drafts/` and `evidence/workflows/`: editable evidence drafts and independently reviewed lifecycle records.
+- `media/lessons/{lesson_id}/vNNN/`: versioned local video, poster and accessible transcript assets.
 - `releases/manifests/{course_id}/`: immutable full-course release snapshots.
 - `releases/active/{course_id}.json`: atomically replaced pointer to the student-visible release.
 - `releases/transactions/{course_id}.json`: short-lived crash-recovery journal removed after a completed release.
@@ -42,7 +46,7 @@ Teacher workflow:
 6. Submit the validated draft for review. The reviewer may return it with a required note or approve it.
 7. Seal an approved draft. The student course API still serves the previously published release.
 8. Optionally register a sealed `ScenarioTemplateV1` with `POST /api/v1/admin/content/runtime-scenarios`, then select its exact ID, version and checksum during publish.
-9. Publish the sealed version to create a full-course V2 release manifest and move the active pointer. Omit `scenarios` or send `null` to preserve current bindings, send `[]` to remove them, or send an explicit list with exactly one `primary` item to replace them.
+9. Publish the sealed version to create a full-course V2/V3 release manifest and move the active pointer. A V3 lesson binds exactly one reviewed evidence corpus and one verified presentation together with its course/scenario artifacts. Omit `scenarios` or send `null` to preserve current bindings, send `[]` to remove them, or send an explicit list with exactly one `primary` item to replace them.
 10. Use release history to roll back. Rollback creates a new immutable release, revalidates the historical course/scenario bundle, and switches both together.
 11. Click `Export bundle` at any time to download:
    - `课程标题.json`: the canonical content layer.
@@ -75,7 +79,18 @@ Regenerate and validate from the repository root:
 & ".\.venv\Scripts\python.exe" -m unittest discover -s tests -v
 ```
 
-The Dayu fixtures are development data. Historical body text, facts, persona material, and explanations marked `教师待审` must be replaced or approved by the teaching team before a real release. A V2 example manifest is only a contract fixture; publication remains controlled exclusively by an active release pointer.
+The legacy Dayu and Shangyang fixtures under `examples/v1/` are development data. Historical body text, facts, persona material, and explanations marked `教师待审` remain compatibility fixtures. The formal `C-prequin-state / L101` and `L103` sources are `services/content/flagships/dayu_l101.py` and `services/content/flagships/shangyang_l103.py`; each has been materialized through distinct author/reviewer/publisher identities into one active V3 release. Example V2/V3 manifests are only contract fixtures; publication remains controlled exclusively by an active release pointer.
+
+Reproduce or verify both formal publications from the repository root:
+
+```powershell
+& ".\.venv\Scripts\python.exe" scripts\publish_flagship_lesson.py L101 --content-root content
+& ".\.venv\Scripts\python.exe" scripts\publish_flagship_lesson.py L103 --content-root content
+& ".\.venv\Scripts\python.exe" -m unittest tests.test_dayu_flagship_content -v
+& ".\.venv\Scripts\python.exe" -m unittest tests.test_shangyang_flagship_content -v
+```
+
+The command is read-only when the canonical source matches the active immutable package. Source drift fails closed and requires a new content version; it never rewrites the existing release.
 
 Sealed files are immutable source artifacts for review and Git submission. The active release manifest, not the highest sealed filename, is authoritative for the course service. Public reads never scan `sealed/` for a presumed latest version. A pre-workflow sealed package must be explicitly whitelisted through `POST /api/v1/admin/content/releases/{course_id}/bootstrap-legacy` with exact `lesson_id` and `content_version` selections.
 

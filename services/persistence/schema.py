@@ -33,11 +33,15 @@ from services.auth.store import (
     users_table,
 )
 from services.game_runtime.store import game_dossiers_table, game_sessions_table
+from services.learning_assets.store import (
+    learning_feedback_table,
+    learning_submissions_table,
+)
 from services.persistence.db import kv_table
 
 
 MigrationMode = Literal["apply-safe", "validate"]
-LATEST_SCHEMA_VERSION = 3
+LATEST_SCHEMA_VERSION = 4
 _SUPPORTED_DIALECTS = frozenset({"sqlite", "postgresql"})
 _SQLITE_LOCK_ERRORS = ("database is locked", "database table is locked")
 _POSTGRES_MIGRATION_LOCK_ID = 0x4348524F4E4F
@@ -754,6 +758,12 @@ _MIGRATIONS = (
         invariant_id="identity-audit-chain-v1",
         initialize=_initialize_identity_audit,
         validate=_validate_identity_audit,
+    ),
+    _Migration(
+        version=4,
+        migration_id="learning-submission-feedback-v1",
+        app_version="0.10.27",
+        tables=(learning_submissions_table, learning_feedback_table),
     ),
 )
 _KNOWN_TABLE_NAMES = frozenset(

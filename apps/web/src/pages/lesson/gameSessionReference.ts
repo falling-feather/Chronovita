@@ -98,6 +98,10 @@ export function readStoredStartedGameReference(
   return stored as StoredStartedGameReference;
 }
 
+export function clearStoredGameReference(binding: GameBinding): void {
+  removeKey(binding.storageKey);
+}
+
 export function persistPendingGameReference(
   binding: GameBinding,
   reference: StoredGameReference,

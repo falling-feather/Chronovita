@@ -1,0 +1,1104 @@
+{
+  "schema_version": "scenario-author-draft/v1",
+  "scenario_id": "dayu-crisis-governance",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L101",
+  "title": "六回合治水议事：水退之后，秩序如何留下",
+  "scenario_type": "crisis_governance",
+  "student_role": "跨聚落治水共同体的议事记录者",
+  "objective": "在六回合内降低洪水风险，同时守住粮食、劳作者状态、公共信任、地形知识与协作能力，并解释每次取舍的证据与代价。",
+  "opening": "连日降雨后，河道漫出旧岸。低地聚落请求立刻加固，上游观察者主张先看地形，粮仓管理者提醒播种期将近。你必须记录并协调六次共同决策。数值是课堂模型，不是夏代统计。",
+  "max_turns": 6,
+  "variables": [
+    {
+      "variable_id": "flood-risk",
+      "label": "洪水风险",
+      "description": "越低越安全；极端工程也可能把风险转移到别处。",
+      "initial": 82.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "grain-reserve",
+      "label": "粮食储备",
+      "description": "工程与赈济都会消耗口粮；越高越能维持聚落。",
+      "initial": 62.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "labor-wellbeing",
+      "label": "劳作者状态",
+      "description": "综合轮换、伤病风险与家庭生计；越高越可持续。",
+      "initial": 66.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "public-trust",
+      "label": "聚落信任",
+      "description": "不同聚落对方案公平、透明与兑现程度的判断。",
+      "initial": 48.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "terrain-knowledge",
+      "label": "地形认知",
+      "description": "对支流、低地和分洪方向的共同记录。",
+      "initial": 22.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    {
+      "variable_id": "coordination",
+      "label": "协作能力",
+      "description": "跨聚落分工、信息共享与执行承诺的能力。",
+      "initial": 34.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    }
+  ],
+  "npcs": [
+    {
+      "person_id": "person-7c4825d9",
+      "display_name": "禹",
+      "role": "治水组织者",
+      "persona": "重视地形、协作和公共责任；角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "不把传说细节说成同时代事实。",
+        "不知道后世考古和现代数值。"
+      ],
+      "initial_attitude": 15.0,
+      "initial_trust": 25.0,
+      "fact_refs": [
+        "fact-34f9b1ba",
+        "fact-bf990cb8"
+      ]
+    },
+    {
+      "person_id": "person-31118bee",
+      "display_name": "益（伯益）",
+      "role": "勘察与协作顾问",
+      "persona": "要求先记录、再复核、后行动；角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "不虚构行程和对话。",
+        "证据不足时明确停下。"
+      ],
+      "initial_attitude": 10.0,
+      "initial_trust": 20.0,
+      "fact_refs": [
+        "fact-bf990cb8",
+        "fact-c708f42f"
+      ]
+    },
+    {
+      "person_id": "person-cef45322",
+      "display_name": "聚落代表",
+      "role": "多聚落意见群体",
+      "persona": "追问风险与资源分配是否公平；角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "合成群体，不代表全部史前居民。",
+        "不虚构人口数字。"
+      ],
+      "initial_attitude": 0.0,
+      "initial_trust": 5.0,
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-c708f42f"
+      ]
+    },
+    {
+      "person_id": "person-dc224fcf",
+      "display_name": "治水劳作者",
+      "role": "工程劳动群体",
+      "persona": "关注轮换、口粮与安全；角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "合成群体，不是假冒出土自述。",
+        "不虚构工具和伤亡。"
+      ],
+      "initial_attitude": 0.0,
+      "initial_trust": 5.0,
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-34f9b1ba"
+      ]
+    }
+  ],
+  "action_rules": [
+    {
+      "action_id": "survey-waterways",
+      "label": "踏勘支流与低地",
+      "description": "暂缓大工程，分组记录水势、低地和可分流方向。",
+      "aliases": [
+        "踏勘",
+        "勘察水道",
+        "先看地形"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "operation": "add",
+          "value": 3.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-reserve",
+          "person_id": "",
+          "operation": "add",
+          "value": -3.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "terrain-knowledge",
+          "person_id": "",
+          "operation": "add",
+          "value": 20.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "public-trust",
+          "person_id": "",
+          "operation": "add",
+          "value": 2.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-31118bee",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": 3.0,
+          "trust_delta": 6.0,
+          "reveal_fact_refs": [
+            "fact-4ba96f68"
+          ]
+        }
+      ],
+      "feedback": "勘察占用了时间和口粮，水势仍在上涨；但支流、低地和受影响聚落第一次出现在同一张记录上。",
+      "fact_refs": [
+        "fact-4ba96f68",
+        "fact-c708f42f"
+      ],
+      "next_node_id": null
+    },
+    {
+      "action_id": "dredge-diversion",
+      "label": "依地形疏浚分流",
+      "description": "依据已经形成的地形记录开挖、清障并分导水流。",
+      "aliases": [
+        "疏导",
+        "开渠分洪",
+        "疏浚"
+      ],
+      "available_when": [
+        {
+          "kind": "state",
+          "variable_id": "terrain-knowledge",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 40.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "operation": "add",
+          "value": -20.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-reserve",
+          "person_id": "",
+          "operation": "add",
+          "value": -7.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "labor-wellbeing",
+          "person_id": "",
+          "operation": "add",
+          "value": -10.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "coordination",
+          "person_id": "",
+          "operation": "add",
+          "value": 4.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-7c4825d9",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": 4.0,
+          "trust_delta": 5.0,
+          "reveal_fact_refs": [
+            "fact-34f9b1ba"
+          ]
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-dc224fcf",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": -2.0,
+          "trust_delta": -4.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "有地形记录的疏浚显著降低了水患，但连续施工消耗口粮与体力。方法有效不等于代价可以忽略。",
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-34f9b1ba"
+      ],
+      "next_node_id": null
+    },
+    {
+      "action_id": "reinforce-settlements",
+      "label": "加固聚落关键岸段",
+      "description": "优先保护住房、粮仓和饮水点，给后续方案争取时间。",
+      "aliases": [
+        "加固河岸",
+        "护住聚落",
+        "修临时堤"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "operation": "add",
+          "value": -10.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-reserve",
+          "person_id": "",
+          "operation": "add",
+          "value": -5.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "labor-wellbeing",
+          "person_id": "",
+          "operation": "add",
+          "value": -7.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "public-trust",
+          "person_id": "",
+          "operation": "add",
+          "value": 8.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-cef45322",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": 4.0,
+          "trust_delta": 7.0,
+          "reveal_fact_refs": [
+            "fact-34f9b1ba"
+          ]
+        }
+      ],
+      "feedback": "关键岸段暂时稳住，居民看到直接保护；但这只是组合措施，不能证明所有地方都应一味筑堵。",
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-34f9b1ba"
+      ],
+      "next_node_id": null
+    },
+    {
+      "action_id": "rotate-labor",
+      "label": "轮换劳作并设安全线",
+      "description": "减少连续强征，让各聚落轮换施工、耕作和照料家庭。",
+      "aliases": [
+        "轮换",
+        "让劳作者休整",
+        "安全施工"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "operation": "add",
+          "value": 5.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-reserve",
+          "person_id": "",
+          "operation": "add",
+          "value": -5.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "labor-wellbeing",
+          "person_id": "",
+          "operation": "add",
+          "value": 15.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "coordination",
+          "person_id": "",
+          "operation": "add",
+          "value": 8.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-dc224fcf",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": 7.0,
+          "trust_delta": 10.0,
+          "reveal_fact_refs": [
+            "fact-00b6a9f4"
+          ]
+        }
+      ],
+      "feedback": "工程速度暂时下降，但轮换让劳作者恢复，也让跨聚落分工更可持续。",
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-c708f42f"
+      ],
+      "next_node_id": null
+    },
+    {
+      "action_id": "share-map-plan",
+      "label": "公开水图并共同议事",
+      "description": "把地形记录、粮食消耗和风险方向公开，由各聚落共同修订方案。",
+      "aliases": [
+        "公开方案",
+        "共同议事",
+        "分享水图"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "operation": "add",
+          "value": 2.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "terrain-knowledge",
+          "person_id": "",
+          "operation": "add",
+          "value": 8.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "public-trust",
+          "person_id": "",
+          "operation": "add",
+          "value": 13.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "coordination",
+          "person_id": "",
+          "operation": "add",
+          "value": 16.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-cef45322",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": 8.0,
+          "trust_delta": 12.0,
+          "reveal_fact_refs": [
+            "fact-c708f42f"
+          ]
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-31118bee",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": 3.0,
+          "trust_delta": 5.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "议事没有立刻退水，却减少了上下游猜疑；方案、代价和承诺开始可以共同检查。",
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-c708f42f"
+      ],
+      "next_node_id": null
+    },
+    {
+      "action_id": "release-emergency-grain",
+      "label": "开仓赈济受灾家庭",
+      "description": "优先维持饮食与迁居，让受灾家庭和劳作者不必在生存压力下退出协作。",
+      "aliases": [
+        "赈济",
+        "开仓",
+        "发放口粮"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "operation": "add",
+          "value": 4.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-reserve",
+          "person_id": "",
+          "operation": "add",
+          "value": -15.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "labor-wellbeing",
+          "person_id": "",
+          "operation": "add",
+          "value": 10.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "public-trust",
+          "person_id": "",
+          "operation": "add",
+          "value": 12.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-cef45322",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": 6.0,
+          "trust_delta": 10.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-dc224fcf",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": 5.0,
+          "trust_delta": 8.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "粮仓明显下降，但最脆弱的家庭得到喘息。治理是否公正，也会影响方案能否继续执行。",
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-c708f42f"
+      ],
+      "next_node_id": null
+    },
+    {
+      "action_id": "force-emergency-dikes",
+      "label": "强征人力抢筑长堤",
+      "description": "不等待充分勘察，集中人力在主河段抢筑防线。",
+      "aliases": [
+        "强征筑堤",
+        "抢筑长堤",
+        "集中人力"
+      ],
+      "available_when": [],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "operation": "add",
+          "value": -18.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-reserve",
+          "person_id": "",
+          "operation": "add",
+          "value": -4.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "labor-wellbeing",
+          "person_id": "",
+          "operation": "add",
+          "value": -18.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "public-trust",
+          "person_id": "",
+          "operation": "add",
+          "value": -9.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "coordination",
+          "person_id": "",
+          "operation": "add",
+          "value": 2.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-dc224fcf",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": -10.0,
+          "trust_delta": -12.0,
+          "reveal_fact_refs": [
+            "fact-00b6a9f4"
+          ]
+        },
+        {
+          "kind": "npc",
+          "variable_id": "",
+          "person_id": "person-cef45322",
+          "operation": "add",
+          "value": 0.0,
+          "attitude_delta": -5.0,
+          "trust_delta": -7.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "feedback": "水位压力迅速缓解，但强征透支劳作者并损害信任。水退不等于治理没有留下伤痕。",
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-34f9b1ba"
+      ],
+      "next_node_id": null
+    }
+  ],
+  "event_rules": [
+    {
+      "event_id": "seasonal-rain-surge",
+      "title": "第三轮强降雨",
+      "match": "all",
+      "trigger": [
+        {
+          "kind": "turn",
+          "variable_id": "",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 3.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "operation": "add",
+          "value": 8.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "grain-reserve",
+          "person_id": "",
+          "operation": "add",
+          "value": -4.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "narrative": "第三轮后强降雨抵达：水势反弹，部分储粮受潮。任何方案都必须经受环境变化。",
+      "once": true,
+      "priority": 10,
+      "fact_refs": [
+        "fact-c708f42f"
+      ]
+    },
+    {
+      "event_id": "coordinated-workfront",
+      "title": "协作工段形成",
+      "match": "all",
+      "trigger": [
+        {
+          "kind": "state",
+          "variable_id": "coordination",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 65.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "terrain-knowledge",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 50.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "operation": "add",
+          "value": -10.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "labor-wellbeing",
+          "person_id": "",
+          "operation": "add",
+          "value": 5.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "public-trust",
+          "person_id": "",
+          "operation": "add",
+          "value": 4.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "narrative": "公开地图与分工让多个工段互相衔接：重复劳动减少，风险进一步下降。",
+      "once": true,
+      "priority": 20,
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-c708f42f"
+      ]
+    },
+    {
+      "event_id": "exhaustion-warning",
+      "title": "劳作透支",
+      "match": "all",
+      "trigger": [
+        {
+          "kind": "state",
+          "variable_id": "labor-wellbeing",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "lte",
+          "value": 25.0
+        }
+      ],
+      "effects": [
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "operation": "add",
+          "value": 7.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        },
+        {
+          "kind": "state",
+          "variable_id": "public-trust",
+          "person_id": "",
+          "operation": "add",
+          "value": -5.0,
+          "attitude_delta": 0.0,
+          "trust_delta": 0.0,
+          "reveal_fact_refs": []
+        }
+      ],
+      "narrative": "连续劳作造成伤病与离队，未完成的工段开始反噬水势；短期强度变成新的风险。",
+      "once": true,
+      "priority": 30,
+      "fact_refs": [
+        "fact-00b6a9f4"
+      ]
+    }
+  ],
+  "ending_rules": [
+    {
+      "ending_id": "ending-balanced-success",
+      "title": "共治成渠",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "variable_id": "",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 6.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "lte",
+          "value": 30.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "public-trust",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 68.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "labor-wellbeing",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 38.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "terrain-knowledge",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 55.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "coordination",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 60.0
+        }
+      ],
+      "summary": "洪水风险降到可控范围，地形记录、公开议事和可持续分工也留下来。共同体记住的不只是一位首领，还有一套可复核的协作方法。",
+      "historical_explanation": "这是课堂中的平衡成功模型：它帮助解释公共治理怎样可能增加权威，同时以信任、记录和责任约束权力；不能反推真实禹时代拥有同样制度。",
+      "major_costs": [
+        "消耗部分粮食与耕作时间",
+        "疏浚仍给劳作者带来压力",
+        "各聚落必须持续兑现公开承诺"
+      ],
+      "source_ref_ids": [
+        "source-485dba0f",
+        "source-58eb4cda",
+        "source-bfb9d857"
+      ],
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-aafc4705",
+        "fact-c708f42f"
+      ],
+      "priority": 10
+    },
+    {
+      "ending_id": "ending-costly-success",
+      "title": "水退而人疲",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "variable_id": "",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 6.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "lte",
+          "value": 32.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "labor-wellbeing",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "lte",
+          "value": 37.0
+        }
+      ],
+      "summary": "主要水患被压下，但强征与连续工程透支了劳作者，聚落之间留下怨气。史官必须同时写下功绩与代价。",
+      "historical_explanation": "英雄叙事常聚焦治水成功；本结局用教学变量补回普通劳作者和资源消耗，但这些数值不是夏代统计。",
+      "major_costs": [
+        "劳作者状态严重下降",
+        "信任可能受损",
+        "短期工程成果需要长期修复社会关系"
+      ],
+      "source_ref_ids": [
+        "source-485dba0f",
+        "source-58eb4cda",
+        "source-6822895b"
+      ],
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-c708f42f",
+        "fact-d3d71c82"
+      ],
+      "priority": 20
+    },
+    {
+      "ending_id": "ending-negotiated-compromise",
+      "title": "分段退水，留下争议",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "variable_id": "",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 6.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "flood-risk",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "lte",
+          "value": 55.0
+        },
+        {
+          "kind": "state",
+          "variable_id": "public-trust",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 52.0
+        }
+      ],
+      "summary": "关键聚落暂时安全，协商避免了共同体瓦解，但部分河段仍需后续治理。你保住了继续合作的条件，没有制造完美神话。",
+      "historical_explanation": "折中结局提示历史行动常是不完整的阶段成果。后世把复杂过程集中到英雄身上，课堂复盘则保留未解决问题。",
+      "major_costs": [
+        "部分地区仍承受较高水患",
+        "粮食和时间已被消耗",
+        "下一阶段仍需重新协商"
+      ],
+      "source_ref_ids": [
+        "source-485dba0f",
+        "source-8e213884"
+      ],
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-bf990cb8",
+        "fact-c708f42f"
+      ],
+      "priority": 30
+    },
+    {
+      "ending_id": "ending-governance-failure",
+      "title": "洪水与失序并行",
+      "match": "all",
+      "conditions": [
+        {
+          "kind": "turn",
+          "variable_id": "",
+          "person_id": "",
+          "field": "attitude",
+          "operator": "gte",
+          "value": 6.0
+        }
+      ],
+      "summary": "六轮结束时水患仍未进入可控范围，或共同体已无力持续执行方案。失败不归咎于一个按钮，而要回看信息、资源、时机与公平怎样相互作用。",
+      "historical_explanation": "这是规则兜底的失败结局，用于训练因果复盘；它不声称对应某次真实史前灾害。",
+      "major_costs": [
+        "洪水风险仍高",
+        "资源被消耗却未形成稳定方案",
+        "聚落可能退出共同治理"
+      ],
+      "source_ref_ids": [
+        "source-485dba0f",
+        "source-a39aeec3"
+      ],
+      "fact_refs": [
+        "fact-00b6a9f4",
+        "fact-55c2fa8b",
+        "fact-c708f42f"
+      ],
+      "priority": 1000
+    }
+  ],
+  "start_node_id": null,
+  "nodes": [],
+  "fact_refs": [
+    "fact-00b6a9f4",
+    "fact-03fb8208",
+    "fact-1afd8491",
+    "fact-34f9b1ba",
+    "fact-4ba96f68",
+    "fact-55c2fa8b",
+    "fact-699a85c1",
+    "fact-6fe6c697",
+    "fact-98a8d039",
+    "fact-aafc4705",
+    "fact-bf990cb8",
+    "fact-c708f42f",
+    "fact-d3d71c82",
+    "fact-d4f1e760",
+    "fact-db3673df",
+    "fact-f3213419"
+  ],
+  "source_ref_ids": [
+    "source-0cee9745",
+    "source-3d327ec3",
+    "source-485dba0f",
+    "source-58eb4cda",
+    "source-6822895b",
+    "source-8196d6b8",
+    "source-8e213884",
+    "source-9be183a9",
+    "source-a39aeec3",
+    "source-b4bc34eb",
+    "source-bfb9d857",
+    "source-e40f7e07"
+  ],
+  "dossier_template": {
+    "title_template": "《{scenario_title}·史官卷宗》",
+    "reflection_questions": [
+      "哪一次选择最改变水患走势？请引用该回合的变量变化和事实依据。",
+      "你的结局保护了谁、让谁承担了代价？还有哪一种组合可能更公平？",
+      "卷宗中的哪一段属于传说、传世文献、考古判断或教学解释？",
+      "如果新增一条同时代文字或新的洪水测年，你会修改哪项结论，为什么？"
+    ],
+    "knowledge_node_kinds": [
+      "evidence",
+      "claim",
+      "boundary",
+      "cause",
+      "consequence",
+      "cost"
+    ]
+  },
+  "compatibility": {
+    "kind": "native-v1",
+    "source_id": "",
+    "source_version": "",
+    "source_checksum": null,
+    "notes": "",
+    "unresolved_refs": [],
+    "legacy_materials": [],
+    "legacy_id_map": {}
+  },
+  "revision": 1,
+  "created_at": "2026-08-13T01:57:23.487163Z",
+  "updated_at": "2026-08-13T01:57:23.487163Z",
+  "created_by": "content-author-dayu",
+  "updated_by": "content-author-dayu"
+}

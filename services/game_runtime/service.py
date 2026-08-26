@@ -118,6 +118,27 @@ class ScenarioReleasePinV1(BaseModel):
     scenario_checksum: Checksum
 
 
+class ScenarioVariableSummaryV1(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    variable_id: ContractId
+    label: str
+    description: str
+    initial: float
+    minimum: float
+    maximum: float
+
+
+class ScenarioNpcSummaryV1(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    person_id: ContractId
+    display_name: str
+    role: str
+    initial_attitude: float = Field(ge=-100, le=100)
+    initial_trust: float = Field(ge=-100, le=100)
+
+
 class ScenarioSummaryV1(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -131,6 +152,8 @@ class ScenarioSummaryV1(BaseModel):
     student_role: str
     objective: str
     max_turns: int
+    variables: tuple[ScenarioVariableSummaryV1, ...] = ()
+    npcs: tuple[ScenarioNpcSummaryV1, ...] = ()
     audience: Literal["development", "published"]
     release_id: ContractId | None = None
     release_no: int | None = None
@@ -1152,6 +1175,27 @@ def _summary(
         student_role=scenario.student_role,
         objective=scenario.objective,
         max_turns=scenario.max_turns,
+        variables=tuple(
+            ScenarioVariableSummaryV1(
+                variable_id=item.variable_id,
+                label=item.label,
+                description=item.description,
+                initial=item.initial,
+                minimum=item.minimum,
+                maximum=item.maximum,
+            )
+            for item in scenario.variables
+        ),
+        npcs=tuple(
+            ScenarioNpcSummaryV1(
+                person_id=item.person_id,
+                display_name=item.display_name,
+                role=item.role,
+                initial_attitude=item.initial_attitude,
+                initial_trust=item.initial_trust,
+            )
+            for item in scenario.npcs
+        ),
         audience=loaded.entry.audience,
         release_id=loaded.release_id,
         release_no=loaded.release_no,
@@ -1508,8 +1552,10 @@ __all__ = [
     "GameSessionNotFound",
     "OwnedGameRuntime",
     "PublishedScenarioPinRequired",
+    "ScenarioNpcSummaryV1",
     "ScenarioReleasePinV1",
     "ScenarioSummaryV1",
+    "ScenarioVariableSummaryV1",
     "SessionReplayV1",
     "TeacherSessionSummaryV1",
     "configure_game_runtime",

@@ -1,0 +1,294 @@
+{
+  "schema": "chronovita-home-era-assets/v1",
+  "processor": {
+    "sharp": "0.35.3",
+    "vips": "8.18.3"
+  },
+  "source_policy": "Original imagegen PNG files remain outside Git. Generated IDs, prompts, source hashes, post-processing and final hashes are recorded here.",
+  "license": "Original AI-assisted teaching artwork produced for Chronovita; not an exact reconstruction of named archaeological objects or historical portraits.",
+  "post_processing": "Detect the two neutral checkerboard tones, derive a feathered alpha matte from colour distance, crop visible bounds, and fit to transparent square WebP canvases.",
+  "eras": {
+    "preqin": {
+      "generated_id": "exec-2e0197a7-1502-4594-928b-63041ed0af98",
+      "alt": "青铜礼器、甲骨片与河纹组成的先秦原创教学主体",
+      "prompt_brief": "先秦：青铜礼器、甲骨片与河纹；原创教学美术，不复原具体出土器物。",
+      "source": {
+        "width": 1149,
+        "height": 1368,
+        "bytes": 2432253,
+        "sha256": "296d49e7ad9f805ccbc9c3a2de6f3c08b7f6310ceaa868e5ac120a6ad797bc27",
+        "detected_background_tones": [
+          249,
+          254
+        ],
+        "visible_bounds": {
+          "left": 34,
+          "top": 0,
+          "width": 1115,
+          "height": 1368
+        }
+      },
+      "variants": [
+        {
+          "width": 640,
+          "height": 640,
+          "format": "webp",
+          "file": "preqin-640.webp",
+          "bytes": 112570,
+          "sha256": "fc7e3528b18728a3ea533f7892f73aaffc0e1b8f9cf4db1025c93a5d073e8157",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        },
+        {
+          "width": 1280,
+          "height": 1280,
+          "format": "webp",
+          "file": "preqin-1280.webp",
+          "bytes": 404488,
+          "sha256": "34e7eecf12c966a2731f7fa31c56329b3a3859682f272e775c7be1d9b2bb4482",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        }
+      ]
+    },
+    "qinhan": {
+      "generated_id": "exec-b3bfb3b1-91d9-4b7f-adf2-7f4a26b4234d",
+      "alt": "甲士、铜马与印玺组成的秦汉原创教学主体",
+      "prompt_brief": "秦汉：甲士、铜马与印玺；原创教学美术，不复原具体俑像。",
+      "source": {
+        "width": 1024,
+        "height": 1536,
+        "bytes": 1820014,
+        "sha256": "f7fd1508a16674c03f5d968f4477956c9f65264fedd7e7b44cf0115168af2e87",
+        "detected_background_tones": [
+          246,
+          254
+        ],
+        "visible_bounds": {
+          "left": 162,
+          "top": 36,
+          "width": 707,
+          "height": 1433
+        }
+      },
+      "variants": [
+        {
+          "width": 640,
+          "height": 640,
+          "format": "webp",
+          "file": "qinhan-640.webp",
+          "bytes": 55944,
+          "sha256": "7208b30f1af880309ba2ed803a324dba3ff51a9f30366708cc449cc9a56242a7",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        },
+        {
+          "width": 1280,
+          "height": 1280,
+          "format": "webp",
+          "file": "qinhan-1280.webp",
+          "bytes": 197850,
+          "sha256": "e9737b7b5f871bafa1336eb76b882b64d3d614b005ea73e9a63d2a4c3d0b882d",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        }
+      ]
+    },
+    "weijin": {
+      "generated_id": "exec-8c08b1f6-b451-471d-bbe2-247b2e46d9e9",
+      "alt": "持卷士人、石窟构件与飞带组成的魏晋南北朝原创教学主体",
+      "prompt_brief": "魏晋南北朝：匿名士人、石窟构件与飞带；原创角色化教学美术。",
+      "source": {
+        "width": 1024,
+        "height": 1536,
+        "bytes": 1917357,
+        "sha256": "585ed2fde8f4dc4ddcaa8f80461d60fc88e0891849334135b1756a114f8022ac",
+        "detected_background_tones": [
+          247,
+          254
+        ],
+        "visible_bounds": {
+          "left": 136,
+          "top": 106,
+          "width": 786,
+          "height": 1338
+        }
+      },
+      "variants": [
+        {
+          "width": 640,
+          "height": 640,
+          "format": "webp",
+          "file": "weijin-640.webp",
+          "bytes": 61860,
+          "sha256": "637c1c42a42a5fb45109fc58209a72d6978ff04654a0a524cf86b6af2e42b960",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        },
+        {
+          "width": 1280,
+          "height": 1280,
+          "format": "webp",
+          "file": "weijin-1280.webp",
+          "bytes": 214060,
+          "sha256": "60265b66d3fe0b29262bcfb78ea45c41b63dcf887639439b289a843b695d7912",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        }
+      ]
+    },
+    "suitang": {
+      "generated_id": "exec-28c93790-c112-47da-8784-8becffaf2460",
+      "alt": "三彩风格骆驼、行囊与飘带组成的隋唐原创教学主体",
+      "prompt_brief": "隋唐：三彩风格骆驼、丝路行囊与飘带；原创教学美术。",
+      "source": {
+        "width": 1177,
+        "height": 1336,
+        "bytes": 1936334,
+        "sha256": "677c57ae85fc9048955f8532d164a56191abc03f3bb762665e9b7a3cda223e58",
+        "detected_background_tones": [
+          246,
+          254
+        ],
+        "visible_bounds": {
+          "left": 94,
+          "top": 38,
+          "width": 1056,
+          "height": 1243
+        }
+      },
+      "variants": [
+        {
+          "width": 640,
+          "height": 640,
+          "format": "webp",
+          "file": "suitang-640.webp",
+          "bytes": 96342,
+          "sha256": "b681a32d7556a6ae8a8ebb421a6a3537d87569476d8fe6aa1493744698c67cd4",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        },
+        {
+          "width": 1280,
+          "height": 1280,
+          "format": "webp",
+          "file": "suitang-1280.webp",
+          "bytes": 285816,
+          "sha256": "7eae9628958294c3033202865b9bbd1312e71d88bf7d0f8c08b1c4b43d917e7e",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        }
+      ]
+    },
+    "songyuan": {
+      "generated_id": "exec-e26805bb-316e-4bcd-86f1-1544182dfc5b",
+      "alt": "海船、青瓷与司南意象组成的宋元原创教学主体",
+      "prompt_brief": "宋元：海船、青瓷与司南意象；原创教学美术，不作精确船型复原。",
+      "source": {
+        "width": 1199,
+        "height": 1312,
+        "bytes": 2271823,
+        "sha256": "f240fb9a1e024fb59278ad24239c4f2368d5de2124b527f71ff60acb351f6cbd",
+        "detected_background_tones": [
+          247,
+          254
+        ],
+        "visible_bounds": {
+          "left": 33,
+          "top": 2,
+          "width": 1123,
+          "height": 1296
+        }
+      },
+      "variants": [
+        {
+          "width": 640,
+          "height": 640,
+          "format": "webp",
+          "file": "songyuan-640.webp",
+          "bytes": 122880,
+          "sha256": "2b18047c04b38d2c15baa4c7653c8b3cba630ec959604c43305b5ecc554e28b9",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        },
+        {
+          "width": 1280,
+          "height": 1280,
+          "format": "webp",
+          "file": "songyuan-1280.webp",
+          "bytes": 454674,
+          "sha256": "9c2dd9adbe6900ee8940a309b40522e8534dee7800da35571606b13f4d093dac",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        }
+      ]
+    },
+    "mingqing": {
+      "generated_id": "exec-9bc53419-ea45-4eb8-b365-3c56f147371c",
+      "alt": "青花瓷、长城城台与线装书组成的明清原创教学主体",
+      "prompt_brief": "明清：青花瓷、长城城台与线装书；原创教学美术。",
+      "source": {
+        "width": 1024,
+        "height": 1536,
+        "bytes": 2609582,
+        "sha256": "24fde70858f2eed995e48452697d473ba1cfa5d802803ba9e65f2f13cf27b3e3",
+        "detected_background_tones": [
+          245,
+          254
+        ],
+        "visible_bounds": {
+          "left": 16,
+          "top": 134,
+          "width": 1002,
+          "height": 1295
+        }
+      },
+      "variants": [
+        {
+          "width": 640,
+          "height": 640,
+          "format": "webp",
+          "file": "mingqing-640.webp",
+          "bytes": 110806,
+          "sha256": "cffdcf6369f7f3757bb79b7f468188fa78ff4cc9c8cb7586f13cae9ccc1d5cba",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        },
+        {
+          "width": 1280,
+          "height": 1280,
+          "format": "webp",
+          "file": "mingqing-1280.webp",
+          "bytes": 426648,
+          "sha256": "6f34dbfe7f9eac072e72f76fb07890a074f04b830cd7be1fde91ab963afc24ab",
+          "alpha": {
+            "min": 0,
+            "max": 255
+          }
+        }
+      ]
+    }
+  }
+}

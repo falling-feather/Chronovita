@@ -33,6 +33,7 @@ from services.persistence.backup import (
 )
 from services.persistence.db import kv_table
 from services.persistence.schema import (
+    LATEST_SCHEMA_VERSION,
     ensure_current_schema,
     inspect_schema,
     schema_migrations_table,
@@ -64,7 +65,7 @@ class DatabaseBackupTests(unittest.TestCase):
         target = self.tmp_root / "restored" / "chronovita.db"
         restored = restore_sqlite_backup(backup, target)
 
-        self.assertEqual(manifest.database_schema_version, 3)
+        self.assertEqual(manifest.database_schema_version, LATEST_SCHEMA_VERSION)
         self.assertEqual(manifest.app_version, APP_VERSION)
         self.assertTrue(manifest.ledger_present)
         self.assertEqual(verification.manifest, manifest)
@@ -516,9 +517,9 @@ class DatabaseBackupTests(unittest.TestCase):
             with engine.begin() as connection:
                 connection.execute(
                     insert(schema_migrations_table).values(
-                        version=4,
-                        migration_id="future-v4",
-                        contract_checksum="4" * 64,
+                        version=5,
+                        migration_id="future-v5",
+                        contract_checksum="5" * 64,
                         applied_at=NOW,
                         app_version="99.0.0",
                     )
