@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://chronovita.local/schemas/archive/v1/course-archive-manifest.schema.json",
-  "$comment": "Pydantic semantic validation additionally enforces exact release identity, renderer identity, portable NFKC paths, file-size totals, source contract checksums and lesson/scenario cross-references. files excludes the self-referential archive manifest.",
+  "$comment": "Pydantic semantic validation additionally enforces exact release identity, renderer identity, portable NFKC paths, file-size totals, source contract checksums and lesson/scenario/supplement cross-references, including the V5 PersonaPack binding. files excludes the self-referential archive manifest.",
   "$defs": {
     "ArchiveRendererV1": {
       "additionalProperties": false,
@@ -60,6 +60,7 @@
             "scenario-template",
             "evidence-corpus",
             "lesson-presentation",
+            "persona-pack",
             "format-layer",
             "teacher-markdown",
             "preview-html"
@@ -300,7 +301,8 @@
         "course-release/v1",
         "course-release/v2",
         "course-release/v3",
-        "course-release/v4"
+        "course-release/v4",
+        "course-release/v5"
       ],
       "title": "Release Schema Version",
       "type": "string"

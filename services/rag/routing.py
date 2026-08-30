@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
-from typing import Literal
 import unicodedata
+from dataclasses import dataclass
+from typing import Literal
 
 from .local_reply import LocalReplyFit
 from .query import RagQueryPlan
 from .retrieval import RetrievalBatch
-
 
 RAG_ROUTER_VERSION = "chronovita-rag-router/v1"
 
@@ -124,7 +123,11 @@ def route_rag_query(
                 else (
                     "unsupported_question_relation"
                     if local_fit.reason == "question_relation_not_published"
-                    else "unsupported_answer_slot"
+                    else (
+                        "persona_answer_slot_not_enabled"
+                        if local_fit.reason == "persona_answer_slot_not_enabled"
+                        else "unsupported_answer_slot"
+                    )
                 )
             ),
             evidence_confidence=confidence,
@@ -167,10 +170,7 @@ def route_rag_query(
         confidence == "high"
         and complexity >= 3
         and len(batch.passages) >= 2
-        and (
-            local_fit is None
-            or local_fit.api_synthesis_allowed
-        )
+        and (local_fit is None or local_fit.api_synthesis_allowed)
     ):
         return RagRouteDecision(
             target="external_api",
@@ -209,9 +209,7 @@ def _evidence_confidence(
 
     candidates = batch.passages[:5]
     coverage = max(item.query_signal_coverage for item in candidates)
-    matched_signals = sum(
-        min(item.matched_signal_count, 3) for item in candidates
-    )
+    matched_signals = sum(min(item.matched_signal_count, 3) for item in candidates)
     vector_similarity = max(
         (
             item.vector_similarity

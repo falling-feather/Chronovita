@@ -23,7 +23,10 @@ from services.contracts.archive_examples import (
     build_dayu_archive_release,
     build_dayu_sealed_lesson,
 )
-from services.contracts.archive_v1 import ARCHIVE_MANIFEST_FILENAME
+from services.contracts.archive_v1 import (
+    ARCHIVE_MANIFEST_FILENAME,
+    supplement_archive_path,
+)
 from services.contracts.examples import build_dayu_bundle
 
 
@@ -247,6 +250,89 @@ class ContentHistoryArchiveTests(unittest.TestCase):
             + "\n",
             encoding="utf-8",
         )
+
+
+class CurrentFlagshipV5ArchiveTests(unittest.TestCase):
+    repository_content = Path(__file__).resolve().parents[1] / "content"
+    course_id = "C-prequin-state"
+    release_id = "rel-28b5624648-0007"
+
+    def setUp(self) -> None:
+        self.original_root = content.content_root()
+        self.tmp_root = (
+            Path.cwd() / ".tmp-content-history-archive-v5-tests" / uuid.uuid4().hex
+        )
+        shutil.copytree(self.repository_content, self.tmp_root)
+        content.configure(self.tmp_root)
+
+    def tearDown(self) -> None:
+        content.configure(self.original_root)
+        shutil.rmtree(self.tmp_root, ignore_errors=True)
+        try:
+            self.tmp_root.parent.rmdir()
+        except OSError:
+            pass
+
+    def test_current_v5_archive_pins_each_persona_pack_exactly(self) -> None:
+        archive = build_course_archive(self.course_id, self.release_id)
+
+        self.assertEqual(archive.manifest.release_schema_version, "course-release/v5")
+        self.assertEqual(len(archive.manifest.lessons), 2)
+        for lesson in archive.manifest.lessons:
+            lesson_files = [
+                item
+                for item in archive.manifest.files
+                if item.lesson_id == lesson.lesson_id
+            ]
+            evidence = [item for item in lesson_files if item.kind == "evidence-corpus"]
+            presentation = [
+                item for item in lesson_files if item.kind == "lesson-presentation"
+            ]
+            personas = [item for item in lesson_files if item.kind == "persona-pack"]
+            self.assertEqual(
+                [item.schema_version for item in evidence],
+                ["evidence-corpus/v2"],
+            )
+            self.assertEqual(
+                [item.schema_version for item in presentation],
+                ["lesson-presentation/v1"],
+            )
+            self.assertEqual(
+                [item.schema_version for item in personas],
+                ["persona-pack/v1"],
+            )
+            persona = personas[0]
+            self.assertEqual(
+                persona.path,
+                supplement_archive_path(
+                    lesson.lesson_id,
+                    "persona-pack",
+                    persona.artifact_id or "",
+                    persona.artifact_version or 0,
+                ),
+            )
+            archived = json.loads(archive.files[persona.path].decode("utf-8"))
+            self.assertEqual(archived["pack_id"], persona.artifact_id)
+            self.assertEqual(archived["pack_version"], persona.artifact_version)
+            self.assertEqual(archived["checksum"], persona.contract_checksum)
+
+    def test_tampered_v5_persona_pack_fails_closed(self) -> None:
+        release = content_workflow.get_release(self.course_id, self.release_id)
+        persona_path = self.tmp_root.joinpath(
+            *release.items[0].persona_pack.path.split("/")
+        )
+        payload = json.loads(persona_path.read_text(encoding="utf-8"))
+        payload["sealed_by"] = "tampered-archive-test"
+        persona_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(
+            ArchiveBuildError,
+            "supplement.*failed verification",
+        ):
+            build_course_archive(self.course_id, self.release_id)
 
 
 if __name__ == "__main__":

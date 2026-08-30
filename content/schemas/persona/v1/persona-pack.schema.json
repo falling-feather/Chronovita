@@ -1,0 +1,401 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/persona/v1/persona-pack.schema.json",
+  "$comment": "Pydantic semantic validation additionally enforces immutable sealed packs, stable reference ordering, least-privilege role voice evidence and unique scenario speaker routes. Cross-artifact references are validated by the publication workflow.",
+  "$defs": {
+    "PersonaEvidenceUseV1": {
+      "additionalProperties": false,
+      "properties": {
+        "passage_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Passage Id",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "role_voice",
+            "historian_note",
+            "boundary_only"
+          ],
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "passage_id",
+        "mode"
+      ],
+      "title": "PersonaEvidenceUseV1",
+      "type": "object"
+    },
+    "PersonaPolicyV1": {
+      "additionalProperties": false,
+      "properties": {
+        "afterlife_material_policy": {
+          "const": "historian_note_only",
+          "default": "historian_note_only",
+          "enum": [
+            "historian_note_only"
+          ],
+          "title": "Afterlife Material Policy",
+          "type": "string"
+        },
+        "unknown_policy": {
+          "const": "explicit_insufficient",
+          "default": "explicit_insufficient",
+          "enum": [
+            "explicit_insufficient"
+          ],
+          "title": "Unknown Policy",
+          "type": "string"
+        },
+        "disclaimer_code": {
+          "const": "role_expression_not_source_quote",
+          "default": "role_expression_not_source_quote",
+          "enum": [
+            "role_expression_not_source_quote"
+          ],
+          "title": "Disclaimer Code",
+          "type": "string"
+        }
+      },
+      "title": "PersonaPolicyV1",
+      "type": "object"
+    },
+    "PersonaProfileBindingV1": {
+      "additionalProperties": false,
+      "properties": {
+        "person_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Person Id",
+          "type": "string"
+        },
+        "persona_kind": {
+          "enum": [
+            "historical_person",
+            "transmitted_memory",
+            "composite_group"
+          ],
+          "title": "Persona Kind",
+          "type": "string"
+        },
+        "channels": {
+          "items": {
+            "enum": [
+              "consult",
+              "scenario"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Channels",
+          "type": "array"
+        },
+        "voice": {
+          "$ref": "#/$defs/PersonaVoiceV1"
+        },
+        "policy": {
+          "$ref": "#/$defs/PersonaPolicyV1"
+        },
+        "focus_answer_slot_ids": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Focus Answer Slot Ids",
+          "type": "array"
+        },
+        "boundary_ids": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Boundary Ids",
+          "type": "array"
+        },
+        "evidence_uses": {
+          "items": {
+            "$ref": "#/$defs/PersonaEvidenceUseV1"
+          },
+          "minItems": 1,
+          "title": "Evidence Uses",
+          "type": "array"
+        },
+        "portrait_asset_key": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 2,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Portrait Asset Key"
+        }
+      },
+      "required": [
+        "person_id",
+        "persona_kind",
+        "channels",
+        "voice",
+        "focus_answer_slot_ids",
+        "boundary_ids",
+        "evidence_uses"
+      ],
+      "title": "PersonaProfileBindingV1",
+      "type": "object"
+    },
+    "PersonaVoiceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "perspective": {
+          "enum": [
+            "first_person_limited",
+            "collective_first_person",
+            "third_person_facilitator"
+          ],
+          "title": "Perspective",
+          "type": "string"
+        },
+        "register": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Register",
+          "type": "string"
+        },
+        "tone_tags": {
+          "items": {
+            "maxLength": 40,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Tone Tags",
+          "type": "array"
+        },
+        "length_policy": {
+          "default": "standard",
+          "enum": [
+            "brief",
+            "standard",
+            "expanded"
+          ],
+          "title": "Length Policy",
+          "type": "string"
+        }
+      },
+      "required": [
+        "perspective",
+        "register",
+        "tone_tags"
+      ],
+      "title": "PersonaVoiceV1",
+      "type": "object"
+    },
+    "ScenarioVoiceBindingV1": {
+      "additionalProperties": false,
+      "properties": {
+        "binding_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Binding Id",
+          "type": "string"
+        },
+        "node_id": {
+          "description": "Pinned scenario node_id; rules_v1 scenarios without explicit nodes use the reserved global-rule-set route namespace.",
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Node Id",
+          "type": "string"
+        },
+        "action_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "person_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Person Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "binding_id",
+        "node_id",
+        "action_id",
+        "person_id"
+      ],
+      "title": "ScenarioVoiceBindingV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "persona-pack/v1",
+      "default": "persona-pack/v1",
+      "enum": [
+        "persona-pack/v1"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "pack_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Pack Id",
+      "type": "string"
+    },
+    "course_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Course Id",
+      "type": "string"
+    },
+    "lesson_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Lesson Id",
+      "type": "string"
+    },
+    "pack_version": {
+      "minimum": 1,
+      "title": "Pack Version",
+      "type": "integer"
+    },
+    "status": {
+      "const": "sealed",
+      "default": "sealed",
+      "enum": [
+        "sealed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "course_content_version": {
+      "minimum": 1,
+      "title": "Course Content Version",
+      "type": "integer"
+    },
+    "course_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Course Checksum",
+      "type": "string"
+    },
+    "scenario_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "scenario_version": {
+      "minimum": 1,
+      "title": "Scenario Version",
+      "type": "integer"
+    },
+    "scenario_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scenario Checksum",
+      "type": "string"
+    },
+    "evidence_corpus_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Evidence Corpus Id",
+      "type": "string"
+    },
+    "evidence_version": {
+      "minimum": 1,
+      "title": "Evidence Version",
+      "type": "integer"
+    },
+    "evidence_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evidence Checksum",
+      "type": "string"
+    },
+    "profiles": {
+      "items": {
+        "$ref": "#/$defs/PersonaProfileBindingV1"
+      },
+      "minItems": 1,
+      "title": "Profiles",
+      "type": "array"
+    },
+    "scenario_voice_bindings": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ScenarioVoiceBindingV1"
+      },
+      "title": "Scenario Voice Bindings",
+      "type": "array"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "sealed_at": {
+      "format": "date-time",
+      "title": "Sealed At",
+      "type": "string"
+    },
+    "sealed_by": {
+      "minLength": 1,
+      "title": "Sealed By",
+      "type": "string"
+    },
+    "checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Checksum",
+      "type": "string"
+    }
+  },
+  "required": [
+    "pack_id",
+    "course_id",
+    "lesson_id",
+    "pack_version",
+    "course_content_version",
+    "course_checksum",
+    "scenario_id",
+    "scenario_version",
+    "scenario_checksum",
+    "evidence_corpus_id",
+    "evidence_version",
+    "evidence_checksum",
+    "profiles",
+    "created_at",
+    "sealed_at",
+    "sealed_by",
+    "checksum"
+  ],
+  "title": "PersonaPackV1",
+  "type": "object"
+}

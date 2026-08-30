@@ -2,7 +2,7 @@
   "schema_version": "rag-benchmark-l103-v2/v1",
   "course_id": "C-prequin-state",
   "lesson_id": "L103",
-  "release_no": 6,
+  "release_no": 7,
   "evidence_schema_version": "evidence-corpus/v2",
   "cases": [
     {

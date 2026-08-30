@@ -25,14 +25,14 @@ class RagBenchmarkL101V2Tests(unittest.TestCase):
             "L101",
         )
 
-    def test_fixture_is_scoped_to_current_release_six_and_only_current_v2_ids(self) -> None:
+    def test_fixture_is_scoped_to_current_release_seven_and_exact_v2_ids(self) -> None:
         benchmark = self.benchmark
         release = self.release
         resources = self.resources
         self.assertIsNotNone(release)
-        self.assertEqual(release.schema_version, "course-release/v4")
-        self.assertEqual(release.release_no, 6)
-        self.assertEqual(release.release_id, "rel-28b5624648-0006")
+        self.assertEqual(release.schema_version, "course-release/v5")
+        self.assertEqual(release.release_no, 7)
+        self.assertEqual(release.release_id, "rel-28b5624648-0007")
         self.assertEqual(resources.release_id, release.release_id)
         self.assertEqual(resources.release_checksum, release.checksum)
         self.assertIsInstance(resources.evidence_corpus, EvidenceCorpusV2)
@@ -92,7 +92,7 @@ class RagBenchmarkL101V2Tests(unittest.TestCase):
             )
         )
 
-    def test_release_six_fts_places_expected_evidence_in_top_five_at_90_percent(self) -> None:
+    def test_release_seven_fts_places_exact_v2_evidence_in_top_five(self) -> None:
         with tempfile.TemporaryDirectory(prefix="chronovita-l101-v2-benchmark-") as temp_dir:
             retriever = HybridEvidenceRetriever(Path(temp_dir) / "rag.sqlite3")
             hits = 0

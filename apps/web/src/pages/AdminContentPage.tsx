@@ -33,6 +33,7 @@ import {
   type CourseReleaseItemV2,
   type CourseReleaseItemV3,
   type CourseReleaseItemV4,
+  type CourseReleaseItemV5,
   type CourseReleaseManifest,
   type EvidenceReleaseSelection,
   type KeywordProfilePackage,
@@ -779,7 +780,7 @@ function releaseItemV2(
 function releaseItemWithSupplements(
   release: CourseReleaseManifest | null,
   lessonId: string,
-): CourseReleaseItemV3 | CourseReleaseItemV4 | null {
+): CourseReleaseItemV3 | CourseReleaseItemV4 | CourseReleaseItemV5 | null {
   const item = release?.items.find((candidate) => candidate.lesson_id === lessonId);
   return item && 'evidence_corpus' in item ? item : null;
 }

@@ -25,7 +25,7 @@ from sqlalchemy import (
     select,
     update,
 )
-from sqlalchemy.engine import Engine, URL
+from sqlalchemy.engine import URL, Engine
 
 from services.auth.store import (
     AuthStore,
@@ -51,7 +51,6 @@ from services.persistence.schema import (
     schema_migrations_table,
 )
 
-
 NOW = datetime(2026, 7, 16, 12, 0, tzinfo=timezone.utc)
 
 
@@ -74,11 +73,15 @@ class DatabaseSchemaTests(unittest.TestCase):
         try:
             first = ensure_current_schema(engine)
             with engine.connect() as connection:
-                first_rows = connection.execute(
-                    select(schema_migrations_table).order_by(
-                        schema_migrations_table.c.version
+                first_rows = (
+                    connection.execute(
+                        select(schema_migrations_table).order_by(
+                            schema_migrations_table.c.version
+                        )
                     )
-                ).mappings().all()
+                    .mappings()
+                    .all()
+                )
 
             statements = []
 
@@ -98,14 +101,18 @@ class DatabaseSchemaTests(unittest.TestCase):
             finally:
                 event.remove(engine, "before_cursor_execute", capture_statement)
             with engine.connect() as connection:
-                second_rows = connection.execute(
-                    select(schema_migrations_table).order_by(
-                        schema_migrations_table.c.version
+                second_rows = (
+                    connection.execute(
+                        select(schema_migrations_table).order_by(
+                            schema_migrations_table.c.version
+                        )
                     )
-                ).mappings().all()
+                    .mappings()
+                    .all()
+                )
 
             self.assertTrue(first.is_current)
-            self.assertEqual(first.current_version, 4)
+            self.assertEqual(first.current_version, 5)
             self.assertEqual(second, first)
             self.assertEqual(second_rows, first_rows)
             self.assertFalse(
@@ -113,7 +120,7 @@ class DatabaseSchemaTests(unittest.TestCase):
             )
             self.assertEqual(
                 [row["version"] for row in second_rows],
-                [1, 2, 3, 4],
+                [1, 2, 3, 4, 5],
             )
         finally:
             engine.dispose()
@@ -173,15 +180,11 @@ class DatabaseSchemaTests(unittest.TestCase):
                     '{"progress":2}',
                 )
                 self.assertEqual(
-                    connection.execute(
-                        select(game_sessions_table.c.data)
-                    ).scalar_one(),
+                    connection.execute(select(game_sessions_table.c.data)).scalar_one(),
                     '{"schema_version":"legacy"}',
                 )
                 self.assertEqual(
-                    connection.execute(
-                        select(game_dossiers_table.c.data)
-                    ).scalar_one(),
+                    connection.execute(select(game_dossiers_table.c.data)).scalar_one(),
                     '{"schema_version":"legacy"}',
                 )
                 head = connection.execute(select(audit_head_table)).mappings().one()
@@ -289,9 +292,7 @@ class DatabaseSchemaTests(unittest.TestCase):
         try:
             ensure_current_schema(engine)
             with sqlite3.connect(path) as connection:
-                journal_mode = connection.execute(
-                    "PRAGMA journal_mode=WAL"
-                ).fetchone()
+                journal_mode = connection.execute("PRAGMA journal_mode=WAL").fetchone()
             self.assertEqual(str(journal_mode[0]).lower(), "wal")
 
             writer = AuthStore(writer_engine)
@@ -375,12 +376,16 @@ class DatabaseSchemaTests(unittest.TestCase):
                 statuses = list(pool.map(migrate, engines))
             self.assertTrue(all(status.is_current for status in statuses))
             with engines[0].connect() as connection:
-                versions = connection.execute(
-                    select(schema_migrations_table.c.version).order_by(
-                        schema_migrations_table.c.version
+                versions = (
+                    connection.execute(
+                        select(schema_migrations_table.c.version).order_by(
+                            schema_migrations_table.c.version
+                        )
                     )
-                ).scalars().all()
-            self.assertEqual(versions, [1, 2, 3, 4])
+                    .scalars()
+                    .all()
+                )
+            self.assertEqual(versions, [1, 2, 3, 4, 5])
         finally:
             for engine in engines:
                 engine.dispose()
@@ -422,6 +427,7 @@ class DatabaseSchemaTests(unittest.TestCase):
                 "6088af90a040f4890eb682d9528bb443458af2d8ef467662fd9a0a0a9538912d",
                 "94d49ee4d1e5e05bad4fc0f69cd394298c3789c1461df9f2b6205b69bb8652fe",
                 "f8b9d55fc2d251d447e29d7922099fc67b94023f7f21cef229f635e03d6bb304",
+                "18faae18a22e7e36430d878bcece26095a3301032b1a144e9054b91cb3afb0e5",
             ),
         )
 
@@ -535,9 +541,9 @@ class DatabaseSchemaTests(unittest.TestCase):
         with engine.begin() as connection:
             connection.execute(
                 insert(schema_migrations_table).values(
-                    version=5,
-                    migration_id="future-v5",
-                    contract_checksum="5" * 64,
+                    version=6,
+                    migration_id="future-v6",
+                    contract_checksum="6" * 64,
                     applied_at=NOW,
                     app_version="99.0.0",
                 )
@@ -554,7 +560,7 @@ class DatabaseSchemaTests(unittest.TestCase):
         with engine.begin() as connection:
             connection.execute(
                 delete(schema_migrations_table).where(
-                    schema_migrations_table.c.version.in_((2, 3, 4))
+                    schema_migrations_table.c.version.in_((2, 3, 4, 5))
                 )
             )
 

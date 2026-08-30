@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V1.0.2**；L101/L103 已分别建成 48 个稳定证据片段的 `EvidenceCorpusV2`，以答案槽、史实边界和人物范围约束本地回复与条件 API。两课已原子切换到 `course-release/v4` 发布 #6；V1 证据与旧发布仍可读。GitHub Pages 继续提供无需登录和 API 的只读内容预览；完整交互仍由本地课堂版承担。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V1.0.3**；L101/L103 已在 48 片段 `EvidenceCorpusV2` 上发布审校后的 `PersonaPackV1`，人物可说范围、禁答边界、证据用途和场景表达均由当前发布锁定。两课已原子切换到 `course-release/v5` 发布 #7；人物多轮会话按账号、发布和证据版本持久化，简单问题本机回答，证据充分的复杂问题才可调用 API。GitHub Pages 仍只提供无需登录和 API 的只读内容预览。
 
 [纯前端预览](https://falling-feather.github.io/Chronovita/) · [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](doc/00-项目总纲.md) · [开发者文档](doc/01-开发者文档.md) · [项目规划](doc/02-项目规划.md) · [开发历史](doc/03-开发历史.md)
 
@@ -26,7 +26,7 @@
 
 - 前端：React 18 + Vite 8 + TypeScript 5 + Ant Design 5 + React Router 7 + React Flow 11 + Zustand
 - 后端：Python 3.11-3.13 + FastAPI + Pydantic v2 + SQLAlchemy 2.0 + SQLite（本地）/ PostgreSQL（生产边界）
-- LLM/RAG：`EvidenceCorpusV2` 用发布绑定的答案槽、史实边界、片段及人物范围驱动本地状态机；只有全部问题维度命中允许的复杂问题才可调用 DeepSeek 兼容 API。SQLite FTS5、`BAAI/bge-small-zh-v1.5` 与 RRF 作为发布内检索底座，模型、向量或网络缺失时回退本地抽取；轻量生成模型仅是后续可插拔方案
+- LLM/RAG：`EvidenceCorpusV2` 与 `PersonaPackV1` 用发布绑定的答案槽、史实边界、人物知识范围和表达规则驱动本地状态机；只有全部问题维度命中允许的复杂问题才可调用 DeepSeek 兼容 API。SQLite FTS5、`BAAI/bge-small-zh-v1.5` 与 RRF 作为发布内检索底座，模型、向量或网络缺失时回退本地抽取；轻量生成模型仅是后续可插拔方案
 - 包管理：npm + package lock / Node.js LTS / Python venv
 - 视觉运行时：Three.js `WebGPURenderer`（WebGPU → WebGL2 → 静态材质图）、原创响应式 WebP 与统一 checksum 总账
 - 基础设施：Docker Compose（中长期接入 Postgres / Redis / 向量库）
@@ -46,6 +46,7 @@
 │   ├── saga/                 互动剧本引擎 + 48 个模板
 │   ├── sandbox/              决策推演通用引擎（商鞅变法首发）
 │   ├── rag/                  发布内 FTS5/BGE 混合检索与证据约束回答
+│   ├── persona_conversation/ 人物会话身份绑定、CAS、幂等与有界记忆
 │   └── llm/                  DeepSeek + mock 适配层
 ├── infra/                    docker-compose 与基础设施
 ├── content/                  课程草稿、封存件、运行制品与发布清单

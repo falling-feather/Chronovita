@@ -37,6 +37,7 @@ ArchiveFileKind = Literal[
     "scenario-template",
     "evidence-corpus",
     "lesson-presentation",
+    "persona-pack",
     "format-layer",
     "teacher-markdown",
     "preview-html",
@@ -69,6 +70,7 @@ ReleaseSchemaVersion = Literal[
     "course-release/v2",
     "course-release/v3",
     "course-release/v4",
+    "course-release/v5",
 ]
 ReleaseOperation = Literal["bootstrap", "publish", "rollback"]
 CredentialKind = Literal["github_app", "fine_grained_token"]
@@ -119,6 +121,7 @@ _MACHINE_FILE_KINDS = {
     "scenario-template",
     "evidence-corpus",
     "lesson-presentation",
+    "persona-pack",
 }
 _PUBLICATION_MODE_ORDER = {
     "pull_request": 0,
@@ -278,13 +281,17 @@ class CourseArchiveLessonV1(ArchiveContractModel):
         extra = set(self.files) - expected
         evidence_prefix = f"lessons/{self.lesson_id}/evidence/"
         presentation_prefix = f"lessons/{self.lesson_id}/presentation/"
+        persona_prefix = f"lessons/{self.lesson_id}/personas/"
         if extra and (
-            len(extra) != 2
+            len(extra) not in {2, 3}
             or sum(path.startswith(evidence_prefix) for path in extra) != 1
             or sum(path.startswith(presentation_prefix) for path in extra) != 1
+            or sum(path.startswith(persona_prefix) for path in extra)
+            != len(extra) - 2
         ):
             raise ValueError(
-                "lesson supplemental files must contain one evidence corpus and one presentation"
+                "lesson supplemental files must contain one evidence corpus, one "
+                "presentation and at most one persona pack"
             )
         expected.update(extra)
         if self.files != tuple(sorted(expected, key=str.casefold)):
@@ -313,6 +320,7 @@ class CourseArchiveFileV1(ArchiveContractModel):
             "scenario-template": "application/json",
             "evidence-corpus": "application/json",
             "lesson-presentation": "application/json",
+            "persona-pack": "application/json",
             "format-layer": "application/json",
             "teacher-markdown": "text/markdown; charset=utf-8",
             "preview-html": "text/html; charset=utf-8",
@@ -489,18 +497,31 @@ class CourseArchivePayloadV1(ArchiveContractModel):
             presentation_files = [
                 item for item in lesson_files if item.kind == "lesson-presentation"
             ]
-            if self.release_schema_version in {"course-release/v3", "course-release/v4"}:
+            persona_files = [
+                item for item in lesson_files if item.kind == "persona-pack"
+            ]
+            if self.release_schema_version in {
+                "course-release/v3",
+                "course-release/v4",
+                "course-release/v5",
+            }:
                 if len(evidence_files) != 1 or len(presentation_files) != 1:
                     raise ValueError(
-                        "V3 archive lessons require one evidence corpus and one presentation"
+                        "V3-V5 archive lessons require one evidence corpus and one "
+                        "presentation"
                     )
                 evidence_file = evidence_files[0]
                 presentation_file = presentation_files[0]
+                allowed_evidence_schemas = {
+                    "course-release/v3": {"evidence-corpus/v1"},
+                    "course-release/v4": {
+                        "evidence-corpus/v1",
+                        "evidence-corpus/v2",
+                    },
+                    "course-release/v5": {"evidence-corpus/v2"},
+                }[self.release_schema_version]
                 if (
-                    evidence_file.schema_version not in (
-                        {"evidence-corpus/v1"} if self.release_schema_version == "course-release/v3"
-                        else {"evidence-corpus/v1", "evidence-corpus/v2"}
-                    )
+                    evidence_file.schema_version not in allowed_evidence_schemas
                     or presentation_file.schema_version != "lesson-presentation/v1"
                 ):
                     raise ValueError(
@@ -524,7 +545,27 @@ class CourseArchivePayloadV1(ArchiveContractModel):
                     raise ValueError(
                         "lesson presentation must use its deterministic archive path"
                     )
-            elif evidence_files or presentation_files:
+                if self.release_schema_version == "course-release/v5":
+                    if (
+                        len(persona_files) != 1
+                        or persona_files[0].schema_version != "persona-pack/v1"
+                    ):
+                        raise ValueError(
+                            "V5 archive lessons require exactly one PersonaPackV1"
+                        )
+                    persona_file = persona_files[0]
+                    if persona_file.path != supplement_archive_path(
+                        lesson.lesson_id,
+                        "persona-pack",
+                        persona_file.artifact_id or "",
+                        persona_file.artifact_version or 0,
+                    ):
+                        raise ValueError(
+                            "persona pack must use its deterministic archive path"
+                        )
+                elif persona_files:
+                    raise ValueError("V3/V4 archives cannot contain persona packs")
+            elif evidence_files or presentation_files or persona_files:
                 raise ValueError("V1/V2 archives cannot contain release supplements")
 
             expected_paths = tuple(
@@ -1195,7 +1236,7 @@ def scenario_archive_path(
 
 def supplement_archive_path(
     lesson_id: str,
-    kind: Literal["evidence-corpus", "lesson-presentation"],
+    kind: Literal["evidence-corpus", "lesson-presentation", "persona-pack"],
     artifact_id: str,
     version: int,
 ) -> str:
@@ -1206,6 +1247,7 @@ def supplement_archive_path(
     segment = {
         "evidence-corpus": "evidence",
         "lesson-presentation": "presentation",
+        "persona-pack": "personas",
     }[kind]
     return _validated_archive_path(
         PurePosixPath(
@@ -1481,8 +1523,8 @@ ARCHIVE_SCHEMA_DOCUMENTS = {
         (
             "Pydantic semantic validation additionally enforces exact release identity, "
             "renderer identity, portable NFKC paths, file-size totals, source contract "
-            "checksums and lesson/scenario cross-references. files excludes the "
-            "self-referential archive manifest."
+            "checksums and lesson/scenario/supplement cross-references, including the "
+            "V5 PersonaPack binding. files excludes the self-referential archive manifest."
         ),
     ),
     "git-repository-binding.schema.json": (
@@ -1594,6 +1636,7 @@ __all__ = [
     "MAX_ARCHIVE_FILE_BYTES",
     "MAX_ARCHIVE_FILES",
     "MAX_ARCHIVE_TOTAL_BYTES",
+    "ArchiveFileKind",
     "ArchiveRendererV1",
     "ContentAssetArchiveFileV1",
     "ContentAssetArchiveManifestV1",
@@ -1610,6 +1653,7 @@ __all__ = [
     "GitPublicationRecordV1",
     "GitRepositoryBindingV1",
     "PublicationRequestV1",
+    "ReleaseSchemaVersion",
     "asset_publication_branch_name",
     "archive_id_for_checksum",
     "archive_relative_path",

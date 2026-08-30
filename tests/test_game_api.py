@@ -101,6 +101,17 @@ class GameApiTests(unittest.TestCase):
             items_by_id["shangyang-institutional-reform"]["audience"],
             "published",
         )
+        for scenario_id in (
+            "dayu-crisis-governance",
+            "shangyang-institutional-reform",
+        ):
+            published = items_by_id[scenario_id]
+            self.assertEqual(published["release_id"], "rel-28b5624648-0007")
+            self.assertEqual(published["release_no"], 7)
+            self.assertEqual(
+                published["release_checksum"],
+                "96a8f151aaed219397a6a66f0c1f5508ea30095929c15f0e868c70c8c66e356d",
+            )
         dayu_summary = items_by_id["scenario-dayu-flood-control"]
         self.assertGreaterEqual(len(dayu_summary["variables"]), 1)
         self.assertGreaterEqual(len(dayu_summary["npcs"]), 1)

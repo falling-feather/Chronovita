@@ -88,6 +88,10 @@ def runtime_presentation_dir() -> Path:
     return runtime_dir() / "presentations"
 
 
+def runtime_persona_dir() -> Path:
+    return runtime_dir() / "personas"
+
+
 def evidence_draft_dir() -> Path:
     return _CONTENT_ROOT / "evidence" / "drafts"
 
@@ -135,6 +139,7 @@ def ensure_content_dirs() -> None:
     runtime_evidence_dir().mkdir(parents=True, exist_ok=True)
     runtime_evidence_v2_dir().mkdir(parents=True, exist_ok=True)
     runtime_presentation_dir().mkdir(parents=True, exist_ok=True)
+    runtime_persona_dir().mkdir(parents=True, exist_ok=True)
     evidence_draft_dir().mkdir(parents=True, exist_ok=True)
     evidence_workflow_dir().mkdir(parents=True, exist_ok=True)
     lesson_media_dir().mkdir(parents=True, exist_ok=True)
@@ -229,14 +234,18 @@ class LessonContentPackage(ContentModel):
     @classmethod
     def _validate_id(cls, value: str) -> str:
         if not _ID_PATTERN.fullmatch(value):
-            raise ValueError("Use 2-64 characters: letters, numbers, dot, underscore or dash.")
+            raise ValueError(
+                "Use 2-64 characters: letters, numbers, dot, underscore or dash."
+            )
         return value
 
     @field_validator("body", mode="before")
     @classmethod
     def _coerce_body(cls, value: object) -> object:
         if isinstance(value, str):
-            return [part.strip() for part in re.split(r"\n\s*\n", value) if part.strip()]
+            return [
+                part.strip() for part in re.split(r"\n\s*\n", value) if part.strip()
+            ]
         return value
 
     @model_validator(mode="after")
@@ -264,7 +273,9 @@ class LessonContentPackage(ContentModel):
             or not self.sealed_by
             or self.checksum is None
         ):
-            raise ValueError("Sealed content requires version, actor, time and checksum.")
+            raise ValueError(
+                "Sealed content requires version, actor, time and checksum."
+            )
         return self
 
 
@@ -336,7 +347,9 @@ class PersonProfilePackage(ContentModel):
     @classmethod
     def _validate_asset_id(cls, value: str) -> str:
         if not _ID_PATTERN.fullmatch(value):
-            raise ValueError("Use 2-64 characters: letters, numbers, dot, underscore or dash.")
+            raise ValueError(
+                "Use 2-64 characters: letters, numbers, dot, underscore or dash."
+            )
         return value
 
     @model_validator(mode="after")
@@ -370,7 +383,9 @@ class KeywordProfilePackage(ContentModel):
     @classmethod
     def _validate_asset_id(cls, value: str) -> str:
         if not _ID_PATTERN.fullmatch(value):
-            raise ValueError("Use 2-64 characters: letters, numbers, dot, underscore or dash.")
+            raise ValueError(
+                "Use 2-64 characters: letters, numbers, dot, underscore or dash."
+            )
         return value
 
     @model_validator(mode="after")
@@ -388,13 +403,25 @@ def content_template() -> LessonContentPackage:
         body=["第一段课文正文。", "第二段课文正文。"],
         keywords=[KeywordCard(word="关键词", pinyin="", gloss="给学生看的简明解释。")],
         people=[PersonCard(name="历史人物", role="身份", summary="人物与本课的关系。")],
-        map_points=[MapPoint(label="地点", region="区域", note="与课程相关的空间信息。")],
-        source_refs=[SourceRef(title="资料标题", source="教材或资料来源", citation_note="页码或版本说明")],
+        map_points=[
+            MapPoint(label="地点", region="区域", note="与课程相关的空间信息。")
+        ],
+        source_refs=[
+            SourceRef(
+                title="资料标题",
+                source="教材或资料来源",
+                citation_note="页码或版本说明",
+            )
+        ],
         facts=["不可违背的史实边界。"],
         qa_points=["学生可能追问的问题。"],
         level_goals=["本课关卡目标或学习目标。"],
-        saga_material=MaterialPlaceholder(title="saga 占位", objective="后续互动叙事目标"),
-        sandbox_material=MaterialPlaceholder(title="sandbox 占位", objective="后续参数化推演目标"),
+        saga_material=MaterialPlaceholder(
+            title="saga 占位", objective="后续互动叙事目标"
+        ),
+        sandbox_material=MaterialPlaceholder(
+            title="sandbox 占位", objective="后续参数化推演目标"
+        ),
     )
 
 
@@ -409,7 +436,11 @@ def person_template() -> PersonProfilePackage:
         boundaries=["不要让人物知道其身后才发生的事件。"],
         keywords=["关键词"],
         related_lessons=["lesson-sample"],
-        source_refs=[SourceRef(title="资料标题", source="教材或史料", citation_note="页码或版本说明")],
+        source_refs=[
+            SourceRef(
+                title="资料标题", source="教材或史料", citation_note="页码或版本说明"
+            )
+        ],
     )
 
 
@@ -424,11 +455,17 @@ def keyword_template() -> KeywordProfilePackage:
         examples=["可放一条课堂中的典型用法。"],
         related_people=["历史人物"],
         related_lessons=["lesson-sample"],
-        source_refs=[SourceRef(title="资料标题", source="教材或史料", citation_note="页码或版本说明")],
+        source_refs=[
+            SourceRef(
+                title="资料标题", source="教材或史料", citation_note="页码或版本说明"
+            )
+        ],
     )
 
 
-def save_draft(payload: LessonContentPackage, saved_by: str | None = None) -> LessonContentPackage:
+def save_draft(
+    payload: LessonContentPackage, saved_by: str | None = None
+) -> LessonContentPackage:
     ensure_content_dirs()
     from services.content import workflow as content_workflow
 
@@ -439,7 +476,9 @@ def save_draft(payload: LessonContentPackage, saved_by: str | None = None) -> Le
             data = payload.model_copy(deep=True)
             data.status = "draft"
             data.version = 0
-            data.created_at = existing.created_at if existing else (data.created_at or now)
+            data.created_at = (
+                existing.created_at if existing else (data.created_at or now)
+            )
             data.updated_at = now
             data.sealed_at = None
             data.sealed_by = None
@@ -533,7 +572,9 @@ def list_sealed() -> list[ContentFileRecord]:
     return records
 
 
-def list_assets(kind: Literal["person", "keyword"] | None = None) -> list[ContentAssetRecord]:
+def list_assets(
+    kind: Literal["person", "keyword"] | None = None,
+) -> list[ContentAssetRecord]:
     ensure_content_dirs()
     records: list[ContentAssetRecord] = []
     if kind in (None, "person"):
@@ -620,7 +661,9 @@ def seal_person_profile(
         if draft is None:
             raise FileNotFoundError(f"Person profile not found: {asset_id}")
         existing = _latest_sealed_person(asset_id)
-        if existing is not None and _asset_fingerprint(existing) == _asset_fingerprint(draft):
+        if existing is not None and _asset_fingerprint(existing) == _asset_fingerprint(
+            draft
+        ):
             existing_path = _sealed_person_path(asset_id, existing.version)
             _require_archivable_asset_file_size(existing_path)
             return existing, existing_path, True
@@ -725,7 +768,9 @@ def seal_keyword_profile(
         if draft is None:
             raise FileNotFoundError(f"Keyword profile not found: {asset_id}")
         existing = _latest_sealed_keyword(asset_id)
-        if existing is not None and _asset_fingerprint(existing) == _asset_fingerprint(draft):
+        if existing is not None and _asset_fingerprint(existing) == _asset_fingerprint(
+            draft
+        ):
             existing_path = _sealed_keyword_path(asset_id, existing.version)
             _require_archivable_asset_file_size(existing_path)
             return existing, existing_path, True
@@ -739,9 +784,7 @@ def seal_keyword_profile(
         sealed.sealed_by = sealed_by
         sealed.checksum = None
         sealed.checksum = package_checksum(sealed)
-        sealed = KeywordProfilePackage.model_validate(
-            sealed.model_dump(mode="json")
-        )
+        sealed = KeywordProfilePackage.model_validate(sealed.model_dump(mode="json"))
         _require_archivable_asset_size(sealed)
         path = _sealed_keyword_path(asset_id, version)
         _write_asset_json(path, sealed, overwrite=False)
@@ -794,12 +837,18 @@ def load_sealed_packages(latest_only: bool = True) -> list[LessonContentPackage]
     latest: dict[str, LessonContentPackage] = {}
     for pkg in packages:
         current = latest.get(pkg.lesson_id)
-        if current is None or (pkg.version, pkg.sealed_at or datetime.min.replace(tzinfo=timezone.utc)) > (
+        if current is None or (
+            pkg.version,
+            pkg.sealed_at or datetime.min.replace(tzinfo=timezone.utc),
+        ) > (
             current.version,
             current.sealed_at or datetime.min.replace(tzinfo=timezone.utc),
         ):
             latest[pkg.lesson_id] = pkg
-    return sorted(latest.values(), key=lambda item: (item.course_id, item.lesson_no, item.lesson_id))
+    return sorted(
+        latest.values(),
+        key=lambda item: (item.course_id, item.lesson_no, item.lesson_id),
+    )
 
 
 def get_sealed_package(lesson_id: str, version: int) -> LessonContentPackage:
@@ -810,19 +859,27 @@ def get_sealed_package(lesson_id: str, version: int) -> LessonContentPackage:
         raise FileNotFoundError(f"Sealed package not found: {lesson_id} v{version}")
     package = _read_package(path, verify_checksum=True)
     _verify_sealed_path(package, path)
-    if package.lesson_id != lesson_id or package.version != version or package.status != "sealed":
+    if (
+        package.lesson_id != lesson_id
+        or package.version != version
+        or package.status != "sealed"
+    ):
         raise ContentIntegrityError(f"Sealed package identity mismatch: {path}")
     return package
 
 
 def load_published_packages():
-    from services.content.workflow import load_published_packages as _load_published_packages
+    from services.content.workflow import (
+        load_published_packages as _load_published_packages,
+    )
 
     return _load_published_packages()
 
 
 def load_published_snapshots():
-    from services.content.workflow import load_published_snapshots as _load_published_snapshots
+    from services.content.workflow import (
+        load_published_snapshots as _load_published_snapshots,
+    )
 
     return _load_published_snapshots()
 
@@ -872,7 +929,9 @@ def _record_from_package(pkg: LessonContentPackage, path: Path) -> ContentFileRe
         title=pkg.title,
         status=pkg.status,
         version=pkg.version,
-        path=str(path.relative_to(_REPO_ROOT)) if path.is_relative_to(_REPO_ROOT) else str(path),
+        path=str(path.relative_to(_REPO_ROOT))
+        if path.is_relative_to(_REPO_ROOT)
+        else str(path),
         updated_at=pkg.updated_at,
         sealed_at=pkg.sealed_at,
         sealed_by=pkg.sealed_by,
@@ -887,7 +946,9 @@ def _verify_draft_path(package: LessonContentPackage, path: Path) -> None:
 
 
 def _verify_sealed_path(package: LessonContentPackage, path: Path) -> None:
-    expected = sealed_dir().resolve() / f"{package.lesson_id}-v{package.version:03d}.json"
+    expected = (
+        sealed_dir().resolve() / f"{package.lesson_id}-v{package.version:03d}.json"
+    )
     if path.resolve() != expected or package.status != "sealed" or package.version < 1:
         raise ContentIntegrityError(f"Sealed package path identity mismatch: {path}")
 
@@ -1008,9 +1069,7 @@ def _require_archivable_asset_size(payload: BaseModel) -> None:
         + "\n"
     ).encode("utf-8")
     if len(raw) > MAX_ARCHIVE_FILE_BYTES:
-        raise ValueError(
-            f"sealed asset exceeds {MAX_ARCHIVE_FILE_BYTES} bytes"
-        )
+        raise ValueError(f"sealed asset exceeds {MAX_ARCHIVE_FILE_BYTES} bytes")
 
 
 def _require_archivable_asset_file_size(path: Path) -> None:
@@ -1021,9 +1080,7 @@ def _require_archivable_asset_file_size(path: Path) -> None:
             f"Cannot inspect sealed asset size: {path}"
         ) from exc
     if size > MAX_ARCHIVE_FILE_BYTES:
-        raise ValueError(
-            f"sealed asset exceeds {MAX_ARCHIVE_FILE_BYTES} bytes"
-        )
+        raise ValueError(f"sealed asset exceeds {MAX_ARCHIVE_FILE_BYTES} bytes")
 
 
 def _atomic_write_json(path: Path, payload: dict, *, overwrite: bool = True) -> None:
@@ -1051,7 +1108,9 @@ def _person_record(asset: PersonProfilePackage, path: Path) -> ContentAssetRecor
         asset_id=asset.asset_id,
         title=asset.name,
         kind="person",
-        path=str(path.relative_to(_REPO_ROOT)) if path.is_relative_to(_REPO_ROOT) else str(path),
+        path=str(path.relative_to(_REPO_ROOT))
+        if path.is_relative_to(_REPO_ROOT)
+        else str(path),
         status=asset.status,
         version=asset.version,
         updated_at=asset.updated_at,
@@ -1066,7 +1125,9 @@ def _keyword_record(asset: KeywordProfilePackage, path: Path) -> ContentAssetRec
         asset_id=asset.asset_id,
         title=asset.word,
         kind="keyword",
-        path=str(path.relative_to(_REPO_ROOT)) if path.is_relative_to(_REPO_ROOT) else str(path),
+        path=str(path.relative_to(_REPO_ROOT))
+        if path.is_relative_to(_REPO_ROOT)
+        else str(path),
         status=asset.status,
         version=asset.version,
         updated_at=asset.updated_at,
@@ -1084,9 +1145,7 @@ def _list_sealed_assets(
     if asset_id is not None and not _ID_PATTERN.fullmatch(asset_id):
         raise ValueError("Invalid asset_id")
     directory = (
-        sealed_people_asset_dir()
-        if kind == "person"
-        else sealed_keyword_asset_dir()
+        sealed_people_asset_dir() if kind == "person" else sealed_keyword_asset_dir()
     )
     pattern = f"{asset_id}-v*.json" if asset_id else "*-v*.json"
     records: list[ContentAssetRecord] = []
@@ -1185,11 +1244,7 @@ def _non_empty_values(values: list[str]) -> list[str]:
 
 
 def _valid_source_refs(values: list[SourceRef]) -> list[SourceRef]:
-    return [
-        item
-        for item in values
-        if item.title.strip() and item.source.strip()
-    ]
+    return [item for item in values if item.title.strip() and item.source.strip()]
 
 
 def _asset_validation_report(

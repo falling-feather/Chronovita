@@ -18,8 +18,8 @@ from sqlalchemy import (
     Table,
     Text,
     UniqueConstraint,
-    inspect,
     insert,
+    inspect,
     select,
     text,
 )
@@ -38,10 +38,10 @@ from services.learning_assets.store import (
     learning_submissions_table,
 )
 from services.persistence.db import kv_table
-
+from services.persona_conversation.store import persona_conversations_table
 
 MigrationMode = Literal["apply-safe", "validate"]
-LATEST_SCHEMA_VERSION = 4
+LATEST_SCHEMA_VERSION = 5
 _SUPPORTED_DIALECTS = frozenset({"sqlite", "postgresql"})
 _SQLITE_LOCK_ERRORS = ("database is locked", "database table is locked")
 _POSTGRES_MIGRATION_LOCK_ID = 0x4348524F4E4F
@@ -173,13 +173,9 @@ def ensure_current_schema(
             raise DatabaseMigrationBusy(
                 "another process is migrating the database"
             ) from exc
-        raise DatabaseSchemaStorageError(
-            "database schema operation failed"
-        ) from exc
+        raise DatabaseSchemaStorageError("database schema operation failed") from exc
     except SQLAlchemyError as exc:
-        raise DatabaseSchemaStorageError(
-            "database schema operation failed"
-        ) from exc
+        raise DatabaseSchemaStorageError("database schema operation failed") from exc
 
 
 def inspect_schema(engine: Engine) -> DatabaseSchemaStatus:
@@ -216,9 +212,7 @@ def inspect_schema(engine: Engine) -> DatabaseSchemaStatus:
     except DatabaseSchemaError:
         raise
     except SQLAlchemyError as exc:
-        raise DatabaseSchemaStorageError(
-            "database schema inspection failed"
-        ) from exc
+        raise DatabaseSchemaStorageError("database schema inspection failed") from exc
 
 
 def migration_contract_checksums() -> tuple[str, ...]:
@@ -356,9 +350,7 @@ def _end_migration_transaction(connection: Connection, dialect: str) -> None:
         ) from exc
     if released is not True:
         connection.invalidate()
-        raise DatabaseSchemaStorageError(
-            "database migration lock ownership was lost"
-        )
+        raise DatabaseSchemaStorageError("database migration lock ownership was lost")
 
 
 def _configure_snapshot_isolation(connection: Connection, dialect: str) -> None:
@@ -437,9 +429,7 @@ def _validate_table(connection: Connection, expected: Table) -> None:
     expected_pk = tuple(column.name for column in expected.primary_key.columns)
     found_pk = tuple(actual_pk.get("constrained_columns") or ())
     if found_pk != expected_pk:
-        raise DatabaseSchemaDrift(
-            f"table primary key drifted: {expected.name}"
-        )
+        raise DatabaseSchemaDrift(f"table primary key drifted: {expected.name}")
     expected_columns = tuple(_column_contract(column) for column in expected.columns)
     found_pk_names = frozenset(found_pk)
     found_columns = tuple(
@@ -447,22 +437,15 @@ def _validate_table(connection: Connection, expected: Table) -> None:
         for column in actual_columns
     )
     if found_columns != expected_columns:
-        raise DatabaseSchemaDrift(
-            f"table column contract drifted: {expected.name}"
-        )
+        raise DatabaseSchemaDrift(f"table column contract drifted: {expected.name}")
     expected_unique = {
         tuple(column.name for column in constraint.columns)
         for constraint in expected.constraints
         if isinstance(constraint, UniqueConstraint)
     }
-    found_unique = {
-        tuple(item.get("column_names") or ())
-        for item in actual_unique
-    }
+    found_unique = {tuple(item.get("column_names") or ()) for item in actual_unique}
     if found_unique != expected_unique:
-        raise DatabaseSchemaDrift(
-            f"table unique constraints drifted: {expected.name}"
-        )
+        raise DatabaseSchemaDrift(f"table unique constraints drifted: {expected.name}")
     expected_indexes = sorted(
         (tuple(column.name for column in index.columns), bool(index.unique))
         for index in expected.indexes
@@ -473,9 +456,7 @@ def _validate_table(connection: Connection, expected: Table) -> None:
         if not item.get("duplicates_constraint")
     )
     if found_indexes != expected_indexes:
-        raise DatabaseSchemaDrift(
-            f"table indexes drifted: {expected.name}"
-        )
+        raise DatabaseSchemaDrift(f"table indexes drifted: {expected.name}")
 
 
 def _column_contract(column: Column) -> tuple[object, ...]:
@@ -517,9 +498,7 @@ def _type_contract(value: object) -> tuple[object, ...]:
 def _migration_rows(connection: Connection) -> list[dict]:
     return list(
         connection.execute(
-            select(schema_migrations_table).order_by(
-                schema_migrations_table.c.version
-            )
+            select(schema_migrations_table).order_by(schema_migrations_table.c.version)
         ).mappings()
     )
 
@@ -544,9 +523,7 @@ def _reject_too_new_ledger(connection: Connection) -> None:
             "database migration ledger version is invalid"
         ) from exc
     if latest_version > LATEST_SCHEMA_VERSION:
-        raise DatabaseSchemaTooNew(
-            "database schema is newer than this application"
-        )
+        raise DatabaseSchemaTooNew("database schema is newer than this application")
 
 
 def _validate_history(rows: list[dict]) -> int:
@@ -554,9 +531,7 @@ def _validate_history(rows: list[dict]) -> int:
         return 0
     versions = [int(row["version"]) for row in rows]
     if versions[-1] > LATEST_SCHEMA_VERSION:
-        raise DatabaseSchemaTooNew(
-            "database schema is newer than this application"
-        )
+        raise DatabaseSchemaTooNew("database schema is newer than this application")
     expected_versions = list(range(1, versions[-1] + 1))
     if versions != expected_versions:
         raise DatabaseMigrationHistoryError(
@@ -589,9 +564,13 @@ def _initialize_identity_audit(connection: Connection) -> None:
 
 
 def _validate_identity_audit(connection: Connection) -> None:
-    heads = connection.execute(
-        select(audit_head_table).order_by(audit_head_table.c.head_id)
-    ).mappings().all()
+    heads = (
+        connection.execute(
+            select(audit_head_table).order_by(audit_head_table.c.head_id)
+        )
+        .mappings()
+        .all()
+    )
     if len(heads) != 1 or int(heads[0]["head_id"]) != 1:
         raise DatabaseSchemaDrift("identity audit head invariant is invalid")
     events = connection.execute(
@@ -610,9 +589,7 @@ def _validate_identity_audit(connection: Connection) -> None:
             actor_roles = json.loads(event["actor_roles"])
             details = json.loads(event["details"])
         except (TypeError, json.JSONDecodeError) as exc:
-            raise DatabaseSchemaDrift(
-                "identity audit event JSON is invalid"
-            ) from exc
+            raise DatabaseSchemaDrift("identity audit event JSON is invalid") from exc
         payload = {
             "sequence": expected_sequence,
             "event_id": event["event_id"],
@@ -632,10 +609,7 @@ def _validate_identity_audit(connection: Connection) -> None:
             raise DatabaseSchemaDrift("identity audit event checksum is invalid")
         previous_hash = event["event_hash"]
     head = heads[0]
-    if (
-        int(head["sequence"]) != event_count
-        or head["event_hash"] != previous_hash
-    ):
+    if int(head["sequence"]) != event_count or head["event_hash"] != previous_hash:
         raise DatabaseSchemaDrift("identity audit head does not match its events")
 
 
@@ -683,12 +657,8 @@ def _status(
         ledger_present=ledger_present,
         current_version=current_version,
         latest_version=LATEST_SCHEMA_VERSION,
-        pending_versions=tuple(
-            range(current_version + 1, LATEST_SCHEMA_VERSION + 1)
-        ),
-        is_current=(
-            ledger_present and current_version == LATEST_SCHEMA_VERSION
-        ),
+        pending_versions=tuple(range(current_version + 1, LATEST_SCHEMA_VERSION + 1)),
+        is_current=(ledger_present and current_version == LATEST_SCHEMA_VERSION),
     )
 
 
@@ -708,9 +678,7 @@ def _table_names(connection: Connection) -> frozenset[str]:
 def _dialect(engine: Engine) -> Literal["sqlite", "postgresql"]:
     name = engine.dialect.name
     if name not in _SUPPORTED_DIALECTS:
-        raise UnsupportedDatabaseDialect(
-            f"database dialect is not supported: {name}"
-        )
+        raise UnsupportedDatabaseDialect(f"database dialect is not supported: {name}")
     return name
 
 
@@ -765,15 +733,17 @@ _MIGRATIONS = (
         app_version="0.10.27",
         tables=(learning_submissions_table, learning_feedback_table),
     ),
+    _Migration(
+        version=5,
+        migration_id="persona-conversation-v1",
+        app_version="1.0.3",
+        tables=(persona_conversations_table,),
+    ),
 )
 _KNOWN_TABLE_NAMES = frozenset(
     {
         schema_migrations_table.name,
-        *(
-            table.name
-            for migration in _MIGRATIONS
-            for table in migration.tables
-        ),
+        *(table.name for migration in _MIGRATIONS for table in migration.tables),
     }
 )
 

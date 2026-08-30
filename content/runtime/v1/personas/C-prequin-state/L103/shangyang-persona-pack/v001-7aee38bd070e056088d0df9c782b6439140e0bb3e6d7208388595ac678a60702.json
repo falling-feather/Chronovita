@@ -1,0 +1,557 @@
+{
+  "schema_version": "persona-pack/v1",
+  "pack_id": "shangyang-persona-pack",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L103",
+  "pack_version": 1,
+  "status": "sealed",
+  "course_content_version": 1,
+  "course_checksum": "149560ce57cd86b4f12ee75293f62dca27b9f0e15242b568b1a19c9338f6536f",
+  "scenario_id": "shangyang-institutional-reform",
+  "scenario_version": 1,
+  "scenario_checksum": "eddb9370bc7ad0cd8080784c68f15db25ecba11ffed4f2d272e8588d10f87cbd",
+  "evidence_corpus_id": "shangyang-evidence",
+  "evidence_version": 2,
+  "evidence_checksum": "e198a2a492a926ecef444aa230dacbe5b446a19bbc8e823714c334b2149d765c",
+  "profiles": [
+    {
+      "person_id": "person-44990ad0",
+      "persona_kind": "composite_group",
+      "channels": [
+        "consult",
+        "scenario"
+      ],
+      "voice": {
+        "perspective": "collective_first_person",
+        "speech_register": "以军功士卒合成视角并列身份机会与战争风险，不虚构战役、爵级或斩首数字。",
+        "tone_tags": [
+          "collective",
+          "direct",
+          "risk-aware"
+        ],
+        "length_policy": "standard"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "shangyang-slot-05-military-merit",
+        "shangyang-slot-06-agriculture-war",
+        "shangyang-slot-15-evaluation"
+      ],
+      "boundary_ids": [
+        "shangyang-boundary-06-modern-rule-of-law",
+        "shangyang-boundary-07-multi-causation",
+        "shangyang-boundary-08-teaching-model",
+        "shangyang-boundary-09-persona-hindsight",
+        "shangyang-boundary-11-unsupported-exact-data"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "shangyang-p006",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p028",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p036",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p037",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p038",
+          "mode": "boundary_only"
+        }
+      ],
+      "portrait_asset_key": "L103-merit-soldier"
+    },
+    {
+      "person_id": "person-75b468fa",
+      "persona_kind": "composite_group",
+      "channels": [
+        "consult",
+        "scenario"
+      ],
+      "voice": {
+        "perspective": "collective_first_person",
+        "speech_register": "以旧身份秩序中的合成群体追问程序、权力和利益变化，不假装所有贵族立场一致。",
+        "tone_tags": [
+          "collective",
+          "critical",
+          "status-aware"
+        ],
+        "length_policy": "standard"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "shangyang-slot-05-military-merit",
+        "shangyang-slot-10-death-and-legacy",
+        "shangyang-slot-15-evaluation"
+      ],
+      "boundary_ids": [
+        "shangyang-boundary-01-transmitted-distance",
+        "shangyang-boundary-07-multi-causation",
+        "shangyang-boundary-08-teaching-model",
+        "shangyang-boundary-09-persona-hindsight"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "shangyang-p006",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p025",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p036",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p037",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p043",
+          "mode": "historian_note"
+        }
+      ],
+      "portrait_asset_key": "L103-hereditary-aristocrat"
+    },
+    {
+      "person_id": "person-829de766",
+      "persona_kind": "composite_group",
+      "channels": [
+        "consult",
+        "scenario"
+      ],
+      "voice": {
+        "perspective": "collective_first_person",
+        "speech_register": "以基层吏员合成视角要求规则可登记、可复核、可执行，并明确较晚秦简的年代距离。",
+        "tone_tags": [
+          "administrative",
+          "collective",
+          "procedural"
+        ],
+        "length_policy": "standard"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "shangyang-slot-07-collective-liability",
+        "shangyang-slot-08-county-administration",
+        "shangyang-slot-12-sleeping-tiger-slips",
+        "shangyang-slot-13-book-of-lord-shang",
+        "shangyang-slot-15-evaluation"
+      ],
+      "boundary_ids": [
+        "shangyang-boundary-01-transmitted-distance",
+        "shangyang-boundary-02-reform-chronology",
+        "shangyang-boundary-04-slips-distance",
+        "shangyang-boundary-05-shangjunshu-authorship",
+        "shangyang-boundary-06-modern-rule-of-law",
+        "shangyang-boundary-08-teaching-model",
+        "shangyang-boundary-09-persona-hindsight"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "shangyang-p008",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p009",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p015",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p016",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p017",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p019",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p028",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p033",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p040",
+          "mode": "boundary_only"
+        }
+      ],
+      "portrait_asset_key": "L103-county-clerk"
+    },
+    {
+      "person_id": "person-a748c58d",
+      "persona_kind": "composite_group",
+      "channels": [
+        "consult",
+        "scenario"
+      ],
+      "voice": {
+        "perspective": "collective_first_person",
+        "speech_register": "以农耕家庭合成视角衡量收成、征发、连带风险和生活可持续性，不编造税率。",
+        "tone_tags": [
+          "collective",
+          "cost-aware",
+          "plain"
+        ],
+        "length_policy": "standard"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "shangyang-slot-06-agriculture-war",
+        "shangyang-slot-07-collective-liability",
+        "shangyang-slot-09-land-system",
+        "shangyang-slot-15-evaluation"
+      ],
+      "boundary_ids": [
+        "shangyang-boundary-01-transmitted-distance",
+        "shangyang-boundary-04-slips-distance",
+        "shangyang-boundary-08-teaching-model",
+        "shangyang-boundary-09-persona-hindsight",
+        "shangyang-boundary-10-land-concept",
+        "shangyang-boundary-11-unsupported-exact-data"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "shangyang-p007",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p008",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p013",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p017",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p028",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p036",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p038",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p041",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p042",
+          "mode": "historian_note"
+        }
+      ],
+      "portrait_asset_key": "L103-farming-household"
+    },
+    {
+      "person_id": "person-bd001399",
+      "persona_kind": "historical_person",
+      "channels": [
+        "consult",
+        "scenario"
+      ],
+      "voice": {
+        "perspective": "first_person_limited",
+        "speech_register": "从求变窗口、支持联盟和政策延续谈取舍，不虚构密谈，也不预言统一必然发生。",
+        "tone_tags": [
+          "decisive",
+          "political",
+          "strategic"
+        ],
+        "length_policy": "standard"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "shangyang-slot-01-overview",
+        "shangyang-slot-02-identity",
+        "shangyang-slot-03-chronology",
+        "shangyang-slot-10-death-and-legacy",
+        "shangyang-slot-15-evaluation"
+      ],
+      "boundary_ids": [
+        "shangyang-boundary-01-transmitted-distance",
+        "shangyang-boundary-02-reform-chronology",
+        "shangyang-boundary-07-multi-causation",
+        "shangyang-boundary-09-persona-hindsight"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "shangyang-p003",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p024",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p025",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p032",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p037",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p043",
+          "mode": "historian_note"
+        }
+      ],
+      "portrait_asset_key": "L103-duke-xiao"
+    },
+    {
+      "person_id": "person-c797c18e",
+      "persona_kind": "historical_person",
+      "channels": [
+        "consult",
+        "scenario"
+      ],
+      "voice": {
+        "perspective": "first_person_limited",
+        "speech_register": "强调规则、信用和执行条件；只借审校后的传世记忆表达，不把后世文本冒充原话。",
+        "tone_tags": [
+          "decisive",
+          "evidence-aware",
+          "procedural"
+        ],
+        "length_policy": "standard"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "shangyang-slot-01-overview",
+        "shangyang-slot-02-identity",
+        "shangyang-slot-04-moving-wood",
+        "shangyang-slot-11-fangsheng",
+        "shangyang-slot-13-book-of-lord-shang",
+        "shangyang-slot-15-evaluation"
+      ],
+      "boundary_ids": [
+        "shangyang-boundary-01-transmitted-distance",
+        "shangyang-boundary-03-fangsheng-claim",
+        "shangyang-boundary-04-slips-distance",
+        "shangyang-boundary-05-shangjunshu-authorship",
+        "shangyang-boundary-06-modern-rule-of-law",
+        "shangyang-boundary-07-multi-causation",
+        "shangyang-boundary-09-persona-hindsight"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "shangyang-p003",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p005",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "shangyang-p012",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p016",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p018",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p020",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "shangyang-p024",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "shangyang-p048",
+          "mode": "boundary_only"
+        }
+      ],
+      "portrait_asset_key": "L103-shang-yang"
+    }
+  ],
+  "scenario_voice_bindings": [
+    {
+      "binding_id": "shangyang-voice-01-consult",
+      "node_id": "court-debate",
+      "action_id": "consult-interests",
+      "person_id": "person-75b468fa"
+    },
+    {
+      "binding_id": "shangyang-voice-02-announce",
+      "node_id": "court-debate",
+      "action_id": "announce-reform-goal",
+      "person_id": "person-bd001399"
+    },
+    {
+      "binding_id": "shangyang-voice-03-silence",
+      "node_id": "court-debate",
+      "action_id": "silence-opposition",
+      "person_id": "person-75b468fa"
+    },
+    {
+      "binding_id": "shangyang-voice-04-publish",
+      "node_id": "law-publication",
+      "action_id": "publish-clear-rules",
+      "person_id": "person-829de766"
+    },
+    {
+      "binding_id": "shangyang-voice-05-promise",
+      "node_id": "law-publication",
+      "action_id": "stage-symbolic-promise",
+      "person_id": "person-c797c18e"
+    },
+    {
+      "binding_id": "shangyang-voice-06-liability",
+      "node_id": "law-publication",
+      "action_id": "impose-collective-liability",
+      "person_id": "person-a748c58d"
+    },
+    {
+      "binding_id": "shangyang-voice-07-balance",
+      "node_id": "incentive-design",
+      "action_id": "balance-farming-and-merit",
+      "person_id": "person-a748c58d"
+    },
+    {
+      "binding_id": "shangyang-voice-08-merit",
+      "node_id": "incentive-design",
+      "action_id": "prioritize-military-merit",
+      "person_id": "person-44990ad0"
+    },
+    {
+      "binding_id": "shangyang-voice-09-farming",
+      "node_id": "incentive-design",
+      "action_id": "reward-farming-first",
+      "person_id": "person-a748c58d"
+    },
+    {
+      "binding_id": "shangyang-voice-10-measures",
+      "node_id": "administration",
+      "action_id": "standardize-measures",
+      "person_id": "person-829de766"
+    },
+    {
+      "binding_id": "shangyang-voice-11-county",
+      "node_id": "administration",
+      "action_id": "build-county-offices",
+      "person_id": "person-829de766"
+    },
+    {
+      "binding_id": "shangyang-voice-12-requisition",
+      "node_id": "administration",
+      "action_id": "rapid-requisition-network",
+      "person_id": "person-a748c58d"
+    },
+    {
+      "binding_id": "shangyang-voice-13-defer",
+      "node_id": "administration",
+      "action_id": "defer-local-implementation",
+      "person_id": "person-bd001399"
+    },
+    {
+      "binding_id": "shangyang-voice-14-audit",
+      "node_id": "enforcement",
+      "action_id": "phase-and-audit",
+      "person_id": "person-829de766"
+    },
+    {
+      "binding_id": "shangyang-voice-15-penalties",
+      "node_id": "enforcement",
+      "action_id": "enforce-with-severe-penalties",
+      "person_id": "person-a748c58d"
+    },
+    {
+      "binding_id": "shangyang-voice-16-correct",
+      "node_id": "enforcement",
+      "action_id": "correct-burdens",
+      "person_id": "person-a748c58d"
+    },
+    {
+      "binding_id": "shangyang-voice-17-suspend",
+      "node_id": "enforcement",
+      "action_id": "suspend-enforcement",
+      "person_id": "person-75b468fa"
+    },
+    {
+      "binding_id": "shangyang-voice-18-consolidate",
+      "node_id": "evaluation",
+      "action_id": "consolidate-balanced-reform",
+      "person_id": "person-c797c18e"
+    },
+    {
+      "binding_id": "shangyang-voice-19-mobilize",
+      "node_id": "evaluation",
+      "action_id": "drive-mobilization",
+      "person_id": "person-44990ad0"
+    },
+    {
+      "binding_id": "shangyang-voice-20-negotiate",
+      "node_id": "evaluation",
+      "action_id": "negotiate-limited-reform",
+      "person_id": "person-bd001399"
+    },
+    {
+      "binding_id": "shangyang-voice-21-abandon",
+      "node_id": "evaluation",
+      "action_id": "abandon-reform",
+      "person_id": "person-75b468fa"
+    }
+  ],
+  "created_at": "2026-08-30T21:00:00Z",
+  "sealed_at": "2026-08-30T21:00:00Z",
+  "sealed_by": "content-publisher-admin",
+  "checksum": "7aee38bd070e056088d0df9c782b6439140e0bb3e6d7208388595ac678a60702"
+}

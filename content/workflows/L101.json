@@ -3,7 +3,7 @@
   "lesson_id": "L101",
   "course_id": "C-prequin-state",
   "state": "published",
-  "revision": 10,
+  "revision": 11,
   "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
   "validation": {
     "schema_version": "content-validation/v1",
@@ -19,8 +19,8 @@
   "sealed_checksum": "49ca4556d2c840491f072bfceb7b294b2af854db6d5a6e67f4bf3496ef45c03e",
   "published_course_id": "C-prequin-state",
   "published_version": 1,
-  "published_release_id": "rel-28b5624648-0006",
-  "updated_at": "2026-08-30T20:38:17.029906Z",
+  "published_release_id": "rel-28b5624648-0007",
+  "updated_at": "2026-08-30T21:17:12.267824Z",
   "history": [
     {
       "sequence": 1,
@@ -141,7 +141,19 @@
       "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
       "sealed_version": null,
       "release_id": "rel-28b5624648-0006"
+    },
+    {
+      "sequence": 11,
+      "action": "publish",
+      "from_state": "published",
+      "to_state": "published",
+      "actor": "content-publisher-admin",
+      "note": "双旗舰课 PersonaPackV1 已完成角色口吻、可说/不可说边界、证据用途与场景说话路线审校，原子切换至 course-release/v5。",
+      "occurred_at": "2026-08-30T21:17:12.267824Z",
+      "draft_fingerprint": "700115003a2fa557e3d0747fbff7c9a58ce47a0d03a99abe3a8a662dbd305139",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0007"
     }
   ],
-  "checksum": "fe6d50af3d5494532390432e8272e2d9e939460f9af33ebb338931f1816fb5fa"
+  "checksum": "b5c4730014390bbf6c4848c2b58909715612c317b4edf533bfc82d93d5efc46a"
 }

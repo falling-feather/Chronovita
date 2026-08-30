@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 import json
+from collections.abc import Awaitable, Callable
+from dataclasses import replace
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -13,12 +14,13 @@ from services.contracts.evidence_v1 import (
     RagAskRequestV1,
     RagCitationV1,
 )
+from services.contracts.persona_v1 import PersonaProfileBindingV1
 from services.contracts.v1 import ContractId, PersonV1
+
 from .local_reply import LocalReplyFit, fit_local_reply
 from .query import RagQueryPlan, plan_rag_query
 from .retrieval import HybridEvidenceRetriever, RetrievalBatch, RetrievedPassage
 from .routing import RagRouteDecision, route_rag_query
-
 
 ROLE_DISCLAIMER = "角色化教学表达，不是史料原话。"
 
@@ -86,6 +88,7 @@ class RagAnswerService:
             request.lesson_id,
         )
         person = self._resolve_person(resources.course_package.people, request)
+        profile = self._resolve_persona_profile(resources, request)
         query_plan = plan_rag_query(
             resources,
             request.question,
@@ -98,6 +101,7 @@ class RagAnswerService:
             person_id=person.person_id if person is not None else None,
             limit=8,
         )
+        batch = _scope_batch_to_persona(batch, profile)
         local_fit = fit_local_reply(
             resources,
             request,
@@ -105,6 +109,7 @@ class RagAnswerService:
             query_plan,
             batch,
         )
+        local_fit = _scope_reply_state_to_persona(local_fit, profile)
         answer_batch = _scope_batch_to_reply_state(batch, local_fit)
         decision = route_rag_query(
             query_plan,
@@ -118,9 +123,15 @@ class RagAnswerService:
                 request,
                 answer_batch,
                 decision=decision,
+                local_fit=local_fit,
+                profile=profile,
             )
 
-        model_candidates = _select_model_candidates(answer_batch, local_fit)
+        model_candidates = _select_model_candidates(
+            answer_batch,
+            local_fit,
+            profile=profile,
+        )
         if (
             decision.target == "external_api"
             and selected_external_generator is not None
@@ -132,6 +143,7 @@ class RagAnswerService:
                         resources,
                         request,
                         person,
+                        profile,
                         model_candidates,
                         query_plan,
                         local_fit,
@@ -141,6 +153,7 @@ class RagAnswerService:
                     resources,
                     request,
                     person,
+                    profile,
                     answer_batch,
                     model_candidates,
                     query_plan,
@@ -161,6 +174,7 @@ class RagAnswerService:
             resources,
             request,
             person,
+            profile,
             answer_batch,
             query_plan,
             local_fit,
@@ -178,24 +192,45 @@ class RagAnswerService:
             None,
         )
         if person is None:
-            raise RagPersonNotFound("The requested person is not in the published lesson.")
+            raise RagPersonNotFound(
+                "The requested person is not in the published lesson."
+            )
         return person
+
+    @staticmethod
+    def _resolve_persona_profile(
+        resources: content_workflow.PublishedLessonResources,
+        request: RagAskRequestV1,
+    ) -> PersonaProfileBindingV1 | None:
+        if request.persona_mode == "expert" or resources.persona_pack is None:
+            return None
+        profile = next(
+            (
+                item
+                for item in resources.persona_pack.profiles
+                if item.person_id == request.person_id and "consult" in item.channels
+            ),
+            None,
+        )
+        if profile is None:
+            raise RagPersonNotFound(
+                "The requested person is not enabled for consultation in the published persona pack."
+            )
+        return profile
 
     def _model_answer(
         self,
         resources: content_workflow.PublishedLessonResources,
         request: RagAskRequestV1,
         person: PersonV1 | None,
+        profile: PersonaProfileBindingV1 | None,
         batch: RetrievalBatch,
         model_candidates: tuple[RetrievedPassage, ...],
         query_plan: RagQueryPlan,
         local_fit: LocalReplyFit | None,
         draft: _GroundedAnswerDraft,
     ) -> RagAnswerV1 | None:
-        retrieved = {
-            item.passage.passage_id: item
-            for item in model_candidates
-        }
+        retrieved = {item.passage.passage_id: item for item in model_candidates}
         if any(passage_id not in retrieved for passage_id in draft.passage_ids):
             return None
         expected_mode = _synthesis_mode_for_query(query_plan)
@@ -209,7 +244,9 @@ class RagAnswerService:
         ):
             return None
         body = _compose_selected_model_answer(
+            resources,
             person,
+            profile,
             selected,
             synthesis_mode=expected_mode,
             local_fit=local_fit,
@@ -232,6 +269,7 @@ class RagAnswerService:
         resources: content_workflow.PublishedLessonResources,
         request: RagAskRequestV1,
         person: PersonV1 | None,
+        profile: PersonaProfileBindingV1 | None,
         batch: RetrievalBatch,
         query_plan: RagQueryPlan,
         local_fit: LocalReplyFit | None,
@@ -241,10 +279,7 @@ class RagAnswerService:
             if query_plan.intent == "identity"
             else _select_extractive_passages(batch)
         )
-        summaries = [
-            item.passage.summary.rstrip("。；; ")
-            for item in selected
-        ]
+        summaries = [item.passage.summary.rstrip("。；; ") for item in selected]
         chronology_notes = list(
             dict.fromkeys(
                 item.passage.chronology_note.rstrip("。；; ")
@@ -258,7 +293,7 @@ class RagAnswerService:
                 if person.summary
                 else "课程档案未提供更多身份说明"
             )
-            boundary = (
+            boundary = _profile_boundary_text(resources, profile) or (
                 person.boundaries[0].rstrip("。；; ")
                 if person.boundaries
                 else "只限本课已发布内容"
@@ -276,21 +311,13 @@ class RagAnswerService:
                 local_fit,
             )
         else:
-            boundary = (
-                person.boundaries[0]
-                if person.boundaries
-                else "回答仅限本课证据。"
+            body = _compose_persona_answer(
+                resources,
+                person,
+                profile,
+                selected,
+                chronology_notes,
             )
-            body = (
-                f"以“{person.name}”的课堂角色来表达："
-                + "；".join(summaries)
-                + "。"
-            )
-            if chronology_notes:
-                body += "同时需要保留材料边界：" + "；".join(
-                    chronology_notes[:2]
-                ) + "。"
-            body += f"这个角色的知识边界是：{boundary}"
         uncertainty: Literal["low", "medium", "high"] = (
             "low"
             if len(selected) >= 2
@@ -314,12 +341,26 @@ class RagAnswerService:
         batch: RetrievalBatch,
         *,
         decision: RagRouteDecision,
+        local_fit: LocalReplyFit | None,
+        profile: PersonaProfileBindingV1 | None,
     ) -> RagAnswerV1:
         if decision.reason == "unsupported_answer_slot":
             body = (
                 "当前发布材料没有提供你所问的具体设计者、建造者或制造者身份，"
                 "因此不能据相近材料猜测。请改问这件遗址或器物能够说明什么。"
             )
+        elif decision.reason == "persona_answer_slot_not_enabled":
+            body = (
+                "这个问题属于本课，但超出了当前人物已经审校的知识范围。"
+                "请切换课程专家，或改问该人物档案中列出的经历、立场与处境。"
+            )
+            relevant_boundary = _profile_boundary_text(
+                resources,
+                profile,
+                boundary_ids=(local_fit.boundary_ids if local_fit is not None else ()),
+            )
+            if relevant_boundary:
+                body += f"可确认的材料边界：{relevant_boundary}。"
         elif decision.target == "clarify":
             body = (
                 "这个问题可能与本课有关，但指代或范围还不够清楚。"
@@ -387,6 +428,7 @@ def _generation_messages(
     resources: content_workflow.PublishedLessonResources,
     request: RagAskRequestV1,
     person: PersonV1 | None,
+    profile: PersonaProfileBindingV1 | None,
     model_candidates: tuple[RetrievedPassage, ...],
     query_plan: RagQueryPlan,
     local_fit: LocalReplyFit | None,
@@ -405,6 +447,17 @@ def _generation_messages(
             "summary": person.summary,
             "persona": person.persona,
             "boundaries": person.boundaries,
+            "published_voice": (
+                profile.voice.model_dump(mode="json") if profile is not None else None
+            ),
+            "published_policy": (
+                profile.policy.model_dump(mode="json") if profile is not None else None
+            ),
+            "allowed_evidence_uses": (
+                [item.model_dump(mode="json") for item in profile.evidence_uses]
+                if profile is not None
+                else None
+            ),
             "mandatory_disclaimer": ROLE_DISCLAIMER,
         }
     )
@@ -439,8 +492,7 @@ def _generation_messages(
                 (
                     f"COURSE_TITLE={resources.course_package.title}",
                     f"QUESTION_INTENT={query_plan.intent}",
-                    "SYNTHESIS_MODE_REQUIRED="
-                    + _synthesis_mode_for_query(query_plan),
+                    "SYNTHESIS_MODE_REQUIRED=" + _synthesis_mode_for_query(query_plan),
                     "LOCAL_REPLY_STATE="
                     + json.dumps(
                         (
@@ -459,9 +511,13 @@ def _generation_messages(
                         separators=(",", ":"),
                     ),
                     "PERSONA_JSON="
-                    + json.dumps(persona_payload, ensure_ascii=False, separators=(",", ":")),
+                    + json.dumps(
+                        persona_payload, ensure_ascii=False, separators=(",", ":")
+                    ),
                     "EVIDENCE_JSON="
-                    + json.dumps(evidence_payload, ensure_ascii=False, separators=(",", ":")),
+                    + json.dumps(
+                        evidence_payload, ensure_ascii=False, separators=(",", ":")
+                    ),
                     "QUESTION_UNTRUSTED="
                     + json.dumps(request.question, ensure_ascii=False),
                 )
@@ -473,18 +529,29 @@ def _generation_messages(
 def _select_model_candidates(
     batch: RetrievalBatch,
     local_fit: LocalReplyFit | None,
+    *,
+    profile: PersonaProfileBindingV1 | None = None,
 ) -> tuple[RetrievedPassage, ...]:
     """Expose only strong, facet-covering evidence to the external selector."""
 
     if not batch.supported or local_fit is None:
         return ()
+    boundary_only_ids = (
+        {
+            item.passage_id
+            for item in profile.evidence_uses
+            if item.mode == "boundary_only"
+        }
+        if profile is not None
+        else set()
+    )
     eligible = [
         item
         for item in batch.passages[:8]
-        if item.matched_signal_count >= 1
-        or (
-            item.vector_similarity is not None
-            and item.vector_similarity >= 0.82
+        if item.passage.passage_id not in boundary_only_ids
+        and (
+            item.matched_signal_count >= 1
+            or (item.vector_similarity is not None and item.vector_similarity >= 0.82)
         )
     ]
     if not eligible:
@@ -492,11 +559,7 @@ def _select_model_candidates(
 
     selected: list[RetrievedPassage] = []
     for facet in local_fit.matched_terms:
-        matching = [
-            item
-            for item in eligible
-            if _passage_supports_facet(item, facet)
-        ]
+        matching = [item for item in eligible if _passage_supports_facet(item, facet)]
         if not matching:
             return ()
         if matching[0] not in selected:
@@ -521,15 +584,80 @@ def _scope_batch_to_reply_state(
         return batch
     allowed = set(local_fit.passage_ids)
     passages = tuple(
-        item
-        for item in batch.passages
-        if item.passage.passage_id in allowed
+        item for item in batch.passages if item.passage.passage_id in allowed
     )
     return RetrievalBatch(
         scope_key=batch.scope_key,
         passages=passages,
         supported=batch.supported and bool(passages),
         vector_used=batch.vector_used,
+    )
+
+
+def _scope_batch_to_persona(
+    batch: RetrievalBatch,
+    profile: PersonaProfileBindingV1 | None,
+) -> RetrievalBatch:
+    """Narrow a person query to evidence reviewed for that persona.
+
+    ``boundary_only`` passages remain available to justify a local boundary
+    response.  The external selector filters them out, and persona prose labels
+    them as non-personal evidence.
+    """
+
+    if profile is None:
+        return batch
+    allowed = {item.passage_id for item in profile.evidence_uses}
+    passages = tuple(
+        item for item in batch.passages if item.passage.passage_id in allowed
+    )
+    # The generic corpus threshold deliberately expects broad source coverage.
+    # A persona pack is narrower by design: one explicitly reviewed passage
+    # with several direct query signals is enough for a deterministic local
+    # response, but never enough to unlock the external API by itself.
+    persona_local_support = any(item.matched_signal_count >= 2 for item in passages)
+    return RetrievalBatch(
+        scope_key=batch.scope_key,
+        passages=passages,
+        supported=bool(passages) and (batch.supported or persona_local_support),
+        vector_used=batch.vector_used,
+    )
+
+
+def _scope_reply_state_to_persona(
+    local_fit: LocalReplyFit | None,
+    profile: PersonaProfileBindingV1 | None,
+) -> LocalReplyFit | None:
+    """Enforce the answer-slot allowlist sealed into the active persona pack."""
+
+    if (
+        local_fit is None
+        or profile is None
+        or not local_fit.answer_slot_supported
+        or local_fit.response_mode == "identity"
+        or not local_fit.slot_ids
+    ):
+        return local_fit
+    enabled = set(profile.focus_answer_slot_ids)
+    requested = set(local_fit.slot_ids)
+    if requested.issubset(enabled):
+        return local_fit
+    profile_boundaries = set(profile.boundary_ids)
+    relevant_boundaries = tuple(
+        boundary_id
+        for boundary_id in local_fit.boundary_ids
+        if boundary_id in profile_boundaries
+    )
+    return replace(
+        local_fit,
+        state_id=f"{local_fit.state_id}.persona-scope-denied",
+        topic_label="当前人物未审校这一问题范围",
+        response_mode="unsupported_slot",
+        api_synthesis_allowed=False,
+        answer_slot_supported=False,
+        reason="persona_answer_slot_not_enabled",
+        passage_ids=(),
+        boundary_ids=relevant_boundaries,
     )
 
 
@@ -580,20 +708,14 @@ def _passage_supports_facet(item: RetrievedPassage, facet: str) -> bool:
         return True
     if len(normalized) < 4:
         return False
-    bigrams = {
-        normalized[index : index + 2]
-        for index in range(len(normalized) - 1)
-    }
+    bigrams = {normalized[index : index + 2] for index in range(len(normalized) - 1)}
     return sum(segment in support for segment in bigrams) >= 2
 
 
 def _passage_locator(item: RetrievedPassage) -> str:
     """Prefer the atomic V2 locator while preserving V1 citation behavior."""
 
-    return (
-        getattr(item.passage, "source_locator", "").strip()
-        or item.source.locator
-    )
+    return getattr(item.passage, "source_locator", "").strip() or item.source.locator
 
 
 _UNCERTAINTY_RANK = {"low": 0, "medium": 1, "high": 2}
@@ -609,9 +731,7 @@ def _bounded_model_uncertainty(
     if certainties & {"legend", "disputed"}:
         floor: Literal["low", "medium", "high"] = "high"
     elif (
-        "interpretation" in certainties
-        or len(source_ids) < 2
-        or len(source_kinds) < 2
+        "interpretation" in certainties or len(source_ids) < 2 or len(source_kinds) < 2
     ):
         floor = "medium"
     else:
@@ -629,8 +749,89 @@ def _synthesis_mode_for_query(
     }.get(query_plan.intent, "overview")
 
 
+def _compose_persona_answer(
+    resources: content_workflow.PublishedLessonResources,
+    person: PersonV1,
+    profile: PersonaProfileBindingV1 | None,
+    selected: list[RetrievedPassage],
+    chronology_notes: list[str],
+) -> str:
+    """Compose role prose while keeping later historian material visibly separate."""
+
+    if profile is None:
+        summaries = [item.passage.summary.rstrip("。；; ") for item in selected]
+        boundary = (
+            person.boundaries[0] if person.boundaries else "回答仅限本课已发布证据。"
+        )
+        body = f"以“{person.name}”的课堂角色来表达：" + "；".join(summaries) + "。"
+        if chronology_notes:
+            body += "需要保留的材料边界：" + "；".join(chronology_notes[:2]) + "。"
+        return body + f"这个角色的知识边界是：{boundary}"
+
+    evidence_modes = {item.passage_id: item.mode for item in profile.evidence_uses}
+    role_summaries = [
+        item.passage.summary.rstrip("。；; ")
+        for item in selected
+        if evidence_modes.get(item.passage.passage_id) == "role_voice"
+    ]
+    historian_summaries = [
+        item.passage.summary.rstrip("。；; ")
+        for item in selected
+        if evidence_modes.get(item.passage.passage_id) == "historian_note"
+    ]
+    boundary_summaries = [
+        item.passage.summary.rstrip("。；; ")
+        for item in selected
+        if evidence_modes.get(item.passage.passage_id) == "boundary_only"
+    ]
+    if role_summaries:
+        if profile.voice.perspective == "collective_first_person":
+            body = f"“{person.name}”合成群体角色：从我们的处境看，"
+        elif profile.voice.perspective == "third_person_facilitator":
+            body = f"围绕“{person.name}”的课堂角色，可以说明："
+        else:
+            body = f"“{person.name}”课堂角色：就我在本课可说的范围，"
+        body += "；".join(role_summaries) + "。"
+    else:
+        body = f"“{person.name}”不能把这部分当作自己的亲历知识来回答。"
+
+    if historian_summaries:
+        body += "史家补充（不属于人物所知）：" + "；".join(historian_summaries) + "。"
+    if boundary_summaries:
+        body += "边界证据（不是人物亲历）：" + "；".join(boundary_summaries) + "。"
+    if chronology_notes:
+        body += "材料年代提示：" + "；".join(chronology_notes[:2]) + "。"
+    boundary = _profile_boundary_text(resources, profile)
+    if boundary:
+        body += f"本次角色边界：{boundary}。"
+    return body
+
+
+def _profile_boundary_text(
+    resources: content_workflow.PublishedLessonResources,
+    profile: PersonaProfileBindingV1 | None,
+    *,
+    boundary_ids: tuple[str, ...] | None = None,
+) -> str:
+    if profile is None:
+        return ""
+    corpus_boundaries = {
+        item.boundary_id: item.statement.rstrip("。；; ")
+        for item in getattr(resources.evidence_corpus, "boundaries", ())
+    }
+    requested_ids = profile.boundary_ids if boundary_ids is None else boundary_ids
+    selected = [
+        corpus_boundaries[boundary_id]
+        for boundary_id in requested_ids
+        if boundary_id in corpus_boundaries
+    ]
+    return "；".join(selected[:2])
+
+
 def _compose_selected_model_answer(
+    resources: content_workflow.PublishedLessonResources,
     person: PersonV1 | None,
+    profile: PersonaProfileBindingV1 | None,
     selected: list[RetrievedPassage],
     *,
     synthesis_mode: Literal[
@@ -643,10 +844,7 @@ def _compose_selected_model_answer(
 ) -> str:
     """Build final prose solely from reviewed passage fields and fixed wording."""
 
-    summaries = [
-        item.passage.summary.rstrip("。；; ")
-        for item in selected
-    ]
+    summaries = [item.passage.summary.rstrip("。；; ") for item in selected]
     chronology_notes = list(
         dict.fromkeys(
             item.passage.chronology_note.rstrip("。；; ")
@@ -657,21 +855,13 @@ def _compose_selected_model_answer(
     topic_label = local_fit.topic_label if local_fit is not None else "本课主题"
 
     if person is not None:
-        body = (
-            f"以“{person.name}”的课堂角色来表达："
-            + "；".join(summaries)
-            + "。"
+        return _compose_persona_answer(
+            resources,
+            person,
+            profile,
+            selected,
+            chronology_notes,
         )
-        if chronology_notes:
-            body += "需要保留的材料边界：" + "；".join(
-                chronology_notes[:2]
-            ) + "。"
-        boundary = (
-            person.boundaries[0]
-            if person.boundaries
-            else "回答仅限本课已发布证据。"
-        )
-        return body + f"这个角色的知识边界是：{boundary}"
 
     if synthesis_mode == "causality":
         body = f"围绕“{topic_label}”，本次证据可以支持："
@@ -684,9 +874,7 @@ def _compose_selected_model_answer(
     body += "；".join(summaries) + "。"
 
     if chronology_notes:
-        body += "需要保留的年代与材料边界：" + "；".join(
-            chronology_notes[:2]
-        ) + "。"
+        body += "需要保留的年代与材料边界：" + "；".join(chronology_notes[:2]) + "。"
     elif synthesis_mode == "boundary":
         body += "边界：不能把材料没有直接支持的细节写成确定史实。"
     return body
@@ -721,13 +909,9 @@ def _answer_contract(
         body=body,
         persona_mode=request.persona_mode,
         person_id=request.person_id,
-        role_disclaimer=(
-            ROLE_DISCLAIMER if request.persona_mode == "person" else None
-        ),
+        role_disclaimer=(ROLE_DISCLAIMER if request.persona_mode == "person" else None),
         citations=citations,
-        retrieved_passage_ids=tuple(
-            item.passage.passage_id for item in batch.passages
-        ),
+        retrieved_passage_ids=tuple(item.passage.passage_id for item in batch.passages),
         course_id=resources.course_id,
         lesson_id=resources.lesson_id,
         release_id=resources.release_id,
@@ -752,11 +936,7 @@ def _select_extractive_passages(
     if peak_matches <= 0:
         return candidates[:limit]
     threshold = 1 if peak_matches < 4 else max(2, (peak_matches + 1) // 2)
-    focused = [
-        item
-        for item in candidates
-        if item.matched_signal_count >= threshold
-    ]
+    focused = [item for item in candidates if item.matched_signal_count >= threshold]
     return (focused or candidates[:1])[:limit]
 
 
@@ -784,9 +964,7 @@ def _compose_local_expert_answer(
         if supporting:
             body += "再结合：" + "；".join(supporting) + "。"
     elif query_plan.intent == "comparison":
-        body = f"围绕“{topic_label}”对照材料可以看到：" + "；".join(
-            summaries
-        ) + "。"
+        body = f"围绕“{topic_label}”对照材料可以看到：" + "；".join(summaries) + "。"
     elif query_plan.intent == "evidence_boundary":
         body = f"结论：现有材料可以支持“{primary}”。"
         if supporting:
@@ -795,9 +973,7 @@ def _compose_local_expert_answer(
         body = "本课证据可以支持：" + "；".join(summaries) + "。"
 
     if chronology_notes:
-        body += "需要保留的年代与材料边界：" + "；".join(
-            chronology_notes[:2]
-        ) + "。"
+        body += "需要保留的年代与材料边界：" + "；".join(chronology_notes[:2]) + "。"
     elif query_plan.intent == "evidence_boundary":
         body += "边界：不能把材料没有直接支持的细节写成确定史实。"
     return body

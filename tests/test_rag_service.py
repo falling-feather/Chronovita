@@ -51,11 +51,9 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
         published_ids = {
             passage.passage_id for passage in resources.evidence_corpus.passages
         }
-        self.assertTrue(
-            set(answer.retrieved_passage_ids).issubset(published_ids)
-        )
+        self.assertTrue(set(answer.retrieved_passage_ids).issubset(published_ids))
 
-    async def test_person_answer_is_bounded_and_disclaimed(self):
+    async def test_person_later_material_is_redirected_with_boundary(self):
         answer = await self.service.ask(
             RagAskRequestV1(
                 course_id="C-prequin-state",
@@ -65,23 +63,11 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
                 question="为什么不能把睡虎地秦简都说成我的亲笔法令？",
             )
         )
-        self.assertEqual(answer.answer_source, "extractive")
+        self.assertEqual(answer.answer_source, "insufficient_evidence")
         self.assertEqual(answer.role_disclaimer, ROLE_DISCLAIMER)
-        self.assertIn("商鞅", answer.body)
-        resources = workflow.get_published_lesson_resources(
-            "C-prequin-state",
-            "L103",
-        )
-        passages = {
-            passage.passage_id: passage
-            for passage in resources.evidence_corpus.passages
-        }
-        self.assertTrue(
-            all(
-                "person-c797c18e" in passages[passage_id].person_ids
-                for passage_id in answer.retrieved_passage_ids
-            )
-        )
+        self.assertIn("超出了当前人物已经审校的知识范围", answer.body)
+        self.assertIn("睡虎地秦简主要写于", answer.body)
+        self.assertEqual(answer.citations, ())
 
     async def test_person_identity_uses_published_profile_and_cited_person_scope(self):
         answer = await self.service.ask(

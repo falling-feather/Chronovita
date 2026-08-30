@@ -17,11 +17,18 @@ from services.contracts.evidence_v1 import (
     sign_evidence_contract,
     verify_evidence_checksum,
 )
-from services.contracts.evidence_v2 import EvidenceCorpusAny, EvidenceCorpusV2, parse_evidence_corpus
+from services.contracts.evidence_v2 import (
+    EvidenceCorpusAny,
+    EvidenceCorpusV2,
+    parse_evidence_corpus,
+)
+from services.contracts.persona_v1 import PersonaPackV1, verify_persona_checksum
 from services.contracts.release_v2 import (
     EvidenceSupplementDescriptorV2,
+    PersonaSupplementDescriptorV1,
     ReleaseSupplementDescriptorV1,
     RuntimeArtifactDescriptorV1,
+    persona_artifact_path_v1,
     runtime_artifact_path,
     supplement_artifact_path,
     supplement_artifact_path_v2,
@@ -39,7 +46,6 @@ from services.game_runtime import (
     ScenarioFileError,
     load_contract_file,
 )
-
 
 MAX_PRESENTATION_ASSET_BYTES = 256 * 1024 * 1024
 
@@ -76,13 +82,116 @@ class RuntimePresentationRecord(BaseModel):
     video_duration_seconds: float
 
 
+class RuntimePersonaRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    descriptor: PersonaSupplementDescriptorV1
+    profile_count: int
+    scenario_voice_binding_count: int
+
+
+def stage_persona_pack(pack: PersonaPackV1) -> RuntimePersonaRecord:
+    """Store one checksum-valid sealed persona pack without publishing it."""
+
+    _validate_persona_pack(pack)
+    descriptor = descriptor_for_persona(pack)
+    target = content_data.content_root() / Path(descriptor.path)
+    _assert_runtime_path(
+        target,
+        content_data.runtime_persona_dir(),
+        must_exist=False,
+    )
+    _require_unique_version(target, descriptor.version, "persona pack")
+    _write_immutable_json(target, pack)
+    return _persona_record(pack, descriptor)
+
+
+def descriptor_for_persona(pack: PersonaPackV1) -> PersonaSupplementDescriptorV1:
+    _validate_persona_pack(pack)
+    return PersonaSupplementDescriptorV1(
+        artifact_id=pack.pack_id,
+        course_id=pack.course_id,
+        lesson_id=pack.lesson_id,
+        version=pack.pack_version,
+        checksum=pack.checksum,
+        path=persona_artifact_path_v1(
+            artifact_id=pack.pack_id,
+            course_id=pack.course_id,
+            lesson_id=pack.lesson_id,
+            version=pack.pack_version,
+            checksum=pack.checksum,
+        ),
+    )
+
+
+def load_persona_pack(
+    *,
+    course_id: str,
+    lesson_id: str,
+    pack_id: str,
+    pack_version: int,
+    pack_checksum: str,
+) -> tuple[PersonaPackV1, PersonaSupplementDescriptorV1]:
+    descriptor = PersonaSupplementDescriptorV1(
+        artifact_id=pack_id,
+        course_id=course_id,
+        lesson_id=lesson_id,
+        version=pack_version,
+        checksum=pack_checksum,
+        path=persona_artifact_path_v1(
+            artifact_id=pack_id,
+            course_id=course_id,
+            lesson_id=lesson_id,
+            version=pack_version,
+            checksum=pack_checksum,
+        ),
+    )
+    pack, actual = load_persona_pack_path(
+        content_data.content_root() / Path(descriptor.path)
+    )
+    if actual != descriptor:
+        raise RuntimeArtifactError("persona pack descriptor changed while loading")
+    return pack, descriptor
+
+
+def load_persona_pack_path(
+    path: Path,
+) -> tuple[PersonaPackV1, PersonaSupplementDescriptorV1]:
+    _assert_runtime_path(path, content_data.runtime_persona_dir())
+    pack = _read_contract(path, PersonaPackV1)
+    _validate_persona_pack(pack)
+    descriptor = descriptor_for_persona(pack)
+    expected = content_data.content_root() / Path(descriptor.path)
+    if path.absolute() != expected.absolute():
+        raise RuntimeArtifactError(
+            f"persona pack identity does not match its path: {path}"
+        )
+    return pack, descriptor
+
+
+def list_staged_personas(
+    *,
+    pack_id: str | None = None,
+) -> list[RuntimePersonaRecord]:
+    records: list[RuntimePersonaRecord] = []
+    for path in _walk_runtime_json_files(content_data.runtime_persona_dir()):
+        pack, descriptor = load_persona_pack_path(path)
+        if pack_id is None or descriptor.artifact_id == pack_id:
+            records.append(_persona_record(pack, descriptor))
+    return sorted(records, key=_supplement_record_sort_key)
+
+
 def stage_evidence_corpus(corpus: EvidenceCorpusAny) -> RuntimeEvidenceRecord:
     """Store a sealed evidence corpus without making it student-visible."""
 
     _validate_evidence_corpus(corpus)
     descriptor = descriptor_for_evidence(corpus)
     target = content_data.content_root() / Path(descriptor.path)
-    root = content_data.runtime_evidence_v2_dir() if isinstance(corpus, EvidenceCorpusV2) else content_data.runtime_evidence_dir()
+    root = (
+        content_data.runtime_evidence_v2_dir()
+        if isinstance(corpus, EvidenceCorpusV2)
+        else content_data.runtime_evidence_dir()
+    )
     _assert_runtime_path(target, root, must_exist=False)
     _require_unique_version(target, descriptor.version, "evidence corpus")
     _write_immutable_json(target, corpus)
@@ -95,12 +204,16 @@ def descriptor_for_evidence(
     _validate_evidence_corpus(corpus)
     if isinstance(corpus, EvidenceCorpusV2):
         return EvidenceSupplementDescriptorV2(
-            artifact_id=corpus.corpus_id, course_id=corpus.course_id,
-            lesson_id=corpus.lesson_id, version=corpus.corpus_version,
+            artifact_id=corpus.corpus_id,
+            course_id=corpus.course_id,
+            lesson_id=corpus.lesson_id,
+            version=corpus.corpus_version,
             checksum=corpus.checksum,
             path=supplement_artifact_path_v2(
-                artifact_id=corpus.corpus_id, course_id=corpus.course_id,
-                lesson_id=corpus.lesson_id, version=corpus.corpus_version,
+                artifact_id=corpus.corpus_id,
+                course_id=corpus.course_id,
+                lesson_id=corpus.lesson_id,
+                version=corpus.corpus_version,
                 checksum=corpus.checksum,
             ),
         )
@@ -131,14 +244,22 @@ def load_evidence_corpus(
     corpus_version: int,
     corpus_checksum: str,
     schema_version: str = "evidence-corpus/v1",
-) -> tuple[EvidenceCorpusAny, ReleaseSupplementDescriptorV1 | EvidenceSupplementDescriptorV2]:
+) -> tuple[
+    EvidenceCorpusAny, ReleaseSupplementDescriptorV1 | EvidenceSupplementDescriptorV2
+]:
     if schema_version == "evidence-corpus/v2":
         descriptor = EvidenceSupplementDescriptorV2(
-            artifact_id=corpus_id, course_id=course_id, lesson_id=lesson_id,
-            version=corpus_version, checksum=corpus_checksum,
+            artifact_id=corpus_id,
+            course_id=course_id,
+            lesson_id=lesson_id,
+            version=corpus_version,
+            checksum=corpus_checksum,
             path=supplement_artifact_path_v2(
-                artifact_id=corpus_id, course_id=course_id, lesson_id=lesson_id,
-                version=corpus_version, checksum=corpus_checksum,
+                artifact_id=corpus_id,
+                course_id=course_id,
+                lesson_id=lesson_id,
+                version=corpus_version,
+                checksum=corpus_checksum,
             ),
         )
     elif schema_version == "evidence-corpus/v1":
@@ -170,12 +291,16 @@ def load_evidence_corpus(
 
 def load_evidence_corpus_path(
     path: Path,
-) -> tuple[EvidenceCorpusAny, ReleaseSupplementDescriptorV1 | EvidenceSupplementDescriptorV2]:
+) -> tuple[
+    EvidenceCorpusAny, ReleaseSupplementDescriptorV1 | EvidenceSupplementDescriptorV2
+]:
     v2_root = content_data.runtime_evidence_v2_dir()
     root = v2_root if _is_within(path, v2_root) else content_data.runtime_evidence_dir()
     _assert_runtime_path(path, root)
     try:
-        payload = json.loads(_read_immutable_bytes(path), object_pairs_hook=_reject_duplicate_json_keys)
+        payload = json.loads(
+            _read_immutable_bytes(path), object_pairs_hook=_reject_duplicate_json_keys
+        )
         corpus = parse_evidence_corpus(payload)
     except (ValueError, ValidationError, json.JSONDecodeError) as exc:
         raise RuntimeArtifactError(f"cannot read runtime evidence: {path}") from exc
@@ -194,7 +319,10 @@ def list_staged_evidence(
     corpus_id: str | None = None,
 ) -> list[RuntimeEvidenceRecord]:
     records: list[RuntimeEvidenceRecord] = []
-    paths = [*_walk_runtime_json_files(content_data.runtime_evidence_dir()), *_walk_runtime_json_files(content_data.runtime_evidence_v2_dir())]
+    paths = [
+        *_walk_runtime_json_files(content_data.runtime_evidence_dir()),
+        *_walk_runtime_json_files(content_data.runtime_evidence_v2_dir()),
+    ]
     for path in paths:
         corpus, descriptor = load_evidence_corpus_path(path)
         if corpus_id is None or descriptor.artifact_id == corpus_id:
@@ -487,12 +615,12 @@ def load_staged_scenario_bytes(
         ValidationError,
         ValueError,
     ) as exc:
-        raise RuntimeArtifactError(
-            f"cannot read runtime artifact: {target}"
-        ) from exc
+        raise RuntimeArtifactError(f"cannot read runtime artifact: {target}") from exc
     _validate_sealed_scenario(scenario)
     if descriptor_for_scenario(scenario) != descriptor:
-        raise RuntimeArtifactError("staged scenario descriptor changed while downloading")
+        raise RuntimeArtifactError(
+            "staged scenario descriptor changed while downloading"
+        )
     return raw, descriptor
 
 
@@ -521,10 +649,14 @@ def bind_course_package(
     selected = sorted(scenarios, key=lambda item: item[0].scenario_id)
     scenario_ids = [scenario.scenario_id for scenario, _ in selected]
     if len(scenario_ids) != len(set(scenario_ids)):
-        raise RuntimeArtifactError("scenario selections must use unique scenario_id values")
+        raise RuntimeArtifactError(
+            "scenario selections must use unique scenario_id values"
+        )
     primary_count = sum(1 for _, primary in selected if primary)
     if selected and primary_count != 1:
-        raise RuntimeArtifactError("a published lesson with scenarios requires one primary")
+        raise RuntimeArtifactError(
+            "a published lesson with scenarios requires one primary"
+        )
 
     refs: list[ScenarioRefV1] = []
     for scenario, primary in selected:
@@ -610,7 +742,9 @@ def load_course_package(
         descriptor.checksum,
     )
     if identity != expected:
-        raise RuntimeArtifactError("runtime course package does not match its descriptor")
+        raise RuntimeArtifactError(
+            "runtime course package does not match its descriptor"
+        )
     return package
 
 
@@ -649,10 +783,21 @@ def load_release_presentation(
         content_data.content_root() / Path(descriptor.path)
     )
     if actual != descriptor:
-        raise RuntimeArtifactError(
-            "runtime presentation does not match its descriptor"
-        )
+        raise RuntimeArtifactError("runtime presentation does not match its descriptor")
     return presentation
+
+
+def load_release_persona(
+    descriptor: PersonaSupplementDescriptorV1,
+) -> PersonaPackV1:
+    if descriptor.kind != "persona-pack":
+        raise RuntimeArtifactError("descriptor is not a persona pack")
+    pack, actual = load_persona_pack_path(
+        content_data.content_root() / Path(descriptor.path)
+    )
+    if actual != descriptor:
+        raise RuntimeArtifactError("runtime persona pack does not match its descriptor")
+    return pack
 
 
 def _scenario_record(
@@ -675,15 +820,11 @@ def _validate_sealed_scenario(scenario: ScenarioTemplateV1) -> None:
 
 def _validate_evidence_corpus(corpus: EvidenceCorpusAny) -> None:
     if corpus.status != "sealed" or not verify_evidence_checksum(corpus):
-        raise RuntimeArtifactError(
-            "evidence corpus must be sealed and checksum-valid"
-        )
+        raise RuntimeArtifactError("evidence corpus must be sealed and checksum-valid")
 
 
 def _validate_lesson_presentation(presentation: LessonPresentationV1) -> None:
-    if presentation.status != "sealed" or not verify_evidence_checksum(
-        presentation
-    ):
+    if presentation.status != "sealed" or not verify_evidence_checksum(presentation):
         raise RuntimeArtifactError(
             "lesson presentation must be sealed and checksum-valid"
         )
@@ -694,14 +835,22 @@ def _validate_lesson_presentation(presentation: LessonPresentationV1) -> None:
     ):
         path = content_data.content_root() / Path(relative_path)
         _assert_runtime_path(path, content_data.lesson_media_dir())
-        if _hash_regular_file(
-            path,
-            root=content_data.lesson_media_dir(),
-            maximum_bytes=MAX_PRESENTATION_ASSET_BYTES,
-        ) != expected_checksum:
+        if (
+            _hash_regular_file(
+                path,
+                root=content_data.lesson_media_dir(),
+                maximum_bytes=MAX_PRESENTATION_ASSET_BYTES,
+            )
+            != expected_checksum
+        ):
             raise RuntimeArtifactError(
                 f"presentation asset checksum mismatch: {relative_path}"
             )
+
+
+def _validate_persona_pack(pack: PersonaPackV1) -> None:
+    if pack.status != "sealed" or not verify_persona_checksum(pack):
+        raise RuntimeArtifactError("persona pack must be sealed and checksum-valid")
 
 
 def _evidence_record(
@@ -725,6 +874,17 @@ def _presentation_record(
         title=presentation.title,
         estimated_minutes=presentation.estimated_minutes,
         video_duration_seconds=presentation.video_duration_seconds,
+    )
+
+
+def _persona_record(
+    pack: PersonaPackV1,
+    descriptor: PersonaSupplementDescriptorV1,
+) -> RuntimePersonaRecord:
+    return RuntimePersonaRecord(
+        descriptor=descriptor,
+        profile_count=len(pack.profiles),
+        scenario_voice_binding_count=len(pack.scenario_voice_bindings),
     )
 
 
@@ -770,9 +930,7 @@ def _walk_runtime_json_files(root: Path) -> list[Path]:
                     f"runtime supplement directory cannot be a symlink: {candidate}"
                 )
         paths.extend(
-            current_path / filename
-            for filename in files
-            if filename.endswith(".json")
+            current_path / filename for filename in files if filename.endswith(".json")
         )
     return sorted(paths)
 
@@ -904,9 +1062,7 @@ def _hash_regular_file(
     except RuntimeArtifactError:
         raise
     except OSError as exc:
-        raise RuntimeArtifactError(
-            f"cannot verify presentation asset: {path}"
-        ) from exc
+        raise RuntimeArtifactError(f"cannot verify presentation asset: {path}") from exc
     if remaining == 0:
         raise RuntimeArtifactError(
             f"presentation asset exceeds {maximum_bytes} bytes: {path}"
@@ -929,7 +1085,9 @@ def _assert_runtime_path(
     try:
         relative = absolute_path.relative_to(absolute_root)
     except ValueError as exc:
-        raise RuntimeArtifactError(f"runtime artifact escapes its root: {path}") from exc
+        raise RuntimeArtifactError(
+            f"runtime artifact escapes its root: {path}"
+        ) from exc
     current = absolute_root
     _assert_not_symlink(current)
     for part in relative.parts:
@@ -956,19 +1114,25 @@ def _assert_not_symlink(path: Path) -> None:
 __all__ = [
     "RuntimeArtifactError",
     "RuntimeEvidenceRecord",
+    "RuntimePersonaRecord",
     "RuntimePresentationRecord",
     "RuntimeScenarioRecord",
     "bind_course_package",
     "descriptor_for_evidence",
+    "descriptor_for_persona",
     "descriptor_for_presentation",
     "descriptor_for_scenario",
     "list_staged_evidence",
+    "list_staged_personas",
     "list_staged_presentations",
     "list_staged_scenarios",
     "load_course_package",
     "load_evidence_corpus",
     "load_lesson_presentation",
+    "load_persona_pack",
+    "load_persona_pack_path",
     "load_release_evidence",
+    "load_release_persona",
     "load_release_presentation",
     "load_runtime_scenario",
     "load_staged_scenario",
@@ -976,5 +1140,6 @@ __all__ = [
     "materialize_course_package",
     "stage_evidence_corpus",
     "stage_lesson_presentation",
+    "stage_persona_pack",
     "stage_scenario",
 ]

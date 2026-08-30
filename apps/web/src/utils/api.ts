@@ -193,12 +193,17 @@ export interface LessonPresentationSupplementDescriptorV1 extends SupplementArti
   kind: 'lesson-presentation';
   schema_version: 'lesson-presentation/v1';
 }
+export interface PersonaSupplementDescriptorV1 extends SupplementArtifactDescriptorBase {
+  kind: 'persona-pack';
+  schema_version: 'persona-pack/v1';
+}
 export type EvidenceSupplementDescriptor =
   | EvidenceSupplementDescriptorV1
   | EvidenceSupplementDescriptorV2;
 export type SupplementArtifactDescriptor =
   | EvidenceSupplementDescriptor
-  | LessonPresentationSupplementDescriptorV1;
+  | LessonPresentationSupplementDescriptorV1
+  | PersonaSupplementDescriptorV1;
 export interface CourseReleaseItemV1 {
   lesson_id: string; course_id: string; content_version: number;
   source_path: string; source_checksum: string; package_path: string;
@@ -220,7 +225,15 @@ export interface CourseReleaseItemV4 extends CourseReleaseItemV2 {
   evidence_corpus: EvidenceSupplementDescriptorV2;
   lesson_presentation: LessonPresentationSupplementDescriptorV1;
 }
-export type CourseReleaseItem = CourseReleaseItemV1 | CourseReleaseItemV2 | CourseReleaseItemV3 | CourseReleaseItemV4;
+export interface CourseReleaseItemV5 extends CourseReleaseItemV4 {
+  persona_pack: PersonaSupplementDescriptorV1;
+}
+export type CourseReleaseItem =
+  | CourseReleaseItemV1
+  | CourseReleaseItemV2
+  | CourseReleaseItemV3
+  | CourseReleaseItemV4
+  | CourseReleaseItemV5;
 export interface CourseReleaseManifest {
   schema_version: string; release_id: string; release_no: number; course_id: string;
   operation: 'bootstrap' | 'publish' | 'rollback'; parent_release_id?: string | null;
@@ -234,6 +247,7 @@ export type ArchiveFileKind =
   | 'scenario-template'
   | 'evidence-corpus'
   | 'lesson-presentation'
+  | 'persona-pack'
   | 'format-layer'
   | 'teacher-markdown'
   | 'preview-html';

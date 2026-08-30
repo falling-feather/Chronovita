@@ -137,10 +137,11 @@ def publish_flagship_media(
     if initial_release is None or initial_release.schema_version not in {
         "course-release/v3",
         "course-release/v4",
+        "course-release/v5",
     }:
         raise RuntimeError(
-            "Flagship media publication requires an active course-release/v3 or "
-            "course-release/v4 manifest."
+            "Flagship media publication requires an active course-release/v3, "
+            "course-release/v4 or course-release/v5 manifest."
         )
     release_schema_version = initial_release.schema_version
     results: list[dict[str, object]] = []
@@ -154,6 +155,9 @@ def publish_flagship_media(
             actor=actor,
         )
         evidence = before.evidence_corpus
+        persona_checksum = (
+            before.persona_pack.checksum if before.persona_pack is not None else None
+        )
         release, record = workflow.publish_version(
             media.lesson_id,
             before.content_version,
@@ -180,6 +184,12 @@ def publish_flagship_media(
             or after.lesson_presentation.checksum != presentation.checksum
             or after.lesson_presentation.presentation_version
             != presentation_version
+            or (
+                after.persona_pack.checksum
+                if after.persona_pack is not None
+                else None
+            )
+            != persona_checksum
         ):
             raise RuntimeError(f"{media.lesson_id} media publication postcondition failed.")
         results.append(
@@ -192,6 +202,7 @@ def publish_flagship_media(
                 "presentation_version": presentation.presentation_version,
                 "presentation_checksum": presentation.checksum,
                 "evidence_checksum": evidence.checksum,
+                "persona_checksum": persona_checksum,
             }
         )
 

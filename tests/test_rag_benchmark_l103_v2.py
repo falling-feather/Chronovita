@@ -17,7 +17,7 @@ BENCHMARK_PATH = (
 )
 COURSE_ID = "C-prequin-state"
 LESSON_ID = "L103"
-EXPECTED_RELEASE_NO = 6
+EXPECTED_RELEASE_NO = 7
 EXPECTED_CASE_COUNT = 60
 MINIMUM_TOP_FIVE_HIT_RATE = 0.90
 
@@ -32,7 +32,7 @@ class RagBenchmarkL103V2Tests(unittest.TestCase):
             LESSON_ID,
         )
 
-    def test_fixture_targets_exact_release_six_v2_corpus(self) -> None:
+    def test_fixture_targets_release_seven_and_exact_v2_corpus(self) -> None:
         self.assertEqual(
             self.benchmark["schema_version"],
             "rag-benchmark-l103-v2/v1",
@@ -48,7 +48,7 @@ class RagBenchmarkL103V2Tests(unittest.TestCase):
 
         self.assertIsNotNone(self.release)
         assert self.release is not None
-        self.assertEqual(self.release.schema_version, "course-release/v4")
+        self.assertEqual(self.release.schema_version, "course-release/v5")
         self.assertEqual(self.release.release_no, EXPECTED_RELEASE_NO)
         self.assertEqual(self.resources.release_no, EXPECTED_RELEASE_NO)
         self.assertEqual(self.resources.release_id, self.release.release_id)
@@ -84,7 +84,7 @@ class RagBenchmarkL103V2Tests(unittest.TestCase):
                     set(case["expected_passage_ids"]).issubset(passage_ids)
                 )
 
-    def test_release_six_fts_top_five_hit_rate_is_at_least_90_percent(self) -> None:
+    def test_release_seven_v2_fts_top_five_hit_rate_is_at_least_90_percent(self) -> None:
         with TemporaryDirectory() as temp_dir:
             # No vectorizer is supplied: this benchmark exercises the offline
             # SQLite FTS path and the same deterministic query rewrites used by

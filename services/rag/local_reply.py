@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import re
+import unicodedata
 from collections.abc import Iterable
 from dataclasses import dataclass
-import re
 from typing import Literal
-import unicodedata
 
 from services.content.workflow import PublishedLessonResources
 from services.contracts.evidence_v1 import (
@@ -19,7 +19,6 @@ from services.contracts.v1 import PersonV1
 
 from .query import RagQueryPlan
 from .retrieval import RetrievalBatch
-
 
 LOCAL_REPLY_VERSION = "chronovita-local-reply/v1"
 
@@ -151,12 +150,8 @@ _V2_LEGACY_STATE_SLOTS: dict[str, tuple[str, ...]] = {
         "shangyang-slot-05-military-merit",
         "shangyang-slot-06-agriculture-war",
     ),
-    "L103.local-administration": (
-        "shangyang-slot-08-county-administration",
-    ),
-    "L103.collective-cost": (
-        "shangyang-slot-07-collective-liability",
-    ),
+    "L103.local-administration": ("shangyang-slot-08-county-administration",),
+    "L103.collective-cost": ("shangyang-slot-07-collective-liability",),
     "L103.fangsheng": ("shangyang-slot-11-fangsheng",),
     "L103.text-layers": (
         "shangyang-slot-12-sleeping-tiger-slips",
@@ -372,9 +367,7 @@ _COMPOSITE_STATES = {
 # its own state match.  Broad audience words such as “老百姓” are intentionally
 # absent because they do not identify an answerable course question by
 # themselves.
-_STATE_ALIASES: dict[
-    tuple[str, str], tuple[tuple[str, tuple[str, ...]], ...]
-] = {
+_STATE_ALIASES: dict[tuple[str, str], tuple[tuple[str, tuple[str, ...]], ...]] = {
     ("C-prequin-state", "L101"): (
         ("L101.transmitted-memory", ("没回家", "不回家", "路过家门", "过门不进")),
         ("L101.yugong-map", ("工程图", "古地图")),
@@ -401,9 +394,7 @@ _STATE_ALIASES: dict[
     ),
 }
 
-_UNSUPPORTED_SLOT_RULES: dict[
-    tuple[str, str], tuple[_UnsupportedSlotRule, ...]
-] = {
+_UNSUPPORTED_SLOT_RULES: dict[tuple[str, str], tuple[_UnsupportedSlotRule, ...]] = {
     ("C-prequin-state", "L101"): (
         _UnsupportedSlotRule(
             "erlitou-builder-identity",
@@ -581,56 +572,175 @@ _STATE_APPROVED_QUESTION_FACETS: dict[str, tuple[str, ...]] = {
 }
 
 _SINGLE_STATE_RELATIONS = (
-    _ApprovedQuestionRelation("L101-memory", frozenset({"L101.transmitted-memory"}), frozenset({"detail", "evidence_boundary", "causality"}), re.compile(r"记忆|保存|传世|成书|现场|证明|能说明|真假|三过家门")),
-    _ApprovedQuestionRelation("L101-map", frozenset({"L101.yugong-map"}), frozenset({"detail", "evidence_boundary", "comparison", "causality"}), re.compile(r"施工图|工程图|记忆地图|空间|九州|贡赋|山川|能说明|证明")),
-    _ApprovedQuestionRelation("L101-flood", frozenset({"L101.flood-science"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"证明|说明|推论|边界|洪水|灾害|自然事件|关系")),
-    _ApprovedQuestionRelation("L101-state", frozenset({"L101.erlitou-state"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"说明|证明|体现|关系|早期国家|功能分区|组织|劳动|专业分工|王权")),
-    _ApprovedQuestionRelation("L101-governance", frozenset({"L101.governance"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"治水|疏导|堵水|壅堵|协作|劳动|动员|责任|权威|代价|影响|比较"), True),
-    _ApprovedQuestionRelation("L101-chronology", frozenset({"L101.chronology"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"年代|同时代|铭文|名字|早于|晚于|距今")),
-    _ApprovedQuestionRelation("L103-reform", frozenset({"L103.reform-overview"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"内容|次序|阶段|改了|改革|两阶段|一次完成")),
-    _ApprovedQuestionRelation("L103-credit", frozenset({"L103.law-credit"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"制度信用|信法律|相信法令|法令公开|徙木|搬.{0,2}木头|明法")),
-    _ApprovedQuestionRelation("L103-farming", frozenset({"L103.farming-merit"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"机会|代价|赋役|负担|影响|富国强兵|农业|战争|士卒|农耕家庭")),
-    _ApprovedQuestionRelation("L103-local", frozenset({"L103.local-administration"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"地方|县政|治理|执行|官吏|增强|国家能力")),
-    _ApprovedQuestionRelation("L103-collective", frozenset({"L103.collective-cost"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"代价|压力|责任|连坐|告发|严刑|影响")),
-    _ApprovedQuestionRelation("L103-land", frozenset({"L103.land-boundary"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"土地|田制|阡陌|产权|概念|边界")),
-    _ApprovedQuestionRelation("L103-measure", frozenset({"L103.fangsheng"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"度量衡|量器|容量|铭文|尺度|制度延续|说明|证明|关系")),
-    _ApprovedQuestionRelation("L103-text", frozenset({"L103.text-layers"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"年代|性质|亲笔|法令|秦律|文本|材料|说明|证明|边界")),
-    _ApprovedQuestionRelation("L103-capacity", frozenset({"L103.state-capacity"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"变强|强盛|统一六国|国家能力|多因|归功|制度延续|消失|处死")),
-    _ApprovedQuestionRelation("L103-modern-law", frozenset({"L103.modern-law-boundary"}), frozenset({"detail", "evidence_boundary", "causality", "comparison"}), re.compile(r"现代法治|现代法律|人人平等|权利|宪政|边界|等于")),
+    _ApprovedQuestionRelation(
+        "L101-memory",
+        frozenset({"L101.transmitted-memory"}),
+        frozenset({"detail", "evidence_boundary", "causality"}),
+        re.compile(r"记忆|保存|传世|成书|现场|证明|能说明|真假|三过家门"),
+    ),
+    _ApprovedQuestionRelation(
+        "L101-map",
+        frozenset({"L101.yugong-map"}),
+        frozenset({"detail", "evidence_boundary", "comparison", "causality"}),
+        re.compile(r"施工图|工程图|记忆地图|空间|九州|贡赋|山川|能说明|证明"),
+    ),
+    _ApprovedQuestionRelation(
+        "L101-flood",
+        frozenset({"L101.flood-science"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"证明|说明|推论|边界|洪水|灾害|自然事件|关系"),
+    ),
+    _ApprovedQuestionRelation(
+        "L101-state",
+        frozenset({"L101.erlitou-state"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"说明|证明|体现|关系|早期国家|功能分区|组织|劳动|专业分工|王权"),
+    ),
+    _ApprovedQuestionRelation(
+        "L101-governance",
+        frozenset({"L101.governance"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"治水|疏导|堵水|壅堵|协作|劳动|动员|责任|权威|代价|影响|比较"),
+        True,
+    ),
+    _ApprovedQuestionRelation(
+        "L101-chronology",
+        frozenset({"L101.chronology"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"年代|同时代|铭文|名字|早于|晚于|距今"),
+    ),
+    _ApprovedQuestionRelation(
+        "L103-reform",
+        frozenset({"L103.reform-overview"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"内容|次序|阶段|改了|改革|两阶段|一次完成"),
+    ),
+    _ApprovedQuestionRelation(
+        "L103-credit",
+        frozenset({"L103.law-credit"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"制度信用|信法律|相信法令|法令公开|徙木|搬.{0,2}木头|明法"),
+    ),
+    _ApprovedQuestionRelation(
+        "L103-farming",
+        frozenset({"L103.farming-merit"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(
+            r"军功爵|军功|机会|代价|赋役|负担|影响|富国强兵|农业|战争|士卒|农耕家庭"
+        ),
+    ),
+    _ApprovedQuestionRelation(
+        "L103-local",
+        frozenset({"L103.local-administration"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"地方|县政|治理|执行|官吏|增强|国家能力"),
+    ),
+    _ApprovedQuestionRelation(
+        "L103-collective",
+        frozenset({"L103.collective-cost"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"代价|压力|责任|连坐|告发|严刑|影响"),
+    ),
+    _ApprovedQuestionRelation(
+        "L103-land",
+        frozenset({"L103.land-boundary"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"土地|田制|阡陌|产权|概念|边界"),
+    ),
+    _ApprovedQuestionRelation(
+        "L103-measure",
+        frozenset({"L103.fangsheng"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"度量衡|量器|容量|铭文|尺度|制度延续|说明|证明|关系"),
+    ),
+    _ApprovedQuestionRelation(
+        "L103-text",
+        frozenset({"L103.text-layers"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"年代|性质|亲笔|法令|秦律|文本|材料|说明|证明|边界"),
+    ),
+    _ApprovedQuestionRelation(
+        "L103-capacity",
+        frozenset({"L103.state-capacity"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"变强|强盛|统一六国|国家能力|多因|归功|制度延续|消失|处死"),
+    ),
+    _ApprovedQuestionRelation(
+        "L103-modern-law",
+        frozenset({"L103.modern-law-boundary"}),
+        frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
+        re.compile(r"现代法治|现代法律|人人平等|权利|宪政|边界|等于"),
+    ),
 )
 
 _PEER_STATE_RELATIONS = (
     _ApprovedQuestionRelation(
         "L101-cross-evidence",
-        frozenset({"L101.transmitted-memory", "L101.yugong-map", "L101.flood-science", "L101.erlitou-state", "L101.chronology"}),
+        frozenset(
+            {
+                "L101.transmitted-memory",
+                "L101.yugong-map",
+                "L101.flood-science",
+                "L101.erlitou-state",
+                "L101.chronology",
+            }
+        ),
         frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
-        re.compile(r"分别能说明|各自.{0,6}(?:说明|证明)|证据边界|不能.{0,12}(?:推出|证明|施工图)|夏代留下.{0,8}施工图|就是.{0,8}施工图|写着.{0,8}名字.{0,8}铭文|同时代.{0,8}铭文|考古.{0,8}(?:挖到|发现).{0,8}(?:大禹|禹).{0,4}名字|历史形成.{0,8}关系|材料.{0,8}(?:关系|边界)"),
+        re.compile(
+            r"分别能说明|各自.{0,6}(?:说明|证明)|证据边界|不能.{0,12}(?:推出|证明|施工图)|夏代留下.{0,8}施工图|就是.{0,8}施工图|写着.{0,8}名字.{0,8}铭文|同时代.{0,8}铭文|考古.{0,8}(?:挖到|发现).{0,8}(?:大禹|禹).{0,4}名字|历史形成.{0,8}关系|材料.{0,8}(?:关系|边界)"
+        ),
         True,
     ),
     _ApprovedQuestionRelation(
         "L101-evidence-and-governance",
-        frozenset({"L101.transmitted-memory", "L101.yugong-map", "L101.flood-science", "L101.erlitou-state", "L101.governance", "L101.chronology"}),
+        frozenset(
+            {
+                "L101.transmitted-memory",
+                "L101.yugong-map",
+                "L101.flood-science",
+                "L101.erlitou-state",
+                "L101.governance",
+                "L101.chronology",
+            }
+        ),
         frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
-        re.compile(r"证明.{0,12}治水现场|早期国家.{0,12}组织劳动|洪水记忆.{0,20}早期国家|治水传说.{0,20}早期国家|不能从洪水.{0,12}推出夏朝|夏代留下.{0,8}施工图|就是.{0,8}施工图|形成.{0,8}关系"),
+        re.compile(
+            r"证明.{0,12}治水现场|早期国家.{0,12}组织劳动|洪水记忆.{0,20}早期国家|治水传说.{0,20}早期国家|不能从洪水.{0,12}推出夏朝|夏代留下.{0,8}施工图|就是.{0,8}施工图|形成.{0,8}关系"
+        ),
         True,
     ),
     _ApprovedQuestionRelation(
         "L103-policy-effects",
-        frozenset({"L103.reform-overview", "L103.law-credit", "L103.farming-merit", "L103.local-administration", "L103.collective-cost", "L103.state-capacity"}),
+        frozenset(
+            {
+                "L103.reform-overview",
+                "L103.law-credit",
+                "L103.farming-merit",
+                "L103.local-administration",
+                "L103.collective-cost",
+                "L103.state-capacity",
+            }
+        ),
         frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
-        re.compile(r"增强.{0,10}(?:秦国|国家能力|地方治理)|富国强兵|制度代价|普通人.{0,10}(?:承担|代价)|农耕家庭.{0,10}(?:赋役|代价|负担)|措施.{0,8}(?:影响|作用)|分别怎样增强|改革制度.{0,8}消失|人亡政息|制度延续"),
+        re.compile(
+            r"增强.{0,10}(?:秦国|国家能力|地方治理)|富国强兵|制度代价|普通人.{0,10}(?:承担|代价)|农耕家庭.{0,10}(?:赋役|代价|负担)|措施.{0,8}(?:影响|作用)|分别怎样增强|改革制度.{0,8}消失|人亡政息|制度延续"
+        ),
         True,
     ),
     _ApprovedQuestionRelation(
         "L103-evidence-materials",
         frozenset({"L103.fangsheng", "L103.text-layers"}),
         frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
-        re.compile(r"年代与性质|各自.{0,8}(?:说明|证明)|分别能说明|材料.{0,8}(?:性质|边界)|制度变化"),
+        re.compile(
+            r"年代与性质|各自.{0,8}(?:说明|证明)|分别能说明|材料.{0,8}(?:性质|边界)|制度变化"
+        ),
         True,
     ),
     _ApprovedQuestionRelation(
         "L103-reviewed-change-comparison",
-        frozenset({"L103.fangsheng", "L103.farming-merit", "L103.local-administration"}),
+        frozenset(
+            {"L103.fangsheng", "L103.farming-merit", "L103.local-administration"}
+        ),
         frozenset({"detail", "causality", "comparison"}),
         re.compile(r"分别怎样改变秦国|分别.{0,8}改变秦国"),
         True,
@@ -676,10 +786,10 @@ def fit_local_reply(
 
     corpus = resources.evidence_corpus
     if isinstance(corpus, EvidenceCorpusV2):
-        if (
-            not verify_evidence_checksum(corpus)
-            or corpus.supersedes_checksum
-            != _SUPPORTED_EVIDENCE_CHECKSUMS.get(lesson_key)
+        if not verify_evidence_checksum(
+            corpus
+        ) or corpus.supersedes_checksum != _SUPPORTED_EVIDENCE_CHECKSUMS.get(
+            lesson_key
         ):
             return None
         return _fit_v2_local_reply(
@@ -781,26 +891,21 @@ def fit_local_reply(
             topic_label="当前发布未批准这些课程要素之间的问法关系",
             response_mode="unsupported_slot",
             api_synthesis_allowed=False,
-            matched_terms=_deduplicate(
-                term for _, terms in matches for term in terms
-            ),
+            matched_terms=_deduplicate(term for _, terms in matches for term in terms),
             answer_slot_supported=False,
             reason="question_relation_not_published",
         )
 
     if len(matches) >= 2 and _SYNTHESIS_LANGUAGE.search(normalized):
         state_id, topic_label = _COMPOSITE_STATES[lesson_key]
-        matched_terms = _deduplicate(
-            term for _, terms in matches for term in terms
-        )
+        matched_terms = _deduplicate(term for _, terms in matches for term in terms)
         state_allows_api = approved_relation.api_synthesis_allowed
     else:
         state, matched_terms = matches[0]
         state_id = state.state_id
         topic_label = state.topic_label
         state_allows_api = (
-            state.api_synthesis_allowed
-            and approved_relation.api_synthesis_allowed
+            state.api_synthesis_allowed and approved_relation.api_synthesis_allowed
         )
 
     evidence_available = batch.supported and bool(batch.passages)
@@ -873,8 +978,7 @@ def _fit_v2_local_reply(
         status="unsupported",
     )
     if unsupported and not (
-        reviewed_relation is not None
-        and _FALSE_PREMISE_CORRECTION.search(normalized)
+        reviewed_relation is not None and _FALSE_PREMISE_CORRECTION.search(normalized)
     ):
         slot, matched_terms = unsupported[0]
         return LocalReplyFit(
@@ -900,14 +1004,14 @@ def _fit_v2_local_reply(
         passage_ids = _deduplicate(
             (
                 *(
-                passage.passage_id
-                for passage in corpus.passages
-                if person is not None and person.person_id in passage.person_ids
+                    passage.passage_id
+                    for passage in corpus.passages
+                    if person is not None and person.person_id in passage.person_ids
                 ),
                 *(
-                passage_id
-                for slot in identity_slots
-                for passage_id in slot.passage_ids
+                    passage_id
+                    for slot in identity_slots
+                    for passage_id in slot.passage_ids
                 ),
             ),
         )
@@ -956,9 +1060,8 @@ def _fit_v2_local_reply(
         query_plan.intent,
         status="supported",
     )
-    requires_composite = (
-        len(legacy_matches) >= 2
-        and bool(_SYNTHESIS_LANGUAGE.search(normalized))
+    requires_composite = len(legacy_matches) >= 2 and bool(
+        _SYNTHESIS_LANGUAGE.search(normalized)
     )
     if supported and not requires_composite:
         slot, matched_terms = supported[0]
@@ -1006,9 +1109,7 @@ def _fit_v2_local_reply(
             topic_label="当前发布未批准这些课程要素之间的问法关系",
             response_mode="unsupported_slot",
             api_synthesis_allowed=False,
-            matched_terms=_deduplicate(
-                term for _, terms in matches for term in terms
-            ),
+            matched_terms=_deduplicate(term for _, terms in matches for term in terms),
             answer_slot_supported=False,
             reason="question_relation_not_published",
         )
@@ -1032,9 +1133,7 @@ def _fit_v2_local_reply(
         resources,
         batch,
         selected_slots,
-        matched_terms=_deduplicate(
-            term for _, terms in matches for term in terms
-        ),
+        matched_terms=_deduplicate(term for _, terms in matches for term in terms),
         state_id=state_id,
         topic_label=topic_label,
         response_mode=(
@@ -1154,9 +1253,7 @@ def _v2_slot_fit(
     boundary_ids = _deduplicate(
         boundary_id for slot in selected for boundary_id in slot.boundary_ids
     )
-    retrieved_ids = {
-        item.passage.passage_id for item in batch.passages
-    }
+    retrieved_ids = {item.passage.passage_id for item in batch.passages}
     eligible_count = len(retrieved_ids.intersection(passage_ids))
     evidence_available = batch.supported and eligible_count > 0
     api_allowed = (
@@ -1247,10 +1344,7 @@ def _matching_states(
         current = grouped.setdefault(state.state_id, (state, []))[1]
         if term not in current:
             current.append(term)
-    matches = [
-        (state, tuple(terms))
-        for state, terms in grouped.values()
-    ]
+    matches = [(state, tuple(terms)) for state, terms in grouped.values()]
     matches.sort(
         key=lambda item: (
             sum(len(_normalize(term)) for term in item[1]),
@@ -1270,14 +1364,11 @@ def _merge_alias_matches(
 
     states = {state.state_id: state for state in _STATE_RULES[lesson_key]}
     combined: dict[str, tuple[_StateRule, list[str]]] = {
-        state.state_id: (state, list(terms))
-        for state, terms in direct_matches
+        state.state_id: (state, list(terms)) for state, terms in direct_matches
     }
     for state_id, aliases in _STATE_ALIASES.get(lesson_key, ()):
         matched_aliases = [
-            alias
-            for alias in aliases
-            if _normalize(alias) in normalized_question
+            alias for alias in aliases if _normalize(alias) in normalized_question
         ]
         if not matched_aliases:
             continue
@@ -1285,10 +1376,7 @@ def _merge_alias_matches(
         current = combined.setdefault(state_id, (state, []))[1]
         current.extend(matched_aliases)
 
-    result = [
-        (state, _deduplicate(terms))
-        for state, terms in combined.values()
-    ]
+    result = [(state, _deduplicate(terms)) for state, terms in combined.values()]
     result.sort(
         key=lambda item: (
             sum(len(_normalize(term)) for term in item[1]),
@@ -1328,11 +1416,7 @@ def _unsupported_question_facets(
         resources.course_package.title,
         *(item.word for item in resources.course_package.keywords),
         *(item.name for item in resources.course_package.people),
-        *(
-            term
-            for state in _STATE_RULES[lesson_key]
-            for term in state.terms
-        ),
+        *(term for state in _STATE_RULES[lesson_key] for term in state.terms),
         *(
             alias
             for _, aliases in _STATE_ALIASES.get(lesson_key, ())
@@ -1387,9 +1471,7 @@ def _approved_question_relation(
     if not state_ids:
         return None
     candidates = (
-        _SINGLE_STATE_RELATIONS
-        if len(state_ids) == 1
-        else _PEER_STATE_RELATIONS
+        _SINGLE_STATE_RELATIONS if len(state_ids) == 1 else _PEER_STATE_RELATIONS
     )
     for relation in candidates:
         states_match = (
@@ -1411,8 +1493,7 @@ def _semantic_segments(run: str) -> tuple[str, ...]:
     maximum = min(len(run), 8)
     for size in range(2, maximum + 1):
         segments.extend(
-            run[start : start + size]
-            for start in range(0, len(run) - size + 1)
+            run[start : start + size] for start in range(0, len(run) - size + 1)
         )
     return tuple(segments)
 

@@ -11,10 +11,6 @@ for _path in (_API_ROOT, _REPO_ROOT):
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from starlette.middleware.trustedhost import TrustedHostMiddleware
-
-from settings import secret_value, settings
-from static_web import mount_classroom_web
 from routers import (
     admin_content,
     auth,
@@ -26,6 +22,10 @@ from routers import (
     practice,
     profile,
 )
+from settings import secret_value, settings
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from static_web import mount_classroom_web
+
 from services import content, persistence, rag, saga
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
@@ -42,6 +42,10 @@ from services.operations import (
     validate_runtime_configuration,
 )
 from services.persistence.student_assets import assert_no_unmapped_student_assets
+from services.persona_conversation import (
+    configure_persona_conversations,
+    shutdown_persona_conversations,
+)
 
 
 @asynccontextmanager
@@ -95,6 +99,7 @@ async def lifespan(app: FastAPI):
             engine=engine,
         )
         configure_learning_assets(engine)
+        configure_persona_conversations(engine)
         rag.configure_rag(
             index_path=settings.rag_index_path,
             model_root=settings.rag_model_root,
@@ -109,6 +114,7 @@ async def lifespan(app: FastAPI):
         app.state.database_engine = None
         saga.clear_states()
         rag.shutdown_rag()
+        shutdown_persona_conversations()
         shutdown_learning_assets()
         shutdown_game_runtime()
         shutdown_identity()
@@ -159,7 +165,9 @@ API_PREFIX = "/api/v1"
 
 app.include_router(common.router, prefix=API_PREFIX, tags=["common"])
 app.include_router(auth.router, prefix=f"{API_PREFIX}/auth", tags=["auth"])
-app.include_router(admin_content.router, prefix=f"{API_PREFIX}/admin/content", tags=["admin-content"])
+app.include_router(
+    admin_content.router, prefix=f"{API_PREFIX}/admin/content", tags=["admin-content"]
+)
 app.include_router(home.router, prefix=f"{API_PREFIX}/home", tags=["home"])
 app.include_router(courses.router, prefix=f"{API_PREFIX}/courses", tags=["courses"])
 app.include_router(learning.router, prefix=f"{API_PREFIX}/learning", tags=["learning"])

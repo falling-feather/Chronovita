@@ -3055,6 +3055,7 @@ def _lesson_from_content(snapshot: PublishedCourseSnapshot) -> Lesson:
         "course-release/v2",
         "course-release/v3",
         "course-release/v4",
+        "course-release/v5",
     } else []
     return _project_content_model(
         Lesson,

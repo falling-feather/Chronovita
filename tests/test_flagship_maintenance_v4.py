@@ -19,8 +19,9 @@ from services.contracts.release_v2 import (
     CourseReleaseItemV4,
     CourseReleaseManifestV3,
     CourseReleaseManifestV4,
+    CourseReleaseManifestV5,
 )
-from tests.release_fixture import activate_v3_release_5
+from tests.release_fixture import activate_v3_release_5, activate_v4_release_6
 
 
 REPOSITORY_CONTENT = Path(__file__).resolve().parents[1] / "content"
@@ -68,6 +69,11 @@ class FlagshipMaintenanceV4Tests(unittest.TestCase):
 
     def _activate_v4_with_v2_evidence(self) -> CourseReleaseManifestV4:
         current = workflow.get_current_release(COURSE_ID)
+        if isinstance(current, CourseReleaseManifestV5):
+            # Repository copies now start at V5.  Repoint to the immutable V4
+            # fixture instead of staging another corpus with the same version.
+            activate_v4_release_6(self.root)
+            current = workflow.get_current_release(COURSE_ID)
         if isinstance(current, CourseReleaseManifestV4) and {
             item.evidence_corpus.schema_version for item in current.items
         } == {"evidence-corpus/v2"}:

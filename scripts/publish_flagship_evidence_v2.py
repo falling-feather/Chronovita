@@ -26,7 +26,10 @@ from services.content.flagships.shangyang_l103_evidence_v2 import (
     build_shangyang_evidence_v2,
 )
 from services.contracts.evidence_v2 import EvidenceCorpusV2
-from services.contracts.release_v2 import CourseReleaseManifestV4
+from services.contracts.release_v2 import (
+    CourseReleaseManifestV4,
+    CourseReleaseManifestV5,
+)
 
 
 COURSE_ID = "C-prequin-state"
@@ -74,7 +77,10 @@ def publish_flagship_evidence_v2(
     active = {
         item.lesson_id: item.evidence_corpus.checksum for item in current.items
     }
-    if isinstance(current, CourseReleaseManifestV4) and active == expected:
+    if isinstance(
+        current,
+        (CourseReleaseManifestV4, CourseReleaseManifestV5),
+    ) and active == expected:
         return {
             "status": "already-published",
             "course_id": COURSE_ID,
@@ -83,6 +89,11 @@ def publish_flagship_evidence_v2(
             "release_checksum": current.checksum,
             "evidence": expected,
         }
+    if isinstance(current, CourseReleaseManifestV5):
+        raise RuntimeError(
+            "The active V5 release binds persona packs to exact evidence checksums; "
+            "publish replacement evidence and persona packs together."
+        )
 
     for corpus in corpora:
         runtime_artifacts.stage_evidence_corpus(corpus)

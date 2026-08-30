@@ -10,6 +10,7 @@ from services import content
 from services.content import workflow
 from services.content.flagships.dayu_l101 import build_dayu_presentation
 from services.content.flagships.shangyang_l103 import build_shangyang_presentation
+from services.contracts.release_v2 import CourseReleaseManifestV5
 from scripts.publish_flagship_media import publish_flagship_media
 
 
@@ -28,8 +29,9 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
     def test_current_release_pins_both_v002_presentations_and_assets(self) -> None:
         release = workflow.get_current_release("C-prequin-state")
         self.assertIsNotNone(release)
-        self.assertEqual(release.schema_version, "course-release/v4")
-        self.assertEqual(release.release_no, 6)
+        self.assertIsInstance(release, CourseReleaseManifestV5)
+        self.assertEqual(release.schema_version, "course-release/v5")
+        self.assertEqual(release.release_no, 7)
         self.assertEqual(
             {item.evidence_corpus.schema_version for item in release.items},
             {"evidence-corpus/v2"},
@@ -43,6 +45,7 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
             resources = workflow.get_published_lesson_resources(
                 "C-prequin-state", lesson_id
             )
+            self.assertIsNotNone(resources.persona_pack)
             presentation = resources.lesson_presentation
             self.assertEqual(presentation.presentation_version, 2)
             self.assertEqual(presentation.video_duration_seconds, 45)
@@ -76,9 +79,45 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
 
             result = publish_flagship_media(temp_content)
 
-            self.assertEqual(result["final_release_no"], 6)
+            self.assertEqual(result["final_release_no"], 7)
+            self.assertEqual(result["release_schema_version"], "course-release/v5")
             self.assertEqual(before_hash, hashlib.sha256(pointer.read_bytes()).hexdigest())
             self.assertEqual(before_count, len(list(manifests.glob("*.json"))))
+        finally:
+            content.configure(REPOSITORY_CONTENT)
+            shutil.rmtree(temp_parent.parent, ignore_errors=True)
+
+    def test_media_upgrade_preserves_v5_persona_bindings(self) -> None:
+        temp_parent = PROJECT_ROOT / ".tmp-flagship-media" / uuid.uuid4().hex
+        temp_content = temp_parent / "content"
+        shutil.copytree(REPOSITORY_CONTENT, temp_content)
+        try:
+            content.configure(temp_content)
+            before = workflow.get_current_release("C-prequin-state")
+            self.assertIsInstance(before, CourseReleaseManifestV5)
+            persona_checksums = {
+                item.lesson_id: item.persona_pack.checksum for item in before.items
+            }
+            for lesson_id in ("L101", "L103"):
+                shutil.copytree(
+                    temp_content / f"media/lessons/{lesson_id}/v002",
+                    temp_content / f"media/lessons/{lesson_id}/v003",
+                )
+
+            result = publish_flagship_media(temp_content, presentation_version=3)
+
+            current = workflow.get_current_release("C-prequin-state")
+            self.assertIsInstance(current, CourseReleaseManifestV5)
+            self.assertEqual(result["release_schema_version"], "course-release/v5")
+            self.assertEqual(result["final_release_no"], 9)
+            self.assertEqual(
+                {item.lesson_id: item.persona_pack.checksum for item in current.items},
+                persona_checksums,
+            )
+            self.assertEqual(
+                {item.lesson_presentation.version for item in current.items},
+                {3},
+            )
         finally:
             content.configure(REPOSITORY_CONTENT)
             shutil.rmtree(temp_parent.parent, ignore_errors=True)
