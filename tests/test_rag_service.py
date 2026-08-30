@@ -8,6 +8,7 @@ from services.rag.retrieval import HybridEvidenceRetriever
 from services.rag.service import (
     ROLE_DISCLAIMER,
     RagAnswerService,
+    RagExternalAnswerUnavailable,
     RagPersonNotFound,
     _GroundedAnswerDraft,
 )
@@ -130,6 +131,26 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
             {citation.passage_id for citation in answer.citations},
         )
 
+    async def test_yugong_does_not_manufacture_a_second_yu_person_state(self):
+        for question in (
+            "《禹贡》中的九州是什么意思？",
+            "《禹贡》如何呈现空间秩序？",
+        ):
+            with self.subTest(question=question):
+                answer = await self.service.ask(
+                    RagAskRequestV1(
+                        course_id="C-prequin-state",
+                        lesson_id="L101",
+                        persona_mode="expert",
+                        question=question,
+                    )
+                )
+                self.assertNotEqual(
+                    answer.answer_source,
+                    "insufficient_evidence",
+                )
+                self.assertTrue(answer.citations)
+
     async def test_extractive_answer_does_not_dump_weakly_related_top_results(self):
         answer = await self.service.ask(
             RagAskRequestV1(
@@ -184,30 +205,118 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
         self.assertEqual(answer.answer_source, "insufficient_evidence")
-        self.assertIn("依据不足", answer.body)
+        self.assertIn("不能照做", answer.body)
         self.assertEqual(answer.citations, ())
 
     async def test_model_failure_falls_back_to_extracts(self):
+        calls = 0
+
         async def failed_generator(_messages):
-            raise TimeoutError("provider timeout")
+            nonlocal calls
+            calls += 1
+            raise RagExternalAnswerUnavailable("provider unavailable")
 
         answer = await self.service.ask(
             RagAskRequestV1(
                 course_id="C-prequin-state",
                 lesson_id="L101",
                 persona_mode="expert",
-                question="二里头遗址与夏史是什么关系？",
+                question="比较积石峡和二里头的证据边界。",
             ),
             generator=failed_generator,
         )
         self.assertEqual(answer.answer_source, "extractive")
         self.assertTrue(answer.citations)
+        self.assertEqual(calls, 1)
+
+    async def test_local_template_does_not_call_external_generator(self):
+        calls = 0
+
+        async def forbidden_generator(_messages):
+            nonlocal calls
+            calls += 1
+            raise AssertionError("simple grounded questions must stay local")
+
+        answer = await self.service.ask(
+            RagAskRequestV1(
+                course_id="C-prequin-state",
+                lesson_id="L103",
+                persona_mode="expert",
+                question="商鞅方升能说明什么？",
+            ),
+            external_generator=forbidden_generator,
+        )
+        self.assertEqual(answer.answer_source, "extractive")
+        self.assertEqual(calls, 0)
+        self.assertIn("本课证据", answer.body)
+
+    async def test_clarify_and_refuse_do_not_call_external_generator(self):
+        calls = 0
+
+        async def forbidden_generator(_messages):
+            nonlocal calls
+            calls += 1
+            raise AssertionError("terminal routes must not call an API")
+
+        clarify = await self.service.ask(
+            RagAskRequestV1(
+                course_id="C-prequin-state",
+                lesson_id="L101",
+                persona_mode="expert",
+                question="这是什么意思？",
+            ),
+            external_generator=forbidden_generator,
+        )
+        refuse = await self.service.ask(
+            RagAskRequestV1(
+                course_id="C-prequin-state",
+                lesson_id="L103",
+                persona_mode="expert",
+                question="今天的数学作业答案是什么？",
+            ),
+            external_generator=forbidden_generator,
+        )
+        self.assertEqual(clarify.answer_source, "insufficient_evidence")
+        self.assertIn("不够清楚", clarify.body)
+        self.assertEqual(refuse.answer_source, "insufficient_evidence")
+        self.assertIn("超出了", refuse.body)
+        self.assertEqual(calls, 0)
+
+    async def test_unpublished_creator_slot_is_not_guessed_or_sent_online(self):
+        calls = 0
+
+        async def forbidden_generator(_messages):
+            nonlocal calls
+            calls += 1
+            raise AssertionError("an unsupported answer slot reached the API")
+
+        for lesson_id, question in (
+            ("L101", "二里头宫殿是谁设计的？"),
+            ("L103", "商鞅方升是谁设计铸造的？"),
+        ):
+            with self.subTest(lesson_id=lesson_id):
+                answer = await self.service.ask(
+                    RagAskRequestV1(
+                        course_id="C-prequin-state",
+                        lesson_id=lesson_id,
+                        persona_mode="expert",
+                        question=question,
+                    ),
+                    external_generator=forbidden_generator,
+                )
+                self.assertEqual(
+                    answer.answer_source,
+                    "insufficient_evidence",
+                )
+                self.assertEqual(answer.citations, ())
+                self.assertIn("不能据相近材料猜测", answer.body)
+        self.assertEqual(calls, 0)
 
     async def test_model_citation_outside_retrieval_is_rejected(self):
         async def escaping_generator(_messages):
             return _GroundedAnswerDraft(
-                body="模型试图引用未召回片段。",
                 passage_ids=("shangyang-p030",),
+                synthesis_mode="boundary",
                 uncertainty="low",
             )
 
@@ -216,7 +325,7 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
                 course_id="C-prequin-state",
                 lesson_id="L101",
                 persona_mode="expert",
-                question="积石峡堰塞湖溃决研究提出什么假说？",
+                question="比较积石峡和二里头的证据边界。",
             ),
             generator=escaping_generator,
         )
@@ -232,8 +341,8 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
         async def grounded_generator(messages):
             captured_messages.extend(messages)
             return _GroundedAnswerDraft(
-                body="积石峡材料支持特定洪水假说，但不能单独证明人物与王朝。",
-                passage_ids=("dayu-p020", "dayu-p023"),
+                passage_ids=("dayu-p020", "dayu-p026"),
+                synthesis_mode="boundary",
                 uncertainty="medium",
             )
 
@@ -242,20 +351,22 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
                 course_id="C-prequin-state",
                 lesson_id="L101",
                 persona_mode="expert",
-                question="积石峡洪水能直接证明大禹和夏朝吗？",
+                question="比较积石峡和二里头的证据边界。",
             ),
             generator=grounded_generator,
         )
         self.assertEqual(answer.answer_source, "model")
         self.assertEqual(
             {item.passage_id for item in answer.citations},
-            {"dayu-p020", "dayu-p023"},
+            {"dayu-p020", "dayu-p026"},
         )
+        self.assertEqual(answer.uncertainty, "high")
         prompt = "\n".join(item["content"] for item in captured_messages)
         self.assertIn("QUESTION_UNTRUSTED", prompt)
         self.assertIn("QUESTION_INTENT=evidence_boundary", prompt)
+        self.assertIn("SYNTHESIS_MODE_REQUIRED=boundary", prompt)
         self.assertIn("EVIDENCE_JSON", prompt)
-        self.assertIn("不得使用模型常识", prompt)
+        self.assertIn("不负责撰写答案正文", prompt)
 
 
 if __name__ == "__main__":

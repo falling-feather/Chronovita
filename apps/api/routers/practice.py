@@ -340,27 +340,42 @@ async def ask_rag(
 ):
     """Answer only from the exact evidence corpus pinned by the active V3 release."""
 
-    generator = None
-    release_llm_lease: Callable[[], None] | None = None
+    external_generator = None
     if (
         settings.llm_provider.strip().casefold() == "deepseek"
         and secret_value(settings.deepseek_api_key).strip()
     ):
-        try:
-            limiter_key = _acquire_llm_lease(context)
-        except HTTPException:
-            # A busy or rate-limited online model must not break the local classroom path.
-            limiter_key = None
-        if limiter_key is not None:
-            release_llm_lease = _once(
-                lambda: _PRACTICE_LLM_CONCURRENCY_LIMITER.release(limiter_key),
-            )
-            generator = rag.structured_model_generator(
-                llm.StructuredLLMAdapter(),
-                model=settings.deepseek_model_pro,
-            )
+        model_generator = rag.structured_model_generator(
+            llm.StructuredLLMAdapter(),
+            model=settings.deepseek_model_pro,
+        )
+
+        async def generate_with_lazy_lease(messages):
+            # The deterministic router invokes this closure only for a grounded,
+            # complex question. Local templates, clarification and refusal never
+            # consume online-model rate or concurrency capacity.
+            try:
+                limiter_key = _acquire_llm_lease(context)
+            except HTTPException as exc:
+                raise rag.RagExternalAnswerUnavailable(
+                    "online model capacity is unavailable"
+                ) from exc
+            try:
+                try:
+                    return await model_generator(messages)
+                except llm.StructuredLLMError as exc:
+                    raise rag.RagExternalAnswerUnavailable(
+                        "online model request failed"
+                    ) from exc
+            finally:
+                _PRACTICE_LLM_CONCURRENCY_LIMITER.release(limiter_key)
+
+        external_generator = generate_with_lazy_lease
     try:
-        return await rag.get_rag_service().ask(req, generator=generator)
+        return await rag.get_rag_service().ask(
+            req,
+            external_generator=external_generator,
+        )
     except content_workflow.ContentNotFound as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -389,9 +404,6 @@ async def ask_rag(
                 "message": "课程证据服务暂不可用，请联系教师检查发布资源。",
             },
         ) from exc
-    finally:
-        if release_llm_lease is not None:
-            release_llm_lease()
 
 
 class AskHistoryItem(BaseModel):

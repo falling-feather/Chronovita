@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -23,7 +24,9 @@ from settings import settings
 from services import content, rag
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow
+from services.operations import ConcurrentCallLimiter, TokenBucketLimiter
 from services.persistence.schema import ensure_current_schema
+from services.rag.service import _GroundedAnswerDraft
 
 
 class RagApiTests(unittest.TestCase):
@@ -283,6 +286,195 @@ class RagApiTests(unittest.TestCase):
         self.assertEqual(
             unavailable.json()["detail"]["code"],
             "rag_content_unavailable",
+        )
+
+    def test_local_clarify_and_refuse_do_not_acquire_online_lease(self) -> None:
+        settings.llm_provider = "deepseek"
+        settings.deepseek_api_key = "configured-test-key"
+
+        async def forbidden_generator(_messages):
+            raise AssertionError("a terminal or local route called the online model")
+
+        with (
+            patch.object(
+                practice_router.rag,
+                "structured_model_generator",
+                return_value=forbidden_generator,
+            ),
+            patch.object(
+                practice_router,
+                "_acquire_llm_lease",
+                side_effect=AssertionError("online lease was acquired too early"),
+            ) as acquire,
+        ):
+            local = self.client.post(
+                "/api/v1/practice/ask/rag",
+                headers=self.student_headers,
+                json=self._request(
+                    lesson_id="L103",
+                    question="商鞅方升能说明什么？",
+                ),
+            )
+            clarify = self.client.post(
+                "/api/v1/practice/ask/rag",
+                headers=self.student_headers,
+                json=self._request(
+                    lesson_id="L101",
+                    question="这是什么意思？",
+                ),
+            )
+            refuse = self.client.post(
+                "/api/v1/practice/ask/rag",
+                headers=self.student_headers,
+                json=self._request(
+                    lesson_id="L103",
+                    question="今天的数学作业答案是什么？",
+                ),
+            )
+
+        self.assertEqual(local.status_code, 200, local.text)
+        self.assertEqual(local.json()["answer_source"], "extractive")
+        self.assertEqual(clarify.status_code, 200, clarify.text)
+        self.assertEqual(clarify.json()["answer_source"], "insufficient_evidence")
+        self.assertEqual(refuse.status_code, 200, refuse.text)
+        self.assertEqual(refuse.json()["answer_source"], "insufficient_evidence")
+        acquire.assert_not_called()
+
+    def test_complex_grounded_route_acquires_and_releases_online_lease(self) -> None:
+        settings.llm_provider = "deepseek"
+        settings.deepseek_api_key = "configured-test-key"
+        previous_rate = practice_router._PRACTICE_LLM_RATE_LIMITER
+        previous_concurrency = practice_router._PRACTICE_LLM_CONCURRENCY_LIMITER
+        self.addCleanup(
+            setattr,
+            practice_router,
+            "_PRACTICE_LLM_RATE_LIMITER",
+            previous_rate,
+        )
+        self.addCleanup(
+            setattr,
+            practice_router,
+            "_PRACTICE_LLM_CONCURRENCY_LIMITER",
+            previous_concurrency,
+        )
+        practice_router._PRACTICE_LLM_RATE_LIMITER = TokenBucketLimiter(
+            max_attempts=10,
+            window_seconds=3600,
+            max_clients=10,
+        )
+        practice_router._PRACTICE_LLM_CONCURRENCY_LIMITER = ConcurrentCallLimiter(
+            max_calls=1,
+            max_clients=10,
+        )
+
+        async def grounded_generator(_messages):
+            return _GroundedAnswerDraft(
+                passage_ids=("dayu-p021", "dayu-p017"),
+                synthesis_mode="boundary",
+                uncertainty="medium",
+            )
+
+        original_acquire = practice_router._acquire_llm_lease
+        with (
+            patch.object(
+                practice_router.rag,
+                "structured_model_generator",
+                return_value=grounded_generator,
+            ),
+            patch.object(
+                practice_router,
+                "_acquire_llm_lease",
+                wraps=original_acquire,
+            ) as acquire,
+        ):
+            response = self.client.post(
+                "/api/v1/practice/ask/rag",
+                headers=self.student_headers,
+                json=self._request(
+                    lesson_id="L101",
+                    question=(
+                        "结合积石峡洪水研究与二里头考古材料，综合分析"
+                        "自然事件、人物传说和夏史判断之间的证据边界。"
+                    ),
+                ),
+            )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["answer_source"], "model")
+        self.assertEqual(acquire.call_count, 1)
+        self.assertEqual(
+            practice_router._PRACTICE_LLM_CONCURRENCY_LIMITER.tracked_clients,
+            0,
+        )
+
+    def test_online_rate_limit_falls_back_to_local_without_leaking_lease(self) -> None:
+        settings.llm_provider = "deepseek"
+        settings.deepseek_api_key = "configured-test-key"
+        previous_rate = practice_router._PRACTICE_LLM_RATE_LIMITER
+        previous_concurrency = practice_router._PRACTICE_LLM_CONCURRENCY_LIMITER
+        self.addCleanup(
+            setattr,
+            practice_router,
+            "_PRACTICE_LLM_RATE_LIMITER",
+            previous_rate,
+        )
+        self.addCleanup(
+            setattr,
+            practice_router,
+            "_PRACTICE_LLM_CONCURRENCY_LIMITER",
+            previous_concurrency,
+        )
+        practice_router._PRACTICE_LLM_RATE_LIMITER = TokenBucketLimiter(
+            max_attempts=1,
+            window_seconds=3600,
+            max_clients=10,
+        )
+        practice_router._PRACTICE_LLM_CONCURRENCY_LIMITER = ConcurrentCallLimiter(
+            max_calls=1,
+            max_clients=10,
+        )
+        calls = 0
+
+        async def grounded_generator(_messages):
+            nonlocal calls
+            calls += 1
+            return _GroundedAnswerDraft(
+                passage_ids=("dayu-p021", "dayu-p017"),
+                synthesis_mode="boundary",
+                uncertainty="medium",
+            )
+
+        payload = self._request(
+            lesson_id="L101",
+            question=(
+                "结合积石峡洪水研究与二里头考古材料，综合分析"
+                "自然事件、人物传说和夏史判断之间的证据边界。"
+            ),
+        )
+        with patch.object(
+            practice_router.rag,
+            "structured_model_generator",
+            return_value=grounded_generator,
+        ):
+            online = self.client.post(
+                "/api/v1/practice/ask/rag",
+                headers=self.student_headers,
+                json=payload,
+            )
+            limited = self.client.post(
+                "/api/v1/practice/ask/rag",
+                headers=self.student_headers,
+                json=payload,
+            )
+
+        self.assertEqual(online.status_code, 200, online.text)
+        self.assertEqual(online.json()["answer_source"], "model")
+        self.assertEqual(limited.status_code, 200, limited.text)
+        self.assertEqual(limited.json()["answer_source"], "extractive")
+        self.assertEqual(calls, 1)
+        self.assertEqual(
+            practice_router._PRACTICE_LLM_CONCURRENCY_LIMITER.tracked_clients,
+            0,
         )
 
     @staticmethod
