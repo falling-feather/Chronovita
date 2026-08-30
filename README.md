@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V0.10.32**；原创学生端视觉系统已覆盖滚动画廊登录、WebGPU 材质日晷开屏、六时代联动长卷、山河课程中心、独立课程头图、课程路线、导读短片、交互史卷、人物助教、历史情景推演、“问史卷”和本地优先学习书案。双旗舰课把关键词、抉择、问答、临时笔记、正文、便签、手绘和导图汇入同一课时成果，并支持不可变提交、版本回看和教师反馈。GitHub Pages 提供无需登录和 API 的只读内容预览；完整交互仍由本地课堂版承担。最终 prerelease 仍须经过用户验收和发行物复核，不宣称公网或多学校生产部署已经完成。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V1.0.0**；本版本以 V0.10.32 的双旗舰课堂、统一账户、确定性推演、发布内 RAG、学习书案和原创视觉系统为正式开发基线，进入“本地状态机拟合 + 受证据约束 API”的内容智能体阶段。GitHub Pages 继续提供无需登录和 API 的只读内容预览；完整交互仍由本地课堂版承担。V1.0.0 是新阶段初始提交，不代表公网、多学校或最终课堂发行已经完成。
 
 [纯前端预览](https://falling-feather.github.io/Chronovita/) · [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](doc/00-项目总纲.md) · [开发者文档](doc/01-开发者文档.md) · [项目规划](doc/02-项目规划.md) · [开发历史](doc/03-开发历史.md)
 
@@ -26,7 +26,7 @@
 
 - 前端：React 18 + Vite 8 + TypeScript 5 + Ant Design 5 + React Router 7 + React Flow 11 + Zustand
 - 后端：Python 3.11-3.13 + FastAPI + Pydantic v2 + SQLAlchemy 2.0 + SQLite（本地）/ PostgreSQL（生产边界）
-- LLM/RAG：DeepSeek 兼容在线模型 + 本地抽取式回退；L101/L103 各 30 个稳定证据片段由 SQLite FTS5 中文字词/二元组与本地 `BAAI/bge-small-zh-v1.5` 检索，经 RRF 融合后由 `/practice/ask/rag` 返回当前发布 checksum、引用卡和不确定性；模型或向量缺失时保持 FTS/抽取可用
+- LLM/RAG：当前稳定实现为 DeepSeek 兼容在线模型 + 本地抽取式回退；V1.0 首选路线是在本机用证据槽位、规则和状态机构成低智能回答器，高置信问题本地组织，证据充分的复杂问题才交给 API，证据不足或主题无关时澄清或拒答。L101/L103 的 SQLite FTS5、`BAAI/bge-small-zh-v1.5` 与 RRF 继续作为检索底座；轻量生成模型仅作为后续可插拔次优方案
 - 包管理：npm + package lock / Node.js LTS / Python venv
 - 视觉运行时：Three.js `WebGPURenderer`（WebGPU → WebGL2 → 静态材质图）、原创响应式 WebP 与统一 checksum 总账
 - 基础设施：Docker Compose（中长期接入 Postgres / Redis / 向量库）
