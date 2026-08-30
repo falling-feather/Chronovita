@@ -25,7 +25,9 @@ from services.contracts.release_examples import (
 from services.contracts.release_v2 import (
     RELEASE_SCHEMA_DOCUMENTS,
     RELEASE_V3_SCHEMA_DOCUMENTS,
+    RELEASE_V4_SCHEMA_DOCUMENTS,
 )
+from services.contracts.evidence_v2 import EVIDENCE_V2_SCHEMA_DOCUMENTS
 from services.contracts.evidence_v1 import (
     EVIDENCE_SCHEMA_DOCUMENTS,
     evidence_schema_document,
@@ -40,6 +42,8 @@ RELEASE_EXAMPLE_DIR = REPO_ROOT / "content" / "examples" / "releases" / "v2"
 RELEASE_V3_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "releases" / "v3"
 RELEASE_V3_EXAMPLE_DIR = REPO_ROOT / "content" / "examples" / "releases" / "v3"
 EVIDENCE_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "evidence" / "v1"
+EVIDENCE_V2_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "evidence" / "v2"
+RELEASE_V4_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "releases" / "v4"
 ARCHIVE_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "archive" / "v1"
 ARCHIVE_EXAMPLE_DIR = REPO_ROOT / "content" / "examples" / "archive" / "v1"
 ARCHIVE_EXAMPLE_PACKAGE_DIR = (
@@ -55,6 +59,8 @@ def export_runtime_contracts() -> None:
     RELEASE_V3_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
     RELEASE_V3_EXAMPLE_DIR.mkdir(parents=True, exist_ok=True)
     EVIDENCE_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
+    EVIDENCE_V2_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
+    RELEASE_V4_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
     ARCHIVE_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
     ARCHIVE_EXAMPLE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -75,6 +81,13 @@ def export_runtime_contracts() -> None:
         filename: evidence_schema_document(model, schema_id)
         for filename, (model, schema_id) in EVIDENCE_SCHEMA_DOCUMENTS.items()
     }
+    evidence_v2_schema_documents = {
+        filename: evidence_schema_document(model, schema_id)
+        for filename, (model, schema_id) in EVIDENCE_V2_SCHEMA_DOCUMENTS.items()
+    }
+    release_v4_schema_documents = {
+        filename: builder() for filename, builder in RELEASE_V4_SCHEMA_DOCUMENTS.items()
+    }
     archive_schema_documents = {
         filename: archive_schema_document(model, schema_id, comment)
         for filename, (model, schema_id, comment) in ARCHIVE_SCHEMA_DOCUMENTS.items()
@@ -88,6 +101,8 @@ def export_runtime_contracts() -> None:
     _remove_stale_json(RELEASE_V3_SCHEMA_DIR, set(release_v3_schema_documents))
     _remove_stale_json(RELEASE_V3_EXAMPLE_DIR, set(release_v3_examples))
     _remove_stale_json(EVIDENCE_SCHEMA_DIR, set(evidence_schema_documents))
+    _remove_stale_json(EVIDENCE_V2_SCHEMA_DIR, set(evidence_v2_schema_documents))
+    _remove_stale_json(RELEASE_V4_SCHEMA_DIR, set(release_v4_schema_documents))
     _remove_stale_json(ARCHIVE_SCHEMA_DIR, set(archive_schema_documents))
     _remove_stale_json(ARCHIVE_EXAMPLE_DIR, set(archive_examples))
 
@@ -111,6 +126,10 @@ def export_runtime_contracts() -> None:
         )
     for filename, document in evidence_schema_documents.items():
         _write_json(EVIDENCE_SCHEMA_DIR / filename, document)
+    for filename, document in evidence_v2_schema_documents.items():
+        _write_json(EVIDENCE_V2_SCHEMA_DIR / filename, document)
+    for filename, document in release_v4_schema_documents.items():
+        _write_json(RELEASE_V4_SCHEMA_DIR / filename, document)
     for filename, document in archive_schema_documents.items():
         _write_json(ARCHIVE_SCHEMA_DIR / filename, document)
     for filename, document in archive_examples.items():

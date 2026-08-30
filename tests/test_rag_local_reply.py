@@ -114,7 +114,9 @@ class RagLocalReplyFitTests(unittest.TestCase):
         self.assertGreaterEqual(len(l101.matched_terms), 3)
         self.assertGreaterEqual(len(l103.matched_terms), 3)
         self.assertTrue(l101.api_synthesis_allowed)
-        self.assertTrue(l103.api_synthesis_allowed)
+        # 商鞅方升槽只批准本地边界回答；把它纳入跨材料比较时也不能
+        # 借其他槽位的权限升级到 API。
+        self.assertFalse(l103.api_synthesis_allowed)
 
     def test_evidence_question_selects_boundary_expression_only(self):
         fit = self._fit(

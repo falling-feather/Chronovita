@@ -20,9 +20,11 @@ from services.contracts.release_v2 import (
     ActiveReleasePointerV1,
     CourseReleaseItemV2,
     CourseReleaseItemV3,
+    CourseReleaseItemV4,
     CourseReleaseManifestAny,
     CourseReleaseManifestV2,
     CourseReleaseManifestV3,
+    CourseReleaseManifestV4,
     RuntimeArtifactDescriptorV1,
     parse_signed_course_release_manifest,
     verify_release_metadata_checksum,
@@ -205,7 +207,7 @@ class ScenarioCatalogRepository:
             for captured in self._capture_active_releases()
             if isinstance(
                 captured.manifest,
-                (CourseReleaseManifestV2, CourseReleaseManifestV3),
+                (CourseReleaseManifestV2, CourseReleaseManifestV3, CourseReleaseManifestV4),
             )
             for record in self._load_release_records(captured.manifest)
         )
@@ -268,7 +270,7 @@ class ScenarioCatalogRepository:
         for manifest in self._reachable_release_history(captured_releases):
             if not isinstance(
                 manifest,
-                (CourseReleaseManifestV2, CourseReleaseManifestV3),
+                (CourseReleaseManifestV2, CourseReleaseManifestV3, CourseReleaseManifestV4),
             ):
                 continue
             for item in manifest.items:
@@ -325,7 +327,7 @@ class ScenarioCatalogRepository:
         for manifest in self._reachable_release_history(captured_releases):
             if not isinstance(
                 manifest,
-                (CourseReleaseManifestV2, CourseReleaseManifestV3),
+                (CourseReleaseManifestV2, CourseReleaseManifestV3, CourseReleaseManifestV4),
             ):
                 continue
             if (
@@ -525,7 +527,7 @@ class ScenarioCatalogRepository:
 
     def _load_release_records(
         self,
-        manifest: CourseReleaseManifestV2 | CourseReleaseManifestV3,
+        manifest: CourseReleaseManifestV2 | CourseReleaseManifestV3 | CourseReleaseManifestV4,
     ) -> tuple[LoadedScenarioV1, ...]:
         records: list[LoadedScenarioV1] = []
         for item in manifest.items:
@@ -536,8 +538,8 @@ class ScenarioCatalogRepository:
 
     def _load_release_item_records(
         self,
-        manifest: CourseReleaseManifestV2 | CourseReleaseManifestV3,
-        item: CourseReleaseItemV2 | CourseReleaseItemV3,
+        manifest: CourseReleaseManifestV2 | CourseReleaseManifestV3 | CourseReleaseManifestV4,
+        item: CourseReleaseItemV2 | CourseReleaseItemV3 | CourseReleaseItemV4,
         scenario_descriptors: tuple[RuntimeArtifactDescriptorV1, ...],
     ) -> tuple[LoadedScenarioV1, ...]:
         configured_root = _resolve_path(
@@ -591,7 +593,7 @@ class ScenarioCatalogRepository:
 
     @staticmethod
     def _release_entry(
-        item: CourseReleaseItemV2 | CourseReleaseItemV3,
+        item: CourseReleaseItemV2 | CourseReleaseItemV3 | CourseReleaseItemV4,
         scenario_descriptor: RuntimeArtifactDescriptorV1,
     ) -> ScenarioCatalogEntryV1:
         course_descriptor = item.course_package

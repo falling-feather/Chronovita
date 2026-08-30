@@ -3054,6 +3054,7 @@ def _lesson_from_content(snapshot: PublishedCourseSnapshot) -> Lesson:
     ] if snapshot.release_schema_version in {
         "course-release/v2",
         "course-release/v3",
+        "course-release/v4",
     } else []
     return _project_content_model(
         Lesson,

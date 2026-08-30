@@ -28,8 +28,12 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
     def test_current_release_pins_both_v002_presentations_and_assets(self) -> None:
         release = workflow.get_current_release("C-prequin-state")
         self.assertIsNotNone(release)
-        self.assertEqual(release.schema_version, "course-release/v3")
-        self.assertEqual(release.release_no, 5)
+        self.assertEqual(release.schema_version, "course-release/v4")
+        self.assertEqual(release.release_no, 6)
+        self.assertEqual(
+            {item.evidence_corpus.schema_version for item in release.items},
+            {"evidence-corpus/v2"},
+        )
 
         expected_builders = {
             "L101": build_dayu_presentation,
@@ -72,7 +76,7 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
 
             result = publish_flagship_media(temp_content)
 
-            self.assertEqual(result["final_release_no"], 5)
+            self.assertEqual(result["final_release_no"], 6)
             self.assertEqual(before_hash, hashlib.sha256(pointer.read_bytes()).hexdigest())
             self.assertEqual(before_count, len(list(manifests.glob("*.json"))))
         finally:

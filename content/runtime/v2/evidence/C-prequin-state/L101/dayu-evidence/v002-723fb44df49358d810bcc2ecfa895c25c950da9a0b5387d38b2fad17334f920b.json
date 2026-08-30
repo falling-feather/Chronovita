@@ -1,0 +1,2163 @@
+{
+  "schema_version": "evidence-corpus/v2",
+  "corpus_id": "dayu-evidence",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L101",
+  "corpus_version": 2,
+  "status": "sealed",
+  "title": "L101 大禹治水正式证据库 V2",
+  "scope_note": "仅服务 C-prequin-state/L101 的精确发布。48个稳定片段把传说、传世文献、自然科学、考古观察和教学解释分层；回答先匹配封闭槽位，再受片段定位、人物范围和边界约束。不得用模型常识补写私人细节、工程参数或王朝自名。",
+  "supersedes_checksum": "ae736fd34b31fc99907e0a33b518dd2fd360530af95d2717e3a54832b2c1ff49",
+  "sources": [
+    {
+      "source_id": "src-allan-jishi",
+      "title": "The Jishi Outburst Flood of 1920 BCE and the Great Flood Legend in Ancient China: Preliminary Reflections",
+      "kind": "research",
+      "author_or_institution": "Sarah Allan",
+      "publisher": "Journal of Chinese Humanities",
+      "published_year": 2017,
+      "url_or_path": "https://doi.org/10.1163/23521341-12340041",
+      "locator": "Vol. 3, Issue 1, pp. 23–34",
+      "citation_note": "对自然事件与传说、夏史之间推论链的反思。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-chnmuseum-early-state",
+      "title": "古代中国：夏商西周时期",
+      "kind": "museum",
+      "author_or_institution": "中国国家博物馆",
+      "publisher": "中国国家博物馆",
+      "published_year": null,
+      "url_or_path": "https://www.chnmuseum.cn/portals/0/web/zt/gudai/detail2.html",
+      "locator": "第一单元‘夏朝的建立’及经济部分",
+      "citation_note": "公共机构关于早期国家与二里头主要遗存的说明。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-loc-yuji-map",
+      "title": "Yu ji tu（禹迹图）",
+      "kind": "museum",
+      "author_or_institution": "美国国会图书馆",
+      "publisher": "Library of Congress",
+      "published_year": 1136,
+      "url_or_path": "https://www.loc.gov/item/2021668264/",
+      "locator": "1136年石刻地图拓本馆藏记录",
+      "citation_note": "用于讨论南宋地理知识与大禹记忆。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-mengzi-tengwen",
+      "title": "《孟子·滕文公上》",
+      "kind": "primary_source",
+      "author_or_institution": "传世文献；中国哲学书电子化计划底本索引",
+      "publisher": "",
+      "published_year": null,
+      "url_or_path": "https://ctext.org/mengzi/teng-wen-gong-i/zh",
+      "locator": "治水、疏河与三过家门相关段落",
+      "citation_note": "战国论说语境中的后世记忆。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-moe-2022",
+      "title": "义务教育历史课程标准（2022年版）",
+      "kind": "curriculum",
+      "author_or_institution": "中华人民共和国教育部",
+      "publisher": "人民教育出版社",
+      "published_year": 2022,
+      "url_or_path": "https://www.moe.gov.cn/srcsite/A26/s8001/202204/t20220420_619921.html",
+      "locator": "历史课程核心素养与学业质量要求",
+      "citation_note": "用于适龄目标、证据意识和历史解释。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-ndrc-erlitou",
+      "title": "中华文明总进程的引领者：二里头文化",
+      "kind": "archaeology",
+      "author_or_institution": "国家发展和改革委员会社会发展司",
+      "publisher": "国家发展和改革委员会",
+      "published_year": 2022,
+      "url_or_path": "https://www.ndrc.gov.cn/xwdt/ztzl/dyhgjwhgy/202209/t20220920_1335799_ext.html",
+      "locator": "二里头遗址与都邑布局部分",
+      "citation_note": "机构性综合说明；更肯定的夏都措辞按解释层呈现。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-nopss-erlitou-layout",
+      "title": "二里头都城布局的新发现及其意义",
+      "kind": "archaeology",
+      "author_or_institution": "赵海涛 / 中国社会科学院考古研究所",
+      "publisher": "全国哲学社会科学工作办公室",
+      "published_year": 2021,
+      "url_or_path": "https://www.nopss.gov.cn/n1/2021/0208/c219544-32025885.html",
+      "locator": "中心区道路、宫殿、作坊与等级结构",
+      "citation_note": "考古工作者对可观察遗存和历史解释的区分。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-npc-civilization",
+      "title": "中华文明起源与早期发展综合研究",
+      "kind": "research",
+      "author_or_institution": "中华文明探源工程相关研究团队",
+      "publisher": "中国人大网",
+      "published_year": 2023,
+      "url_or_path": "https://www.npc.gov.cn/npc/c2/c30834/202309/t20230901_431407.html",
+      "locator": "二里头与伊洛河流域部分",
+      "citation_note": "用于年代、区域、宫城和高等级产品作坊概览。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-pep-seven-history",
+      "title": "义务教育教科书·中国历史七年级上册目录与课程位置",
+      "kind": "textbook",
+      "author_or_institution": "人民教育出版社",
+      "publisher": "人民教育出版社",
+      "published_year": null,
+      "url_or_path": "https://www.pep.com.cn/products/jc/czjks/201802/t20180227_1922743.shtml",
+      "locator": "七年级上册早期国家相关单元",
+      "citation_note": "仅用于主题与学段定位，不复制教材正文。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-science-jishi",
+      "title": "Outburst flood at 1920 BCE supports historicity of China's Great Flood and the Xia dynasty",
+      "kind": "research",
+      "author_or_institution": "Qinglong Wu et al.",
+      "publisher": "Science",
+      "published_year": 2016,
+      "url_or_path": "https://doi.org/10.1126/science.aaf0842",
+      "locator": "Science 353 (6299), pp. 579–582",
+      "citation_note": "积石峡洪水与夏史连接的原始研究，结论存在后续争议。",
+      "reliability": "disputed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-shangshu-yugong",
+      "title": "《尚书·禹贡》",
+      "kind": "primary_source",
+      "author_or_institution": "传世文献；中国哲学书电子化计划底本索引",
+      "publisher": "",
+      "published_year": null,
+      "url_or_path": "https://ctext.org/shang-shu/tribute-of-yu/zh",
+      "locator": "九州、山川、贡赋相关文本",
+      "citation_note": "文本层次和成篇问题需保留学术边界。",
+      "reliability": "disputed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-shiji-xia",
+      "title": "《史记·夏本纪》",
+      "kind": "primary_source",
+      "author_or_institution": "司马迁；中国哲学书电子化计划底本索引",
+      "publisher": "传世文献",
+      "published_year": -90,
+      "url_or_path": "https://ctext.org/shiji/xia-ben-ji/zh",
+      "locator": "禹、治水、启继位相关叙事",
+      "citation_note": "西汉成书，作为后世夏史叙事使用。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    }
+  ],
+  "boundaries": [
+    {
+      "boundary_id": "dayu-b-absence",
+      "label": "未发现不等于不存在",
+      "category": "claim_limit",
+      "statement": "当前没有可公认直读为禹的同时代文字，只能限制人物姓名层面的断言；它既不能证明禹必不存在，也不能把后世叙事自动变成事实。"
+    },
+    {
+      "boundary_id": "dayu-b-causation",
+      "label": "治理与国家形成不是单线因果",
+      "category": "causation",
+      "statement": "公共工程需要协调资源，但不能据此断言一次治水直接创造了王朝；权威形成、聚落整合、生产与礼仪秩序需要多类证据共同解释。"
+    },
+    {
+      "boundary_id": "dayu-b-chronology",
+      "label": "夏代年代采用约数",
+      "category": "chronology",
+      "statement": "约公元前21世纪至约公元前1600年是教学与研究采用的传统年代框架，不是同时代纪年，更不能精确到某年某月。"
+    },
+    {
+      "boundary_id": "dayu-b-erlitou-name",
+      "label": "二里头文化不自动等于夏王朝",
+      "category": "claim_limit",
+      "statement": "二里头是考古学命名；年代、地域和聚落等级支持它与夏后期高度相关，但目前不能靠遗址复杂性直接读出王朝自名、禹或启。"
+    },
+    {
+      "boundary_id": "dayu-b-legend-detail",
+      "label": "道德母题不能还原现场细节",
+      "category": "claim_limit",
+      "statement": "三过家门、个人对白和精确行程属于后世传承的叙事细节，可研究历史记忆与伦理评价，不能当作已被考古核验的现场记录。"
+    },
+    {
+      "boundary_id": "dayu-b-local-flood",
+      "label": "局地洪水不能独证大禹治水",
+      "category": "causation",
+      "statement": "积石峡研究讨论的是特定地点、特定时段的自然事件；从局地溃决到全国洪水、禹的身份和夏王朝开端之间仍有独立证据缺口。"
+    },
+    {
+      "boundary_id": "dayu-b-memory-map",
+      "label": "后世地图不是夏代测绘图",
+      "category": "source_distance",
+      "statement": "1136年的《禹迹图》与《禹贡》的空间叙述能够说明后人如何组织地理知识和大禹记忆，不能提供夏代工程的精确坐标与路线。"
+    },
+    {
+      "boundary_id": "dayu-b-modern-waterwork",
+      "label": "古代叙事不等于现代工程方案",
+      "category": "modern_concept",
+      "statement": "疏、堵等词只能帮助理解治理思路，不能直接推出符合现代水文学的流量、坝高、工期、预算或唯一施工方案。"
+    },
+    {
+      "boundary_id": "dayu-b-persona",
+      "label": "人物仅在已发布知识边界内发言",
+      "category": "persona_knowledge",
+      "statement": "禹、鲧、益及课堂合成人群不能知道后世考古、现代测年或课堂变量，也不得虚构私人生活、原话、数字和亲历见闻。"
+    },
+    {
+      "boundary_id": "dayu-b-teaching-model",
+      "label": "关卡变量不是夏代统计",
+      "category": "teaching_model",
+      "statement": "风险、粮食、劳作、信任、地形认知和协作能力是用于比较选择与代价的课堂模型，不对应一份真实的夏代账册。"
+    },
+    {
+      "boundary_id": "dayu-b-transmitted-distance",
+      "label": "传世文献晚于传统禹时代",
+      "category": "source_distance",
+      "statement": "《孟子》《尚书》相关篇章和《史记·夏本纪》的形成、编定或流传年代均晚于传统禹时代；它们直接证明的是后世记忆和解释。"
+    }
+  ],
+  "answer_slots": [
+    {
+      "slot_id": "dayu-slot-erlitou-state",
+      "label": "二里头材料怎样支持早期国家研究",
+      "status": "supported",
+      "response_mode": "topic",
+      "question_form": "causality",
+      "term_groups": [
+        [
+          "二里头",
+          "二里头文化",
+          "二里头遗址"
+        ],
+        [
+          "国家",
+          "早期国家",
+          "王权",
+          "都邑"
+        ]
+      ],
+      "passage_ids": [
+        "dayu-p011",
+        "dayu-p012",
+        "dayu-p013",
+        "dayu-p014",
+        "dayu-p016",
+        "dayu-p018",
+        "dayu-p019",
+        "dayu-p035",
+        "dayu-p036",
+        "dayu-p037",
+        "dayu-p038",
+        "dayu-p044"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-erlitou-name"
+      ],
+      "api_synthesis_allowed": true
+    },
+    {
+      "slot_id": "dayu-slot-erlitou-xia-boundary",
+      "label": "二里头与夏的对应边界",
+      "status": "supported",
+      "response_mode": "boundary",
+      "question_form": "evidence_boundary",
+      "term_groups": [
+        [
+          "二里头",
+          "二里头文化"
+        ],
+        [
+          "夏",
+          "夏朝",
+          "夏都",
+          "禹"
+        ]
+      ],
+      "passage_ids": [
+        "dayu-p012",
+        "dayu-p015",
+        "dayu-p017",
+        "dayu-p018",
+        "dayu-p023",
+        "dayu-p026",
+        "dayu-p036",
+        "dayu-p044",
+        "dayu-p048"
+      ],
+      "boundary_ids": [
+        "dayu-b-absence",
+        "dayu-b-chronology",
+        "dayu-b-erlitou-name"
+      ],
+      "api_synthesis_allowed": true
+    },
+    {
+      "slot_id": "dayu-slot-governance-power-cost",
+      "label": "公共治理、权威与社会代价",
+      "status": "supported",
+      "response_mode": "topic",
+      "question_form": "causality",
+      "term_groups": [
+        [
+          "公共工程",
+          "治水",
+          "治理"
+        ],
+        [
+          "代价",
+          "信任",
+          "权威",
+          "王权",
+          "组织"
+        ]
+      ],
+      "passage_ids": [
+        "dayu-p002",
+        "dayu-p010",
+        "dayu-p011",
+        "dayu-p019",
+        "dayu-p027",
+        "dayu-p028",
+        "dayu-p043",
+        "dayu-p045",
+        "dayu-p046",
+        "dayu-p048"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-teaching-model"
+      ],
+      "api_synthesis_allowed": true
+    },
+    {
+      "slot_id": "dayu-slot-jishi-flood",
+      "label": "积石峡洪水研究的支持范围",
+      "status": "supported",
+      "response_mode": "boundary",
+      "question_form": "evidence_boundary",
+      "term_groups": [
+        [
+          "堰塞湖",
+          "溃决洪水",
+          "积石峡"
+        ],
+        [
+          "关系",
+          "夏",
+          "大禹",
+          "证明",
+          "边界"
+        ]
+      ],
+      "passage_ids": [
+        "dayu-p020",
+        "dayu-p021",
+        "dayu-p022",
+        "dayu-p023",
+        "dayu-p039",
+        "dayu-p040",
+        "dayu-p041",
+        "dayu-p044",
+        "dayu-p048"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-chronology",
+        "dayu-b-local-flood"
+      ],
+      "api_synthesis_allowed": true
+    },
+    {
+      "slot_id": "dayu-slot-memory-map",
+      "label": "《禹贡》与《禹迹图》的空间证据边界",
+      "status": "supported",
+      "response_mode": "boundary",
+      "question_form": "evidence_boundary",
+      "term_groups": [
+        [
+          "九州",
+          "地图",
+          "禹贡",
+          "禹迹图"
+        ],
+        [
+          "坐标",
+          "空间",
+          "证据",
+          "路线"
+        ]
+      ],
+      "passage_ids": [
+        "dayu-p009",
+        "dayu-p024",
+        "dayu-p025",
+        "dayu-p034",
+        "dayu-p042",
+        "dayu-p044"
+      ],
+      "boundary_ids": [
+        "dayu-b-chronology",
+        "dayu-b-memory-map",
+        "dayu-b-transmitted-distance"
+      ],
+      "api_synthesis_allowed": true
+    },
+    {
+      "slot_id": "dayu-slot-methods",
+      "label": "鲧堵禹疏与组合治理",
+      "status": "supported",
+      "response_mode": "topic",
+      "question_form": "comparison",
+      "term_groups": [
+        [
+          "堵",
+          "筑堤",
+          "鲧"
+        ],
+        [
+          "疏",
+          "疏导",
+          "禹"
+        ]
+      ],
+      "passage_ids": [
+        "dayu-p007",
+        "dayu-p009",
+        "dayu-p027",
+        "dayu-p028",
+        "dayu-p043",
+        "dayu-p045",
+        "dayu-p046"
+      ],
+      "boundary_ids": [
+        "dayu-b-modern-waterwork",
+        "dayu-b-teaching-model",
+        "dayu-b-transmitted-distance"
+      ],
+      "api_synthesis_allowed": true
+    },
+    {
+      "slot_id": "dayu-slot-private-biography",
+      "label": "禹的私人生活与精确个人资料",
+      "status": "unsupported",
+      "response_mode": "boundary",
+      "question_form": "any",
+      "term_groups": [
+        [
+          "大禹",
+          "禹"
+        ],
+        [
+          "出生",
+          "原话",
+          "妻子",
+          "生日",
+          "相貌",
+          "身高"
+        ]
+      ],
+      "passage_ids": [],
+      "boundary_ids": [
+        "dayu-b-legend-detail",
+        "dayu-b-persona"
+      ],
+      "api_synthesis_allowed": false
+    },
+    {
+      "slot_id": "dayu-slot-revise-with-new-evidence",
+      "label": "新证据如何改变现有判断",
+      "status": "supported",
+      "response_mode": "topic",
+      "question_form": "causality",
+      "term_groups": [
+        [
+          "新发现",
+          "新材料",
+          "新证据",
+          "铭文"
+        ],
+        [
+          "修改",
+          "判断",
+          "结论",
+          "解释"
+        ]
+      ],
+      "passage_ids": [
+        "dayu-p001",
+        "dayu-p017",
+        "dayu-p021",
+        "dayu-p023",
+        "dayu-p026",
+        "dayu-p041",
+        "dayu-p043",
+        "dayu-p044",
+        "dayu-p048"
+      ],
+      "boundary_ids": [
+        "dayu-b-absence",
+        "dayu-b-causation",
+        "dayu-b-erlitou-name"
+      ],
+      "api_synthesis_allowed": true
+    },
+    {
+      "slot_id": "dayu-slot-source-layers",
+      "label": "传说、文献、自然科学与考古怎样分层",
+      "status": "supported",
+      "response_mode": "overview",
+      "question_form": "comparison",
+      "term_groups": [
+        [
+          "传世文献",
+          "传说",
+          "史记",
+          "孟子",
+          "禹贡"
+        ],
+        [
+          "材料",
+          "考古",
+          "自然科学",
+          "证据"
+        ]
+      ],
+      "passage_ids": [
+        "dayu-p001",
+        "dayu-p003",
+        "dayu-p004",
+        "dayu-p007",
+        "dayu-p009",
+        "dayu-p012",
+        "dayu-p020",
+        "dayu-p024",
+        "dayu-p043",
+        "dayu-p044",
+        "dayu-p047",
+        "dayu-p048"
+      ],
+      "boundary_ids": [
+        "dayu-b-chronology",
+        "dayu-b-local-flood",
+        "dayu-b-transmitted-distance"
+      ],
+      "api_synthesis_allowed": true
+    },
+    {
+      "slot_id": "dayu-slot-succession",
+      "label": "禹、益、启与继承秩序",
+      "status": "supported",
+      "response_mode": "topic",
+      "question_form": "causality",
+      "term_groups": [
+        [
+          "启",
+          "益",
+          "禹"
+        ],
+        [
+          "世袭",
+          "王位",
+          "禅让",
+          "继承"
+        ]
+      ],
+      "passage_ids": [
+        "dayu-p005",
+        "dayu-p010",
+        "dayu-p029",
+        "dayu-p032",
+        "dayu-p043",
+        "dayu-p046"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-chronology",
+        "dayu-b-transmitted-distance"
+      ],
+      "api_synthesis_allowed": true
+    },
+    {
+      "slot_id": "dayu-slot-three-doors",
+      "label": "三过家门的认识价值与边界",
+      "status": "supported",
+      "response_mode": "boundary",
+      "question_form": "evidence_boundary",
+      "term_groups": [
+        [
+          "三次",
+          "三过家门",
+          "家门"
+        ],
+        [
+          "事实",
+          "证据",
+          "证明",
+          "责任"
+        ]
+      ],
+      "passage_ids": [
+        "dayu-p004",
+        "dayu-p006",
+        "dayu-p007",
+        "dayu-p008",
+        "dayu-p033",
+        "dayu-p043",
+        "dayu-p047"
+      ],
+      "boundary_ids": [
+        "dayu-b-legend-detail",
+        "dayu-b-transmitted-distance"
+      ],
+      "api_synthesis_allowed": false
+    },
+    {
+      "slot_id": "dayu-slot-unknown-engineering",
+      "label": "夏代治水的精确工程参数",
+      "status": "unsupported",
+      "response_mode": "boundary",
+      "question_form": "any",
+      "term_groups": [
+        [
+          "大禹",
+          "工程",
+          "治水"
+        ],
+        [
+          "公里",
+          "坝高",
+          "工期",
+          "施工图",
+          "流量",
+          "经费",
+          "造价"
+        ]
+      ],
+      "passage_ids": [],
+      "boundary_ids": [
+        "dayu-b-modern-waterwork",
+        "dayu-b-transmitted-distance"
+      ],
+      "api_synthesis_allowed": false
+    }
+  ],
+  "passages": [
+    {
+      "passage_id": "dayu-p001",
+      "source_id": "src-moe-2022",
+      "title": "课程目标：从材料形成历史认识",
+      "text": "本课依据义务教育历史课程的核心素养取向，引导学生辨认材料类型、建立时序空间观念，并用证据支持有边界的历史解释。课程中的证据意识还要求学生说明材料的形成时间、观察对象和可支持的结论强度。因而同一个‘禹’主题下，文本、遗址和自然事件不能被压成一条无差别答案；回答必须先说明材料身份，再给出判断。",
+      "summary": "课堂不是判断故事好不好听，而是练习材料—判断—边界的论证链。",
+      "source_locator": "附件《义务教育历史课程标准（2022年版）》‘课程目标—核心素养内涵’条目",
+      "fact_ids": [
+        "fact-c708f42f"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "历史解释",
+        "证据边界"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-revise-with-new-evidence",
+        "dayu-slot-source-layers"
+      ],
+      "boundary_ids": [
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "curriculum_goal",
+      "certainty": "consensus",
+      "chronology_note": "2022年公布的现代课程标准，用于教学目标而非古代事实。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p002",
+      "source_id": "src-moe-2022",
+      "title": "课程目标：理解早期国家",
+      "text": "早期国家主题应把政治权力、社会组织和物质遗存联系起来，避免只背王朝名称与年代。早期国家并非只靠王朝名称来理解。都邑规划、资源集中、礼仪秩序、跨聚落协调和社会分化分别提供不同观察角度；课堂把它们并列，是为了避免把英雄故事直接替代国家形成的复杂过程。",
+      "summary": "用公共治理与二里头材料连接权力秩序和社会代价。",
+      "source_locator": "附件《义务教育历史课程标准（2022年版）》‘课程内容—中国古代史’与‘学业质量’条目",
+      "fact_ids": [
+        "fact-00b6a9f4",
+        "fact-aafc4705"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "公共动员",
+        "早期国家"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-governance-power-cost"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "curriculum_goal",
+      "certainty": "consensus",
+      "chronology_note": "现代课程目标。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p003",
+      "source_id": "src-pep-seven-history",
+      "title": "七年级内容位置",
+      "text": "人民教育出版社七年级上册把夏商周与早期国家置于学生初次系统学习中国古代史的阶段；本课据此控制概念数量和阅读难度。目录只能确认学段、单元和主题位置，不能承担史实证明。V2语料因此不摘录教材章节，而以已登记文献、考古与研究资料重新撰写适龄摘要，所有年代仍保留‘约’的性质。",
+      "summary": "课程身份属于七年级早期国家学习，不复制教材章节。",
+      "source_locator": "人民教育出版社产品页‘中国历史七年级上册’目录中的夏商周单元",
+      "fact_ids": [
+        "fact-d4f1e760"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "七年级",
+        "早期国家"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-source-layers"
+      ],
+      "boundary_ids": [
+        "dayu-b-chronology"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "curriculum_goal",
+      "certainty": "consensus",
+      "chronology_note": "现代教材目录和学段信息。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p004",
+      "source_id": "src-shiji-xia",
+      "title": "《夏本纪》的禹治水叙事",
+      "text": "《史记·夏本纪》系统叙述鲧、禹与洪水治理，是理解秦汉以来夏史框架的重要传世文本；它的成书年代远晚于传统禹时代。《夏本纪》把更早的口传、谱系和政治记忆纳入西汉史学结构。它可用来比较鲧、禹与后继者在后世叙事中的位置，却没有消除近两千年的时间距离；具体对白、工程次序和地名仍需独立互证。",
+      "summary": "可证明西汉史家如何组织禹的故事，不能单独证明现场细节。",
+      "source_locator": "《史记》卷二《夏本纪》开篇至禹受命治水叙事段",
+      "fact_ids": [
+        "fact-98a8d039",
+        "fact-bf990cb8"
+      ],
+      "person_ids": [
+        "person-7c4825d9",
+        "person-b40a4965"
+      ],
+      "keywords": [
+        "传世文献"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-source-layers",
+        "dayu-slot-three-doors"
+      ],
+      "boundary_ids": [
+        "dayu-b-persona",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "《史记》成书于西汉，晚于传统所述事件约两千年。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p005",
+      "source_id": "src-shiji-xia",
+      "title": "禹后启继位的王朝叙事",
+      "text": "《夏本纪》把禹、益与启的继承关系编入夏王朝开端，为后世讨论禅让与世袭转换提供了叙事框架。这段继承叙事同时出现禹对益的举荐、诸侯归启等内容，成为后世解释禅让与世袭转折的基础。它能支持‘后人怎样组织王朝起点’的问题，不能单独还原每次政治会议或证明继承只由一种原因决定。",
+      "summary": "继承框架来自后世整理的王朝谱系。",
+      "source_locator": "《史记》卷二《夏本纪》禹举益、禹崩与启继位叙事段",
+      "fact_ids": [
+        "fact-6fe6c697"
+      ],
+      "person_ids": [
+        "person-31118bee",
+        "person-7c4825d9"
+      ],
+      "keywords": [
+        "世袭",
+        "权力秩序"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-succession"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-persona",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "西汉文本对更早传统的整理。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p006",
+      "source_id": "src-shiji-xia",
+      "title": "公共责任的道德形象",
+      "text": "后世夏史叙事突出禹长期在外、以公共事务为先的形象，形成影响深远的政治伦理记忆。把长期离家与公共责任联系起来，是这类叙事最稳定的伦理功能。课堂可以分析为什么后世不断重述这种领导者形象，但不把‘三次’当成考古计数，也不为人物补写未经来源支持的家中对白与情感细节。",
+      "summary": "道德记忆重要，但具体次数和对白不可考古核验。",
+      "source_locator": "《史记》卷二《夏本纪》禹劳身焦思、居外十三年相关叙事段",
+      "fact_ids": [
+        "fact-d3d71c82"
+      ],
+      "person_ids": [
+        "person-7c4825d9"
+      ],
+      "keywords": [
+        "三过家门",
+        "公共责任"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-three-doors"
+      ],
+      "boundary_ids": [
+        "dayu-b-legend-detail",
+        "dayu-b-persona",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "transmitted_text",
+      "certainty": "legend",
+      "chronology_note": "后世传承的英雄叙事，不是同时代工作日志。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p007",
+      "source_id": "src-mengzi-tengwen",
+      "title": "战国论说中的疏河",
+      "text": "《孟子·滕文公上》以禹疏河、长期在外说明公共责任，把治水放进关于治理者职责的论辩。孟子借禹讨论治理责任，而不是编写水利工程验收报告。‘疏’在文本中构成与水势相应的治理形象；若要判断某一河段究竟应疏、应防还是迁居，还需要地形、季节、材料与人力信息。",
+      "summary": "这段材料首先说明战国思想语境如何使用禹的形象。",
+      "source_locator": "《孟子·滕文公上》第4章禹疏九河、八年于外相关段",
+      "fact_ids": [
+        "fact-34f9b1ba",
+        "fact-f3213419"
+      ],
+      "person_ids": [
+        "person-7c4825d9"
+      ],
+      "keywords": [
+        "公共责任",
+        "疏导"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-methods",
+        "dayu-slot-source-layers",
+        "dayu-slot-three-doors"
+      ],
+      "boundary_ids": [
+        "dayu-b-modern-waterwork",
+        "dayu-b-persona",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "战国时期文本语境，晚于传统所述禹时代。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p008",
+      "source_id": "src-mengzi-tengwen",
+      "title": "三过家门的传承层",
+      "text": "《孟子》相关叙事包含禹在外多年、经过家门而不入的说法，展示这一母题在战国时期已经用于赞扬尽职。这条材料能够确认该母题在战国论说中已经被用来赞扬尽职，也能与西汉叙事比较其传播。它不能证明禹实际经过哪三处门、家人在场说了什么，或把伦理赞颂转换成逐日行程。",
+      "summary": "可研究母题传播，不能据此复原准确行程。",
+      "source_locator": "《孟子·滕文公上》第4章‘三过其门而不入’相关句",
+      "fact_ids": [
+        "fact-bf990cb8",
+        "fact-d3d71c82"
+      ],
+      "person_ids": [
+        "person-7c4825d9"
+      ],
+      "keywords": [
+        "传说",
+        "责任伦理"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-three-doors"
+      ],
+      "boundary_ids": [
+        "dayu-b-legend-detail",
+        "dayu-b-persona",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "transmitted_text",
+      "certainty": "legend",
+      "chronology_note": "战国论说留下的后世记忆。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p009",
+      "source_id": "src-shangshu-yugong",
+      "title": "九州、山川与空间秩序",
+      "text": "《禹贡》以九州、山川、水道和贡赋组织天下空间，反映文本编纂者对地理与政治秩序的系统表达。九州、山脉、水道和贡赋在篇章中组成有秩序的天下图景。地名经历沿革，文本也有层累与成篇讨论，所以课程只用它研究空间观与政治秩序，不按篇章顺序绘制一条已经证实的夏代施工路线。",
+      "summary": "它是空间思想材料，不是可直接套用的夏代施工图。",
+      "source_locator": "《尚书·夏书·禹贡》九州总叙及导山、导水次序",
+      "fact_ids": [
+        "fact-03fb8208",
+        "fact-4ba96f68"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "九州",
+        "记忆地图"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-memory-map",
+        "dayu-slot-methods",
+        "dayu-slot-source-layers"
+      ],
+      "boundary_ids": [
+        "dayu-b-memory-map",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "transmitted_text",
+      "certainty": "disputed",
+      "chronology_note": "传世文本的成篇与层累问题存在讨论。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p010",
+      "source_id": "src-shangshu-yugong",
+      "title": "治水与贡赋叙事",
+      "text": "《禹贡》把山川治理、土地差异和贡赋安排放进同一结构，说明后世叙事常把环境整治与政治秩序联系起来。环境治理和贡赋秩序在同一文本中出现，说明后世作者倾向把治水功绩与政治整合联系起来。不过文本结构只能提示一种解释路径，不能证明某次洪水工程直接产生国家或所有地区同时接受同一制度。",
+      "summary": "从水土治理走向权力秩序是一种文本结构和教学解释。",
+      "source_locator": "《尚书·夏书·禹贡》各州田赋、贡物与交通叙述",
+      "fact_ids": [
+        "fact-03fb8208",
+        "fact-c708f42f"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "权力秩序",
+        "贡赋"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-succession"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "后世传世文本，不作为禹时代制度清单。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p011",
+      "source_id": "src-chnmuseum-early-state",
+      "title": "博物馆的早期国家框架",
+      "text": "中国国家博物馆把夏商西周概括为早期国家形态形成和初步发展的阶段，并强调王权、政治结构与物质文化的变化。博物馆展陈把早期国家放在长时段物质文化变化中呈现，强调政治结构、生产和礼仪相互联系。它适合作为课堂总框架；对某件遗物、某个遗址或王朝名称的判断仍需查看具体考古记录和论证强度。",
+      "summary": "公共展陈提供课程结构，但具体判断仍需回到材料层级。",
+      "source_locator": "中国国家博物馆‘古代中国—夏商西周时期’第一单元总述",
+      "fact_ids": [
+        "fact-aafc4705"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "早期国家",
+        "王权"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state",
+        "dayu-slot-governance-power-cost"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "teaching_explanation",
+      "certainty": "consensus",
+      "chronology_note": "现代博物馆展陈说明。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p012",
+      "source_id": "src-chnmuseum-early-state",
+      "title": "二里头与夏史的时空重合",
+      "text": "国家博物馆说明二里头文化的分布地域和延续年代与传世文献中的夏人活动时空大体相合，因此是探索夏史的主要遗存。‘时空大体相合’是一种综合关系：年代可重叠、核心区域可接近、聚落等级可匹配。它显著提高二里头研究夏史的价值，却不等于遗址自报名称，更不能从相合直接推出禹曾在宫殿区生活。",
+      "summary": "时空重合支持高度相关，不等于发现王朝自名。",
+      "source_locator": "中国国家博物馆‘古代中国—夏朝的建立’二里头文化说明",
+      "fact_ids": [
+        "fact-1afd8491",
+        "fact-699a85c1"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "二里头",
+        "夏史"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state",
+        "dayu-slot-erlitou-xia-boundary",
+        "dayu-slot-source-layers"
+      ],
+      "boundary_ids": [
+        "dayu-b-chronology",
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "interpretation",
+      "chronology_note": "现代考古综合判断，材料年代约距今3800—3500年。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p013",
+      "source_id": "src-chnmuseum-early-state",
+      "title": "专业分工与高等级器物",
+      "text": "国家博物馆资料显示二里头时期已出现专业手工业分工、青铜礼器、玉石加工与绿松石镶嵌等复杂生产。专业作坊需要原料、技术、劳力和产品分配，高等级礼器又显示使用者之间并不平等。这些观察可以支持社会分化和资源集中，但不能由一件青铜器倒推出某位王的姓名或具体治水命令。",
+      "summary": "专业生产和高等级器物帮助观察权力集中与社会分化。",
+      "source_locator": "中国国家博物馆‘古代中国—夏商西周时期’经济与礼器展项说明",
+      "fact_ids": [
+        "fact-aafc4705"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "专业分工",
+        "青铜"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state"
+      ],
+      "boundary_ids": [
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "二里头文化时期的考古观察。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p014",
+      "source_id": "src-ndrc-erlitou",
+      "title": "大型都邑与广域影响",
+      "text": "国家发展改革委资料概述二里头大型都邑、宫城、城市道路、宫殿建筑、青铜礼器和官营作坊等发现。宫城、主干道路、作坊和高等级器物共同构成比单件文物更强的组织证据。它们说明都邑建设存在持续协调和资源集中；至于这些能力是否源于治水，只能作为课堂比较问题，不能直接写成考古结论。",
+      "summary": "这些遗存支持集中规划和广域王权研究。",
+      "source_locator": "国家发展改革委专题‘二里头文化’之‘最早的广域王权国家’与都邑要素段",
+      "fact_ids": [
+        "fact-aafc4705"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "宫城",
+        "道路网",
+        "都邑"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "对持续考古发现的现代综合。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p015",
+      "source_id": "src-ndrc-erlitou",
+      "title": "“夏都”措辞的解释层",
+      "text": "该机构资料采用“夏都斟鄩”等较肯定表述；课堂同时保留考古学命名与历史身份认定之间的推论步骤。机构文章采用较肯定的历史身份措辞，V2保留该出处，同时把‘考古观察’与‘王朝认定’拆开。学生引用时应写‘该机构据综合研究作此解释’，而不是声称宫殿、道路或方位本身写着‘夏都’。",
+      "summary": "公共机构结论也要标明它属于综合解释。",
+      "source_locator": "国家发展改革委专题‘二里头文化’中‘夏都斟鄩’表述段",
+      "fact_ids": [
+        "fact-1afd8491",
+        "fact-db3673df"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "夏都",
+        "解释边界"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-xia-boundary"
+      ],
+      "boundary_ids": [
+        "dayu-b-absence",
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "boundary_note",
+      "certainty": "interpretation",
+      "chronology_note": "现代机构性历史解释，不是遗物自证名称。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p016",
+      "source_id": "src-nopss-erlitou-layout",
+      "title": "井字形道路与功能分区",
+      "text": "二里头中心区的主干道路把都邑划分为规整区域，宫殿、作坊、祭祀与贵族居住墓葬空间呈现明确组织。纵横道路、围垣和成组建筑的关系来自田野发掘与布局复原，属于可观察遗迹基础上的空间判断。多项遗迹相互配合，比孤立器物更能说明规划；其年代分期和功能解释仍应随新发掘修正。",
+      "summary": "城市布局是讨论统治能力和等级秩序的直接材料。",
+      "source_locator": "全国哲学社会科学工作办公室文章‘中心区纵横道路与功能分区’段",
+      "fact_ids": [
+        "fact-aafc4705"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "功能分区",
+        "道路网"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state"
+      ],
+      "boundary_ids": [
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "现代田野考古对二里头遗迹的观察与复原。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p017",
+      "source_id": "src-nopss-erlitou-layout",
+      "title": "从遗址到夏史的综合判断",
+      "text": "考古研究者依据年代、地域、发展程度和文献对应关系，认为二里头极可能与夏后期王朝遗存相关。‘极可能’不是含糊逃避，而是对证据强度的准确标记。年代、地域、文明发展程度和文献传统可以共同增加解释力；缺少可读王朝自名则要求结论保留条件，后续新材料也可能提高或降低对应程度。",
+      "summary": "“极可能”呈现证据强度，仍区别于直接文字确认。",
+      "source_locator": "全国哲学社会科学工作办公室文章结语‘二里头与夏后期’判断段",
+      "fact_ids": [
+        "fact-1afd8491",
+        "fact-699a85c1"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "二里头",
+        "考古判断"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-xia-boundary",
+        "dayu-slot-revise-with-new-evidence"
+      ],
+      "boundary_ids": [
+        "dayu-b-absence",
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "interpretation",
+      "chronology_note": "现代考古与文献综合判断。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p018",
+      "source_id": "src-npc-civilization",
+      "title": "伊洛河流域与年代范围",
+      "text": "探源工程综合资料把二里头置于伊洛河流域，并概述其约距今3800—3500年的年代和大型中心地位。约距今3800至3500年同样是综合测年形成的范围，而非某位人物的生卒年。区域中心地位可以和传世夏史框架比较，但比较必须分别列出考古年代、文献年代和传统王朝年代，不能相互替代。",
+      "summary": "区域和年代重合是重要联系证据。",
+      "source_locator": "中国人大网‘中华文明探源工程’中伊洛河流域、二里头年代与中心聚落段",
+      "fact_ids": [
+        "fact-699a85c1",
+        "fact-d4f1e760"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "伊洛河",
+        "年代"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state",
+        "dayu-slot-erlitou-xia-boundary"
+      ],
+      "boundary_ids": [
+        "dayu-b-chronology",
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "现代测年与区域研究的概括。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p019",
+      "source_id": "src-npc-civilization",
+      "title": "宫城、作坊与礼器",
+      "text": "综合研究资料列出宫城、高等级产品作坊、青铜与玉礼器及广泛影响，显示资源和礼仪活动存在集中控制。宫城和高等级作坊反映资源、技术与礼仪活动的集中，是解释国家能力的重要组合。公共工程同样需要组织，但目前材料没有把这些建筑直接标注为治水机关；两者之间只能做有边界的机制比较。",
+      "summary": "可用于解释早期国家能力，不直接说明具体治水组织。",
+      "source_locator": "中国人大网‘中华文明探源工程’中宫城、作坊、高等级礼器段",
+      "fact_ids": [
+        "fact-aafc4705",
+        "fact-c708f42f"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "作坊",
+        "宫城",
+        "礼器"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state",
+        "dayu-slot-governance-power-cost"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "二里头文化考古材料及现代解释。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p020",
+      "source_id": "src-science-jishi",
+      "title": "积石峡堰塞湖溃决假说",
+      "text": "2016年研究提出黄河上游积石峡曾形成堰塞湖并发生大型溃决洪水，给出约公元前1920年的时间判断。研究把地震、滑坡堰塞、湖水积聚和溃决联系为一条自然事件链，并通过多种测年材料提出约公元前1920年的时间。每一步都有方法和误差范围，因此应称‘研究提出’而不是无条件事实。",
+      "summary": "这是特定地点自然事件的研究假说。",
+      "source_locator": "Science 353(6299), 579–582，摘要与‘Outburst flood’结果段",
+      "fact_ids": [
+        "fact-55c2fa8b"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "溃决洪水",
+        "积石峡"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-jishi-flood",
+        "dayu-slot-source-layers"
+      ],
+      "boundary_ids": [
+        "dayu-b-chronology",
+        "dayu-b-local-flood"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "disputed",
+      "chronology_note": "现代地质与考古测年研究，事件约公元前1920年。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p021",
+      "source_id": "src-science-jishi",
+      "title": "从洪水到夏史的推论",
+      "text": "原研究进一步讨论积石峡洪水与中国大洪水传说、夏代年代之间的可能联系，这一步超出了单纯确认自然事件。论文从自然事件继续推到大洪水记忆和夏代开端，历史解释比地质判断多跨了几个环节。课堂回答应把‘积石峡发生什么’与‘它是否进入远古记忆’分开，再说明人物、传播和王朝仍缺哪些桥接证据。",
+      "summary": "自然事件、文化记忆和王朝身份是三段不同推论。",
+      "source_locator": "Science 353(6299), 579–582，讨论洪水传说与夏代年代的结论段",
+      "fact_ids": [
+        "fact-4ba96f68",
+        "fact-55c2fa8b"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "夏史",
+        "推论链"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-jishi-flood",
+        "dayu-slot-revise-with-new-evidence"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-local-flood"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "disputed",
+      "chronology_note": "2016年研究提出的历史连接假说。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p022",
+      "source_id": "src-allan-jishi",
+      "title": "洪水传说不能由单点独占解释",
+      "text": "Sarah Allan 的讨论肯定新材料值得重视，同时提醒洪水传说有复杂的文本与思想传统，单个局地事件不能自动解释全部叙事。反思文章把新自然科学材料放回中国洪水叙事的长期文本传统中，提醒不同篇章的思想主题和形成过程并不由一个灾害点完全解释。它不是简单否认洪水，而是要求对自然事件和叙事传播分别举证。",
+      "summary": "应把地质证据与文本传播分别检验。",
+      "source_locator": "Journal of Chinese Humanities 3(1), 23–34，对2016年积石峡论文的文本史反思段",
+      "fact_ids": [
+        "fact-55c2fa8b",
+        "fact-bf990cb8"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "洪水传说",
+        "证据边界"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-jishi-flood"
+      ],
+      "boundary_ids": [
+        "dayu-b-local-flood",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "interpretation",
+      "chronology_note": "2017年对2016年研究的学术反思。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p023",
+      "source_id": "src-allan-jishi",
+      "title": "人物与王朝仍需独立证据",
+      "text": "即使接受积石峡发生过大洪水，从灾害到禹这一人物、再到夏王朝开端，仍需要各自的材料与年代链支持。即使局地洪水获得更强地质支持，‘灾害存在’、‘禹组织治理’和‘夏王朝建立’仍是三个命题。每个命题需要不同材料；把其中一个成立写成三个都成立，是RAG回答必须阻止的越界推论。",
+      "summary": "不得把“有洪水”缩写成“禹和夏已被证明”。",
+      "source_locator": "Journal of Chinese Humanities 3(1), 23–34，结论部分关于禹、洪水传说与夏史连接",
+      "fact_ids": [
+        "fact-55c2fa8b",
+        "fact-db3673df"
+      ],
+      "person_ids": [
+        "person-7c4825d9"
+      ],
+      "keywords": [
+        "人物证据",
+        "王朝证据"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-xia-boundary",
+        "dayu-slot-jishi-flood",
+        "dayu-slot-revise-with-new-evidence"
+      ],
+      "boundary_ids": [
+        "dayu-b-absence",
+        "dayu-b-causation",
+        "dayu-b-local-flood",
+        "dayu-b-persona"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "boundary_note",
+      "certainty": "consensus",
+      "chronology_note": "现代方法论边界。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p024",
+      "source_id": "src-loc-yuji-map",
+      "title": "1136年的《禹迹图》",
+      "text": "美国国会图书馆馆藏记录把《禹迹图》标为1136年石刻地图相关拓本，它属于南宋时期的地图传统。馆藏日期把这件地图材料固定在南宋，而不是传统禹时代。它能直接支持地图史、刻石和后世地理知识研究；与禹有关的题名和内容说明记忆延续，不把制作年代向前移动数千年。",
+      "summary": "地图本身比传统禹时代晚数千年。",
+      "source_locator": "Library of Congress item 2021668264，馆藏记录‘Date Created/Published: 1136’",
+      "fact_ids": [
+        "fact-4ba96f68"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "南宋",
+        "禹迹图"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-memory-map",
+        "dayu-slot-source-layers"
+      ],
+      "boundary_ids": [
+        "dayu-b-chronology",
+        "dayu-b-memory-map"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "地图刻制年代为1136年。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p025",
+      "source_id": "src-loc-yuji-map",
+      "title": "记忆地图而非施工图",
+      "text": "《禹迹图》展示后世如何把河流、疆域与大禹文化记忆结合，是研究地图史和历史记忆的材料。地图上的河流、海岸与行政空间体现制图者所处时代的知识整理。若课程把它和《禹贡》并置，目的是比较后世怎样给‘禹迹’赋形，而不是把所有线条转换成夏代河道与工程坐标。",
+      "summary": "不能据此给夏代工程标注精确坐标。",
+      "source_locator": "Library of Congress item 2021668264，地图图像及馆藏说明",
+      "fact_ids": [
+        "fact-03fb8208",
+        "fact-4ba96f68"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "空间边界",
+        "记忆地图"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-memory-map"
+      ],
+      "boundary_ids": [
+        "dayu-b-memory-map"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "boundary_note",
+      "certainty": "consensus",
+      "chronology_note": "南宋材料用于研究南宋及其继承的知识传统。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p026",
+      "source_id": "src-chnmuseum-early-state",
+      "title": "没有同时代“禹”铭文的边界",
+      "text": "二里头的都邑、器物和空间结构十分丰富，但当前公开材料并未提供一条得到学界公认、可同时代直读为“禹”的铭文。丰富遗存证明二里头社会复杂，并不等于已经发现一件刻有‘禹’且年代、释读均获公认的器物。人物模式回答这类问题时必须承认自己不能知道后世发掘，也不能借角色口吻制造铭文。",
+      "summary": "物质复杂性不能替代人物姓名证据。",
+      "source_locator": "中国国家博物馆二里头展陈说明与公开器物、遗址信息中的文字证据边界",
+      "fact_ids": [
+        "fact-1afd8491",
+        "fact-db3673df"
+      ],
+      "person_ids": [
+        "person-7c4825d9"
+      ],
+      "keywords": [
+        "考古边界",
+        "铭文"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-xia-boundary",
+        "dayu-slot-revise-with-new-evidence"
+      ],
+      "boundary_ids": [
+        "dayu-b-absence",
+        "dayu-b-erlitou-name",
+        "dayu-b-persona"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "boundary_note",
+      "certainty": "consensus",
+      "chronology_note": "针对当前公开考古证据状况的边界说明。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p027",
+      "source_id": "src-moe-2022",
+      "title": "治理模型不是历史统计",
+      "text": "六项变量把洪水风险、粮食、劳作者状态、信任、地形知识和协作并列，帮助学生看见决策关系。它们没有对应的夏代统计表。模型把每次行动造成的短期收益与长期负担显性化：例如快速施工可能降水患却损耗粮食和体力。数值只保证游戏规则可反馈，不宣称古人曾按百分制记录信任，也不能用于现代工程计算。",
+      "summary": "关卡用结构化模型练习因果与权衡。",
+      "source_locator": "附件《义务教育历史课程标准（2022年版）》‘学业质量—运用材料解释历史’条目及L101关卡变量定义",
+      "fact_ids": [
+        "fact-00b6a9f4",
+        "fact-c708f42f"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "变量",
+        "教学模型"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-methods"
+      ],
+      "boundary_ids": [
+        "dayu-b-modern-waterwork",
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "teaching_explanation",
+      "certainty": "interpretation",
+      "chronology_note": "V0.10现代课堂设计。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p028",
+      "source_id": "src-mengzi-tengwen",
+      "title": "英雄叙事之外的协作",
+      "text": "传世文本常把功绩集中到禹，但治水叙事本身包含任命、协作者与广泛劳作。课堂据此加入益、聚落代表和劳作者，避免把公共工程缩成一人动作。文本把成就集中于禹，公共工程在现实机制上却必然涉及观察、运输、开挖、粮食和聚落协商。课堂合成人群让这些成本可见，但他们不是有出土姓名的证人；人物回答只能解释权衡。",
+      "summary": "群体角色是有依据的教学建模，不是假造具名人物。",
+      "source_locator": "《孟子·滕文公上》第4章任命、劳作与治水叙事；L101人物建模说明",
+      "fact_ids": [
+        "fact-00b6a9f4",
+        "fact-c708f42f"
+      ],
+      "person_ids": [
+        "person-31118bee",
+        "person-cef45322",
+        "person-dc224fcf"
+      ],
+      "keywords": [
+        "劳动",
+        "协作"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-methods"
+      ],
+      "boundary_ids": [
+        "dayu-b-persona",
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "teaching_explanation",
+      "certainty": "interpretation",
+      "chronology_note": "由传世叙事主题形成的现代教学表达。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p029",
+      "source_id": "src-chnmuseum-early-state",
+      "title": "年代使用约数",
+      "text": "国家博物馆以约公元前21世纪等框架介绍夏朝建立，并以二里头材料探索夏史。课堂沿用约数，同时提醒这不是同时代精确纪年。‘约公元前21世纪’用于把传统夏代框架放入通史顺序，与二里头测年范围也不是同一种来源。回答应分别标注‘传统王朝年代’和‘考古测年范围’，不能用前者替代遗址分期。",
+      "summary": "年代框架用于排序，不应伪装成某年某日。",
+      "source_locator": "中国国家博物馆‘古代中国—夏朝的建立’年代框架说明",
+      "fact_ids": [
+        "fact-699a85c1",
+        "fact-d4f1e760"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "年代框架"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-succession"
+      ],
+      "boundary_ids": [
+        "dayu-b-chronology",
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "boundary_note",
+      "certainty": "interpretation",
+      "chronology_note": "现代研究和教学使用的约数。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p030",
+      "source_id": "src-moe-2022",
+      "title": "卷宗的证据链",
+      "text": "史官卷宗要求保存选择、状态变化、代价、历史解释与来源，并用“观察—判断—边界—修正”完成复盘。卷宗中的选择记录来自学生会话，来源卡来自当前发布，解释句则由学生或受约束服务生成。三者要分栏保存，使教师能看见结论如何形成，也能在后端失败时保留本地推理过程。",
+      "summary": "学习成果记录推理过程，而不只记录胜负。",
+      "source_locator": "附件《义务教育历史课程标准（2022年版）》‘学业质量’证据表达要求及L101卷宗模板",
+      "fact_ids": [
+        "fact-00b6a9f4",
+        "fact-c708f42f"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "史官卷宗",
+        "复盘"
+      ],
+      "answer_slot_ids": [],
+      "boundary_ids": [
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "teaching_explanation",
+      "certainty": "consensus",
+      "chronology_note": "V0.10现代课堂评价设计。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p031",
+      "source_id": "src-shiji-xia",
+      "title": "鲧失利与禹受命之间的叙事转换",
+      "text": "《史记·夏本纪》先叙鲧治水未成，再叙舜举禹续治，把两人安排进一条失败—接续—成功的王朝叙事。这个结构能够说明西汉史家怎样解释领导权转移，也促成后世‘鲧堵禹疏’的鲜明对比；但篇章没有提供可供现代复核的坝体剖面、流量记录和逐段工法，不能据此判定鲧在任何地点都只会筑堵，或禹从未使用防护措施。回答方法题时应先说明这种对照来自何时的文本，再把现代工程条件与文本评价分别列出。",
+      "summary": "文本提供人物与评价结构，不提供现代工程参数。",
+      "source_locator": "《史记》卷二《夏本纪》鲧受命、被殛与禹受荐治水叙事段",
+      "fact_ids": [
+        "fact-34f9b1ba",
+        "fact-98a8d039",
+        "fact-bf990cb8",
+        "fact-f3213419"
+      ],
+      "person_ids": [
+        "person-7c4825d9",
+        "person-b40a4965"
+      ],
+      "keywords": [
+        "工程组合",
+        "禹",
+        "鲧"
+      ],
+      "answer_slot_ids": [],
+      "boundary_ids": [
+        "dayu-b-modern-waterwork",
+        "dayu-b-persona",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "西汉文本整理的远古叙事。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p032",
+      "source_id": "src-shiji-xia",
+      "title": "禹、益、启继承叙事中的多重解释",
+      "text": "《夏本纪》同时保留禹举益、禹死后诸侯归启等环节，因此继承并不是一句‘父传子’就能完整概括。后世可把它解释为政治声望、支持联盟和家族继承共同作用的转折。课堂可以比较这些解释，却不能把诸侯态度、禹的真实意图或启取得位置的全过程当作西汉作者亲历的事实；更不能据此宣称王朝形成只有唯一原因。若要评价世袭转折，还应追问其他传世材料如何叙述，以及是否存在可对应的同时代制度记录。",
+      "summary": "继承框架可讨论权力秩序，动机和过程仍需保留边界。",
+      "source_locator": "《史记》卷二《夏本纪》禹荐益、十年禹崩及诸侯朝启相关叙事段",
+      "fact_ids": [
+        "fact-03fb8208",
+        "fact-6fe6c697",
+        "fact-c708f42f"
+      ],
+      "person_ids": [
+        "person-31118bee",
+        "person-7c4825d9"
+      ],
+      "keywords": [
+        "世袭",
+        "启",
+        "益",
+        "禅让"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-succession"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-persona",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "西汉史家整理的王朝起源叙事。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p033",
+      "source_id": "src-mengzi-tengwen",
+      "title": "责任伦理为何不能替代事实核验",
+      "text": "《孟子》把禹多年在外和过门不入用于论证治理者应以天下事务为重。作为思想史材料，它直接显示战国论辩如何调动大禹形象，也解释了这一故事为何在后世教育中持续有力量。可是伦理意义越鲜明，越需要区分修辞与现场：次数、路程、家庭对话、当时情绪都没有因此获得同时代证据，学生只能评价母题，不能假冒人物补述私人记忆。由此得到的稳妥结论是‘战国人已这样讲述和评价禹’，而不是‘每个动作已被当时记录’。",
+      "summary": "可以分析责任伦理，不能把道德叙事改写成人物档案。",
+      "source_locator": "《孟子·滕文公上》第4章‘八年于外，三过其门而不入’相关段",
+      "fact_ids": [
+        "fact-bf990cb8",
+        "fact-d3d71c82"
+      ],
+      "person_ids": [
+        "person-7c4825d9"
+      ],
+      "keywords": [
+        "三过家门",
+        "伦理记忆",
+        "责任"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-three-doors"
+      ],
+      "boundary_ids": [
+        "dayu-b-legend-detail",
+        "dayu-b-persona",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "transmitted_text",
+      "certainty": "legend",
+      "chronology_note": "战国论说中的后世记忆。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p034",
+      "source_id": "src-shangshu-yugong",
+      "title": "把《禹贡》画成施工路线会丢失什么",
+      "text": "《禹贡》的叙述在州域、山川、水道、土产和贡赋之间转换，目标是构造一个有层次的天下秩序。若只把地名依次连接，学生会误以为文本保存了同一时间完成的旅行或工程日志，也会忽略地名沿革和篇章层累。更稳妥的地图应分别标出文本空间、现代推定位置和不确定区，并在图例中明确它不是夏代测绘原图。地图交互还应让学生切换材料年代，使南宋制图、传世篇章和现代考古点不会在视觉上混为一层。",
+      "summary": "《禹贡》适合研究空间秩序，不适合直接生成确定施工线。",
+      "source_locator": "《尚书·夏书·禹贡》九州总叙、导山导水与贡道段落的结构对读",
+      "fact_ids": [
+        "fact-03fb8208",
+        "fact-4ba96f68"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "九州",
+        "施工路线",
+        "禹贡"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-memory-map"
+      ],
+      "boundary_ids": [
+        "dayu-b-memory-map",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "boundary_note",
+      "certainty": "consensus",
+      "chronology_note": "传世篇章的空间表达，形成时间晚于传统禹时代。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p035",
+      "source_id": "src-chnmuseum-early-state",
+      "title": "高等级器物必须放回生产与使用关系",
+      "text": "二里头出土的青铜礼器、玉器和绿松石制品具有较高制作要求，和专业手工业分工一起显示资源、技术与使用权存在集中。单列器物名称只能证明‘有物’，把作坊、原料、制作难度、出土空间和使用差异结合，才能讨论社会分化。即便如此，这些器物仍不直接回答谁组织过洪水治理，也不写出夏王朝的自称。学生引用器物时应同时写出出土空间或生产背景，避免用一张精美文物图片代替完整论证。",
+      "summary": "器物组合支持社会分化与资源集中，不直接证明禹或治水机构。",
+      "source_locator": "中国国家博物馆‘古代中国—夏商西周时期’青铜、玉石与绿松石器展项说明",
+      "fact_ids": [
+        "fact-aafc4705",
+        "fact-c708f42f"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "专业分工",
+        "礼器",
+        "社会分化"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "二里头文化考古材料的现代展陈说明。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p036",
+      "source_id": "src-ndrc-erlitou",
+      "title": "大型中心与周边聚落构成区域层级",
+      "text": "机构资料把二里头置于更广的区域聚落网络中理解：大型中心拥有宫殿、道路和高等级作坊，影响范围又超出核心区。这种中心—周边差异有助于研究广域政治整合，而不仅是说遗址面积很大。它增加二里头与早期国家讨论的相关性，但‘广域王权’仍是从聚落层级、资源流动和礼仪分布作出的综合解释。若只看到中心遗址而不比较周边聚落，就无法判断资源和礼仪影响是否真正超出都邑边界。",
+      "summary": "区域层级是早期国家的重要组合证据，仍需与王朝自名分开。",
+      "source_locator": "国家发展改革委专题‘二里头文化’之都邑规模、文化影响与广域王权段",
+      "fact_ids": [
+        "fact-1afd8491",
+        "fact-699a85c1",
+        "fact-aafc4705"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "区域层级",
+        "广域王权",
+        "聚落"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state",
+        "dayu-slot-erlitou-xia-boundary"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "interpretation",
+      "chronology_note": "现代机构对二里头考古成果的综合解释。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p037",
+      "source_id": "src-nopss-erlitou-layout",
+      "title": "道路、围垣和院落的组合比单点发现更有解释力",
+      "text": "二里头中心区的道路并非孤立线段，它们与围垣、宫殿建筑基址、作坊区和墓葬空间形成相互关系。考古工作者依据叠压、打破与分期判断建设顺序，再复原功能分区。课堂回答应说明‘直接观察到遗迹’与‘据关系复原规划’是两层信息；规划能力可以支持政治组织研究，却不能自动确认规划者姓名。发掘揭示的先后关系还可能随新区揭露而调整，因此示意图必须标记分期和复原性质。",
+      "summary": "布局证据包含遗迹观察和空间解释两层。",
+      "source_locator": "全国哲学社会科学工作办公室文章‘中心区道路、围垣和分区’及考古判断说明段",
+      "fact_ids": [
+        "fact-1afd8491",
+        "fact-699a85c1",
+        "fact-aafc4705"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "功能分区",
+        "围垣",
+        "道路网"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state"
+      ],
+      "boundary_ids": [
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "二里头田野考古及现代布局复原。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p038",
+      "source_id": "src-npc-civilization",
+      "title": "探源工程为何强调多学科与多地点比较",
+      "text": "中华文明探源相关综合资料把年代测定、聚落考古、手工业、礼仪遗存和区域互动放在同一研究框架内。这样的证据链不依赖一件‘定名文物’，而通过多个可重复观察的指标讨论文明和早期国家。它也意味着单一故事、单一洪水点或单一都城不能承担全部结论，任何王朝对应都要接受新测年和新发掘的持续检验。多学科并不等于自动一致；若测年、空间分布和文本框架出现冲突，答案应展示冲突而不是挑选最顺耳的一项。",
+      "summary": "多学科组合增强解释，也要求结论可随新材料修正。",
+      "source_locator": "中国人大网‘中华文明起源与早期发展综合研究’多学科方法与二里头成果综述段",
+      "fact_ids": [
+        "fact-699a85c1",
+        "fact-aafc4705",
+        "fact-c708f42f",
+        "fact-d4f1e760"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "多学科",
+        "探源工程",
+        "证据链"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-erlitou-name"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "consensus",
+      "chronology_note": "现代多学科考古研究框架。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p039",
+      "source_id": "src-science-jishi",
+      "title": "积石峡洪水假说由多环节组成",
+      "text": "原研究不是只凭传说寻找地点，而是把地震活动、滑坡坝、被淹聚落材料、溃决沉积和下游文化年代连接起来。每一环节使用的材料和推断方式不同：沉积可支持洪水过程，测年给出范围，文化序列用于历史比较。将整条链简写成‘发现大禹洪水’会同时抹去自然科学不确定性与历史连接的额外假设。",
+      "summary": "自然事件链可以检验，但不能省略跨到人物和王朝的推论。",
+      "source_locator": "Science 353(6299), 579–582，研究设计、地震滑坡坝与溃决沉积结果段",
+      "fact_ids": [
+        "fact-4ba96f68",
+        "fact-55c2fa8b"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "地震",
+        "积石峡",
+        "证据链"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-jishi-flood"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-local-flood"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "disputed",
+      "chronology_note": "对约公元前1920年局地自然事件的现代研究。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p040",
+      "source_id": "src-science-jishi",
+      "title": "约公元前1920年并非无误差的日历日期",
+      "text": "论文给出的年代来自放射性碳等材料和事件关系的综合，不是洪水当年留下的纪年牌。把它与传统夏代起点比较时，还要面对样品对应、校正区间、文化阶段和王朝框架并非同一尺度的问题。因此课堂写作应使用‘约’和‘研究提出’，不应把1920写成精确开工年份，更不能据此计算禹的年龄。",
+      "summary": "测年范围用于比较事件，不提供禹的个人年表。",
+      "source_locator": "Science 353(6299), 579–582，年代测定方法、校正结果与历史年代讨论段",
+      "fact_ids": [
+        "fact-55c2fa8b",
+        "fact-699a85c1",
+        "fact-d4f1e760"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "公元前1920年",
+        "测年",
+        "积石峡"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-jishi-flood"
+      ],
+      "boundary_ids": [
+        "dayu-b-chronology",
+        "dayu-b-local-flood",
+        "dayu-b-persona"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "boundary_note",
+      "certainty": "disputed",
+      "chronology_note": "现代科学测年范围与传统王朝年代框架的比较。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p041",
+      "source_id": "src-allan-jishi",
+      "title": "对洪水假说的质疑不是简单二选一",
+      "text": "学术反思可以接受积石峡存在重要洪水材料，同时质疑它是否足以解释大洪水传说和夏史。这不是在‘洪水发生’与‘洪水完全虚构’之间二选一，而是逐段检查：事件规模如何、传播链是否存在、文本母题何时形成、王朝年代如何对应。学生据此可以给出暂定判断，并明确哪条新证据会改变判断。",
+      "summary": "争议要求拆分命题，而不是把资料分成全真与全假。",
+      "source_locator": "Journal of Chinese Humanities 3(1), 23–34，对积石峡事件、传说结构与夏史对应的分项讨论",
+      "fact_ids": [
+        "fact-55c2fa8b",
+        "fact-bf990cb8",
+        "fact-db3673df"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "争议",
+        "洪水传说",
+        "积石峡"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-jishi-flood",
+        "dayu-slot-revise-with-new-evidence"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-local-flood",
+        "dayu-b-transmitted-distance"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "interpretation",
+      "chronology_note": "2017年对2016年假说的学术反思。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p042",
+      "source_id": "src-loc-yuji-map",
+      "title": "《禹迹图》的制作年代本身就是证据",
+      "text": "馆藏记录给出的1136年让地图首先成为南宋史料：可研究当时怎样表现河流、海岸、行政空间和大禹文化记忆。题名涉及禹，不代表图面来自禹手中；后世不断绘制‘禹迹’反而说明大禹叙事具有长久的空间想象力量。课堂地图应显示制作年代，并把它与二里头遗址点、积石峡自然事件点分层。",
+      "summary": "先问地图何时制作，再问它能说明哪个时代。",
+      "source_locator": "Library of Congress item 2021668264，日期、题名、图像与馆藏元数据",
+      "fact_ids": [
+        "fact-03fb8208",
+        "fact-4ba96f68"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "南宋",
+        "地图史",
+        "禹迹图"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-memory-map"
+      ],
+      "boundary_ids": [
+        "dayu-b-chronology",
+        "dayu-b-memory-map"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "boundary_note",
+      "certainty": "consensus",
+      "chronology_note": "1136年地图材料，距传统禹时代数千年。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p043",
+      "source_id": "src-moe-2022",
+      "title": "回答历史问题先写主张再核对材料",
+      "text": "证据推理可以用四步完成：先把问题改写成可检验主张，再列出材料类型与年代，接着说明每项材料支持到哪里，最后写出仍缺什么。这个方法使‘三过家门是真的吗’转化为‘哪些文本何时记录该母题，它能支持伦理记忆还是现场次数’，也使模型无权用流畅语言跨过证据缺口。",
+      "summary": "主张—材料—边界—缺口是本课问答的基本结构。",
+      "source_locator": "附件《义务教育历史课程标准（2022年版）》‘史料实证’‘历史解释’核心素养条目及L101问答规范",
+      "fact_ids": [
+        "fact-00b6a9f4",
+        "fact-c708f42f"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "历史解释",
+        "史料实证",
+        "证据边界"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-methods",
+        "dayu-slot-revise-with-new-evidence",
+        "dayu-slot-source-layers",
+        "dayu-slot-succession",
+        "dayu-slot-three-doors"
+      ],
+      "boundary_ids": [
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "curriculum_goal",
+      "certainty": "consensus",
+      "chronology_note": "现代课程标准与本课回答规范。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p044",
+      "source_id": "src-moe-2022",
+      "title": "比较证据时不能只数来源数量",
+      "text": "多个网页重复同一种后世说法，不等于获得多种独立证据。L101比较时至少区分传世文本、遗址和器物、自然科学研究、现代教学解释；还要检查它们是否真的回答同一个命题。二里头布局可回答社会组织，积石峡沉积可回答局地灾害，《史记》可回答西汉夏史叙述，三者不能相互冒名，却能共同界定问题。",
+      "summary": "证据多样性取决于材料能力，不取决于链接数量。",
+      "source_locator": "附件《义务教育历史课程标准（2022年版）》史料实证要求及L101四层证据对照表",
+      "fact_ids": [
+        "fact-1afd8491",
+        "fact-55c2fa8b",
+        "fact-699a85c1",
+        "fact-c708f42f"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "四层证据",
+        "材料能力",
+        "比较"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-state",
+        "dayu-slot-erlitou-xia-boundary",
+        "dayu-slot-jishi-flood",
+        "dayu-slot-memory-map",
+        "dayu-slot-revise-with-new-evidence",
+        "dayu-slot-source-layers"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "teaching_explanation",
+      "certainty": "consensus",
+      "chronology_note": "现代课堂的证据比较方法。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p045",
+      "source_id": "src-moe-2022",
+      "title": "组合治理比背诵唯一方法更接近历史思考",
+      "text": "课堂中的踏勘、局部加固、疏浚分流、轮换劳作、迁居和粮食调配不是声称禹实际依次做过这些事，而是把公共治理中的约束显性化。地形不同，疏和防的作用也不同；资源有限时，先保护谁、让谁承担劳作会影响信任。评价答案应看学生是否说明条件、代价和证据，而不是是否只按下‘疏’字。",
+      "summary": "关卡练习条件与权衡，不复刻夏代施工。",
+      "source_locator": "附件《义务教育历史课程标准（2022年版）》历史解释要求及L101六回合规则说明",
+      "fact_ids": [
+        "fact-00b6a9f4",
+        "fact-34f9b1ba",
+        "fact-c708f42f",
+        "fact-f3213419"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "疏导",
+        "组合治理",
+        "防护"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-methods"
+      ],
+      "boundary_ids": [
+        "dayu-b-modern-waterwork",
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "teaching_explanation",
+      "certainty": "interpretation",
+      "chronology_note": "现代课堂情境，不是夏代工程记录。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p046",
+      "source_id": "src-moe-2022",
+      "title": "公共工程扩大权威也扩大责任",
+      "text": "跨聚落工程需要共享地形信息、调配粮食、组织劳力并让承诺得到执行，这些机制可能提高组织者的声望和命令能力。相同机制也可能造成强征、误工、分配不公与风险转移。课堂因此不把水位下降当作唯一胜利条件，而同时记录劳作者状态与公共信任；这是一种历史解释模型，不是‘治水必然建国’的公式。",
+      "summary": "权威与代价要在同一因果链中评价。",
+      "source_locator": "附件《义务教育历史课程标准（2022年版）》历史解释与责任意识要求及L101治理变量说明",
+      "fact_ids": [
+        "fact-00b6a9f4",
+        "fact-aafc4705",
+        "fact-c708f42f"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "公共工程",
+        "权威",
+        "社会代价"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-methods",
+        "dayu-slot-succession"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "teaching_explanation",
+      "certainty": "interpretation",
+      "chronology_note": "现代课堂对公共治理机制的分析。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p047",
+      "source_id": "src-moe-2022",
+      "title": "人物模式必须主动承认自己不知道后世材料",
+      "text": "角色化回答的价值是呈现立场差异，例如禹强调协作、劳作者追问口粮与轮换；它不是让模型假装穿越。人物不能说自己见过二里头发掘、放射性碳测年、1136年地图或现代课程标准。涉及这些材料时，系统应转为课程专家口吻或明确‘依据不足’，并始终显示‘角色化教学表达，不是史料原话’。",
+      "summary": "人物语气不能扩大人物的知识年代。",
+      "source_locator": "附件《义务教育历史课程标准（2022年版）》史料实证要求及L101人物档案知识边界",
+      "fact_ids": [
+        "fact-00b6a9f4",
+        "fact-1afd8491",
+        "fact-c708f42f",
+        "fact-db3673df"
+      ],
+      "person_ids": [
+        "person-31118bee",
+        "person-cef45322",
+        "person-dc224fcf"
+      ],
+      "keywords": [
+        "人物边界",
+        "依据不足",
+        "角色化表达"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-source-layers",
+        "dayu-slot-three-doors"
+      ],
+      "boundary_ids": [
+        "dayu-b-persona",
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_and_listed_people",
+      "evidence_kind": "boundary_note",
+      "certainty": "consensus",
+      "chronology_note": "现代课堂人物建模规范。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "dayu-p048",
+      "source_id": "src-moe-2022",
+      "title": "新证据应改变哪一层结论",
+      "text": "如果未来发现年代、出土环境和释读都可靠的同时代文字，首先要看它写了什么：出现王朝自名可加强身份判断，出现人物名可加强人物对应，记录水患仍需判断地点和范围。新证据不会自动让所有传说细节同时成真。相反，新的测年或地层关系也可能削弱既有对应。好的卷宗应注明原判断、受影响的证据层和修改后的不确定性。",
+      "summary": "新材料只改变它直接相关的命题，不给整套故事一次性盖章。",
+      "source_locator": "附件《义务教育历史课程标准（2022年版）》证据意识与历史解释要求及L101卷宗修订提示",
+      "fact_ids": [
+        "fact-00b6a9f4",
+        "fact-1afd8491",
+        "fact-55c2fa8b",
+        "fact-c708f42f",
+        "fact-db3673df"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "新证据",
+        "结论修订",
+        "证据层"
+      ],
+      "answer_slot_ids": [
+        "dayu-slot-erlitou-xia-boundary",
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-jishi-flood",
+        "dayu-slot-revise-with-new-evidence",
+        "dayu-slot-source-layers"
+      ],
+      "boundary_ids": [
+        "dayu-b-absence",
+        "dayu-b-causation",
+        "dayu-b-erlitou-name",
+        "dayu-b-teaching-model"
+      ],
+      "persona_scope": "expert_only",
+      "evidence_kind": "teaching_explanation",
+      "certainty": "consensus",
+      "chronology_note": "面向未来发现的现代证据推理练习。",
+      "teaching_note": ""
+    }
+  ],
+  "created_at": "2026-08-31T00:00:00Z",
+  "sealed_at": "2026-08-31T00:00:00Z",
+  "sealed_by": "chronovita-content-team",
+  "checksum": "723fb44df49358d810bcc2ecfa895c25c950da9a0b5387d38b2fad17334f920b"
+}

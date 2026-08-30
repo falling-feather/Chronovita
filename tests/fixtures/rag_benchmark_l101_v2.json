@@ -1,0 +1,78 @@
+{
+  "schema_version": "rag-benchmark-l101/v2",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L101",
+  "release_no": 6,
+  "description": "L101《大禹治水》EvidenceCorpusV2 的60题自然问法 FTS Top 5 基准。题目覆盖全部受支持回答槽、同义改写和证据边界，不以照抄片段标题制造命中。",
+  "cases": [
+    {"case_id":"L101-V2-001","slot_id":"dayu-slot-source-layers","question":"听到大禹治水故事时，怎样分清传说、后世文献、考古发现和现代研究？","expected_passage_ids":["dayu-p001","dayu-p004","dayu-p043","dayu-p044"]},
+    {"case_id":"L101-V2-002","slot_id":"dayu-slot-source-layers","question":"《史记》写得很具体，为什么仍不能当成禹时代的现场笔录？","expected_passage_ids":["dayu-p004","dayu-p043"]},
+    {"case_id":"L101-V2-003","slot_id":"dayu-slot-source-layers","question":"《孟子》关于禹的说法，首先能告诉我们战国人怎样看待他吗？","expected_passage_ids":["dayu-p007","dayu-p008","dayu-p033"]},
+    {"case_id":"L101-V2-004","slot_id":"dayu-slot-source-layers","question":"二里头遗址、积石峡洪水和《禹迹图》分别属于哪一类材料？","expected_passage_ids":["dayu-p012","dayu-p020","dayu-p024","dayu-p044"]},
+    {"case_id":"L101-V2-005","slot_id":"dayu-slot-source-layers","question":"同一种说法被好几个网页重复，能算成多种独立证据吗？","expected_passage_ids":["dayu-p043","dayu-p044"]},
+    {"case_id":"L101-V2-006","slot_id":"dayu-slot-source-layers","question":"让大禹角色回答时，为什么不能把后世考古知识塞进他的嘴里？","expected_passage_ids":["dayu-p026","dayu-p028","dayu-p047"]},
+
+    {"case_id":"L101-V2-007","slot_id":"dayu-slot-three-doors","question":"三过家门而不入这个故事，最稳妥能说明什么？","expected_passage_ids":["dayu-p006","dayu-p008","dayu-p033"]},
+    {"case_id":"L101-V2-008","slot_id":"dayu-slot-three-doors","question":"我们能确认禹真的恰好三次走过家门吗？","expected_passage_ids":["dayu-p006","dayu-p008","dayu-p033"]},
+    {"case_id":"L101-V2-009","slot_id":"dayu-slot-three-doors","question":"过门不入的故事，对理解古人期待怎样的领导者有什么用？","expected_passage_ids":["dayu-p006","dayu-p007","dayu-p033"]},
+    {"case_id":"L101-V2-010","slot_id":"dayu-slot-three-doors","question":"如果让禹自己补讲家里的对白，为什么会越过证据边界？","expected_passage_ids":["dayu-p006","dayu-p033","dayu-p047"]},
+    {"case_id":"L101-V2-011","slot_id":"dayu-slot-three-doors","question":"《孟子》和《史记》都讲禹尽责，它们离传统所说的禹时代有多远？","expected_passage_ids":["dayu-p004","dayu-p007","dayu-p008"]},
+    {"case_id":"L101-V2-012","slot_id":"dayu-slot-three-doors","question":"把三过家门当成可以逐日核对的行程记录，会有什么问题？","expected_passage_ids":["dayu-p008","dayu-p033"]},
+
+    {"case_id":"L101-V2-013","slot_id":"dayu-slot-methods","question":"鲧一定只会堵水、禹一定只会疏水吗？","expected_passage_ids":["dayu-p007","dayu-p031","dayu-p045"]},
+    {"case_id":"L101-V2-014","slot_id":"dayu-slot-methods","question":"洪水来了，为什么不能不看地形就一味开沟排水？","expected_passage_ids":["dayu-p007","dayu-p027","dayu-p045"]},
+    {"case_id":"L101-V2-015","slot_id":"dayu-slot-methods","question":"治水是不是只能在筑堤和疏浚之间二选一？","expected_passage_ids":["dayu-p027","dayu-p031","dayu-p045"]},
+    {"case_id":"L101-V2-016","slot_id":"dayu-slot-methods","question":"课堂为什么把踏勘、分洪、加固和粮食调配放进同一个治理方案？","expected_passage_ids":["dayu-p027","dayu-p045","dayu-p046"]},
+    {"case_id":"L101-V2-017","slot_id":"dayu-slot-methods","question":"古文里的“疏”能直接换算成现代水利工程方案吗？","expected_passage_ids":["dayu-p007","dayu-p031","dayu-p045"]},
+    {"case_id":"L101-V2-018","slot_id":"dayu-slot-methods","question":"一个方案很快压低水患却大量消耗劳力，应该怎样评价？","expected_passage_ids":["dayu-p027","dayu-p028","dayu-p046"]},
+
+    {"case_id":"L101-V2-019","slot_id":"dayu-slot-erlitou-state","question":"道路、围垣和宫殿区为什么比一件孤立文物更能说明规划能力？","expected_passage_ids":["dayu-p014","dayu-p016","dayu-p037"]},
+    {"case_id":"L101-V2-020","slot_id":"dayu-slot-erlitou-state","question":"二里头的作坊和高等级礼器怎样反映资源集中？","expected_passage_ids":["dayu-p013","dayu-p019","dayu-p035"]},
+    {"case_id":"L101-V2-021","slot_id":"dayu-slot-erlitou-state","question":"从中心都邑到周边聚落的层级，对早期国家研究有什么意义？","expected_passage_ids":["dayu-p014","dayu-p036","dayu-p038"]},
+    {"case_id":"L101-V2-022","slot_id":"dayu-slot-erlitou-state","question":"考古学家怎样从遗迹之间的关系复原二里头功能分区？","expected_passage_ids":["dayu-p016","dayu-p037"]},
+    {"case_id":"L101-V2-023","slot_id":"dayu-slot-erlitou-state","question":"多学科探源为什么不靠一件所谓的“定名文物”下结论？","expected_passage_ids":["dayu-p038","dayu-p044"]},
+    {"case_id":"L101-V2-024","slot_id":"dayu-slot-erlitou-state","question":"二里头为何能支持广域王权研究，却不能直接说明是谁组织了治水？","expected_passage_ids":["dayu-p014","dayu-p019","dayu-p036"]},
+
+    {"case_id":"L101-V2-025","slot_id":"dayu-slot-erlitou-xia-boundary","question":"为什么可以说二里头与夏高度相关，却不能直接写成二里头就是夏？","expected_passage_ids":["dayu-p012","dayu-p015","dayu-p017","dayu-p026"]},
+    {"case_id":"L101-V2-026","slot_id":"dayu-slot-erlitou-xia-boundary","question":"考古有没有找到学界公认、同时代写着“禹”的铭文？","expected_passage_ids":["dayu-p017","dayu-p026","dayu-p048"]},
+    {"case_id":"L101-V2-027","slot_id":"dayu-slot-erlitou-xia-boundary","question":"现在没有发现禹名，是不是就证明禹绝对不存在？","expected_passage_ids":["dayu-p017","dayu-p026","dayu-p048"]},
+    {"case_id":"L101-V2-028","slot_id":"dayu-slot-erlitou-xia-boundary","question":"机构文章把二里头称作“夏都”时，学生引用应怎样保留解释层？","expected_passage_ids":["dayu-p015","dayu-p017","dayu-p044"]},
+    {"case_id":"L101-V2-029","slot_id":"dayu-slot-erlitou-xia-boundary","question":"二里头测年范围和传统夏代年代可以直接互相替代吗？","expected_passage_ids":["dayu-p012","dayu-p018","dayu-p029"]},
+    {"case_id":"L101-V2-030","slot_id":"dayu-slot-erlitou-xia-boundary","question":"若将来发现可靠的王朝自名，现有二里头判断会怎样变化？","expected_passage_ids":["dayu-p017","dayu-p026","dayu-p048"]},
+
+    {"case_id":"L101-V2-031","slot_id":"dayu-slot-jishi-flood","question":"积石峡研究直接讨论的是哪一场自然事件？","expected_passage_ids":["dayu-p020","dayu-p039","dayu-p040"]},
+    {"case_id":"L101-V2-032","slot_id":"dayu-slot-jishi-flood","question":"为什么发现约公元前1920年的局地洪水，并不等于找到了大禹本人？","expected_passage_ids":["dayu-p021","dayu-p023","dayu-p039","dayu-p040"]},
+    {"case_id":"L101-V2-033","slot_id":"dayu-slot-jishi-flood","question":"从地震滑坡到堰塞湖溃决，这条证据链包含哪些不同推断？","expected_passage_ids":["dayu-p020","dayu-p039"]},
+    {"case_id":"L101-V2-034","slot_id":"dayu-slot-jishi-flood","question":"学者质疑积石峡洪水假说时，是不是就在否认那里发生过洪水？","expected_passage_ids":["dayu-p022","dayu-p041"]},
+    {"case_id":"L101-V2-035","slot_id":"dayu-slot-jishi-flood","question":"测年写“约公元前1920年”，为什么不能当成禹的精确个人年表？","expected_passage_ids":["dayu-p020","dayu-p029","dayu-p040"]},
+    {"case_id":"L101-V2-036","slot_id":"dayu-slot-jishi-flood","question":"怎样把地质灾害、洪水传说和夏王朝这三个命题拆开检查？","expected_passage_ids":["dayu-p021","dayu-p023","dayu-p041","dayu-p044"]},
+
+    {"case_id":"L101-V2-037","slot_id":"dayu-slot-memory-map","question":"南宋《禹迹图》为什么不能拿来标注夏代施工坐标？","expected_passage_ids":["dayu-p024","dayu-p025","dayu-p042"]},
+    {"case_id":"L101-V2-038","slot_id":"dayu-slot-memory-map","question":"《禹贡》里的九州和水道能直接连成禹的旅行路线吗？","expected_passage_ids":["dayu-p009","dayu-p034"]},
+    {"case_id":"L101-V2-039","slot_id":"dayu-slot-memory-map","question":"一幅题名带“禹”的地图，首先应该追问它是什么时候制作的吗？","expected_passage_ids":["dayu-p024","dayu-p042"]},
+    {"case_id":"L101-V2-040","slot_id":"dayu-slot-memory-map","question":"课堂地图怎样避免把遗址地点、洪水地点和后世记忆混成一层？","expected_passage_ids":["dayu-p025","dayu-p042","dayu-p044"]},
+    {"case_id":"L101-V2-041","slot_id":"dayu-slot-memory-map","question":"《禹贡》把山川和贡赋放在一起，主要展现了怎样的空间秩序？","expected_passage_ids":["dayu-p009","dayu-p010","dayu-p034"]},
+    {"case_id":"L101-V2-042","slot_id":"dayu-slot-memory-map","question":"历史地图为什么要分别标出文本空间、现代推定位置和不确定区？","expected_passage_ids":["dayu-p025","dayu-p034","dayu-p042"]},
+
+    {"case_id":"L101-V2-043","slot_id":"dayu-slot-governance-power-cost","question":"协调多个聚落共同治水，为什么可能让组织者获得更大权威？","expected_passage_ids":["dayu-p002","dayu-p010","dayu-p046"]},
+    {"case_id":"L101-V2-044","slot_id":"dayu-slot-governance-power-cost","question":"公共工程成功了，为什么仍要追问粮食、劳作和公平代价？","expected_passage_ids":["dayu-p027","dayu-p028","dayu-p046"]},
+    {"case_id":"L101-V2-045","slot_id":"dayu-slot-governance-power-cost","question":"治水能用一句“因为修了工程，所以国家诞生”来解释吗？","expected_passage_ids":["dayu-p002","dayu-p011","dayu-p019","dayu-p046"]},
+    {"case_id":"L101-V2-046","slot_id":"dayu-slot-governance-power-cost","question":"强征劳力能快速压低风险，为什么未必会得到好结局？","expected_passage_ids":["dayu-p027","dayu-p028","dayu-p046"]},
+    {"case_id":"L101-V2-047","slot_id":"dayu-slot-governance-power-cost","question":"关卡里的信任、风险和粮食数字，是夏代留下的真实账册吗？","expected_passage_ids":["dayu-p027","dayu-p030","dayu-p046"]},
+    {"case_id":"L101-V2-048","slot_id":"dayu-slot-governance-power-cost","question":"史官卷宗为什么要同时保存选择、状态变化、来源和后续修正？","expected_passage_ids":["dayu-p030","dayu-p043","dayu-p048"]},
+
+    {"case_id":"L101-V2-049","slot_id":"dayu-slot-succession","question":"禹之后启取得首领位置，为什么不能简单概括成一次父传子？","expected_passage_ids":["dayu-p005","dayu-p032"]},
+    {"case_id":"L101-V2-050","slot_id":"dayu-slot-succession","question":"传世叙事里的禹举益和诸侯归启，可以支持哪些继承解释？","expected_passage_ids":["dayu-p005","dayu-p032"]},
+    {"case_id":"L101-V2-051","slot_id":"dayu-slot-succession","question":"所谓从禅让转向世袭，属于同时代档案还是后世王朝叙事？","expected_passage_ids":["dayu-p005","dayu-p029","dayu-p032"]},
+    {"case_id":"L101-V2-052","slot_id":"dayu-slot-succession","question":"启继位能证明早期国家只由家族继承这一个原因形成吗？","expected_passage_ids":["dayu-p010","dayu-p032","dayu-p046"]},
+    {"case_id":"L101-V2-053","slot_id":"dayu-slot-succession","question":"讨论禹、益、启时，怎样区分人物关系框架和真实会议细节？","expected_passage_ids":["dayu-p005","dayu-p032","dayu-p043"]},
+    {"case_id":"L101-V2-054","slot_id":"dayu-slot-succession","question":"传统夏代年代为什么只能帮助排序，不能给禹和启标出精确日期？","expected_passage_ids":["dayu-p005","dayu-p029","dayu-p032"]},
+
+    {"case_id":"L101-V2-055","slot_id":"dayu-slot-revise-with-new-evidence","question":"如果新出土文字出现王朝自名，它会先改变哪一层历史判断？","expected_passage_ids":["dayu-p017","dayu-p026","dayu-p048"]},
+    {"case_id":"L101-V2-056","slot_id":"dayu-slot-revise-with-new-evidence","question":"新发现一条水患记录，会不会让三过家门等细节也一起变真？","expected_passage_ids":["dayu-p023","dayu-p043","dayu-p048"]},
+    {"case_id":"L101-V2-057","slot_id":"dayu-slot-revise-with-new-evidence","question":"新的测年结果如果和现有框架冲突，应该怎样修改结论？","expected_passage_ids":["dayu-p017","dayu-p041","dayu-p048"]},
+    {"case_id":"L101-V2-058","slot_id":"dayu-slot-revise-with-new-evidence","question":"为什么历史结论要写明，出现什么新材料会让自己改主意？","expected_passage_ids":["dayu-p001","dayu-p043","dayu-p048"]},
+    {"case_id":"L101-V2-059","slot_id":"dayu-slot-revise-with-new-evidence","question":"多学科材料互相冲突时，是挑最顺耳的一项还是如实展示冲突？","expected_passage_ids":["dayu-p038","dayu-p041","dayu-p044","dayu-p048"]},
+    {"case_id":"L101-V2-060","slot_id":"dayu-slot-revise-with-new-evidence","question":"发现一件刻有“禹”字的器物，就一定能证明完整的治水故事吗？","expected_passage_ids":["dayu-p023","dayu-p026","dayu-p048"]}
+  ]
+}

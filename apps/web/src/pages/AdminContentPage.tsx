@@ -32,6 +32,7 @@ import {
   type ContentFileRecord,
   type CourseReleaseItemV2,
   type CourseReleaseItemV3,
+  type CourseReleaseItemV4,
   type CourseReleaseManifest,
   type EvidenceReleaseSelection,
   type KeywordProfilePackage,
@@ -43,6 +44,7 @@ import {
   type RuntimePresentationRecord,
   type PresentationReleaseSelection,
   type ScenarioReleaseSelection,
+  evidenceReleaseSelectionFromDescriptor,
 } from '../utils/api';
 import { ADMIN_CONTENT_PREVIEW_KEY } from '../utils/adminContentStorage';
 import { parseContentBlock, parseContentMarkup, renderMarkupHtml, stripInlineMarkup } from '../utils/contentMarkup';
@@ -774,10 +776,10 @@ function releaseItemV2(
   return item && 'scenarios' in item ? item : null;
 }
 
-function releaseItemV3(
+function releaseItemWithSupplements(
   release: CourseReleaseManifest | null,
   lessonId: string,
-): CourseReleaseItemV3 | null {
+): CourseReleaseItemV3 | CourseReleaseItemV4 | null {
   const item = release?.items.find((candidate) => candidate.lesson_id === lessonId);
   return item && 'evidence_corpus' in item ? item : null;
 }
@@ -858,8 +860,8 @@ export default function AdminContentPage() {
     () => releaseItemV2(activeRelease, editor.lesson_id),
     [activeRelease, editor.lesson_id],
   );
-  const activeReleaseItemV3 = useMemo(
-    () => releaseItemV3(activeRelease, editor.lesson_id),
+  const activeReleaseItemWithSupplements = useMemo(
+    () => releaseItemWithSupplements(activeRelease, editor.lesson_id),
     [activeRelease, editor.lesson_id],
   );
   const lessonRuntimeEvidence = useMemo(
@@ -967,18 +969,18 @@ export default function AdminContentPage() {
     if (value !== 'replace') return;
     if (!selectedEvidenceKey) {
       const active = lessonRuntimeEvidence.find((item) => (
-        item.descriptor.artifact_id === activeReleaseItemV3?.evidence_corpus.artifact_id
-        && item.descriptor.version === activeReleaseItemV3?.evidence_corpus.version
-        && item.descriptor.checksum === activeReleaseItemV3?.evidence_corpus.checksum
+        item.descriptor.artifact_id === activeReleaseItemWithSupplements?.evidence_corpus.artifact_id
+        && item.descriptor.version === activeReleaseItemWithSupplements?.evidence_corpus.version
+        && item.descriptor.checksum === activeReleaseItemWithSupplements?.evidence_corpus.checksum
       ));
       const fallback = active || (lessonRuntimeEvidence.length === 1 ? lessonRuntimeEvidence[0] : undefined);
       setSelectedEvidenceKey(fallback ? supplementRuntimeKey(fallback) : undefined);
     }
     if (!selectedPresentationKey) {
       const active = lessonRuntimePresentations.find((item) => (
-        item.descriptor.artifact_id === activeReleaseItemV3?.lesson_presentation.artifact_id
-        && item.descriptor.version === activeReleaseItemV3?.lesson_presentation.version
-        && item.descriptor.checksum === activeReleaseItemV3?.lesson_presentation.checksum
+        item.descriptor.artifact_id === activeReleaseItemWithSupplements?.lesson_presentation.artifact_id
+        && item.descriptor.version === activeReleaseItemWithSupplements?.lesson_presentation.version
+        && item.descriptor.checksum === activeReleaseItemWithSupplements?.lesson_presentation.checksum
       ));
       const fallback = active || (lessonRuntimePresentations.length === 1 ? lessonRuntimePresentations[0] : undefined);
       setSelectedPresentationKey(fallback ? supplementRuntimeKey(fallback) : undefined);
@@ -1945,14 +1947,12 @@ export default function AdminContentPage() {
     }
     if (supplementBindingMode === 'replace') {
       if (!selectedRuntimeEvidence || !selectedRuntimePresentation) {
-        toast.warning('V3 发布必须同时选择一份精确证据库和一份精确展示资源');
+        toast.warning('发布必须同时选择一份精确证据库和一份精确展示资源');
         return;
       }
-      evidenceSelection = {
-        corpus_id: selectedRuntimeEvidence.descriptor.artifact_id,
-        corpus_version: selectedRuntimeEvidence.descriptor.version,
-        corpus_checksum: selectedRuntimeEvidence.descriptor.checksum,
-      };
+      evidenceSelection = evidenceReleaseSelectionFromDescriptor(
+        selectedRuntimeEvidence.descriptor,
+      );
       presentationSelection = {
         presentation_id: selectedRuntimePresentation.descriptor.artifact_id,
         presentation_version: selectedRuntimePresentation.descriptor.version,
@@ -2533,17 +2533,17 @@ export default function AdminContentPage() {
               <div style={{ display: 'grid', gap: 6, marginBottom: 10 }}>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ color: 'var(--text-mute)', fontSize: 12 }}>当前线上证据</span>
-                  {activeReleaseItemV3 ? (
+                  {activeReleaseItemWithSupplements ? (
                     <Tag color="cyan">
-                      {activeReleaseItemV3.evidence_corpus.artifact_id} · v{activeReleaseItemV3.evidence_corpus.version} · {activeReleaseItemV3.evidence_corpus.checksum.slice(0, 8)}
+                      {activeReleaseItemWithSupplements.evidence_corpus.artifact_id} · v{activeReleaseItemWithSupplements.evidence_corpus.version} · {activeReleaseItemWithSupplements.evidence_corpus.checksum.slice(0, 8)}
                     </Tag>
                   ) : <Tag>V1/V2 未绑定</Tag>}
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ color: 'var(--text-mute)', fontSize: 12 }}>当前线上展示</span>
-                  {activeReleaseItemV3 ? (
+                  {activeReleaseItemWithSupplements ? (
                     <Tag color="gold">
-                      {activeReleaseItemV3.lesson_presentation.artifact_id} · v{activeReleaseItemV3.lesson_presentation.version} · {activeReleaseItemV3.lesson_presentation.checksum.slice(0, 8)}
+                      {activeReleaseItemWithSupplements.lesson_presentation.artifact_id} · v{activeReleaseItemWithSupplements.lesson_presentation.version} · {activeReleaseItemWithSupplements.lesson_presentation.checksum.slice(0, 8)}
                     </Tag>
                   ) : <Tag>V1/V2 未绑定</Tag>}
                 </div>

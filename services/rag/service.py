@@ -105,9 +105,10 @@ class RagAnswerService:
             query_plan,
             batch,
         )
+        answer_batch = _scope_batch_to_reply_state(batch, local_fit)
         decision = route_rag_query(
             query_plan,
-            batch,
+            answer_batch,
             local_fit=local_fit,
             require_local_fit=True,
         )
@@ -115,11 +116,11 @@ class RagAnswerService:
             return self._insufficient(
                 resources,
                 request,
-                batch,
+                answer_batch,
                 decision=decision,
             )
 
-        model_candidates = _select_model_candidates(batch, local_fit)
+        model_candidates = _select_model_candidates(answer_batch, local_fit)
         if (
             decision.target == "external_api"
             and selected_external_generator is not None
@@ -140,7 +141,7 @@ class RagAnswerService:
                     resources,
                     request,
                     person,
-                    batch,
+                    answer_batch,
                     model_candidates,
                     query_plan,
                     local_fit,
@@ -160,7 +161,7 @@ class RagAnswerService:
             resources,
             request,
             person,
-            batch,
+            answer_batch,
             query_plan,
             local_fit,
         )
@@ -411,6 +412,7 @@ def _generation_messages(
         {
             "passage_id": item.passage.passage_id,
             "source_title": item.source.title,
+            "source_locator": _passage_locator(item),
             "title": item.passage.title,
             "text": item.passage.text,
             "summary": item.passage.summary,
@@ -509,6 +511,28 @@ def _select_model_candidates(
     return tuple(selected[:4])
 
 
+def _scope_batch_to_reply_state(
+    batch: RetrievalBatch,
+    local_fit: LocalReplyFit | None,
+) -> RetrievalBatch:
+    """Remove retrieved passages not authorized by the published V2 slot."""
+
+    if local_fit is None or not local_fit.passage_ids:
+        return batch
+    allowed = set(local_fit.passage_ids)
+    passages = tuple(
+        item
+        for item in batch.passages
+        if item.passage.passage_id in allowed
+    )
+    return RetrievalBatch(
+        scope_key=batch.scope_key,
+        passages=passages,
+        supported=batch.supported and bool(passages),
+        vector_used=batch.vector_used,
+    )
+
+
 def _selection_covers_required_facets(
     selected: list[RetrievedPassage],
     candidates: tuple[RetrievedPassage, ...],
@@ -561,6 +585,15 @@ def _passage_supports_facet(item: RetrievedPassage, facet: str) -> bool:
         for index in range(len(normalized) - 1)
     }
     return sum(segment in support for segment in bigrams) >= 2
+
+
+def _passage_locator(item: RetrievedPassage) -> str:
+    """Prefer the atomic V2 locator while preserving V1 citation behavior."""
+
+    return (
+        getattr(item.passage, "source_locator", "").strip()
+        or item.source.locator
+    )
 
 
 _UNCERTAINTY_RANK = {"low": 0, "medium": 1, "high": 2}
@@ -675,7 +708,7 @@ def _answer_contract(
             passage_id=item.passage.passage_id,
             source_id=item.source.source_id,
             source_title=item.source.title,
-            locator=item.source.locator,
+            locator=_passage_locator(item),
             excerpt=item.passage.text,
             relevance=item.relevance,
             certainty=item.passage.certainty,

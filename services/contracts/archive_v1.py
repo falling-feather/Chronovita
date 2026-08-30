@@ -68,6 +68,7 @@ ReleaseSchemaVersion = Literal[
     "course-release/v1",
     "course-release/v2",
     "course-release/v3",
+    "course-release/v4",
 ]
 ReleaseOperation = Literal["bootstrap", "publish", "rollback"]
 CredentialKind = Literal["github_app", "fine_grained_token"]
@@ -488,7 +489,7 @@ class CourseArchivePayloadV1(ArchiveContractModel):
             presentation_files = [
                 item for item in lesson_files if item.kind == "lesson-presentation"
             ]
-            if self.release_schema_version == "course-release/v3":
+            if self.release_schema_version in {"course-release/v3", "course-release/v4"}:
                 if len(evidence_files) != 1 or len(presentation_files) != 1:
                     raise ValueError(
                         "V3 archive lessons require one evidence corpus and one presentation"
@@ -496,11 +497,14 @@ class CourseArchivePayloadV1(ArchiveContractModel):
                 evidence_file = evidence_files[0]
                 presentation_file = presentation_files[0]
                 if (
-                    evidence_file.schema_version != "evidence-corpus/v1"
+                    evidence_file.schema_version not in (
+                        {"evidence-corpus/v1"} if self.release_schema_version == "course-release/v3"
+                        else {"evidence-corpus/v1", "evidence-corpus/v2"}
+                    )
                     or presentation_file.schema_version != "lesson-presentation/v1"
                 ):
                     raise ValueError(
-                        "V3 supplement archive schema identities are invalid"
+                        "release supplement archive schema identities are invalid"
                     )
                 if evidence_file.path != supplement_archive_path(
                     lesson.lesson_id,
@@ -521,7 +525,7 @@ class CourseArchivePayloadV1(ArchiveContractModel):
                         "lesson presentation must use its deterministic archive path"
                     )
             elif evidence_files or presentation_files:
-                raise ValueError("V1/V2 archives cannot contain V3 supplements")
+                raise ValueError("V1/V2 archives cannot contain release supplements")
 
             expected_paths = tuple(
                 sorted(file_paths_by_lesson[lesson.lesson_id], key=str.casefold)

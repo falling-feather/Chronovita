@@ -61,7 +61,7 @@ class RagClaimGroundingTests(unittest.IsolatedAsyncioTestCase):
         async def selector(messages):
             captured_messages.extend(messages)
             return _GroundedAnswerDraft(
-                passage_ids=("dayu-p020", "dayu-p026"),
+                passage_ids=("dayu-p044", "dayu-p040", "dayu-p039"),
                 synthesis_mode="boundary",
                 uncertainty="low",
             )
@@ -74,15 +74,16 @@ class RagClaimGroundingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(answer.answer_source, "model")
         self.assertEqual(
             {citation.passage_id for citation in answer.citations},
-            {"dayu-p020", "dayu-p026"},
+            {"dayu-p044", "dayu-p040", "dayu-p039"},
         )
         self.assertEqual(answer.uncertainty, "high")
         self.assertIn("当前发布证据可以支持", answer.body)
-        self.assertIn("特定地点自然事件的研究假说", answer.body)
-        self.assertIn("物质复杂性不能替代人物姓名证据", answer.body)
+        self.assertIn("证据多样性取决于材料能力", answer.body)
+        self.assertIn("自然事件链可以检验", answer.body)
         prompt = "\n".join(item["content"] for item in captured_messages)
-        self.assertIn("dayu-p020", prompt)
-        self.assertIn("dayu-p026", prompt)
+        self.assertIn("dayu-p044", prompt)
+        self.assertIn("dayu-p040", prompt)
+        self.assertIn("dayu-p039", prompt)
         self.assertNotIn("dayu-p030", prompt)
         for forbidden in ("1921", "秦始皇", "李冰", "都江堰", "灭亡"):
             self.assertNotIn(forbidden, answer.body)
@@ -124,13 +125,20 @@ class RagClaimGroundingTests(unittest.IsolatedAsyncioTestCase):
     async def test_low_uncertainty_requires_consensus_source_diversity(self) -> None:
         async def consensus_selection(_messages):
             return _GroundedAnswerDraft(
-                passage_ids=("dayu-p023", "dayu-p026"),
+                passage_ids=("dayu-p038", "dayu-p035", "dayu-p014"),
                 synthesis_mode="boundary",
                 uncertainty="low",
             )
 
         answer = await self.service.ask(
-            self.request,
+            self.request.model_copy(
+                update={
+                    "question": (
+                        "综合分析二里头宫殿区、道路网、手工业和区域聚落层级"
+                        "为何能支持早期国家研究，又不能证明什么？"
+                    )
+                }
+            ),
             external_generator=consensus_selection,
         )
 

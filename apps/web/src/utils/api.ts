@@ -177,12 +177,28 @@ export interface RuntimeArtifactDescriptor {
   artifact_id: string; course_id: string; lesson_id: string;
   version: number; checksum: string; path: string;
 }
-export interface SupplementArtifactDescriptor {
-  kind: 'evidence-corpus' | 'lesson-presentation';
-  schema_version: 'evidence-corpus/v1' | 'lesson-presentation/v1';
+interface SupplementArtifactDescriptorBase {
   artifact_id: string; course_id: string; lesson_id: string;
   version: number; checksum: string; path: string;
 }
+export interface EvidenceSupplementDescriptorV1 extends SupplementArtifactDescriptorBase {
+  kind: 'evidence-corpus';
+  schema_version: 'evidence-corpus/v1';
+}
+export interface EvidenceSupplementDescriptorV2 extends SupplementArtifactDescriptorBase {
+  kind: 'evidence-corpus';
+  schema_version: 'evidence-corpus/v2';
+}
+export interface LessonPresentationSupplementDescriptorV1 extends SupplementArtifactDescriptorBase {
+  kind: 'lesson-presentation';
+  schema_version: 'lesson-presentation/v1';
+}
+export type EvidenceSupplementDescriptor =
+  | EvidenceSupplementDescriptorV1
+  | EvidenceSupplementDescriptorV2;
+export type SupplementArtifactDescriptor =
+  | EvidenceSupplementDescriptor
+  | LessonPresentationSupplementDescriptorV1;
 export interface CourseReleaseItemV1 {
   lesson_id: string; course_id: string; content_version: number;
   source_path: string; source_checksum: string; package_path: string;
@@ -197,10 +213,14 @@ export interface CourseReleaseItemV2 {
   audience: 'published';
 }
 export interface CourseReleaseItemV3 extends CourseReleaseItemV2 {
-  evidence_corpus: SupplementArtifactDescriptor;
-  lesson_presentation: SupplementArtifactDescriptor;
+  evidence_corpus: EvidenceSupplementDescriptorV1;
+  lesson_presentation: LessonPresentationSupplementDescriptorV1;
 }
-export type CourseReleaseItem = CourseReleaseItemV1 | CourseReleaseItemV2 | CourseReleaseItemV3;
+export interface CourseReleaseItemV4 extends CourseReleaseItemV2 {
+  evidence_corpus: EvidenceSupplementDescriptorV2;
+  lesson_presentation: LessonPresentationSupplementDescriptorV1;
+}
+export type CourseReleaseItem = CourseReleaseItemV1 | CourseReleaseItemV2 | CourseReleaseItemV3 | CourseReleaseItemV4;
 export interface CourseReleaseManifest {
   schema_version: string; release_id: string; release_no: number; course_id: string;
   operation: 'bootstrap' | 'publish' | 'rollback'; parent_release_id?: string | null;
@@ -566,18 +586,36 @@ export interface EvidenceWorkflowRecord {
   history: EvidenceWorkflowEvent[]; checksum: string;
 }
 export interface RuntimeEvidenceRecord {
-  descriptor: SupplementArtifactDescriptor; title: string;
+  descriptor: EvidenceSupplementDescriptor; title: string;
   source_count: number; passage_count: number;
 }
 export interface RuntimePresentationRecord {
-  descriptor: SupplementArtifactDescriptor; title: string;
+  descriptor: LessonPresentationSupplementDescriptorV1; title: string;
   estimated_minutes: number; video_duration_seconds: number;
 }
-export interface EvidenceReleaseSelection {
+interface EvidenceReleaseSelectionBase {
   corpus_id: string; corpus_version: number; corpus_checksum: string;
 }
+export interface EvidenceReleaseSelectionV1 extends EvidenceReleaseSelectionBase {
+  schema_version?: 'evidence-corpus/v1';
+}
+export interface EvidenceReleaseSelectionV2 extends EvidenceReleaseSelectionBase {
+  schema_version: 'evidence-corpus/v2';
+}
+export type EvidenceReleaseSelection = EvidenceReleaseSelectionV1 | EvidenceReleaseSelectionV2;
 export interface PresentationReleaseSelection {
   presentation_id: string; presentation_version: number; presentation_checksum: string;
+}
+
+export function evidenceReleaseSelectionFromDescriptor(
+  descriptor: EvidenceSupplementDescriptor,
+): EvidenceReleaseSelection {
+  return {
+    corpus_id: descriptor.artifact_id,
+    corpus_version: descriptor.version,
+    corpus_checksum: descriptor.checksum,
+    schema_version: descriptor.schema_version,
+  };
 }
 
 export type RagPersonaMode = 'expert' | 'person';

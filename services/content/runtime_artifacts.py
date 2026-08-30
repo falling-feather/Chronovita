@@ -17,11 +17,14 @@ from services.contracts.evidence_v1 import (
     sign_evidence_contract,
     verify_evidence_checksum,
 )
+from services.contracts.evidence_v2 import EvidenceCorpusAny, EvidenceCorpusV2, parse_evidence_corpus
 from services.contracts.release_v2 import (
+    EvidenceSupplementDescriptorV2,
     ReleaseSupplementDescriptorV1,
     RuntimeArtifactDescriptorV1,
     runtime_artifact_path,
     supplement_artifact_path,
+    supplement_artifact_path_v2,
 )
 from services.contracts.v1 import (
     CoursePackageV1,
@@ -58,7 +61,7 @@ class RuntimeScenarioRecord(BaseModel):
 class RuntimeEvidenceRecord(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    descriptor: ReleaseSupplementDescriptorV1
+    descriptor: ReleaseSupplementDescriptorV1 | EvidenceSupplementDescriptorV2
     title: str
     source_count: int
     passage_count: int
@@ -73,22 +76,34 @@ class RuntimePresentationRecord(BaseModel):
     video_duration_seconds: float
 
 
-def stage_evidence_corpus(corpus: EvidenceCorpusV1) -> RuntimeEvidenceRecord:
+def stage_evidence_corpus(corpus: EvidenceCorpusAny) -> RuntimeEvidenceRecord:
     """Store a sealed evidence corpus without making it student-visible."""
 
     _validate_evidence_corpus(corpus)
     descriptor = descriptor_for_evidence(corpus)
     target = content_data.content_root() / Path(descriptor.path)
-    _assert_runtime_path(target, content_data.runtime_evidence_dir(), must_exist=False)
+    root = content_data.runtime_evidence_v2_dir() if isinstance(corpus, EvidenceCorpusV2) else content_data.runtime_evidence_dir()
+    _assert_runtime_path(target, root, must_exist=False)
     _require_unique_version(target, descriptor.version, "evidence corpus")
     _write_immutable_json(target, corpus)
     return _evidence_record(corpus, descriptor)
 
 
 def descriptor_for_evidence(
-    corpus: EvidenceCorpusV1,
-) -> ReleaseSupplementDescriptorV1:
+    corpus: EvidenceCorpusAny,
+) -> ReleaseSupplementDescriptorV1 | EvidenceSupplementDescriptorV2:
     _validate_evidence_corpus(corpus)
+    if isinstance(corpus, EvidenceCorpusV2):
+        return EvidenceSupplementDescriptorV2(
+            artifact_id=corpus.corpus_id, course_id=corpus.course_id,
+            lesson_id=corpus.lesson_id, version=corpus.corpus_version,
+            checksum=corpus.checksum,
+            path=supplement_artifact_path_v2(
+                artifact_id=corpus.corpus_id, course_id=corpus.course_id,
+                lesson_id=corpus.lesson_id, version=corpus.corpus_version,
+                checksum=corpus.checksum,
+            ),
+        )
     return ReleaseSupplementDescriptorV1(
         kind="evidence-corpus",
         schema_version="evidence-corpus/v1",
@@ -115,24 +130,37 @@ def load_evidence_corpus(
     corpus_id: str,
     corpus_version: int,
     corpus_checksum: str,
-) -> tuple[EvidenceCorpusV1, ReleaseSupplementDescriptorV1]:
-    descriptor = ReleaseSupplementDescriptorV1(
-        kind="evidence-corpus",
-        schema_version="evidence-corpus/v1",
-        artifact_id=corpus_id,
-        course_id=course_id,
-        lesson_id=lesson_id,
-        version=corpus_version,
-        checksum=corpus_checksum,
-        path=supplement_artifact_path(
+    schema_version: str = "evidence-corpus/v1",
+) -> tuple[EvidenceCorpusAny, ReleaseSupplementDescriptorV1 | EvidenceSupplementDescriptorV2]:
+    if schema_version == "evidence-corpus/v2":
+        descriptor = EvidenceSupplementDescriptorV2(
+            artifact_id=corpus_id, course_id=course_id, lesson_id=lesson_id,
+            version=corpus_version, checksum=corpus_checksum,
+            path=supplement_artifact_path_v2(
+                artifact_id=corpus_id, course_id=course_id, lesson_id=lesson_id,
+                version=corpus_version, checksum=corpus_checksum,
+            ),
+        )
+    elif schema_version == "evidence-corpus/v1":
+        descriptor = ReleaseSupplementDescriptorV1(
             kind="evidence-corpus",
+            schema_version="evidence-corpus/v1",
             artifact_id=corpus_id,
             course_id=course_id,
             lesson_id=lesson_id,
             version=corpus_version,
             checksum=corpus_checksum,
-        ),
-    )
+            path=supplement_artifact_path(
+                kind="evidence-corpus",
+                artifact_id=corpus_id,
+                course_id=course_id,
+                lesson_id=lesson_id,
+                version=corpus_version,
+                checksum=corpus_checksum,
+            ),
+        )
+    else:
+        raise RuntimeArtifactError(f"unsupported evidence schema: {schema_version}")
     target = content_data.content_root() / Path(descriptor.path)
     corpus, actual = load_evidence_corpus_path(target)
     if actual != descriptor:
@@ -142,9 +170,15 @@ def load_evidence_corpus(
 
 def load_evidence_corpus_path(
     path: Path,
-) -> tuple[EvidenceCorpusV1, ReleaseSupplementDescriptorV1]:
-    _assert_runtime_path(path, content_data.runtime_evidence_dir())
-    corpus = _read_contract(path, EvidenceCorpusV1)
+) -> tuple[EvidenceCorpusAny, ReleaseSupplementDescriptorV1 | EvidenceSupplementDescriptorV2]:
+    v2_root = content_data.runtime_evidence_v2_dir()
+    root = v2_root if _is_within(path, v2_root) else content_data.runtime_evidence_dir()
+    _assert_runtime_path(path, root)
+    try:
+        payload = json.loads(_read_immutable_bytes(path), object_pairs_hook=_reject_duplicate_json_keys)
+        corpus = parse_evidence_corpus(payload)
+    except (ValueError, ValidationError, json.JSONDecodeError) as exc:
+        raise RuntimeArtifactError(f"cannot read runtime evidence: {path}") from exc
     _validate_evidence_corpus(corpus)
     descriptor = descriptor_for_evidence(corpus)
     expected = content_data.content_root() / Path(descriptor.path)
@@ -160,7 +194,8 @@ def list_staged_evidence(
     corpus_id: str | None = None,
 ) -> list[RuntimeEvidenceRecord]:
     records: list[RuntimeEvidenceRecord] = []
-    for path in _walk_runtime_json_files(content_data.runtime_evidence_dir()):
+    paths = [*_walk_runtime_json_files(content_data.runtime_evidence_dir()), *_walk_runtime_json_files(content_data.runtime_evidence_v2_dir())]
+    for path in paths:
         corpus, descriptor = load_evidence_corpus_path(path)
         if corpus_id is None or descriptor.artifact_id == corpus_id:
             records.append(_evidence_record(corpus, descriptor))
@@ -593,8 +628,8 @@ def load_runtime_scenario(
 
 
 def load_release_evidence(
-    descriptor: ReleaseSupplementDescriptorV1,
-) -> EvidenceCorpusV1:
+    descriptor: ReleaseSupplementDescriptorV1 | EvidenceSupplementDescriptorV2,
+) -> EvidenceCorpusAny:
     if descriptor.kind != "evidence-corpus":
         raise RuntimeArtifactError("descriptor is not an evidence corpus")
     corpus, actual = load_evidence_corpus_path(
@@ -638,7 +673,7 @@ def _validate_sealed_scenario(scenario: ScenarioTemplateV1) -> None:
         raise RuntimeArtifactError("scenario must be sealed and checksum-valid")
 
 
-def _validate_evidence_corpus(corpus: EvidenceCorpusV1) -> None:
+def _validate_evidence_corpus(corpus: EvidenceCorpusAny) -> None:
     if corpus.status != "sealed" or not verify_evidence_checksum(corpus):
         raise RuntimeArtifactError(
             "evidence corpus must be sealed and checksum-valid"
@@ -670,8 +705,8 @@ def _validate_lesson_presentation(presentation: LessonPresentationV1) -> None:
 
 
 def _evidence_record(
-    corpus: EvidenceCorpusV1,
-    descriptor: ReleaseSupplementDescriptorV1,
+    corpus: EvidenceCorpusAny,
+    descriptor: ReleaseSupplementDescriptorV1 | EvidenceSupplementDescriptorV2,
 ) -> RuntimeEvidenceRecord:
     return RuntimeEvidenceRecord(
         descriptor=descriptor,
@@ -761,7 +796,7 @@ def _reject_duplicate_json_keys(
 
 
 def _write_immutable_json(path: Path, payload: BaseModel) -> None:
-    root = content_data.runtime_dir()
+    root = content_data.content_root() / "runtime"
     _assert_runtime_path(path, root, must_exist=False)
     path.parent.mkdir(parents=True, exist_ok=True)
     _assert_runtime_path(path, root, must_exist=False)
@@ -903,6 +938,14 @@ def _assert_runtime_path(
             _assert_not_symlink(current)
     if must_exist and not absolute_path.is_file():
         raise RuntimeArtifactError(f"runtime artifact does not exist: {path}")
+
+
+def _is_within(path: Path, root: Path) -> bool:
+    try:
+        path.absolute().relative_to(root.absolute())
+        return True
+    except ValueError:
+        return False
 
 
 def _assert_not_symlink(path: Path) -> None:

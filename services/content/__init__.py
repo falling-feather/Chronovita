@@ -80,6 +80,10 @@ def runtime_evidence_dir() -> Path:
     return runtime_dir() / "evidence"
 
 
+def runtime_evidence_v2_dir() -> Path:
+    return _CONTENT_ROOT / "runtime" / "v2" / "evidence"
+
+
 def runtime_presentation_dir() -> Path:
     return runtime_dir() / "presentations"
 
@@ -129,6 +133,7 @@ def ensure_content_dirs() -> None:
     runtime_course_package_dir().mkdir(parents=True, exist_ok=True)
     runtime_scenario_dir().mkdir(parents=True, exist_ok=True)
     runtime_evidence_dir().mkdir(parents=True, exist_ok=True)
+    runtime_evidence_v2_dir().mkdir(parents=True, exist_ok=True)
     runtime_presentation_dir().mkdir(parents=True, exist_ok=True)
     evidence_draft_dir().mkdir(parents=True, exist_ok=True)
     evidence_workflow_dir().mkdir(parents=True, exist_ok=True)

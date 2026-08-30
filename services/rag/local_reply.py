@@ -7,7 +7,14 @@ from typing import Literal
 import unicodedata
 
 from services.content.workflow import PublishedLessonResources
-from services.contracts.evidence_v1 import RagAskRequestV1
+from services.contracts.evidence_v1 import (
+    RagAskRequestV1,
+    verify_evidence_checksum,
+)
+from services.contracts.evidence_v2 import (
+    EvidenceAnswerSlotV1,
+    EvidenceCorpusV2,
+)
 from services.contracts.v1 import PersonV1
 
 from .query import RagQueryPlan
@@ -42,6 +49,9 @@ class LocalReplyFit:
     matched_terms: tuple[str, ...]
     answer_slot_supported: bool = True
     reason: str = "matched_published_state"
+    slot_ids: tuple[str, ...] = ()
+    passage_ids: tuple[str, ...] = ()
+    boundary_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -94,6 +104,65 @@ _SUPPORTED_EVIDENCE_CHECKSUMS: dict[tuple[str, str], str] = {
         "C-prequin-state",
         "L103",
     ): "06ab368e3f54051f21e56e4047ab9efb8f447cb81e2ef68620105995db4ce633",
+}
+
+# EvidenceCorpusV2 publishes the reviewed reply state together with the
+# passages.  These aliases preserve the V1 diagnostic state names for existing
+# clients while the new ``slot_ids`` field exposes the actual V2 authority.
+_V2_SLOT_STATE_IDS: dict[str, str] = {
+    "dayu-slot-erlitou-state": "L101.erlitou-state",
+    "dayu-slot-erlitou-xia-boundary": "L101.erlitou-state",
+    "dayu-slot-governance-power-cost": "L101.governance",
+    "dayu-slot-jishi-flood": "L101.flood-science",
+    "dayu-slot-memory-map": "L101.yugong-map",
+    "dayu-slot-methods": "L101.governance",
+    "dayu-slot-source-layers": "L101.transmitted-memory",
+    "shangyang-slot-01-overview": "L103.reform-overview",
+    "shangyang-slot-04-moving-wood": "L103.law-credit",
+    "shangyang-slot-05-military-merit": "L103.farming-merit",
+    "shangyang-slot-06-agriculture-war": "L103.farming-merit",
+    "shangyang-slot-07-collective-liability": "L103.collective-cost",
+    "shangyang-slot-08-county-administration": "L103.local-administration",
+    "shangyang-slot-11-fangsheng": "L103.fangsheng",
+    "shangyang-slot-12-sleeping-tiger-slips": "L103.text-layers",
+    "shangyang-slot-13-book-of-lord-shang": "L103.text-layers",
+    "shangyang-slot-15-evaluation": "L103.state-capacity",
+}
+
+_V2_LEGACY_STATE_SLOTS: dict[str, tuple[str, ...]] = {
+    "L101.transmitted-memory": ("dayu-slot-source-layers",),
+    "L101.yugong-map": ("dayu-slot-memory-map",),
+    "L101.flood-science": ("dayu-slot-jishi-flood",),
+    "L101.erlitou-state": (
+        "dayu-slot-erlitou-state",
+        "dayu-slot-erlitou-xia-boundary",
+    ),
+    "L101.governance": (
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-methods",
+    ),
+    "L101.chronology": (
+        "dayu-slot-erlitou-xia-boundary",
+        "dayu-slot-jishi-flood",
+    ),
+    "L103.reform-overview": ("shangyang-slot-01-overview",),
+    "L103.law-credit": ("shangyang-slot-04-moving-wood",),
+    "L103.farming-merit": (
+        "shangyang-slot-05-military-merit",
+        "shangyang-slot-06-agriculture-war",
+    ),
+    "L103.local-administration": (
+        "shangyang-slot-08-county-administration",
+    ),
+    "L103.collective-cost": (
+        "shangyang-slot-07-collective-liability",
+    ),
+    "L103.fangsheng": ("shangyang-slot-11-fangsheng",),
+    "L103.text-layers": (
+        "shangyang-slot-12-sleeping-tiger-slips",
+        "shangyang-slot-13-book-of-lord-shang",
+    ),
+    "L103.state-capacity": ("shangyang-slot-15-evaluation",),
 }
 
 _STATE_RULES: dict[tuple[str, str], tuple[_StateRule, ...]] = {
@@ -398,6 +467,9 @@ _GENERIC_UNSUPPORTED_SLOT_RULES = (
 _SYNTHESIS_LANGUAGE = re.compile(
     r"比较|综合|分别|以及|关系|同时|一方面|另一方面|权衡|评价|分析"
 )
+_FALSE_PREMISE_CORRECTION = re.compile(
+    r"就是|对吗|是不是|并非|并不是|不能直接|能不能直接"
+)
 _HAN_RUN = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff]+")
 _ASCII_WORD = re.compile(r"[a-z0-9]+(?:[-_.][a-z0-9]+)*")
 
@@ -597,11 +669,28 @@ def fit_local_reply(
     lesson_key = (resources.course_id, resources.lesson_id)
     if (
         lesson_key not in _SUPPORTED_LESSONS
-        or resources.evidence_corpus.checksum
-        != _SUPPORTED_EVIDENCE_CHECKSUMS.get(lesson_key)
         or request.course_id != resources.course_id
         or request.lesson_id != resources.lesson_id
     ):
+        return None
+
+    corpus = resources.evidence_corpus
+    if isinstance(corpus, EvidenceCorpusV2):
+        if (
+            not verify_evidence_checksum(corpus)
+            or corpus.supersedes_checksum
+            != _SUPPORTED_EVIDENCE_CHECKSUMS.get(lesson_key)
+        ):
+            return None
+        return _fit_v2_local_reply(
+            resources,
+            request,
+            person,
+            query_plan,
+            batch,
+            corpus,
+        )
+    if corpus.checksum != _SUPPORTED_EVIDENCE_CHECKSUMS.get(lesson_key):
         return None
 
     slot_match = _unsupported_slot_match(
@@ -731,6 +820,379 @@ def fit_local_reply(
             else "matched_state_without_sufficient_evidence"
         ),
     )
+
+
+def _fit_v2_local_reply(
+    resources: PublishedLessonResources,
+    request: RagAskRequestV1,
+    person: PersonV1 | None,
+    query_plan: RagQueryPlan,
+    batch: RetrievalBatch,
+    corpus: EvidenceCorpusV2,
+) -> LocalReplyFit | None:
+    """Resolve a reply exclusively through the state pack sealed in V2.
+
+    V2 answer slots are publication data, not application constants.  The
+    compatibility maps above only retain V1 diagnostic names; they never add
+    passages or grant API permission that the active corpus did not publish.
+    """
+
+    generic_unsupported = _unsupported_slot_match(
+        resources.course_id,
+        resources.lesson_id,
+        query_plan.original_question,
+    )
+    if generic_unsupported is not None:
+        rule, matched_terms = generic_unsupported
+        return LocalReplyFit(
+            state_id=f"{resources.lesson_id}.unsupported.{rule.slot_id}",
+            topic_label=rule.topic_label,
+            response_mode="unsupported_slot",
+            api_synthesis_allowed=False,
+            matched_terms=matched_terms,
+            answer_slot_supported=False,
+            reason="answer_slot_not_published",
+        )
+
+    normalized = _normalize(query_plan.original_question)
+    lesson_key = (resources.course_id, resources.lesson_id)
+    legacy_matches = _merge_alias_matches(
+        lesson_key,
+        normalized,
+        _matching_states(lesson_key, normalized),
+    )
+    reviewed_relation = _approved_question_relation(
+        legacy_matches,
+        query_plan.intent,
+        normalized,
+    )
+    unsupported = _matching_v2_slots(
+        corpus,
+        normalized,
+        query_plan.intent,
+        status="unsupported",
+    )
+    if unsupported and not (
+        reviewed_relation is not None
+        and _FALSE_PREMISE_CORRECTION.search(normalized)
+    ):
+        slot, matched_terms = unsupported[0]
+        return LocalReplyFit(
+            state_id=f"{resources.lesson_id}.unsupported.{slot.slot_id}",
+            topic_label=slot.label,
+            response_mode="unsupported_slot",
+            api_synthesis_allowed=False,
+            matched_terms=matched_terms,
+            answer_slot_supported=False,
+            reason="answer_slot_not_published",
+            slot_ids=(slot.slot_id,),
+            boundary_ids=slot.boundary_ids,
+        )
+
+    if query_plan.intent == "identity":
+        if not _valid_identity_person(resources, request, person):
+            return None
+        identity_slots = [
+            slot
+            for slot in corpus.answer_slots
+            if slot.status == "supported" and slot.response_mode == "identity"
+        ]
+        passage_ids = _deduplicate(
+            (
+                *(
+                passage.passage_id
+                for passage in corpus.passages
+                if person is not None and person.person_id in passage.person_ids
+                ),
+                *(
+                passage_id
+                for slot in identity_slots
+                for passage_id in slot.passage_ids
+                ),
+            ),
+        )
+        return LocalReplyFit(
+            state_id=f"{resources.lesson_id}.identity.{person.person_id}",
+            topic_label=f"{person.name}的课程身份",
+            response_mode="identity",
+            api_synthesis_allowed=False,
+            matched_terms=(person.name,),
+            reason=(
+                "published_person_identity"
+                if batch.passages
+                else "published_identity_without_retrieved_evidence"
+            ),
+            slot_ids=tuple(slot.slot_id for slot in identity_slots),
+            passage_ids=passage_ids,
+            boundary_ids=_deduplicate(
+                boundary_id
+                for slot in identity_slots
+                for boundary_id in slot.boundary_ids
+            ),
+        )
+
+    if query_plan.intent == "overview":
+        overview_slots = [
+            slot
+            for slot in corpus.answer_slots
+            if slot.status == "supported" and slot.response_mode == "overview"
+        ]
+        if not overview_slots:
+            return None
+        return _v2_slot_fit(
+            resources,
+            batch,
+            overview_slots,
+            matched_terms=(resources.course_package.title,),
+            state_id=f"{resources.lesson_id}.overview",
+            topic_label=resources.course_package.title,
+            response_mode="overview",
+            allow_api=False,
+        )
+
+    supported = _matching_v2_slots(
+        corpus,
+        normalized,
+        query_plan.intent,
+        status="supported",
+    )
+    requires_composite = (
+        len(legacy_matches) >= 2
+        and bool(_SYNTHESIS_LANGUAGE.search(normalized))
+    )
+    if supported and not requires_composite:
+        slot, matched_terms = supported[0]
+        return _v2_slot_fit(
+            resources,
+            batch,
+            (slot,),
+            matched_terms=matched_terms,
+            state_id=_V2_SLOT_STATE_IDS.get(
+                slot.slot_id,
+                f"{resources.lesson_id}.slot.{slot.slot_id}",
+            ),
+            topic_label=slot.label,
+            response_mode=slot.response_mode,
+        )
+
+    # Compatibility for already-reviewed V1 question wordings.  A legacy
+    # relation may select a V2 slot, but every citation and API permission still
+    # comes from that slot in the active immutable corpus.
+    matches = legacy_matches
+    if not matches:
+        return None
+
+    unsupported_facets = _unsupported_question_facets(
+        resources,
+        lesson_key,
+        query_plan.original_question,
+        matched_state_ids=tuple(state.state_id for state, _ in matches),
+    )
+    if unsupported_facets:
+        return LocalReplyFit(
+            state_id=f"{resources.lesson_id}.unsupported.unpublished-question-facet",
+            topic_label="当前发布未覆盖的问题用途或表述维度",
+            response_mode="unsupported_slot",
+            api_synthesis_allowed=False,
+            matched_terms=unsupported_facets,
+            answer_slot_supported=False,
+            reason="question_facet_not_published",
+        )
+
+    relation = reviewed_relation
+    if relation is None:
+        return LocalReplyFit(
+            state_id=f"{resources.lesson_id}.unsupported.unpublished-question-relation",
+            topic_label="当前发布未批准这些课程要素之间的问法关系",
+            response_mode="unsupported_slot",
+            api_synthesis_allowed=False,
+            matched_terms=_deduplicate(
+                term for _, terms in matches for term in terms
+            ),
+            answer_slot_supported=False,
+            reason="question_relation_not_published",
+        )
+
+    slot_index = {slot.slot_id: slot for slot in corpus.answer_slots}
+    selected_slots = _deduplicate_slots(
+        slot_index[slot_id]
+        for state, _ in matches
+        for slot_id in _V2_LEGACY_STATE_SLOTS.get(state.state_id, ())
+        if slot_id in slot_index and slot_index[slot_id].status == "supported"
+    )
+    if not selected_slots:
+        return None
+
+    if len(matches) >= 2 and _SYNTHESIS_LANGUAGE.search(normalized):
+        state_id, topic_label = _COMPOSITE_STATES[lesson_key]
+    else:
+        state_id = matches[0][0].state_id
+        topic_label = matches[0][0].topic_label
+    return _v2_slot_fit(
+        resources,
+        batch,
+        selected_slots,
+        matched_terms=_deduplicate(
+            term for _, terms in matches for term in terms
+        ),
+        state_id=state_id,
+        topic_label=topic_label,
+        response_mode=(
+            "boundary" if query_plan.intent == "evidence_boundary" else "topic"
+        ),
+        allow_api=relation.api_synthesis_allowed,
+    )
+
+
+def _matching_v2_slots(
+    corpus: EvidenceCorpusV2,
+    normalized_question: str,
+    intent: str,
+    *,
+    status: Literal["supported", "unsupported"],
+) -> list[tuple[EvidenceAnswerSlotV1, tuple[str, ...]]]:
+    matches: list[tuple[EvidenceAnswerSlotV1, tuple[str, ...]]] = []
+    all_terms = _deduplicate(
+        term
+        for slot in corpus.answer_slots
+        for group in slot.term_groups
+        for term in group
+    )
+    for slot in corpus.answer_slots:
+        if slot.status != status or not _v2_question_form_matches(
+            slot,
+            normalized_question,
+            intent,
+        ):
+            continue
+        matched_terms: list[str] = []
+        for group in slot.term_groups:
+            group_matches = [
+                term
+                for term in group
+                if _v2_term_occurs_independently(
+                    term,
+                    normalized_question,
+                    all_terms,
+                )
+            ]
+            if not group_matches:
+                break
+            matched_terms.extend(group_matches)
+        else:
+            matches.append((slot, _deduplicate(matched_terms)))
+    matches.sort(
+        key=lambda item: (
+            sum(len(_normalize(term)) for term in item[1]),
+            len(item[1]),
+            item[0].slot_id,
+        ),
+        reverse=True,
+    )
+    return matches
+
+
+def _v2_term_occurs_independently(
+    term: str,
+    normalized_question: str,
+    all_terms: tuple[str, ...],
+) -> bool:
+    normalized_term = _normalize(term)
+    for occurrence in re.finditer(
+        re.escape(normalized_term),
+        normalized_question,
+    ):
+        start, end = occurrence.span()
+        covered = False
+        for blocker in all_terms:
+            normalized_blocker = _normalize(blocker)
+            if len(normalized_blocker) <= len(normalized_term):
+                continue
+            for outer in re.finditer(
+                re.escape(normalized_blocker),
+                normalized_question,
+            ):
+                if outer.start() <= start and outer.end() >= end:
+                    covered = True
+                    break
+            if covered:
+                break
+        if not covered:
+            return True
+    return False
+
+
+def _v2_question_form_matches(
+    slot: EvidenceAnswerSlotV1,
+    normalized_question: str,
+    intent: str,
+) -> bool:
+    if slot.question_form == "identity":
+        return intent == "identity"
+    if slot.question_form == "creator_identity":
+        return bool(_CREATOR_QUESTION.search(normalized_question))
+    # The term groups are the semantic permission.  These forms describe how
+    # to arrange the answer; ordinary pupils need not use an exact interrogative.
+    return True
+
+
+def _v2_slot_fit(
+    resources: PublishedLessonResources,
+    batch: RetrievalBatch,
+    slots: Iterable[EvidenceAnswerSlotV1],
+    *,
+    matched_terms: tuple[str, ...],
+    state_id: str,
+    topic_label: str,
+    response_mode: LocalResponseMode,
+    allow_api: bool = True,
+) -> LocalReplyFit:
+    selected = _deduplicate_slots(slots)
+    passage_ids = _deduplicate(
+        passage_id for slot in selected for passage_id in slot.passage_ids
+    )
+    boundary_ids = _deduplicate(
+        boundary_id for slot in selected for boundary_id in slot.boundary_ids
+    )
+    retrieved_ids = {
+        item.passage.passage_id for item in batch.passages
+    }
+    eligible_count = len(retrieved_ids.intersection(passage_ids))
+    evidence_available = batch.supported and eligible_count > 0
+    api_allowed = (
+        allow_api
+        and evidence_available
+        and eligible_count >= 2
+        and all(slot.api_synthesis_allowed for slot in selected)
+    )
+    return LocalReplyFit(
+        state_id=state_id,
+        topic_label=topic_label,
+        response_mode=response_mode,
+        api_synthesis_allowed=api_allowed,
+        matched_terms=matched_terms,
+        reason=(
+            "matched_published_v2_slot"
+            if evidence_available
+            else "matched_state_without_sufficient_evidence"
+        ),
+        slot_ids=tuple(slot.slot_id for slot in selected),
+        passage_ids=passage_ids,
+        boundary_ids=boundary_ids,
+    )
+
+
+def _deduplicate_slots(
+    values: Iterable[EvidenceAnswerSlotV1],
+) -> tuple[EvidenceAnswerSlotV1, ...]:
+    result: list[EvidenceAnswerSlotV1] = []
+    seen: set[str] = set()
+    for value in values:
+        if value.slot_id in seen:
+            continue
+        seen.add(value.slot_id)
+        result.append(value)
+    return tuple(result)
 
 
 def _valid_identity_person(

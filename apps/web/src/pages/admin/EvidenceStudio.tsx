@@ -413,7 +413,7 @@ export default function EvidenceStudio({
       <section className="chrono-card" style={{ padding: 18 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div style={{ maxWidth: 760 }}>
-            <div className="chrono-course-eyeline">Evidence corpus · course-release/v3</div>
+            <div className="chrono-course-eyeline">Evidence corpus · course-release/v4</div>
             <h2 className="chrono-title" style={{ margin: '6px 0 8px', fontSize: 24 }}>证据资料库与展示发布</h2>
             <div style={{ color: 'var(--text-mute)', lineHeight: 1.75 }}>
               逐项绑定来源、稳定片段、课程事实与人物边界；作者、审校者、管理员分别完成送审、批准和不可变封存。这里不抓取网页，也不处理 PDF/OCR。

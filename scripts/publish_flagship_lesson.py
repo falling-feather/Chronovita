@@ -1,8 +1,9 @@
 """Materialize a reviewed flagship lesson through the production workflows.
 
 The command is intentionally narrow.  It installs one canonical source module,
-uses distinct author/reviewer/publisher identities, then verifies the active V3
+uses distinct author/reviewer/publisher identities, then verifies the active
 release.  Re-running an already published, byte-identical lesson is read-only.
+Evidence V2 must be published through the two-lesson atomic upgrade workflow.
 """
 
 from __future__ import annotations
@@ -59,6 +60,29 @@ SHANGYANG_ACTORS = Actors(
     reviewer="content-reviewer-shangyang",
     publisher="content-publisher-admin",
 )
+
+
+_V2_EVIDENCE_GUIDANCE = (
+    "This legacy flagship lesson publisher only materializes evidence-corpus/v1. "
+    "Use scripts/publish_flagship_evidence_v2.py (backed by "
+    "workflow.publish_evidence_bundle_v2) for the reviewed two-lesson atomic "
+    "Evidence V2 upgrade."
+)
+
+
+def _release_schema_for_legacy_publish(current: object | None) -> str:
+    if current is not None and getattr(current, "schema_version", None) == "course-release/v4":
+        return "course-release/v4"
+    return "course-release/v3"
+
+
+def _reject_v2_evidence_release(current: object | None) -> None:
+    if current is None:
+        return
+    for item in getattr(current, "items", ()):
+        evidence = getattr(item, "evidence_corpus", None)
+        if getattr(evidence, "schema_version", None) == "evidence-corpus/v2":
+            raise RuntimeError(_V2_EVIDENCE_GUIDANCE)
 
 
 def _assert_existing_dayu_matches_source(
@@ -126,6 +150,7 @@ def _assert_existing_dayu_matches_source(
     canonical_presentation = build_dayu_presentation(
         root,
         sealed_by=DAYU_ACTORS.publisher,
+        presentation_version=resources.lesson_presentation.presentation_version,
     )
     presentation_payload = resources.lesson_presentation.model_dump(mode="json")
     canonical_presentation_payload = canonical_presentation.model_dump(mode="json")
@@ -210,6 +235,7 @@ def _assert_existing_shangyang_matches_source(
     canonical_presentation = build_shangyang_presentation(
         root,
         sealed_by=SHANGYANG_ACTORS.publisher,
+        presentation_version=resources.lesson_presentation.presentation_version,
     )
     presentation_payload = resources.lesson_presentation.model_dump(mode="json")
     canonical_presentation_payload = canonical_presentation.model_dump(mode="json")
@@ -226,6 +252,8 @@ def publish_dayu(*, root: Path) -> dict[str, object]:
     content.configure(root)
     draft_source = build_dayu_course_draft()
     current = workflow.get_current_release(draft_source.course_id)
+    _reject_v2_evidence_release(current)
+    release_schema_version = _release_schema_for_legacy_publish(current)
     if current is not None:
         item = next(
             (
@@ -351,7 +379,7 @@ def publish_dayu(*, root: Path) -> dict[str, object]:
         sealed_course.lesson_id,
     )
     if (
-        release.schema_version != "course-release/v3"
+        release.schema_version != release_schema_version
         or published_workflow.state != "published"
         or resources.evidence_corpus.checksum != evidence.checksum
         or resources.lesson_presentation.checksum
@@ -360,7 +388,10 @@ def publish_dayu(*, root: Path) -> dict[str, object]:
         or evidence_record.descriptor.artifact_id != DAYU_CORPUS_ID
         or presentation_record.descriptor.artifact_id != DAYU_PRESENTATION_ID
     ):
-        raise RuntimeError("Dayu V3 publication postcondition failed.")
+        raise RuntimeError(
+            "Dayu publication did not preserve the expected release schema "
+            f"{release_schema_version}."
+        )
     return {
         "status": "published",
         "release_id": release.release_id,
@@ -378,6 +409,8 @@ def publish_shangyang(*, root: Path) -> dict[str, object]:
     content.configure(root)
     draft_source = build_shangyang_course_draft()
     current = workflow.get_current_release(draft_source.course_id)
+    _reject_v2_evidence_release(current)
+    release_schema_version = _release_schema_for_legacy_publish(current)
     if current is not None:
         item = next(
             (
@@ -505,7 +538,7 @@ def publish_shangyang(*, root: Path) -> dict[str, object]:
         sealed_course.lesson_id,
     )
     if (
-        release.schema_version != "course-release/v3"
+        release.schema_version != release_schema_version
         or published_workflow.state != "published"
         or resources.evidence_corpus.checksum != evidence.checksum
         or resources.lesson_presentation.checksum
@@ -515,7 +548,10 @@ def publish_shangyang(*, root: Path) -> dict[str, object]:
         or presentation_record.descriptor.artifact_id
         != SHANGYANG_PRESENTATION_ID
     ):
-        raise RuntimeError("Shangyang V3 publication postcondition failed.")
+        raise RuntimeError(
+            "Shangyang publication did not preserve the expected release schema "
+            f"{release_schema_version}."
+        )
     return {
         "status": "published",
         "release_id": release.release_id,

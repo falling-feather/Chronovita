@@ -133,6 +133,16 @@ def publish_flagship_media(
 ) -> dict[str, object]:
     root = content_root.resolve()
     content.configure(root)
+    initial_release = workflow.get_current_release(COURSE_ID)
+    if initial_release is None or initial_release.schema_version not in {
+        "course-release/v3",
+        "course-release/v4",
+    }:
+        raise RuntimeError(
+            "Flagship media publication requires an active course-release/v3 or "
+            "course-release/v4 manifest."
+        )
+    release_schema_version = initial_release.schema_version
     results: list[dict[str, object]] = []
 
     for media in FLAGSHIP_MEDIA:
@@ -153,6 +163,7 @@ def publish_flagship_media(
                 corpus_id=evidence.corpus_id,
                 corpus_version=evidence.corpus_version,
                 corpus_checksum=evidence.checksum,
+                schema_version=evidence.schema_version,
             ),
             presentation_selection=workflow.PresentationReleaseSelection(
                 presentation_id=presentation.presentation_id,
@@ -162,7 +173,7 @@ def publish_flagship_media(
         )
         after = workflow.get_published_lesson_resources(COURSE_ID, media.lesson_id)
         if (
-            release.schema_version != "course-release/v3"
+            release.schema_version != release_schema_version
             or record.state != "published"
             or after.content_version != before.content_version
             or after.evidence_corpus.checksum != evidence.checksum
@@ -185,8 +196,14 @@ def publish_flagship_media(
         )
 
     final_release = workflow.get_current_release(COURSE_ID)
-    if final_release is None or final_release.schema_version != "course-release/v3":
-        raise RuntimeError("Final flagship release is not course-release/v3.")
+    if (
+        final_release is None
+        or final_release.schema_version != release_schema_version
+    ):
+        raise RuntimeError(
+            "Flagship media publication changed the active release schema; "
+            f"expected {release_schema_version}."
+        )
     final_versions = {
         item.lesson_id: item.lesson_presentation.version
         for item in final_release.items
@@ -204,6 +221,7 @@ def publish_flagship_media(
         "status": "published",
         "course_id": COURSE_ID,
         "presentation_version": presentation_version,
+        "release_schema_version": final_release.schema_version,
         "lessons": results,
         "final_release_id": final_release.release_id,
         "final_release_no": final_release.release_no,

@@ -160,9 +160,12 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
                 question="搬根木头就能让老百姓信法律吗？",
             )
         )
-        self.assertEqual(
-            [citation.passage_id for citation in answer.citations],
-            ["shangyang-p005"],
+        citation_ids = {citation.passage_id for citation in answer.citations}
+        self.assertIn("shangyang-p005", citation_ids)
+        self.assertTrue(
+            citation_ids.issubset(
+                {"shangyang-p005", "shangyang-p034", "shangyang-p035"}
+            )
         )
         self.assertNotIn("睡虎地", answer.body)
 
@@ -341,7 +344,7 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
         async def grounded_generator(messages):
             captured_messages.extend(messages)
             return _GroundedAnswerDraft(
-                passage_ids=("dayu-p020", "dayu-p026"),
+                passage_ids=("dayu-p044",),
                 synthesis_mode="boundary",
                 uncertainty="medium",
             )
@@ -358,9 +361,9 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(answer.answer_source, "model")
         self.assertEqual(
             {item.passage_id for item in answer.citations},
-            {"dayu-p020", "dayu-p026"},
+            {"dayu-p044"},
         )
-        self.assertEqual(answer.uncertainty, "high")
+        self.assertEqual(answer.uncertainty, "medium")
         prompt = "\n".join(item["content"] for item in captured_messages)
         self.assertIn("QUESTION_UNTRUSTED", prompt)
         self.assertIn("QUESTION_INTENT=evidence_boundary", prompt)

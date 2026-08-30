@@ -5,7 +5,6 @@ import tempfile
 import unittest
 
 from services.content import workflow
-from services.contracts.evidence_v1 import EvidenceCorpusV1
 from services.rag.retrieval import (
     EvidenceIntegrityError,
     HybridEvidenceRetriever,
@@ -347,9 +346,10 @@ class RagRetrievalTests(unittest.TestCase):
         )
 
     def test_tampered_corpus_fails_before_index_access(self):
+        corpus_type = type(self.resources["L101"].evidence_corpus)
         tampered = self.resources["L101"].model_copy(
             update={
-                "evidence_corpus": EvidenceCorpusV1.model_validate(
+                "evidence_corpus": corpus_type.model_validate(
                     {
                         **self.resources["L101"].evidence_corpus.model_dump(mode="json"),
                         "title": "被篡改的证据库",

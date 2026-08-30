@@ -1,0 +1,323 @@
+{
+  "schema_version": "rag-benchmark-l103-v2/v1",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L103",
+  "release_no": 6,
+  "evidence_schema_version": "evidence-corpus/v2",
+  "cases": [
+    {
+      "slot_id": "shangyang-slot-01-overview",
+      "question": "商鞅变法到底改了啥——军功、耕战、县制都算在里面吗？",
+      "expected_passage_ids": ["shangyang-p004", "shangyang-p006", "shangyang-p007", "shangyang-p008", "shangyang-p009", "shangyang-p010", "shangyang-p023"]
+    },
+    {
+      "slot_id": "shangyang-slot-01-overview",
+      "question": "如果用三句话说清这场改革的目标、办法和代价，应该抓住什么？",
+      "expected_passage_ids": ["shangyang-p001", "shangyang-p023", "shangyang-p024", "shangyang-p027"]
+    },
+    {
+      "slot_id": "shangyang-slot-01-overview",
+      "question": "为什么说变法是一整套国家建设，而不是几个互不相干的命令？",
+      "expected_passage_ids": ["shangyang-p023", "shangyang-p032", "shangyang-p036"]
+    },
+    {
+      "slot_id": "shangyang-slot-01-overview",
+      "question": "这节课要学什么——只背变法措施，还是用证据评价改革？",
+      "expected_passage_ids": ["shangyang-p001", "shangyang-p002", "shangyang-p024", "shangyang-p030"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-02-identity",
+      "question": "商鞅原来是不是叫卫鞅，后来为什么换了这个称呼？",
+      "expected_passage_ids": ["shangyang-p003", "shangyang-p047"]
+    },
+    {
+      "slot_id": "shangyang-slot-02-identity",
+      "question": "这个从卫国到秦国主持改革的人，身份经历大致是什么？",
+      "expected_passage_ids": ["shangyang-p003", "shangyang-p047"]
+    },
+    {
+      "slot_id": "shangyang-slot-02-identity",
+      "question": "课堂里召见商鞅时，他可以知道哪些事，又不能冒充知道哪些后世材料？",
+      "expected_passage_ids": ["shangyang-p020", "shangyang-p047"]
+    },
+    {
+      "slot_id": "shangyang-slot-02-identity",
+      "question": "大良造、受封商地和‘商鞅’这个名字之间是什么关系？",
+      "expected_passage_ids": ["shangyang-p003", "shangyang-p047"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-03-chronology",
+      "question": "课上为什么常把改革分成前356年和前350年前后两轮？",
+      "expected_passage_ids": ["shangyang-p004", "shangyang-p023", "shangyang-p032"]
+    },
+    {
+      "slot_id": "shangyang-slot-03-chronology",
+      "question": "商鞅变法的前356年和前350年，难道是某一天把所有新法一次推遍秦国吗？",
+      "expected_passage_ids": ["shangyang-p004", "shangyang-p031", "shangyang-p033"]
+    },
+    {
+      "slot_id": "shangyang-slot-03-chronology",
+      "question": "变法、方升铭文、睡虎地秦简和《史记》分别离哪个时代近？",
+      "expected_passage_ids": ["shangyang-p016", "shangyang-p033"]
+    },
+    {
+      "slot_id": "shangyang-slot-03-chronology",
+      "question": "《史记》把故事排成一个顺序，就等于秦国的原始行政日历吗？",
+      "expected_passage_ids": ["shangyang-p031", "shangyang-p033"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-04-moving-wood",
+      "question": "搬一根木头怎么会和百姓是否相信新法扯上关系？",
+      "expected_passage_ids": ["shangyang-p005", "shangyang-p034"]
+    },
+    {
+      "slot_id": "shangyang-slot-04-moving-wood",
+      "question": "徙木立信这个故事真正能说明什么，哪些现场细节不能当真？",
+      "expected_passage_ids": ["shangyang-p005", "shangyang-p034", "shangyang-p035"]
+    },
+    {
+      "slot_id": "shangyang-slot-04-moving-wood",
+      "question": "官府把说好的赏金兑付了，就足够长期建立制度信用了吗？",
+      "expected_passage_ids": ["shangyang-p005", "shangyang-p034"]
+    },
+    {
+      "slot_id": "shangyang-slot-04-moving-wood",
+      "question": "《韩非子》对法的评价能不能拿来证明徙木现场确实如此？",
+      "expected_passage_ids": ["shangyang-p005", "shangyang-p035"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-05-military-merit",
+      "question": "军功爵让非贵族男子凭战功升爵，真能冲破旧贵族只看出身的门槛吗？",
+      "expected_passage_ids": ["shangyang-p006", "shangyang-p037"]
+    },
+    {
+      "slot_id": "shangyang-slot-05-military-merit",
+      "question": "军功爵算不算人人公平的上升通道？",
+      "expected_passage_ids": ["shangyang-p006", "shangyang-p037"]
+    },
+    {
+      "slot_id": "shangyang-slot-05-military-merit",
+      "question": "军功带来的身份机会和士卒、家庭承担的战争成本怎么一起看？",
+      "expected_passage_ids": ["shangyang-p006", "shangyang-p036", "shangyang-p037"]
+    },
+    {
+      "slot_id": "shangyang-slot-05-military-merit",
+      "question": "秦国战斗力增强可以全用军功授爵来解释吗？",
+      "expected_passage_ids": ["shangyang-p024", "shangyang-p036", "shangyang-p037"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-06-agriculture-war",
+      "question": "奖励种田又鼓励打仗，对一个普通农耕家庭会同时带来什么？",
+      "expected_passage_ids": ["shangyang-p007", "shangyang-p038"]
+    },
+    {
+      "slot_id": "shangyang-slot-06-agriculture-war",
+      "question": "为什么秦把耕作、兵源、奖惩和国家动员连成了一套？",
+      "expected_passage_ids": ["shangyang-p007", "shangyang-p036"]
+    },
+    {
+      "slot_id": "shangyang-slot-06-agriculture-war",
+      "question": "农民得到生产奖励后，是不是就不会再承受赋役和战争压力？",
+      "expected_passage_ids": ["shangyang-p007", "shangyang-p038"]
+    },
+    {
+      "slot_id": "shangyang-slot-06-agriculture-war",
+      "question": "现有材料能算出某户农民具体交多少税、服几天役吗？",
+      "expected_passage_ids": ["shangyang-p007", "shangyang-p038"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-07-collective-liability",
+      "question": "连坐听着很严厉，它想解决的基层执行难题是什么？",
+      "expected_passage_ids": ["shangyang-p008", "shangyang-p039"]
+    },
+    {
+      "slot_id": "shangyang-slot-07-collective-liability",
+      "question": "什伍编组和相互告发怎样让责任追查到邻里家户？",
+      "expected_passage_ids": ["shangyang-p008", "shangyang-p017", "shangyang-p039"]
+    },
+    {
+      "slot_id": "shangyang-slot-07-collective-liability",
+      "question": "为什么说连带责任既提高控制效率，也会把惩罚压力扩散给别人？",
+      "expected_passage_ids": ["shangyang-p008", "shangyang-p038", "shangyang-p039"]
+    },
+    {
+      "slot_id": "shangyang-slot-07-collective-liability",
+      "question": "睡虎地秦简里的责任规定能直接当作商鞅最初颁布的原文吗？",
+      "expected_passage_ids": ["shangyang-p008", "shangyang-p039", "shangyang-p045"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-08-county-administration",
+      "question": "县制到底怎样把秦国中央的命令送到地方？",
+      "expected_passage_ids": ["shangyang-p009", "shangyang-p023", "shangyang-p040"]
+    },
+    {
+      "slot_id": "shangyang-slot-08-county-administration",
+      "question": "设县只是地图上换个地名，还是连官吏、登记和司法都变了？",
+      "expected_passage_ids": ["shangyang-p009", "shangyang-p040"]
+    },
+    {
+      "slot_id": "shangyang-slot-08-county-administration",
+      "question": "地方官和文书为什么是县政真正运转的关键？",
+      "expected_passage_ids": ["shangyang-p017", "shangyang-p040"]
+    },
+    {
+      "slot_id": "shangyang-slot-08-county-administration",
+      "question": "秦简展示的成熟县廷工作，能证明每个环节都是商鞅一次设计的吗？",
+      "expected_passage_ids": ["shangyang-p009", "shangyang-p039", "shangyang-p040"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-09-land-system",
+      "question": "开阡陌是不是就等于今天说的土地完全私有？",
+      "expected_passage_ids": ["shangyang-p010", "shangyang-p041", "shangyang-p042"]
+    },
+    {
+      "slot_id": "shangyang-slot-09-land-system",
+      "question": "田界变化为什么还要和赋役、农业开发、国家管理放在一起讲？",
+      "expected_passage_ids": ["shangyang-p010", "shangyang-p041", "shangyang-p042"]
+    },
+    {
+      "slot_id": "shangyang-slot-09-land-system",
+      "question": "一句‘开阡陌’能不能证明秦国各地都彻底废井田了？",
+      "expected_passage_ids": ["shangyang-p010", "shangyang-p041"]
+    },
+    {
+      "slot_id": "shangyang-slot-09-land-system",
+      "question": "拿现代产权概念直接套战国田制，会漏掉哪些历史条件？",
+      "expected_passage_ids": ["shangyang-p010", "shangyang-p041", "shangyang-p042"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-10-death-and-legacy",
+      "question": "商鞅被处死以后，他推动的制度是不是马上全没了？",
+      "expected_passage_ids": ["shangyang-p011", "shangyang-p024", "shangyang-p025"]
+    },
+    {
+      "slot_id": "shangyang-slot-10-death-and-legacy",
+      "question": "为什么会出现改革者失势，但有些规则仍继续运转的情况？",
+      "expected_passage_ids": ["shangyang-p011", "shangyang-p024", "shangyang-p043"]
+    },
+    {
+      "slot_id": "shangyang-slot-10-death-and-legacy",
+      "question": "个人结局悲惨能直接证明整场改革失败吗？",
+      "expected_passage_ids": ["shangyang-p011", "shangyang-p025", "shangyang-p043"]
+    },
+    {
+      "slot_id": "shangyang-slot-10-death-and-legacy",
+      "question": "商鞅死后，有哪些材料能说明改革制度延续、并没有人亡政息？",
+      "expected_passage_ids": ["shangyang-p011", "shangyang-p014", "shangyang-p024"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-11-fangsheng",
+      "question": "商鞅方升这件量器最直接能证明哪一项改革？",
+      "expected_passage_ids": ["shangyang-p012", "shangyang-p013"]
+    },
+    {
+      "slot_id": "shangyang-slot-11-fangsheng",
+      "question": "统一容量标准为什么会影响征收、仓储和交换？",
+      "expected_passage_ids": ["shangyang-p012", "shangyang-p013"]
+    },
+    {
+      "slot_id": "shangyang-slot-11-fangsheng",
+      "question": "同一件方升上前后两次刻字，分别属于什么年代、说明什么？",
+      "expected_passage_ids": ["shangyang-p012", "shangyang-p014", "shangyang-p044"]
+    },
+    {
+      "slot_id": "shangyang-slot-11-fangsheng",
+      "question": "有了方升实物，就能顺带证明徙木故事和全部变法都真实吗？",
+      "expected_passage_ids": ["shangyang-p012", "shangyang-p029", "shangyang-p044"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-12-sleeping-tiger-slips",
+      "question": "睡虎地秦简比商鞅变法晚了多久，它为什么仍然有用？",
+      "expected_passage_ids": ["shangyang-p015", "shangyang-p016", "shangyang-p039"]
+    },
+    {
+      "slot_id": "shangyang-slot-12-sleeping-tiger-slips",
+      "question": "云梦出土的那批竹简真是商鞅亲手写的法典吗？",
+      "expected_passage_ids": ["shangyang-p015", "shangyang-p016", "shangyang-p045"]
+    },
+    {
+      "slot_id": "shangyang-slot-12-sleeping-tiger-slips",
+      "question": "为什么不能把睡虎地秦简看成内容完全相同的一部秦律？",
+      "expected_passage_ids": ["shangyang-p015", "shangyang-p017", "shangyang-p045"]
+    },
+    {
+      "slot_id": "shangyang-slot-12-sleeping-tiger-slips",
+      "question": "这些秦简怎样让我们看到法律和官吏工作进入日常生活？",
+      "expected_passage_ids": ["shangyang-p017", "shangyang-p039", "shangyang-p040"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-13-book-of-lord-shang",
+      "question": "《商君书》里的每句话都是商鞅本人亲笔写的吗？",
+      "expected_passage_ids": ["shangyang-p018", "shangyang-p020", "shangyang-p021", "shangyang-p046"]
+    },
+    {
+      "slot_id": "shangyang-slot-13-book-of-lord-shang",
+      "question": "研究者为什么要把《商君书》分篇、分层判断年代？",
+      "expected_passage_ids": ["shangyang-p020", "shangyang-p021", "shangyang-p046"]
+    },
+    {
+      "slot_id": "shangyang-slot-13-book-of-lord-shang",
+      "question": "就算不是一人一时写成，《商君书》还有什么思想史价值？",
+      "expected_passage_ids": ["shangyang-p020", "shangyang-p021", "shangyang-p046"]
+    },
+    {
+      "slot_id": "shangyang-slot-13-book-of-lord-shang",
+      "question": "引用书里的农战主张时，应该说是商鞅原话还是思想传统？",
+      "expected_passage_ids": ["shangyang-p018", "shangyang-p020", "shangyang-p046"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-14-modern-law",
+      "question": "秦国也讲按法办事，能把它直接叫作现代法治吗？",
+      "expected_passage_ids": ["shangyang-p019", "shangyang-p026", "shangyang-p048"]
+    },
+    {
+      "slot_id": "shangyang-slot-14-modern-law",
+      "question": "秦法和今天法治有哪些局部可比之处，又有哪些根本差别？",
+      "expected_passage_ids": ["shangyang-p026", "shangyang-p043", "shangyang-p048"]
+    },
+    {
+      "slot_id": "shangyang-slot-14-modern-law",
+      "question": "规则公开、官吏负责就等于已经有权利保障和程序正义了吗？",
+      "expected_passage_ids": ["shangyang-p019", "shangyang-p026", "shangyang-p048"]
+    },
+    {
+      "slot_id": "shangyang-slot-14-modern-law",
+      "question": "秦简里的严格执法能不能证明当时已经‘法律面前人人平等’？",
+      "expected_passage_ids": ["shangyang-p026", "shangyang-p039", "shangyang-p048"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-15-evaluation",
+      "question": "评价商鞅变法，为什么不能只说军队强了就是成功？",
+      "expected_passage_ids": ["shangyang-p027", "shangyang-p037", "shangyang-p043"]
+    },
+    {
+      "slot_id": "shangyang-slot-15-evaluation",
+      "question": "国家能力、制度延续和百姓承受的压力应该怎样放进同一评价？",
+      "expected_passage_ids": ["shangyang-p027", "shangyang-p028", "shangyang-p030", "shangyang-p043"]
+    },
+    {
+      "slot_id": "shangyang-slot-15-evaluation",
+      "question": "秦后来统一六国，能不能全算成商鞅一个人的功劳？",
+      "expected_passage_ids": ["shangyang-p024", "shangyang-p032", "shangyang-p043"]
+    },
+    {
+      "slot_id": "shangyang-slot-15-evaluation",
+      "question": "《韩非子》后来怎样同时看商鞅之法的功效与不足？",
+      "expected_passage_ids": ["shangyang-p022", "shangyang-p043"]
+    }
+  ]
+}

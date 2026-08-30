@@ -475,16 +475,15 @@ def _supplement_references(item) -> tuple[object, ...]:
 
 def _parse_supplement(raw: bytes, kind: str, lesson_id: str):
     from services.contracts.evidence_v1 import (
-        EvidenceCorpusV1,
         LessonPresentationV1,
         verify_evidence_checksum,
     )
+    from services.contracts.evidence_v2 import parse_evidence_corpus
 
-    model = {
-        "evidence-corpus": EvidenceCorpusV1,
-        "lesson-presentation": LessonPresentationV1,
-    }[kind]
-    supplement = _parse_json_model(raw, model, f"{kind} {lesson_id}")
+    if kind == "evidence-corpus":
+        supplement = _parse_json_contract(raw, parse_evidence_corpus, f"{kind} {lesson_id}")
+    else:
+        supplement = _parse_json_model(raw, LessonPresentationV1, f"{kind} {lesson_id}")
     if not verify_evidence_checksum(supplement):
         raise ArchiveBuildError(f"{kind} failed checksum verification")
     return supplement
