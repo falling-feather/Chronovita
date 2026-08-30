@@ -307,9 +307,21 @@ class ScenarioCatalogRepository:
                         )
                     )
 
-        unique_matches = {
-            _complete_identity(record.entry): record for record in matches
-        }
+        unique_matches: dict[
+            tuple[str, int, str, str, str, int, str],
+            LoadedScenarioV1,
+        ] = {}
+        for record in matches:
+            identity = _complete_identity(record.entry)
+            existing = unique_matches.get(identity)
+            # One immutable artifact identity may be reachable from several
+            # release generations.  Prefer the newest exact release so the V5
+            # EvidenceCorpus-derived classifier context is not overwritten by
+            # an older release or the development catalog copy.
+            if existing is None or (record.release_no or -1) > (
+                existing.release_no or -1
+            ):
+                unique_matches[identity] = record
         if not unique_matches:
             raise ScenarioCatalogNotFound(
                 f"pinned scenario not found: {scenario_id} v{scenario_version}"
@@ -589,13 +601,25 @@ class ScenarioCatalogRepository:
             raise ScenarioIntegrityError(
                 f"published course package failed verification: {exc}"
             ) from exc
+        classification_fact_sources = None
+        if (
+            isinstance(item, CourseReleaseItemV5)
+            and item.course_id == "C-prequin-state"
+            and item.lesson_id in {"L101", "L103"}
+        ):
+            try:
+                evidence = runtime_artifacts.load_release_evidence(item.evidence_corpus)
+            except runtime_artifacts.RuntimeArtifactError as exc:
+                raise ScenarioIntegrityError(
+                    "published evidence corpus failed verification: "
+                    f"{item.lesson_id}: {exc}"
+                ) from exc
+            classification_fact_sources = _reviewed_fact_source_map(evidence)
 
         records: list[LoadedScenarioV1] = []
         for scenario_descriptor in scenario_descriptors:
             try:
-                scenario = runtime_artifacts.load_runtime_scenario(
-                    scenario_descriptor
-                )
+                scenario = runtime_artifacts.load_runtime_scenario(scenario_descriptor)
             except runtime_artifacts.RuntimeArtifactError as exc:
                 raise ScenarioIntegrityError(
                     f"published scenario failed verification: {exc}"
@@ -615,7 +639,11 @@ class ScenarioCatalogRepository:
             records.append(
                 LoadedScenarioV1(
                     entry=self._release_entry(item, scenario_descriptor),
-                    engine=SituationEngineV1(bundle.course, bundle.scenario),
+                    engine=SituationEngineV1(
+                        bundle.course,
+                        bundle.scenario,
+                        classification_fact_sources=classification_fact_sources,
+                    ),
                     release_id=manifest.release_id,
                     release_no=manifest.release_no,
                     release_checksum=str(manifest.checksum),
@@ -686,6 +714,25 @@ class ScenarioCatalogRepository:
             "artifact path",
         )
         return path
+
+
+def _reviewed_fact_source_map(evidence) -> dict[str, tuple[str, ...]]:
+    """Project an immutable corpus into the classifier's least-privilege view."""
+
+    reviewed_source_ids = {
+        item.source_id for item in evidence.sources if item.reliability == "reviewed"
+    }
+    sources_by_fact: dict[str, set[str]] = {}
+    for passage in evidence.passages:
+        if passage.source_id not in reviewed_source_ids:
+            continue
+        for fact_id in passage.fact_ids:
+            sources_by_fact.setdefault(fact_id, set()).add(passage.source_id)
+    return {
+        fact_id: tuple(sorted(source_ids))
+        for fact_id, source_ids in sorted(sources_by_fact.items())
+        if source_ids
+    }
 
 
 def _matches_exact_identity(

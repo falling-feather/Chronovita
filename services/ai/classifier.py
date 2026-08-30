@@ -11,8 +11,13 @@ from services.ai.contracts import (
     ClassificationReason,
     ClassifierModelOutputV1,
 )
-from services.contracts.v1 import FactV1, GameSessionV1, PlayerInput
+from services.contracts.v1 import (
+    GameSessionV1,
+    PlayerInput,
+    reviewed_classification_fact_sources,
+)
 from services.game_runtime import SituationEngineV1, UnknownAction
+from services.game_runtime.action_fit import fit_local_action
 from services.llm import (
     LLMFailureCode,
     StructuredCompletion,
@@ -105,27 +110,6 @@ class ActionClassifierV1:
                 available_action_ids=available_ids,
             )
 
-        try:
-            exact_action_id = engine.resolve_action_id(normalized_input)
-        except UnknownAction:
-            exact_action_id = None
-        if exact_action_id is not None:
-            if exact_action_id not in available_ids:
-                return self._result(
-                    kind="rejected",
-                    source="guardrail",
-                    reason_code="action_unavailable",
-                    available_action_ids=available_ids,
-                )
-            return self._result(
-                kind="matched",
-                source="exact",
-                reason_code="exact_match",
-                action_id=exact_action_id,
-                confidence=1.0,
-                available_action_ids=available_ids,
-            )
-
         if _looks_like_prompt_injection(normalized_input):
             return self._result(
                 kind="rejected",
@@ -134,6 +118,86 @@ class ActionClassifierV1:
                 confidence=1.0,
                 available_action_ids=available_ids,
             )
+
+        if (
+            engine.course.course_id == "C-prequin-state"
+            and engine.course.lesson_id in {"L101", "L103"}
+        ):
+            local = fit_local_action(
+                lesson_id=engine.course.lesson_id,
+                raw_input=normalized_input,
+                available_actions=available,
+            )
+            if local.kind == "exact_alias":
+                return self._result(
+                    kind="matched",
+                    source="exact",
+                    reason_code="exact_match",
+                    action_id=local.action_id,
+                    confidence=1.0,
+                    available_action_ids=available_ids,
+                )
+            if local.kind == "local_semantic_match":
+                return self._result(
+                    kind="matched",
+                    source="local_state",
+                    reason_code="local_semantic_match",
+                    action_id=local.action_id,
+                    confidence=local.score,
+                    available_action_ids=available_ids,
+                )
+            if local.kind == "injection":
+                return self._result(
+                    kind="rejected",
+                    source="guardrail",
+                    reason_code="prompt_injection",
+                    confidence=1.0,
+                    available_action_ids=available_ids,
+                )
+            if local.kind == "off_topic":
+                return self._result(
+                    kind="rejected",
+                    source="guardrail",
+                    reason_code=(
+                        "invalid_input"
+                        if local.reason_code == "invalid_input"
+                        else "out_of_scope"
+                    ),
+                    confidence=1.0,
+                    available_action_ids=available_ids,
+                )
+            if local.reason_code == "action_unavailable":
+                return self._result(
+                    kind="rejected",
+                    source="guardrail",
+                    reason_code="action_unavailable",
+                    confidence=local.score,
+                    available_action_ids=available_ids,
+                )
+            # Relevant but non-unique proposals continue to the reviewed-fact
+            # API classifier below.  No online capacity is consumed by all
+            # locally settled, off-topic or injection cases above.
+        else:
+            try:
+                exact_action_id = engine.resolve_action_id(normalized_input)
+            except UnknownAction:
+                exact_action_id = None
+            if exact_action_id is not None:
+                if exact_action_id not in available_ids:
+                    return self._result(
+                        kind="rejected",
+                        source="guardrail",
+                        reason_code="action_unavailable",
+                        available_action_ids=available_ids,
+                    )
+                return self._result(
+                    kind="matched",
+                    source="exact",
+                    reason_code="exact_match",
+                    action_id=exact_action_id,
+                    confidence=1.0,
+                    available_action_ids=available_ids,
+                )
 
         facts = _reviewed_fact_context(engine, available_ids)
         fact_ids = [item["fact_id"] for item in facts]
@@ -321,38 +385,24 @@ def _reviewed_fact_context(
     engine: SituationEngineV1,
     available_action_ids: list[str],
 ) -> list[dict[str, object]]:
-    sources = {item.source_id: item for item in engine.course.source_refs}
-    action_by_id = {
-        item.action_id: item for item in engine.scenario.action_rules
-    }
-    relevant_ids = set(engine.scenario.fact_refs)
-    for action_id in available_action_ids:
-        relevant_ids.update(action_by_id[action_id].fact_refs)
-    fact_by_id: dict[str, FactV1] = {
+    fact_by_id = {
         item.fact_id: item for item in engine.course.facts
     }
-    result: list[dict[str, object]] = []
-    for fact_id in sorted(relevant_ids):
-        fact = fact_by_id.get(fact_id)
-        if fact is None or not fact.source_ref_ids:
-            continue
-        if "教师待审" in fact.statement:
-            continue
-        if any(
-            source_id not in sources
-            or sources[source_id].reliability != "reviewed"
-            for source_id in fact.source_ref_ids
-        ):
-            continue
-        result.append(
-            {
-                "fact_id": fact.fact_id,
-                "statement": fact.statement,
-                "certainty": fact.certainty,
-                "source_ref_ids": list(fact.source_ref_ids),
-            }
-        )
-    return result
+    source_map = reviewed_classification_fact_sources(
+        engine.course,
+        engine.scenario,
+        available_action_ids,
+        classification_fact_sources=engine.classification_fact_sources,
+    )
+    return [
+        {
+            "fact_id": fact_id,
+            "statement": fact_by_id[fact_id].statement,
+            "certainty": fact_by_id[fact_id].certainty,
+            "source_ref_ids": list(source_ids),
+        }
+        for fact_id, source_ids in source_map.items()
+    ]
 
 
 def _failure_reason(code: LLMFailureCode) -> ClassificationReason:

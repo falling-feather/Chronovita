@@ -3,8 +3,9 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from pathlib import Path
 import stat as stat_module
+from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Literal, TypeVar
 
 from pydantic import (
@@ -49,7 +50,7 @@ from services.contracts.v1 import (
     reviewed_narrative_refs,
     verify_contract_checksum,
 )
-
+from services.game_runtime.dialogue_models import ScenarioNpcDialogueV1
 
 ENGINE_VERSION = "rules-v1.0.0"
 MAX_CONTRACT_FILE_BYTES = 2 * 1024 * 1024
@@ -102,8 +103,13 @@ class RuntimeClassificationContextV1(BaseModel):
         str_strip_whitespace=True,
     )
 
-    source: Literal["fixed", "exact", "llm"]
-    reason_code: Literal["fixed_action", "exact_match", "semantic_match"]
+    source: Literal["fixed", "exact", "local_state", "llm"]
+    reason_code: Literal[
+        "fixed_action",
+        "exact_match",
+        "local_semantic_match",
+        "semantic_match",
+    ]
     policy_version: Literal["action-classifier/v1"] = "action-classifier/v1"
     reviewed_fact_refs: list[ContractId] = Field(default_factory=list)
     provider: str = Field(default="", max_length=32)
@@ -117,22 +123,34 @@ class RuntimeClassificationContextV1(BaseModel):
         expected_reason = {
             "fixed": "fixed_action",
             "exact": "exact_match",
+            "local_state": "local_semantic_match",
             "llm": "semantic_match",
         }[self.source]
         if self.reason_code != expected_reason:
-            raise ValueError("classification context source and reason_code are inconsistent")
+            raise ValueError(
+                "classification context source and reason_code are inconsistent"
+            )
         if self.source == "llm":
             if not self.reviewed_fact_refs:
                 raise ValueError("llm classification context requires reviewed facts")
             if not self.provider or not self.model or not self.output_checksum:
                 raise ValueError("llm classification context requires model metadata")
-        elif (
+        elif self.source != "local_state" and (
             self.reviewed_fact_refs
             or self.provider
             or self.model
             or self.output_checksum
         ):
-            raise ValueError("non-llm classification context cannot claim model evidence")
+            raise ValueError(
+                "non-llm classification context cannot claim model evidence"
+            )
+        elif self.source == "local_state" and (
+            self.reviewed_fact_refs
+            or self.provider
+            or self.model
+            or self.output_checksum
+        ):
+            raise ValueError("local classification cannot claim model evidence")
         return self
 
 
@@ -155,14 +173,24 @@ class RuntimeCommandV1(BaseModel):
     @model_validator(mode="after")
     def validate_classification(self) -> "RuntimeCommandV1":
         if self.action_source != "fixed" and self.action_id is None:
-            raise ValueError("free_input and fallback commands require a classified action_id")
+            raise ValueError(
+                "free_input and fallback commands require a classified action_id"
+            )
         if self.classification_context is not None:
-            if self.action_source == "fixed" and self.classification_context.source != "fixed":
+            if (
+                self.action_source == "fixed"
+                and self.classification_context.source != "fixed"
+            ):
                 raise ValueError("fixed commands require fixed classification context")
-            if self.action_source == "free_input" and self.classification_context.source == "fixed":
+            if (
+                self.action_source == "free_input"
+                and self.classification_context.source == "fixed"
+            ):
                 raise ValueError("free input cannot claim fixed classification context")
             if self.action_source == "fallback":
-                raise ValueError("fallback commands cannot carry typed classification context")
+                raise ValueError(
+                    "fallback commands cannot carry typed classification context"
+                )
         return self
 
 
@@ -182,6 +210,7 @@ class AdvanceResultV1(BaseModel):
     action_feedback: str = ""
     triggered_event_ids: tuple[ContractId, ...] = ()
     ending_id: ContractId | None = None
+    npc_dialogue: ScenarioNpcDialogueV1 | None = None
 
 
 class RuntimeNarrativeV1(BaseModel):
@@ -262,20 +291,26 @@ def load_contract_file(path: str | Path, model: type[ModelT]) -> ModelT:
     try:
         return model.model_validate(payload)
     except ValidationError as exc:
-        raise ScenarioFileError(f"invalid {model.__name__} file {source}: {exc}") from exc
+        raise ScenarioFileError(
+            f"invalid {model.__name__} file {source}: {exc}"
+        ) from exc
 
 
 def load_course_package(path: str | Path) -> CoursePackageV1:
     course = load_contract_file(path, CoursePackageV1)
     if course.status != "sealed" or not verify_contract_checksum(course):
-        raise ScenarioIntegrityError("course package must be sealed with a valid checksum")
+        raise ScenarioIntegrityError(
+            "course package must be sealed with a valid checksum"
+        )
     return course
 
 
 def load_scenario_template(path: str | Path) -> ScenarioTemplateV1:
     scenario = load_contract_file(path, ScenarioTemplateV1)
     if scenario.status != "sealed" or not verify_contract_checksum(scenario):
-        raise ScenarioIntegrityError("scenario template must be sealed with a valid checksum")
+        raise ScenarioIntegrityError(
+            "scenario template must be sealed with a valid checksum"
+        )
     return scenario
 
 
@@ -286,6 +321,8 @@ class SituationEngineV1:
         self,
         course: CoursePackageV1,
         scenario: ScenarioTemplateV1,
+        *,
+        classification_fact_sources: Mapping[str, Sequence[str]] | None = None,
     ) -> None:
         try:
             bundle = RuntimeBundleV1.model_validate(
@@ -300,18 +337,13 @@ class SituationEngineV1:
             ) from exc
         self.course = bundle.course
         self.scenario = bundle.scenario
-        self._actions = {
-            item.action_id: item
-            for item in self.scenario.action_rules
-        }
-        self._events = {
-            item.event_id: item
-            for item in self.scenario.event_rules
-        }
-        self._endings = {
-            item.ending_id: item
-            for item in self.scenario.ending_rules
-        }
+        self._classification_fact_sources = _normalize_classification_fact_sources(
+            self.course,
+            classification_fact_sources,
+        )
+        self._actions = {item.action_id: item for item in self.scenario.action_rules}
+        self._events = {item.event_id: item for item in self.scenario.event_rules}
+        self._endings = {item.ending_id: item for item in self.scenario.ending_rules}
         self._alias_index = self._build_alias_index()
 
     @classmethod
@@ -328,6 +360,22 @@ class SituationEngineV1:
     @property
     def ruleset_hash(self) -> str:
         return str(self.scenario.checksum)
+
+    @property
+    def classification_fact_sources(self) -> dict[str, tuple[str, ...]] | None:
+        if self._classification_fact_sources is None:
+            return None
+        return dict(self._classification_fact_sources)
+
+    @property
+    def validation_context(self) -> dict[str, object]:
+        if self._classification_fact_sources is None:
+            return {}
+        return {
+            "classification_fact_sources": dict(
+                self._classification_fact_sources
+            )
+        }
 
     def start_session(
         self,
@@ -405,7 +453,9 @@ class SituationEngineV1:
         )
         return self._validated_session(session)
 
-    def available_actions(self, session: GameSessionV1) -> tuple[AvailableActionV1, ...]:
+    def available_actions(
+        self, session: GameSessionV1
+    ) -> tuple[AvailableActionV1, ...]:
         checked = self._validated_session(session)
         return tuple(
             AvailableActionV1(
@@ -423,7 +473,9 @@ class SituationEngineV1:
             return action_id
         resolved = self._alias_index.get(_normalize_action_text(raw_input))
         if resolved is None:
-            raise UnknownAction("fixed input does not match an action id, label or alias")
+            raise UnknownAction(
+                "fixed input does not match an action id, label or alias"
+            )
         return resolved
 
     def apply_action(
@@ -465,7 +517,9 @@ class SituationEngineV1:
                 f"session {checked.session_id} is already {checked.status}"
             )
         if command.occurred_at < checked.updated_at:
-            raise SessionIntegrityError("command time cannot be earlier than session updated_at")
+            raise SessionIntegrityError(
+                "command time cannot be earlier than session updated_at"
+            )
 
         turn_no = checked.current_turn + 1
         snapshot = rule_snapshot_from_session(self.scenario, checked)
@@ -644,7 +698,9 @@ class SituationEngineV1:
             ),
             history=[
                 *checked.history,
-                NarrativeMessageV1(role="player", text=command.raw_input, turn_no=turn_no),
+                NarrativeMessageV1(
+                    role="player", text=command.raw_input, turn_no=turn_no
+                ),
                 NarrativeMessageV1(role="narrator", text=narrative, turn_no=turn_no),
             ],
             ending_id=evaluated.ending_id,
@@ -687,7 +743,9 @@ class SituationEngineV1:
             or turn.narrative_source != "rules"
             or turn.classification_evidence is None
         ):
-            raise SessionIntegrityError("narration requires a fresh deterministic rule result")
+            raise SessionIntegrityError(
+                "narration requires a fresh deterministic rule result"
+            )
 
         snapshot = rule_snapshot_from_session(self.scenario, checked)
         try:
@@ -703,9 +761,13 @@ class SituationEngineV1:
             ) from exc
         rule_narrative = render_rule_narrative(self.scenario, evaluated)
         if turn.narrative != rule_narrative:
-            raise SessionIntegrityError("rule result narrative does not match its ruleset")
+            raise SessionIntegrityError(
+                "rule result narrative does not match its ruleset"
+            )
         if outcome.source == "fallback" and outcome.narrative != rule_narrative:
-            raise SessionIntegrityError("fallback narration must preserve the rule narrative")
+            raise SessionIntegrityError(
+                "fallback narration must preserve the rule narrative"
+            )
 
         allowed_fact_refs, allowed_source_ref_ids = reviewed_narrative_refs(
             self.course,
@@ -717,9 +779,13 @@ class SituationEngineV1:
         if outcome.source == "llm" and not allowed_fact_refs:
             raise SessionIntegrityError("llm narration requires reviewed fact context")
         if not set(outcome.used_fact_refs).issubset(allowed_fact_refs):
-            raise SessionIntegrityError("narration fact references exceed the allowlist")
+            raise SessionIntegrityError(
+                "narration fact references exceed the allowlist"
+            )
         if not set(outcome.used_source_ref_ids).issubset(allowed_source_ref_ids):
-            raise SessionIntegrityError("narration source references exceed the allowlist")
+            raise SessionIntegrityError(
+                "narration source references exceed the allowlist"
+            )
 
         narrative_evidence = NarrativeEvidenceV1(
             source=outcome.source,
@@ -761,7 +827,9 @@ class SituationEngineV1:
             or history[-1].role != "narrator"
             or history[-1].turn_no != turn.turn_no
         ):
-            raise SessionIntegrityError("rule result history lacks its narrator projection")
+            raise SessionIntegrityError(
+                "rule result history lacks its narrator projection"
+            )
         history[-1] = NarrativeMessageV1(
             role="narrator",
             text=outcome.narrative,
@@ -777,7 +845,9 @@ class SituationEngineV1:
         try:
             narrated_session = GameSessionV1.model_validate(session_payload)
         except ValidationError as exc:
-            raise SessionIntegrityError(f"generated narrated session is invalid: {exc}") from exc
+            raise SessionIntegrityError(
+                f"generated narrated session is invalid: {exc}"
+            ) from exc
         narrated_session = self._validated_session(narrated_session)
         return AdvanceResultV1(
             session=narrated_session,
@@ -813,10 +883,13 @@ class SituationEngineV1:
                     "course": self.course.model_dump(mode="json"),
                     "scenario": self.scenario.model_dump(mode="json"),
                     "session": session.model_dump(mode="json"),
-                }
+                },
+                context=self.validation_context,
             )
         except ValidationError as exc:
-            raise SessionIntegrityError(f"session does not match its pinned ruleset: {exc}") from exc
+            raise SessionIntegrityError(
+                f"session does not match its pinned ruleset: {exc}"
+            ) from exc
         if bundle.session is None:
             raise SessionIntegrityError("runtime bundle lost its session")
         return bundle.session
@@ -837,7 +910,9 @@ class SituationEngineV1:
     def _labels_for(self, action_ids) -> list[str]:
         return [self._actions[action_id].label for action_id in action_ids]
 
-    def _updated_npc_states(self, session: GameSessionV1, evaluated) -> list[NpcStateV1]:
+    def _updated_npc_states(
+        self, session: GameSessionV1, evaluated
+    ) -> list[NpcStateV1]:
         previous = {item.person_id: item for item in session.npc_states}
         changed = {item.person_id for item in evaluated.npc_changes}
         basis = list(evaluated.fact_refs)
@@ -848,7 +923,9 @@ class SituationEngineV1:
                 trust=item.trust,
                 known_fact_refs=list(item.known_fact_refs),
                 last_basis_refs=(
-                    basis if item.person_id in changed and basis else previous[item.person_id].last_basis_refs
+                    basis
+                    if item.person_id in changed and basis
+                    else previous[item.person_id].last_basis_refs
                 ),
                 flags=dict(previous[item.person_id].flags),
                 updated_turn=item.updated_turn,
@@ -911,22 +988,40 @@ class SituationEngineV1:
                     "evidence-version-1 sessions do not accept fallback commands"
                 )
         if context.source == "fixed":
-            if command.action_source != "fixed" or command.classification_confidence not in {
-                None,
-                1.0,
-            }:
-                raise SessionIntegrityError("fixed classification evidence requires confidence 1")
+            if (
+                command.action_source != "fixed"
+                or command.classification_confidence
+                not in {
+                    None,
+                    1.0,
+                }
+            ):
+                raise SessionIntegrityError(
+                    "fixed classification evidence requires confidence 1"
+                )
         elif context.source == "exact":
             if (
                 command.action_source != "free_input"
                 or command.classification_confidence != 1.0
             ):
-                raise SessionIntegrityError("exact classification evidence requires confidence 1")
+                raise SessionIntegrityError(
+                    "exact classification evidence requires confidence 1"
+                )
+        elif context.source == "local_state":
+            if (
+                command.action_source != "free_input"
+                or command.classification_confidence is None
+            ):
+                raise SessionIntegrityError(
+                    "local classification evidence requires confidence"
+                )
         elif (
             command.action_source != "free_input"
             or command.classification_confidence is None
         ):
-            raise SessionIntegrityError("llm classification evidence requires confidence")
+            raise SessionIntegrityError(
+                "llm classification evidence requires confidence"
+            )
         return context
 
     @staticmethod
@@ -947,6 +1042,31 @@ class SituationEngineV1:
             and turn.classified_action_id == action_id
             and turn.classification_confidence == confidence
         )
+
+
+def _normalize_classification_fact_sources(
+    course: CoursePackageV1,
+    value: Mapping[str, Sequence[str]] | None,
+) -> dict[str, tuple[str, ...]] | None:
+    if value is None:
+        return None
+    known_fact_ids = {item.fact_id for item in course.facts}
+    normalized: dict[str, tuple[str, ...]] = {}
+    for fact_id, source_ids in value.items():
+        if fact_id not in known_fact_ids:
+            raise ScenarioIntegrityError(
+                f"classification evidence references unknown fact {fact_id}"
+            )
+        checked_sources = tuple(sorted(set(source_ids)))
+        if not checked_sources or any(
+            not isinstance(source_id, str) or not source_id.strip()
+            for source_id in checked_sources
+        ):
+            raise ScenarioIntegrityError(
+                f"classification fact {fact_id} requires reviewed source ids"
+            )
+        normalized[fact_id] = checked_sources
+    return dict(sorted(normalized.items()))
 
 
 def _normalize_action_text(value: str) -> str:
@@ -981,6 +1101,7 @@ __all__ = [
     "ScenarioDefinitionError",
     "ScenarioFileError",
     "ScenarioIntegrityError",
+    "ScenarioNpcDialogueV1",
     "SessionIntegrityError",
     "SessionTerminalError",
     "SituationEngineV1",

@@ -6,7 +6,19 @@ from dataclasses import dataclass
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
-from sqlalchemy import Column, DateTime, MetaData, String, Table, Text, insert, select, update
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+    insert,
+    select,
+    update,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
@@ -17,10 +29,15 @@ from services.contracts.v1 import (
     GameSessionV1,
     verify_contract_checksum,
 )
+from services.game_runtime.dialogue_models import (
+    ScenarioNpcDialogueV1,
+    verify_dialogue_record,
+)
 
 
 MAX_SESSION_RECORD_BYTES = 4 * 1024 * 1024
 MAX_DOSSIER_RECORD_BYTES = 2 * 1024 * 1024
+MAX_DIALOGUE_RECORD_BYTES = 128 * 1024
 
 
 class GameStoreError(RuntimeError):
@@ -48,6 +65,14 @@ class StoredDossierNotFound(GameStoreError):
 
 
 class StoredDossierIntegrityError(GameStoreError):
+    pass
+
+
+class StoredDialogueNotFound(GameStoreError):
+    pass
+
+
+class StoredDialogueIntegrityError(GameStoreError):
     pass
 
 
@@ -137,6 +162,12 @@ class StoredDossierRecord:
     raw_data: str
 
 
+@dataclass(frozen=True)
+class StoredDialogueRecord:
+    dialogue: ScenarioNpcDialogueV1
+    raw_data: str
+
+
 _METADATA = MetaData()
 
 game_sessions_table = Table(
@@ -153,6 +184,21 @@ game_dossiers_table = Table(
     Column("dossier_id", String, primary_key=True),
     Column("data", Text, nullable=False),
     Column("updated_at", DateTime(timezone=True), nullable=False),
+)
+
+game_npc_dialogues_table = Table(
+    "game_npc_dialogues",
+    _METADATA,
+    Column("turn_id", String, primary_key=True),
+    Column("session_id", String, nullable=False, index=True),
+    Column("turn_no", Integer, nullable=False),
+    Column("data", Text, nullable=False),
+    Column("updated_at", DateTime(timezone=True), nullable=False),
+    UniqueConstraint(
+        "session_id",
+        "turn_no",
+        name="uq_game_npc_dialogues_session_turn",
+    ),
 )
 
 
@@ -252,11 +298,56 @@ class GameRuntimeStore:
             raw_data=raw_data,
         )
 
+    def load_dialogues(self, session_id: str) -> tuple[StoredDialogueRecord, ...]:
+        try:
+            with self.engine.connect() as connection:
+                rows = connection.execute(
+                    select(
+                        game_npc_dialogues_table.c.turn_id,
+                        game_npc_dialogues_table.c.turn_no,
+                        game_npc_dialogues_table.c.data,
+                    )
+                    .where(game_npc_dialogues_table.c.session_id == session_id)
+                    .order_by(game_npc_dialogues_table.c.turn_no)
+                ).all()
+        except SQLAlchemyError as exc:
+            raise GameStoreError("game dialogue storage read failed") from exc
+        records: list[StoredDialogueRecord] = []
+        for turn_id, turn_no, raw_data in rows:
+            if not isinstance(raw_data, str):
+                raise StoredDialogueIntegrityError(
+                    f"game dialogue record is not text: {turn_id}"
+                )
+            dialogue = _decode_dialogue(raw_data, str(turn_id))
+            if dialogue.session_id != session_id or dialogue.turn_no != turn_no:
+                raise StoredDialogueIntegrityError(
+                    f"game dialogue row identity mismatch: {turn_id}"
+                )
+            records.append(StoredDialogueRecord(dialogue=dialogue, raw_data=raw_data))
+        return tuple(records)
+
+    def load_dialogue(
+        self,
+        session_id: str,
+        turn_id: str,
+    ) -> StoredDialogueRecord:
+        records = self.load_dialogues(session_id)
+        record = next(
+            (item for item in records if item.dialogue.turn_id == turn_id),
+            None,
+        )
+        if record is None:
+            raise StoredDialogueNotFound(
+                f"game dialogue not found: {session_id}/{turn_id}"
+            )
+        return record
+
     def compare_and_swap(
         self,
         current: StoredSessionRecord,
         next_session: GameSessionV1,
         dossier: DossierV1 | None = None,
+        dialogue: ScenarioNpcDialogueV1 | None = None,
     ) -> None:
         previous = current.session
         if next_session.session_id != previous.session_id:
@@ -275,6 +366,14 @@ class GameRuntimeStore:
             dossier_raw = _encode_dossier(dossier)
         elif next_session.dossier_id is not None:
             raise ValueError("a newly referenced dossier must be stored atomically")
+        dialogue_raw = None
+        if dialogue is not None:
+            _validate_dialogue_link(
+                next_session,
+                dialogue,
+                current.envelope.release_identity,
+            )
+            dialogue_raw = _encode_dialogue(dialogue)
         try:
             with self.engine.begin() as connection:
                 result = connection.execute(
@@ -291,7 +390,18 @@ class GameRuntimeStore:
                     )
                 if dossier is not None and dossier_raw is not None:
                     _insert_dossier(connection, dossier, dossier_raw)
-        except (StoredSessionWriteConflict, StoredDossierIntegrityError):
+                if dialogue is not None and dialogue_raw is not None:
+                    _insert_dialogue(
+                        connection,
+                        dialogue,
+                        dialogue_raw,
+                        updated_at=next_session.updated_at,
+                    )
+        except (
+            StoredSessionWriteConflict,
+            StoredDossierIntegrityError,
+            StoredDialogueIntegrityError,
+        ):
             raise
         except SQLAlchemyError as exc:
             raise GameStoreError("game session storage update failed") from exc
@@ -514,6 +624,60 @@ def _decode_dossier(raw_data: str, dossier_id: str) -> DossierV1:
     return dossier
 
 
+def _encode_dialogue(dialogue: ScenarioNpcDialogueV1) -> str:
+    try:
+        checked = ScenarioNpcDialogueV1.model_validate(
+            dialogue.model_dump(mode="python"),
+            strict=True,
+        )
+    except ValidationError as exc:
+        raise StoredDialogueIntegrityError(
+            "game dialogue failed contract validation"
+        ) from exc
+    if not verify_dialogue_record(checked):
+        raise StoredDialogueIntegrityError("game dialogue checksum is invalid")
+    raw = _canonical_json(checked.model_dump(mode="json"))
+    _validate_record_size(
+        raw,
+        limit=MAX_DIALOGUE_RECORD_BYTES,
+        label="game dialogue record",
+        error_type=StoredDialogueIntegrityError,
+    )
+    return raw
+
+
+def _decode_dialogue(raw_data: str, turn_id: str) -> ScenarioNpcDialogueV1:
+    _validate_record_size(
+        raw_data,
+        limit=MAX_DIALOGUE_RECORD_BYTES,
+        label=f"game dialogue record {turn_id}",
+        error_type=StoredDialogueIntegrityError,
+    )
+    try:
+        # Reject duplicate object keys before handing the same bytes to
+        # Pydantic's strict JSON validator.  Strict Python validation would
+        # reject JSON arrays for the contract's immutable tuple fields, while
+        # strict JSON validation correctly preserves their wire representation.
+        json.loads(raw_data, object_pairs_hook=_reject_duplicate_json_keys)
+        dialogue = ScenarioNpcDialogueV1.model_validate_json(
+            raw_data,
+            strict=True,
+        )
+    except (UnicodeError, json.JSONDecodeError, ValidationError, ValueError) as exc:
+        raise StoredDialogueIntegrityError(
+            f"invalid persisted game dialogue {turn_id}: {exc}"
+        ) from exc
+    if dialogue.turn_id != turn_id:
+        raise StoredDialogueIntegrityError(
+            f"persisted game dialogue identity mismatch: {turn_id}"
+        )
+    if not verify_dialogue_record(dialogue):
+        raise StoredDialogueIntegrityError(
+            f"persisted game dialogue checksum is invalid: {turn_id}"
+        )
+    return dialogue
+
+
 def _insert_dossier(connection, dossier: DossierV1, raw_data: str) -> None:
     try:
         connection.execute(
@@ -526,6 +690,30 @@ def _insert_dossier(connection, dossier: DossierV1, raw_data: str) -> None:
     except IntegrityError as exc:
         raise StoredDossierIntegrityError(
             f"game dossier insert violated storage integrity: {dossier.dossier_id}"
+        ) from exc
+
+
+def _insert_dialogue(
+    connection,
+    dialogue: ScenarioNpcDialogueV1,
+    raw_data: str,
+    *,
+    updated_at,
+) -> None:
+    try:
+        connection.execute(
+            insert(game_npc_dialogues_table).values(
+                turn_id=dialogue.turn_id,
+                session_id=dialogue.session_id,
+                turn_no=dialogue.turn_no,
+                data=raw_data,
+                updated_at=updated_at,
+            )
+        )
+    except IntegrityError as exc:
+        raise StoredDialogueIntegrityError(
+            "game dialogue insert violated storage integrity: "
+            f"{dialogue.session_id}/{dialogue.turn_id}"
         ) from exc
 
 
@@ -559,6 +747,48 @@ def _validate_dossier_link(session: GameSessionV1, dossier: DossierV1) -> None:
         dossier.ending_id,
     ):
         raise ValueError("dossier artifact identity does not match the session")
+
+
+def _validate_dialogue_link(
+    session: GameSessionV1,
+    dialogue: ScenarioNpcDialogueV1,
+    release_identity: GameSessionReleaseIdentityV1 | None,
+) -> None:
+    if release_identity is None:
+        raise StoredDialogueIntegrityError(
+            "game dialogue requires a session-pinned release identity"
+        )
+    if not session.turns or session.turns[-1].turn_id != dialogue.turn_id:
+        raise StoredDialogueIntegrityError(
+            "game dialogue must describe the newly settled turn"
+        )
+    turn = session.turns[-1]
+    if (
+        dialogue.session_id != session.session_id
+        or dialogue.turn_no != session.current_turn
+        or dialogue.turn_no != turn.turn_no
+        or dialogue.action_id != turn.classified_action_id
+    ):
+        raise StoredDialogueIntegrityError(
+            "game dialogue turn identity does not match the session"
+        )
+    if (
+        dialogue.release_id != release_identity.release_id
+        or dialogue.release_no != release_identity.release_no
+        or dialogue.release_checksum != release_identity.release_checksum
+        or dialogue.course_id != session.course_id
+        or dialogue.lesson_id != session.lesson_id
+        or dialogue.course_content_version != session.course_content_version
+        or dialogue.course_checksum != session.course_checksum
+        or dialogue.scenario_id != session.scenario_id
+        or dialogue.scenario_version != session.scenario_version
+        or dialogue.scenario_checksum != session.scenario_checksum
+    ):
+        raise StoredDialogueIntegrityError(
+            "game dialogue release identity does not match the session"
+        )
+    if not verify_dialogue_record(dialogue):
+        raise StoredDialogueIntegrityError("game dialogue checksum is invalid")
 
 
 def _validate_record_size(
@@ -624,6 +854,21 @@ def encode_stored_dossier(dossier: DossierV1) -> str:
     return _encode_dossier(dossier)
 
 
+def decode_stored_dialogue(
+    raw_data: str,
+    turn_id: str,
+) -> ScenarioNpcDialogueV1:
+    """Decode and verify one persisted NPC dialogue projection."""
+
+    return _decode_dialogue(raw_data, turn_id)
+
+
+def encode_stored_dialogue(dialogue: ScenarioNpcDialogueV1) -> str:
+    """Encode one verified NPC dialogue projection."""
+
+    return _encode_dialogue(dialogue)
+
+
 def validate_stored_dossier_link(
     session: GameSessionV1,
     dossier: DossierV1,
@@ -637,6 +882,7 @@ __all__ = [
     "GameSessionReleaseIdentityV1",
     "GameRuntimeStore",
     "GameStoreError",
+    "MAX_DIALOGUE_RECORD_BYTES",
     "MAX_DOSSIER_RECORD_BYTES",
     "PersistedGameSessionEnvelope",
     "PersistedGameSessionV1",
@@ -644,16 +890,22 @@ __all__ = [
     "StoredDossierIntegrityError",
     "StoredDossierNotFound",
     "StoredDossierRecord",
+    "StoredDialogueIntegrityError",
+    "StoredDialogueNotFound",
+    "StoredDialogueRecord",
     "StoredSessionAlreadyExists",
     "StoredSessionIntegrityError",
     "StoredSessionNotFound",
     "StoredSessionRecord",
     "StoredSessionWriteConflict",
     "decode_stored_dossier",
+    "decode_stored_dialogue",
     "decode_stored_session",
     "encode_stored_dossier",
+    "encode_stored_dialogue",
     "encode_stored_session",
     "game_dossiers_table",
+    "game_npc_dialogues_table",
     "game_sessions_table",
     "validate_stored_dossier_link",
 ]

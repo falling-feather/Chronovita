@@ -32,7 +32,11 @@ from services.auth.store import (
     sessions_table,
     users_table,
 )
-from services.game_runtime.store import game_dossiers_table, game_sessions_table
+from services.game_runtime.store import (
+    game_dossiers_table,
+    game_npc_dialogues_table,
+    game_sessions_table,
+)
 from services.learning_assets.store import (
     learning_feedback_table,
     learning_submissions_table,
@@ -41,7 +45,7 @@ from services.persistence.db import kv_table
 from services.persona_conversation.store import persona_conversations_table
 
 MigrationMode = Literal["apply-safe", "validate"]
-LATEST_SCHEMA_VERSION = 5
+LATEST_SCHEMA_VERSION = 6
 _SUPPORTED_DIALECTS = frozenset({"sqlite", "postgresql"})
 _SQLITE_LOCK_ERRORS = ("database is locked", "database table is locked")
 _POSTGRES_MIGRATION_LOCK_ID = 0x4348524F4E4F
@@ -738,6 +742,12 @@ _MIGRATIONS = (
         migration_id="persona-conversation-v1",
         app_version="1.0.3",
         tables=(persona_conversations_table,),
+    ),
+    _Migration(
+        version=6,
+        migration_id="scenario-npc-dialogue-v1",
+        app_version="1.0.4",
+        tables=(game_npc_dialogues_table,),
     ),
 )
 _KNOWN_TABLE_NAMES = frozenset(

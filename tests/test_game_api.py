@@ -24,6 +24,7 @@ from main import app
 from routers import game as game_router
 from settings import settings
 from services import content
+from services.content import workflow as content_workflow
 from services.game_runtime import (
     RevisionConflict,
     RuntimeCommandV1,
@@ -274,6 +275,57 @@ class GameApiTests(unittest.TestCase):
             "/api/v1/practice/game/sessions/session-does-not-exist"
         )
         self.assertEqual(missing.status_code, 404)
+
+    def test_published_fixed_turn_returns_and_restores_one_auditable_dialogue(self):
+        resources = content_workflow.get_published_lesson_resources(
+            "C-prequin-state",
+            "L101",
+        )
+        persona_pack = resources.persona_pack
+        self.assertIsNotNone(persona_pack)
+        assert persona_pack is not None
+        started = self.client.post(
+            "/api/v1/practice/game/sessions",
+            json={
+                "scenario_id": persona_pack.scenario_id,
+                "client_request_id": "api-dialogue-start-001",
+                "release_pin": {
+                    "release_id": resources.release_id,
+                    "release_no": resources.release_no,
+                    "release_checksum": resources.release_checksum,
+                    "course_id": resources.course_id,
+                    "lesson_id": resources.lesson_id,
+                    "course_content_version": resources.content_version,
+                    "course_checksum": resources.course_package.checksum,
+                    "scenario_version": persona_pack.scenario_version,
+                    "scenario_checksum": persona_pack.scenario_checksum,
+                },
+            },
+        )
+        self.assertEqual(started.status_code, 200, started.text)
+        session_id = started.json()["session"]["session_id"]
+
+        advanced = self.client.post(
+            f"/api/v1/practice/game/sessions/{session_id}/turns",
+            json={
+                "client_action_id": "api-dialogue-turn-001",
+                "action_id": "survey-waterways",
+                "expected_revision": 1,
+            },
+        )
+        self.assertEqual(advanced.status_code, 200, advanced.text)
+        dialogue = advanced.json()["npc_dialogue"]
+        self.assertEqual(dialogue["route_source"], "local_state")
+        self.assertEqual(dialogue["route_reason"], "fixed_action_local")
+        self.assertEqual(dialogue["release_id"], resources.release_id)
+        self.assertEqual(dialogue["turn_id"], advanced.json()["turn"]["turn_id"])
+
+        restored = self.client.get(
+            f"/api/v1/practice/game/sessions/{session_id}/dialogues"
+        )
+        self.assertEqual(restored.status_code, 200, restored.text)
+        self.assertEqual(restored.json()["session_storage"], "sqlite-json")
+        self.assertEqual(restored.json()["items"], [dialogue])
 
     def test_fixed_turn_authority_and_free_input_contract_are_separate(self):
         started = self.client.post(

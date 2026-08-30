@@ -19,6 +19,7 @@
           "enum": [
             "fixed",
             "exact",
+            "local_state",
             "llm"
           ],
           "title": "Source",
@@ -28,6 +29,7 @@
           "enum": [
             "fixed_action",
             "exact_match",
+            "local_semantic_match",
             "semantic_match"
           ],
           "title": "Reason Code",

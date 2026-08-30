@@ -1,6 +1,6 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V1.0.3**；L101/L103 已在 48 片段 `EvidenceCorpusV2` 上发布审校后的 `PersonaPackV1`，人物可说范围、禁答边界、证据用途和场景表达均由当前发布锁定。两课已原子切换到 `course-release/v5` 发布 #7；人物多轮会话按账号、发布和证据版本持久化，简单问题本机回答，证据充分的复杂问题才可调用 API。GitHub Pages 仍只提供无需登录和 API 的只读内容预览。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V1.0.4**；L101/L103 已在 48 片段 `EvidenceCorpusV2` 与审校 `PersonaPackV1` 上接通本地陈策拟合、受约束 API 升级和逐回合具名人物回应。规则引擎始终先结算，模型只能在当前发布证据与人物边界内润色表达，失败时回退本地台词；人物对话按账号、发布、证据和回合原子持久化并可刷新恢复。GitHub Pages 仍只提供无需登录和 API 的只读内容预览。
 
 [纯前端预览](https://falling-feather.github.io/Chronovita/) · [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](doc/00-项目总纲.md) · [开发者文档](doc/01-开发者文档.md) · [项目规划](doc/02-项目规划.md) · [开发历史](doc/03-开发历史.md)
 

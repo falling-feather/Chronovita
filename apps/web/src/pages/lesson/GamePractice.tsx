@@ -19,6 +19,7 @@ import type {
   GameSession,
   Lesson,
   LessonScenarioRef,
+  ScenarioNpcDialogueV1,
 } from '../../utils/api';
 import { api } from '../../utils/api';
 import {
@@ -40,9 +41,13 @@ import {
   endingTone,
   gameSceneForLesson,
   groupAdventureRounds,
+  mergeScenarioNpcDialogues,
   roundLabel,
+  scenarioNpcDialogueMatchesSession,
+  scenarioNpcDialogueRoute,
 } from './gamePresentation';
 import { emitLearningEvent } from '../../features/classroom/learningLedger';
+import { ScenarioNpcDialogue } from './ScenarioNpcDialogue';
 
 interface FreeInputNotice {
   kind: 'clarification_required' | 'rejected' | 'provider_unavailable';
@@ -95,6 +100,7 @@ function PinnedGamePlayer({
 }) {
   const [scenario, setScenario] = useState<GameScenarioSummary | null>(null);
   const [session, setSession] = useState<GameSession | null>(null);
+  const [dialogues, setDialogues] = useState<ScenarioNpcDialogueV1[]>([]);
   const [dossier, setDossier] = useState<GameDossier | null>(null);
   const [booting, setBooting] = useState(true);
   const [actingMode, setActingMode] = useState<'fixed' | 'free' | null>(null);
@@ -115,6 +121,7 @@ function PinnedGamePlayer({
     if (fresh) {
       clearStoredGameReference(binding);
       setSession(null);
+      setDialogues([]);
       setDossier(null);
       setFreeInput('');
       setFreeInputNotice(null);
@@ -133,6 +140,9 @@ function PinnedGamePlayer({
         client_request_id: clientRequestId,
       };
       if (!stored) persistPendingGameReference(binding, pending);
+      const dialogueRequest = stored?.session_id
+        ? readSessionDialogues(stored.session_id)
+        : null;
       const started = await api.gameStart({
         scenario_id: binding.scenario.scenario_id,
         client_request_id: clientRequestId,
@@ -143,6 +153,9 @@ function PinnedGamePlayer({
       if (stored?.session_id && started.session.session_id !== stored.session_id) {
         throw new Error('服务器恢复的学习记录与浏览器保存的会话不一致。');
       }
+      const restoredDialogues = await (
+        dialogueRequest ?? readSessionDialogues(started.session.session_id)
+      );
       if (requestGeneration.current !== generation) return;
       persistPendingGameReference(binding, {
         ...pending,
@@ -151,6 +164,9 @@ function PinnedGamePlayer({
       });
       setScenario(started.scenario);
       setSession(started.session);
+      setDialogues((restoredDialogues ?? []).filter((dialogue) => (
+        scenarioNpcDialogueMatchesSession(dialogue, started.session, binding.pin)
+      )));
       setSelectedTurnNo(started.session.current_turn);
       setResumed(Boolean(stored?.session_id));
     } catch (openError) {
@@ -187,6 +203,10 @@ function PinnedGamePlayer({
     () => groupAdventureRounds(session?.history ?? []),
     [session?.history],
   );
+  const dialogueByTurn = useMemo(
+    () => new Map(dialogues.map((dialogue) => [dialogue.turn_no, dialogue])),
+    [dialogues],
+  );
   const selectedRound = rounds.find((round) => round.turnNo === selectedTurnNo)
     ?? rounds.at(-1)
     ?? null;
@@ -194,9 +214,17 @@ function PinnedGamePlayer({
 
   const restoreSession = async (sessionId: string) => {
     try {
-      const restored = await api.gameSession(sessionId);
+      const [restored, restoredDialogues] = await Promise.all([
+        api.gameSession(sessionId),
+        readSessionDialogues(sessionId),
+      ]);
       assertSessionIdentity(restored, binding);
       setSession(restored);
+      if (restoredDialogues) {
+        setDialogues(restoredDialogues.filter((dialogue) => (
+          scenarioNpcDialogueMatchesSession(dialogue, restored, binding.pin)
+        )));
+      }
       setSelectedTurnNo(restored.current_turn);
     } catch {
       // Keep the last verified session visible when refresh also fails.
@@ -218,6 +246,14 @@ function PinnedGamePlayer({
       });
       assertSessionIdentity(result.session, binding);
       setSession(result.session);
+      const npcDialogue = result.npc_dialogue;
+      if (npcDialogue && scenarioNpcDialogueMatchesSession(
+        npcDialogue,
+        result.session,
+        binding.pin,
+      )) {
+        setDialogues((current) => mergeScenarioNpcDialogues(current, [npcDialogue]));
+      }
       setSelectedTurnNo(result.session.current_turn);
       setLastFeedback(result.action_feedback);
       setLastEventIds(result.triggered_event_ids);
@@ -257,6 +293,17 @@ function PinnedGamePlayer({
         if (!response.result) throw new Error('服务器没有返回已完成的回合。');
         assertSessionIdentity(response.result.session, binding);
         setSession(response.result.session);
+        const npcDialogue = response.result.npc_dialogue;
+        if (npcDialogue && scenarioNpcDialogueMatchesSession(
+          npcDialogue,
+          response.result.session,
+          binding.pin,
+        )) {
+          setDialogues((current) => mergeScenarioNpcDialogues(
+            current,
+            [npcDialogue],
+          ));
+        }
         setSelectedTurnNo(response.result.session.current_turn);
         setFreeInput('');
         setLastFeedback(response.result.action_feedback);
@@ -322,6 +369,13 @@ function PinnedGamePlayer({
   const outcomeTone = endingTone(dossier?.ending_id ?? session.ending_id, session.status);
   const variableById = new Map(scenario.variables.map((variable) => [variable.variable_id, variable]));
   const npcById = new Map(scenario.npcs.map((npc) => [npc.person_id, npc]));
+  const selectedDialogue = selectedRound ? dialogueByTurn.get(selectedRound.turnNo) : null;
+  const selectedTurn = selectedDialogue
+    ? session.turns.find((turn) => turn.turn_id === selectedDialogue.turn_id)
+    : null;
+  const selectedPortrait = selectedDialogue
+    ? companionPortraitFor(lesson.id, { name: selectedDialogue.display_name })
+    : null;
 
   return (
     <section className={`chrono-adventure chrono-adventure-${scene.palette}`} aria-label="历史情景推演">
@@ -386,37 +440,62 @@ function PinnedGamePlayer({
             ))}
           </nav>
 
-          <article
-            key={`round-${selectedRound?.turnNo ?? 0}`}
-            className="chrono-adventure-narrative"
-            aria-live="polite"
-          >
-            <header>
-              <div>
-                <span>{roundLabel(selectedRound?.turnNo ?? 0)}</span>
-                <strong>{selectedRound?.turnNo === session.current_turn ? '此刻局势' : '回看议事记录'}</strong>
-              </div>
-              {selectedRound && selectedRound.turnNo !== session.current_turn ? (
-                <button type="button" onClick={() => setSelectedTurnNo(session.current_turn)}>回到当前</button>
+          {selectedDialogue ? (
+            <ScenarioNpcDialogue
+              key={selectedDialogue.output_checksum}
+              turnNo={selectedDialogue.turn_no}
+              person={{
+                name: selectedDialogue.display_name,
+                role: selectedDialogue.role,
+                portrait: selectedPortrait ? {
+                  src: companionPortraitUrl(selectedPortrait, 256),
+                  srcSet: `${companionPortraitUrl(selectedPortrait, 512)} 2x`,
+                  alt: selectedPortrait.alt,
+                } : {
+                  alt: `${selectedDialogue.display_name}人物剪影`,
+                },
+              }}
+              playerStatement={selectedTurn?.raw_input || selectedRound?.player || '本轮沿用已选行动。'}
+              situationNarrative={selectedTurn?.narrative || selectedRound?.narration || session.summary}
+              speech={selectedDialogue.text}
+              route={{ kind: scenarioNpcDialogueRoute(selectedDialogue) }}
+              status={session.status}
+              disclaimer={selectedDialogue.disclaimer}
+            />
+          ) : (
+            <article
+              key={`round-${selectedRound?.turnNo ?? 0}`}
+              className="chrono-adventure-narrative"
+              aria-live="polite"
+            >
+              <header>
+                <div>
+                  <span>{roundLabel(selectedRound?.turnNo ?? 0)}</span>
+                  <strong>{selectedRound?.turnNo === session.current_turn ? '此刻局势' : '回看议事记录'}</strong>
+                </div>
+                {selectedRound && selectedRound.turnNo !== session.current_turn ? (
+                  <button type="button" onClick={() => setSelectedTurnNo(session.current_turn)}>回到当前</button>
+                ) : null}
+              </header>
+              {selectedRound?.player ? (
+                <blockquote>
+                  <span>你的陈策</span>
+                  <p>{selectedRound.player}</p>
+                </blockquote>
               ) : null}
-            </header>
-            {selectedRound?.player ? (
-              <blockquote>
-                <span>你的陈策</span>
-                <p>{selectedRound.player}</p>
-              </blockquote>
-            ) : null}
-            <div className="chrono-adventure-narrator">
-              <BookOutlined />
-              <p>{selectedRound?.narration || session.summary}</p>
-            </div>
-            {acting ? (
-              <div className="chrono-adventure-thinking">
-                <Spin size="small" />
-                <span>{actingMode === 'free' ? '正在理解你的陈策，并核对本轮规则…' : '正在结算局势与人物反馈…'}</span>
+              <div className="chrono-adventure-narrator">
+                <BookOutlined />
+                <p>{selectedRound?.narration || session.summary}</p>
               </div>
-            ) : null}
-          </article>
+            </article>
+          )}
+
+          {acting ? (
+            <div className="chrono-adventure-thinking" aria-live="polite">
+              <Spin size="small" />
+              <span>{actingMode === 'free' ? '正在理解你的陈策，并核对本轮规则…' : '正在结算局势与人物反馈…'}</span>
+            </div>
+          ) : null}
 
           {selectedRound?.turnNo === session.current_turn && (lastFeedback || lastEventIds.length > 0) ? (
             <div className="chrono-adventure-feedback">
@@ -660,4 +739,14 @@ function createRequestId(kind: 'start' | 'turn'): string {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message.replace(/^\d{3}\s+/, '') : '请求失败，请稍后重试。';
+}
+
+async function readSessionDialogues(sessionId: string): Promise<ScenarioNpcDialogueV1[] | null> {
+  try {
+    const response = await api.getGameDialogues(sessionId);
+    return response.items;
+  } catch {
+    // Older releases and temporarily unavailable projections keep the rule narrative usable.
+    return null;
+  }
 }

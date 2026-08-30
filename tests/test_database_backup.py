@@ -17,7 +17,7 @@ from sqlalchemy.engine import URL, Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 from scripts import manage_database as database_cli
-from services.game_runtime.store import game_sessions_table
+from services.game_runtime.store import game_dossiers_table, game_sessions_table
 from services.persistence import backup as backup_module
 from services.persistence.backup import (
     DatabaseBackupDestinationExists,
@@ -83,8 +83,9 @@ class DatabaseBackupTests(unittest.TestCase):
         source = self.tmp_root / "legacy-v08.db"
         engine = self._engine(source)
         try:
-            kv_table.metadata.create_all(engine)
-            game_sessions_table.metadata.create_all(engine)
+            kv_table.create(engine)
+            game_sessions_table.create(engine)
+            game_dossiers_table.create(engine)
             with engine.begin() as connection:
                 connection.execute(
                     insert(kv_table).values(
@@ -518,13 +519,14 @@ class DatabaseBackupTests(unittest.TestCase):
     def test_future_schema_backup_is_rejected(self):
         source = self._current_database("future.db", value="future")
         engine = self._engine(source)
+        future_version = LATEST_SCHEMA_VERSION + 1
         try:
             with engine.begin() as connection:
                 connection.execute(
                     insert(schema_migrations_table).values(
-                        version=6,
-                        migration_id="future-v6",
-                        contract_checksum="6" * 64,
+                        version=future_version,
+                        migration_id=f"future-v{future_version}",
+                        contract_checksum="f" * 64,
                         applied_at=NOW,
                         app_version="99.0.0",
                     )

@@ -8,8 +8,8 @@ from services.ai.contracts import (
 def __getattr__(name: str):
     if name in {"ActionClassifierV1", "PROMPT_POLICY_VERSION"}:
         from services.ai.classifier import (
-            ActionClassifierV1,
             PROMPT_POLICY_VERSION,
+            ActionClassifierV1,
         )
 
         return {
@@ -18,15 +18,20 @@ def __getattr__(name: str):
         }[name]
     if name in {"HistoricalNarratorV1", "NARRATOR_POLICY_VERSION"}:
         from services.ai.narrator import (
-            HistoricalNarratorV1,
             NARRATOR_POLICY_VERSION,
+            HistoricalNarratorV1,
         )
 
         return {
             "HistoricalNarratorV1": HistoricalNarratorV1,
             "NARRATOR_POLICY_VERSION": NARRATOR_POLICY_VERSION,
         }[name]
+    if name == "ScenarioDialogueLLMAdapterV1":
+        from services.ai.dialogue import ScenarioDialogueLLMAdapterV1
+
+        return ScenarioDialogueLLMAdapterV1
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "ActionClassificationV1",
@@ -36,4 +41,5 @@ __all__ = [
     "NARRATOR_POLICY_VERSION",
     "NarratorModelOutputV1",
     "PROMPT_POLICY_VERSION",
+    "ScenarioDialogueLLMAdapterV1",
 ]

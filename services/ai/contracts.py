@@ -58,6 +58,7 @@ class ClassifierModelOutputV1(BaseModel):
 
 ClassificationReason = Literal[
     "exact_match",
+    "local_semantic_match",
     "semantic_match",
     "ambiguous",
     "low_confidence",
@@ -97,7 +98,7 @@ class ActionClassificationV1(BaseModel):
         "rejected",
         "provider_unavailable",
     ]
-    source: Literal["exact", "llm", "guardrail", "fallback"]
+    source: Literal["exact", "local_state", "llm", "guardrail", "fallback"]
     reason_code: ClassificationReason
     action_id: ContractId | None = None
     confidence: float | None = Field(default=None, ge=0, le=1)
@@ -126,6 +127,14 @@ class ActionClassificationV1(BaseModel):
             self.kind != "matched" or self.confidence != 1.0
         ):
             raise ValueError("exact source requires a confidence-1 match")
+        if self.source == "local_state" and (
+            self.kind != "matched"
+            or self.reason_code != "local_semantic_match"
+            or self.confidence is None
+        ):
+            raise ValueError(
+                "local_state source requires a local semantic match with confidence"
+            )
         if self.source == "llm" and (
             self.confidence is None
             or not self.provider
@@ -140,6 +149,7 @@ class ActionClassificationV1(BaseModel):
         allowed_result_shapes = {
             "matched": {
                 ("exact", "exact_match"),
+                ("local_state", "local_semantic_match"),
                 ("llm", "semantic_match"),
             },
             "clarification_required": {
@@ -151,6 +161,7 @@ class ActionClassificationV1(BaseModel):
                 ("guardrail", "session_not_active"),
                 ("guardrail", "invalid_input"),
                 ("guardrail", "prompt_injection"),
+                ("guardrail", "out_of_scope"),
                 ("llm", "anachronism"),
                 ("llm", "fact_conflict"),
                 ("llm", "prompt_injection"),

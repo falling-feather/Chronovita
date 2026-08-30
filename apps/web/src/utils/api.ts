@@ -710,6 +710,46 @@ export interface GameSession {
   dossier_id: string | null;
   started_at: string; updated_at: string; ended_at: string | null;
 }
+export type ScenarioNpcDialogueRouteSource = 'local_state' | 'external_api' | 'fallback';
+export type ScenarioNpcDialogueRouteReason =
+  | 'fixed_action_local'
+  | 'free_input_local'
+  | 'classified_fallback_local'
+  | 'free_input_external_polish'
+  | 'external_unavailable'
+  | 'external_invalid_response'
+  | 'external_reference_out_of_bounds';
+export type ScenarioNpcDialogueFallbackReason =
+  | ''
+  | 'provider_unavailable'
+  | 'invalid_response'
+  | 'reference_out_of_bounds';
+export interface ScenarioNpcDialogueV1 {
+  schema_version: 'scenario-npc-dialogue/v1';
+  session_id: string; turn_id: string; turn_no: number;
+  node_id: string; action_id: string; binding_id: string;
+  person_id: string; display_name: string; role: string;
+  persona_kind: 'historical_person' | 'transmitted_memory' | 'composite_group';
+  portrait_asset_key: string | null;
+  text: string;
+  disclaimer: '角色化教学表达，不是史料原话。';
+  route_source: ScenarioNpcDialogueRouteSource;
+  route_reason: ScenarioNpcDialogueRouteReason;
+  release_id: string; release_no: number; release_checksum: string;
+  course_id: string; lesson_id: string;
+  course_content_version: number; course_checksum: string;
+  scenario_id: string; scenario_version: number; scenario_checksum: string;
+  persona_pack_id: string; persona_pack_version: number; persona_pack_checksum: string;
+  evidence_corpus_id: string; evidence_version: number; evidence_checksum: string;
+  used_passage_ids: string[]; used_slot_ids: string[]; used_boundary_ids: string[];
+  provider: string; model: string;
+  fallback_reason: ScenarioNpcDialogueFallbackReason;
+  basis_checksum: string; output_checksum: string;
+}
+export interface ScenarioNpcDialogueListV1 {
+  items: ScenarioNpcDialogueV1[];
+  session_storage: 'sqlite-json';
+}
 export interface GameStartRequest {
   scenario_id: string; client_request_id: string; release_pin?: ScenarioReleasePin;
 }
@@ -720,6 +760,7 @@ export interface GameTurnResponse {
   session: GameSession;
   turn: { turn_id: string; narrative: string; classified_action_id: string };
   action_feedback: string; triggered_event_ids: string[]; ending_id: string | null;
+  npc_dialogue: ScenarioNpcDialogueV1 | null;
 }
 export interface GameAvailableAction {
   action_id: string; label: string; description: string;
@@ -874,6 +915,10 @@ export const api = {
     }),
   gameSession: (sessionId: string) =>
     jsonFetch<GameSession>(`/practice/game/sessions/${encodeURIComponent(sessionId)}`),
+  getGameDialogues: (sessionId: string) =>
+    jsonFetch<ScenarioNpcDialogueListV1>(
+      `/practice/game/sessions/${encodeURIComponent(sessionId)}/dialogues`,
+    ),
   gameTurn: (
     sessionId: string,
     body: {

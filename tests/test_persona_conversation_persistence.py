@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, inspect, select
 from sqlalchemy.engine import URL
 
 from apps.api import main as api_main
+from services.game_runtime.store import game_npc_dialogues_table
 from services.persistence import schema as schema_module
 from services.persistence.backup import (
     backup_sqlite_database,
@@ -43,7 +44,9 @@ class PersonaConversationPersistenceTests(unittest.TestCase):
         shutdown_persona_conversations()
         self.temp_dir.cleanup()
 
-    def test_v4_database_upgrades_with_an_append_only_persona_migration(self) -> None:
+    def test_v4_database_upgrades_with_append_only_persona_and_dialogue_migrations(
+        self,
+    ) -> None:
         engine = self._engine("upgrade.db")
         try:
             with (
@@ -61,10 +64,14 @@ class PersonaConversationPersistenceTests(unittest.TestCase):
 
             upgraded = ensure_current_schema(engine)
 
-            self.assertEqual(upgraded.current_version, 5)
+            self.assertEqual(upgraded.current_version, 6)
             self.assertTrue(upgraded.is_current)
             self.assertIn(
                 persona_conversations_table.name,
+                inspect(engine).get_table_names(),
+            )
+            self.assertIn(
+                game_npc_dialogues_table.name,
                 inspect(engine).get_table_names(),
             )
             with engine.connect() as connection:

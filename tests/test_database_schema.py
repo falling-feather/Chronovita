@@ -35,6 +35,7 @@ from services.auth.store import (
 from services.game_runtime.store import (
     GameRuntimeStore,
     game_dossiers_table,
+    game_npc_dialogues_table,
     game_sessions_table,
 )
 from services.persistence import db
@@ -112,7 +113,7 @@ class DatabaseSchemaTests(unittest.TestCase):
                 )
 
             self.assertTrue(first.is_current)
-            self.assertEqual(first.current_version, 5)
+            self.assertEqual(first.current_version, 6)
             self.assertEqual(second, first)
             self.assertEqual(second_rows, first_rows)
             self.assertFalse(
@@ -120,7 +121,11 @@ class DatabaseSchemaTests(unittest.TestCase):
             )
             self.assertEqual(
                 [row["version"] for row in second_rows],
-                [1, 2, 3, 4, 5],
+                [1, 2, 3, 4, 5, 6],
+            )
+            self.assertIn(
+                game_npc_dialogues_table.name,
+                inspect(engine).get_table_names(),
             )
         finally:
             engine.dispose()
@@ -143,7 +148,8 @@ class DatabaseSchemaTests(unittest.TestCase):
         engine = self._engine("legacy-v08.db")
         try:
             kv_table.metadata.create_all(engine)
-            game_sessions_table.metadata.create_all(engine)
+            game_sessions_table.create(engine)
+            game_dossiers_table.create(engine)
             with engine.begin() as connection:
                 connection.execute(
                     insert(kv_table).values(
@@ -198,7 +204,8 @@ class DatabaseSchemaTests(unittest.TestCase):
         engine = self._engine("legacy-v095.db")
         try:
             kv_table.metadata.create_all(engine)
-            game_sessions_table.metadata.create_all(engine)
+            game_sessions_table.create(engine)
+            game_dossiers_table.create(engine)
             self._create_legacy_identity_layout(engine)
             with engine.begin() as connection:
                 connection.execute(
@@ -385,7 +392,7 @@ class DatabaseSchemaTests(unittest.TestCase):
                     .scalars()
                     .all()
                 )
-            self.assertEqual(versions, [1, 2, 3, 4, 5])
+            self.assertEqual(versions, [1, 2, 3, 4, 5, 6])
         finally:
             for engine in engines:
                 engine.dispose()
@@ -428,6 +435,7 @@ class DatabaseSchemaTests(unittest.TestCase):
                 "94d49ee4d1e5e05bad4fc0f69cd394298c3789c1461df9f2b6205b69bb8652fe",
                 "f8b9d55fc2d251d447e29d7922099fc67b94023f7f21cef229f635e03d6bb304",
                 "18faae18a22e7e36430d878bcece26095a3301032b1a144e9054b91cb3afb0e5",
+                "193b74712b52f6f1d8a48502a7810ac7d36f756fdb2e567eb53e50a84f1bfa22",
             ),
         )
 
@@ -541,9 +549,9 @@ class DatabaseSchemaTests(unittest.TestCase):
         with engine.begin() as connection:
             connection.execute(
                 insert(schema_migrations_table).values(
-                    version=6,
-                    migration_id="future-v6",
-                    contract_checksum="6" * 64,
+                    version=7,
+                    migration_id="future-v7",
+                    contract_checksum="7" * 64,
                     applied_at=NOW,
                     app_version="99.0.0",
                 )
@@ -560,7 +568,7 @@ class DatabaseSchemaTests(unittest.TestCase):
         with engine.begin() as connection:
             connection.execute(
                 delete(schema_migrations_table).where(
-                    schema_migrations_table.c.version.in_((2, 3, 4, 5))
+                    schema_migrations_table.c.version.in_((2, 3, 4, 5, 6))
                 )
             )
 

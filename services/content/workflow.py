@@ -1519,12 +1519,39 @@ def get_published_lesson_resources(
     lesson_id: str,
 ) -> PublishedLessonResources:
     release = get_current_release(course_id)
-    if release is None or not isinstance(
+    if release is None:
+        raise ContentNotFound(
+            f"No published V3/V4/V5 resources for {course_id}/{lesson_id}."
+        )
+    return _lesson_resources_from_release(release, lesson_id)
+
+
+def get_release_lesson_resources(
+    course_id: str,
+    lesson_id: str,
+    release_id: str,
+) -> PublishedLessonResources:
+    """Load one lesson from an exact immutable release in active history.
+
+    Long-lived game sessions must keep the content identity selected when the
+    session started.  They therefore cannot follow the mutable active pointer
+    used by ordinary course browsing and new persona consultations.
+    """
+
+    release = get_release(course_id, release_id)
+    return _lesson_resources_from_release(release, lesson_id)
+
+
+def _lesson_resources_from_release(
+    release: CourseReleaseManifestAny,
+    lesson_id: str,
+) -> PublishedLessonResources:
+    if not isinstance(
         release,
         (CourseReleaseManifestV3, CourseReleaseManifestV4, CourseReleaseManifestV5),
     ):
         raise ContentNotFound(
-            f"No published V3/V4/V5 resources for {course_id}/{lesson_id}."
+            f"No published V3/V4/V5 resources for {release.course_id}/{lesson_id}."
         )
     item = next(
         (candidate for candidate in release.items if candidate.lesson_id == lesson_id),
@@ -1532,7 +1559,7 @@ def get_published_lesson_resources(
     )
     if item is None:
         raise ContentNotFound(
-            f"Published lesson resources not found: {course_id}/{lesson_id}."
+            f"Published lesson resources not found: {release.course_id}/{lesson_id}."
         )
     if isinstance(item, CourseReleaseItemV3):
         package = _load_release_item_v3(item)

@@ -1,5 +1,11 @@
-import type { GameNarrativeMessage, GameSession } from '../../utils/api';
+import type {
+  GameNarrativeMessage,
+  ScenarioReleasePin,
+  GameSession,
+  ScenarioNpcDialogueV1,
+} from '../../utils/api';
 import { publicAssetUrl } from '../../runtime';
+import type { ScenarioNpcDialogueRoute } from './ScenarioNpcDialogue';
 
 export interface GameSceneAsset {
   lessonId: string;
@@ -95,6 +101,48 @@ export function roundLabel(turnNo: number): string {
 
 export function choiceMark(index: number): string {
   return ['壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'][index] ?? String(index + 1);
+}
+
+export function scenarioNpcDialogueRoute(
+  dialogue: Pick<ScenarioNpcDialogueV1, 'route_source' | 'route_reason'>,
+): ScenarioNpcDialogueRoute {
+  if (dialogue.route_source === 'external_api') return 'api-assisted';
+  if (dialogue.route_source === 'fallback') return 'safe-fallback';
+  return dialogue.route_reason === 'fixed_action_local'
+    ? 'local-script'
+    : 'local-evidence';
+}
+
+export function mergeScenarioNpcDialogues(
+  current: ScenarioNpcDialogueV1[],
+  incoming: ScenarioNpcDialogueV1[],
+): ScenarioNpcDialogueV1[] {
+  if (incoming.length === 0) return current;
+  const byTurnId = new Map(current.map((dialogue) => [dialogue.turn_id, dialogue]));
+  for (const dialogue of incoming) byTurnId.set(dialogue.turn_id, dialogue);
+  return [...byTurnId.values()].sort((left, right) => (
+    left.turn_no - right.turn_no || left.turn_id.localeCompare(right.turn_id)
+  ));
+}
+
+export function scenarioNpcDialogueMatchesSession(
+  dialogue: ScenarioNpcDialogueV1,
+  session: GameSession,
+  releasePin: ScenarioReleasePin,
+): boolean {
+  const turn = session.turns.find((item) => item.turn_id === dialogue.turn_id);
+  return dialogue.session_id === session.session_id
+    && dialogue.turn_no === turn?.turn_no
+    && dialogue.course_id === session.course_id
+    && dialogue.lesson_id === session.lesson_id
+    && dialogue.course_content_version === session.course_content_version
+    && dialogue.course_checksum === session.course_checksum
+    && dialogue.scenario_id === session.scenario_id
+    && dialogue.scenario_version === session.scenario_version
+    && dialogue.scenario_checksum === session.scenario_checksum
+    && dialogue.release_id === releasePin.release_id
+    && dialogue.release_no === releasePin.release_no
+    && dialogue.release_checksum === releasePin.release_checksum;
 }
 
 function appendParagraph(current: string, next: string): string {

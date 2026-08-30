@@ -169,7 +169,8 @@ def build_final_dossier(
                 "scenario": engine.scenario.model_dump(mode="json"),
                 "session": attached_session.model_dump(mode="json"),
                 "dossier": dossier.model_dump(mode="json"),
-            }
+            },
+            context=engine.validation_context,
         )
     except ValidationError as exc:
         raise DossierGenerationError(
