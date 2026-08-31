@@ -202,6 +202,20 @@ class GameDialogueRuntimeServiceTests(unittest.IsolatedAsyncioTestCase):
             ),
         )
 
+    @staticmethod
+    def _release_id_for_schema(schema_version: str) -> str:
+        release = workflow.get_current_release("C-prequin-state")
+        while release is not None:
+            if release.schema_version == schema_version:
+                return release.release_id
+            if release.parent_release_id is None:
+                break
+            release = workflow.get_release(
+                "C-prequin-state",
+                release.parent_release_id,
+            )
+        raise AssertionError(f"release history has no {schema_version} manifest")
+
     def _start(self, service, lesson_id: str, *, suffix: str):
         _resources, scenario_id, pin = self._pin(lesson_id)
         return service.start_session(
@@ -239,11 +253,14 @@ class GameDialogueRuntimeServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
-        current = workflow.get_current_release("C-prequin-state")
-        self.assertIsNotNone(current.parent_release_id)
+        v4_release_id = self._release_id_for_schema("course-release/v4")
         old_resources, old_scenario_id, old_pin = self._pin(
             "L103",
-            release_id=current.parent_release_id,
+            release_id=v4_release_id,
+        )
+        self.assertEqual(
+            workflow.get_release("C-prequin-state", old_pin.release_id).schema_version,
+            "course-release/v4",
         )
         old_record = self.repository.get_published_record(
             old_scenario_id,
@@ -520,11 +537,14 @@ class GameDialogueRuntimeServiceTests(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_v4_release_keeps_legacy_narrator_and_has_no_dialogue(self):
-        current = workflow.get_current_release("C-prequin-state")
-        self.assertIsNotNone(current.parent_release_id)
+        v4_release_id = self._release_id_for_schema("course-release/v4")
         resources, scenario_id, pin = self._pin(
             "L101",
-            release_id=current.parent_release_id,
+            release_id=v4_release_id,
+        )
+        self.assertEqual(
+            workflow.get_release("C-prequin-state", pin.release_id).schema_version,
+            "course-release/v4",
         )
         self.assertIsNone(resources.persona_pack)
         narrator = _LegacyNarrator()

@@ -3,6 +3,7 @@ import {
   test,
   type Browser,
   type Page,
+  type Route,
   type TestInfo,
 } from '@playwright/test';
 
@@ -51,12 +52,22 @@ async function login(page: Page, username: string, password: string) {
   await page.getByRole('button', { name: '进入课堂' }).click();
 }
 
-function observeRuntimeHealth(page: Page) {
+interface ExpectedRuntimeFailures {
+  dialogueRequest: boolean;
+}
+
+function observeRuntimeHealth(
+  page: Page,
+  expectedFailures: ExpectedRuntimeFailures = { dialogueRequest: false },
+) {
   const issues: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error' || message.type() === 'warning') {
       const text = message.text();
       if (text === 'Failed to load resource: the server responded with a status of 401 (Unauthorized)') {
+        return;
+      }
+      if (expectedFailures.dialogueRequest && /Failed to load resource.*ERR_FAILED/.test(text)) {
         return;
       }
       const source = message.location().url;
@@ -98,8 +109,34 @@ async function openStage(page: Page, name: '抉择' | '召见' | '卷宗') {
   await expect(page).toHaveURL(new RegExp(`layer=${name === '抉择' ? 'practice' : name === '召见' ? 'ask' : 'create'}`));
 }
 
+interface RenderedNpcDialogue {
+  responseLabel: string;
+  speech: string;
+}
+
+async function expectNpcDialogue(page: Page, turnNo: number): Promise<RenderedNpcDialogue> {
+  const dialogue = page.getByRole('article', { name: `第 ${turnNo} 回合人物回应` });
+  await expect(dialogue).toBeVisible();
+  await expect(dialogue.getByText('你的陈策', { exact: true })).toBeVisible();
+  await expect(dialogue.getByText('局势', { exact: true })).toBeVisible();
+  await expect(dialogue.getByText('角色化教学表达，不是史料原话。', { exact: true }))
+    .toBeVisible();
+  const response = dialogue.locator('.chrono-scenario-dialogue__response');
+  await expect(response).toHaveAttribute('aria-label', /.+的回应/);
+  const responseLabel = await response.getAttribute('aria-label');
+  const speech = (await dialogue.locator('.chrono-scenario-dialogue__voice blockquote').innerText()).trim();
+  expect(responseLabel).toBeTruthy();
+  expect(speech).not.toBe('');
+  return { responseLabel: responseLabel!, speech };
+}
+
+async function failDialogueRequest(route: Route) {
+  await route.abort('failed');
+}
+
 async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: TestInfo) {
-  const issues = observeRuntimeHealth(page);
+  const expectedFailures: ExpectedRuntimeFailures = { dialogueRequest: false };
+  const issues = observeRuntimeHealth(page, expectedFailures);
   const externalRequests = await keepClassroomLocalOnly(page);
   const lessonPath = `/courses/${COURSE_ID}/lessons/${lesson.lessonId}`;
 
@@ -139,16 +176,60 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
   await expect(progress).toHaveText('0');
 
   await page.getByLabel('自拟历史行动').fill(lesson.freeInput);
+  const firstAdvance = page.waitForResponse((response) => (
+    response.request().method() === 'POST'
+    && response.url().includes('/api/v1/practice/game/sessions/')
+    && response.url().endsWith('/free-input')
+  ));
   await page.locator('.chrono-adventure-free-input').getByRole('button', { name: '呈上议策' }).click();
   await expect(progress).toHaveText('1');
+  const firstAdvanceBody = await (await firstAdvance).json();
+  expect(firstAdvanceBody).toMatchObject({
+    kind: 'advanced',
+    result: {
+      npc_dialogue: {
+        schema_version: 'scenario-npc-dialogue/v1',
+        session_id: expect.any(String),
+        turn_no: 1,
+        persona_pack_id: expect.any(String),
+        evidence_corpus_id: expect.any(String),
+        disclaimer: '角色化教学表达，不是史料原话。',
+      },
+    },
+  });
+  await expectNpcDialogue(page, 1);
 
   for (let turn = 2; turn <= 6; turn += 1) {
     await page.locator('.chrono-adventure-choices button').first().click();
     await expect(progress).toHaveText(`${turn}`);
+    const renderedDialogue = await expectNpcDialogue(page, turn);
     if (turn === 3) {
       await page.reload();
       await expect(progress).toHaveText('3');
       await expect(page.getByText('已续接上次议事')).toBeVisible();
+      const restoredDialogue = await expectNpcDialogue(page, 3);
+      expect(restoredDialogue).toEqual(renderedDialogue);
+    }
+    if (
+      turn === 4
+      && lesson.lessonId === 'L101'
+      && testInfo.project.name === 'classroom-1366x768'
+    ) {
+      expectedFailures.dialogueRequest = true;
+      await page.route(
+        '**/api/v1/practice/game/sessions/*/dialogues',
+        failDialogueRequest,
+      );
+      await page.reload();
+      await expect(progress).toHaveText('4');
+      await expect(page.locator('.chrono-adventure-narrative')).toBeVisible();
+      await expect(page.locator('.chrono-adventure-narrator')).not.toBeEmpty();
+      await expect(page.getByRole('article', { name: '第 4 回合人物回应' })).toHaveCount(0);
+      await page.unroute(
+        '**/api/v1/practice/game/sessions/*/dialogues',
+        failDialogueRequest,
+      );
+      expectedFailures.dialogueRequest = false;
     }
   }
   await expect(page.locator('.chrono-adventure-ending')).toBeVisible();
@@ -166,15 +247,21 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
   await page.locator('.chrono-ask-composer').getByRole('button', { name: '发问' }).click();
   const answer = page.locator('.chrono-ask-turn .chrono-ask-answer').last();
   await expect(answer).toBeVisible();
-  await expect(answer.locator('.chrono-ask-citations blockquote').first()).toBeVisible();
-  await expect(answer.getByText(/据本课材料/)).toBeVisible();
   await expect(page.getByText(/混合检索|词法回退|证据库 v|校验 [a-f0-9]{8}/)).toHaveCount(0);
-  await answer.getByRole('button', { name: /据何而答/ }).click();
-  await expect(answer.locator('.chrono-ask-citations')).toHaveCount(0);
-  await answer.getByRole('button', { name: /据何而答/ }).click();
-  await expect(answer.locator('.chrono-ask-citations blockquote').first()).toBeVisible();
   if (lesson.personMode) {
-    await expect(answer.getByText('角色化教学表达，不是史料原话。')).toBeVisible();
+    await expect(answer.getByText('当前材料暂不能回答')).toBeVisible();
+    await expect(answer).toContainText('超出了当前人物已经审校的知识范围');
+    await expect(answer.locator('.chrono-ask-citations')).toHaveCount(0);
+    await expect(answer.getByRole('button', { name: '据何而答 · 暂无可用材料' })).toBeDisabled();
+    await expect(answer.getByText('角色化教学表达，不是史料原话。', { exact: true }))
+      .toBeVisible();
+  } else {
+    await expect(answer.locator('.chrono-ask-citations blockquote').first()).toBeVisible();
+    await expect(answer.getByText(/据本课材料/)).toBeVisible();
+    await answer.getByRole('button', { name: /据何而答/ }).click();
+    await expect(answer.locator('.chrono-ask-citations')).toHaveCount(0);
+    await answer.getByRole('button', { name: /据何而答/ }).click();
+    await expect(answer.locator('.chrono-ask-citations blockquote').first()).toBeVisible();
   }
   await expectNoHorizontalOverflow(page);
 

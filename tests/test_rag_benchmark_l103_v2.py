@@ -17,8 +17,8 @@ BENCHMARK_PATH = (
 )
 COURSE_ID = "C-prequin-state"
 LESSON_ID = "L103"
-EXPECTED_RELEASE_NO = 7
-EXPECTED_CASE_COUNT = 60
+EXPECTED_RELEASE_NO = 8
+EXPECTED_CASE_COUNT = 64
 MINIMUM_TOP_FIVE_HIT_RATE = 0.90
 
 
@@ -32,7 +32,7 @@ class RagBenchmarkL103V2Tests(unittest.TestCase):
             LESSON_ID,
         )
 
-    def test_fixture_targets_release_seven_and_exact_v2_corpus(self) -> None:
+    def test_fixture_targets_release_eight_and_exact_v2_corpus(self) -> None:
         self.assertEqual(
             self.benchmark["schema_version"],
             "rag-benchmark-l103-v2/v1",
@@ -67,6 +67,31 @@ class RagBenchmarkL103V2Tests(unittest.TestCase):
         self.assertTrue(
             all(case_slots.count(slot_id) == 4 for slot_id in supported_slots)
         )
+        shiji_cases = [
+            case
+            for case in self.benchmark["cases"]
+            if case["slot_id"]
+            == "shangyang-slot-17-shiji-source-distance"
+        ]
+        self.assertEqual(len(shiji_cases), 4)
+        self.assertEqual(
+            len({case["question"] for case in shiji_cases}),
+            4,
+        )
+        shiji_passage_ids = {
+            "shangyang-p003",
+            "shangyang-p004",
+            "shangyang-p031",
+            "shangyang-p033",
+        }
+        self.assertTrue(
+            all(
+                set(case["expected_passage_ids"]).issubset(
+                    shiji_passage_ids
+                )
+                for case in shiji_cases
+            )
+        )
 
         for case in self.benchmark["cases"]:
             with self.subTest(question=case["question"]):
@@ -84,7 +109,7 @@ class RagBenchmarkL103V2Tests(unittest.TestCase):
                     set(case["expected_passage_ids"]).issubset(passage_ids)
                 )
 
-    def test_release_seven_v2_fts_top_five_hit_rate_is_at_least_90_percent(self) -> None:
+    def test_release_eight_v2_fts_top_five_hit_rate_is_at_least_90_percent(self) -> None:
         with TemporaryDirectory() as temp_dir:
             # No vectorizer is supplied: this benchmark exercises the offline
             # SQLite FTS path and the same deterministic query rewrites used by

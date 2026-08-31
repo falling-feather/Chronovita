@@ -7,12 +7,6 @@ from tempfile import TemporaryDirectory
 
 from services import content
 from services.content import runtime_artifacts, workflow
-from services.content.flagships.dayu_l101_persona_v1 import (
-    build_dayu_persona_pack_v1,
-)
-from services.content.flagships.shangyang_l103_persona_v1 import (
-    build_shangyang_persona_pack_v1,
-)
 from services.contracts.persona_v1 import PersonaPackV1, sign_persona_pack
 from services.contracts.release_v2 import (
     CourseReleaseManifestV4,
@@ -21,6 +15,7 @@ from services.contracts.release_v2 import (
 from tests.release_fixture import activate_v4_release_6
 
 REPOSITORY_CONTENT = Path(__file__).resolve().parents[1] / "content"
+V5_RELEASE_ID = "rel-28b5624648-0007"
 
 
 def _copy_published_content(target: Path) -> None:
@@ -37,11 +32,28 @@ def _selection(pack: PersonaPackV1) -> workflow.PersonaBundleReleaseSelection:
     )
 
 
+def _load_historical_v1_personas(root: Path) -> tuple[PersonaPackV1, ...]:
+    """Load immutable V1 packs before the fixture removes persona runtime data."""
+
+    content.configure(root)
+    release = workflow.get_release("C-prequin-state", V5_RELEASE_ID)
+    if not isinstance(release, CourseReleaseManifestV5):
+        raise AssertionError("Historical release #7 must remain course-release/v5.")
+    packs = tuple(
+        runtime_artifacts.load_release_persona(item.persona_pack)
+        for item in release.items
+    )
+    if any(pack.pack_version != 1 for pack in packs):
+        raise AssertionError("Historical release #7 must bind PersonaPackV1 v1.")
+    return packs
+
+
 class PersonaBundleReleaseTests(unittest.TestCase):
     def test_two_lesson_persona_bundle_is_activated_in_one_v5_release(self):
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             _copy_published_content(root)
+            dayu, shangyang = _load_historical_v1_personas(root)
             activate_v4_release_6(root)
             content.configure(root)
             try:
@@ -49,10 +61,6 @@ class PersonaBundleReleaseTests(unittest.TestCase):
                 self.assertIsInstance(previous, CourseReleaseManifestV4)
                 self.assertEqual(previous.release_no, 6)
 
-                dayu = build_dayu_persona_pack_v1(sealed_by="content-publisher-admin")
-                shangyang = build_shangyang_persona_pack_v1(
-                    sealed_by="content-publisher-admin"
-                )
                 runtime_artifacts.stage_persona_pack(dayu)
                 runtime_artifacts.stage_persona_pack(shangyang)
 
@@ -99,12 +107,11 @@ class PersonaBundleReleaseTests(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             _copy_published_content(root)
+            dayu, shangyang = _load_historical_v1_personas(root)
             activate_v4_release_6(root)
             content.configure(root)
             try:
                 previous = workflow.get_current_release("C-prequin-state")
-                dayu = build_dayu_persona_pack_v1()
-                shangyang = build_shangyang_persona_pack_v1()
                 runtime_artifacts.stage_persona_pack(dayu)
                 runtime_artifacts.stage_persona_pack(shangyang)
 

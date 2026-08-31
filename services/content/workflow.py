@@ -36,7 +36,6 @@ from services.contracts.release_v2 import (
     CourseReleaseManifestV4,
     CourseReleaseManifestV5,
     EvidenceSupplementDescriptorV2,
-    PersonaSupplementDescriptorV1,
     ReleaseSupplementDescriptorV1,
 )
 from services.contracts.v1 import (
@@ -254,6 +253,19 @@ class EvidenceBundleReleaseSelection(EvidenceReleaseSelection):
 
 class PersonaBundleReleaseSelection(LifecycleModel):
     lesson_id: ContractId
+    pack_id: ContractId
+    pack_version: int = Field(ge=1)
+    pack_checksum: Checksum
+
+
+class EvidencePersonaBundleReleaseSelection(LifecycleModel):
+    """One exact EvidenceCorpusV2 + PersonaPackV1 lesson binding."""
+
+    lesson_id: ContractId
+    corpus_id: ContractId
+    corpus_version: int = Field(ge=1)
+    corpus_checksum: Checksum
+    evidence_schema_version: Literal["evidence-corpus/v2"] = "evidence-corpus/v2"
     pack_id: ContractId
     pack_version: int = Field(ge=1)
     pack_checksum: Checksum
@@ -1217,6 +1229,100 @@ def publish_persona_bundle_v1(
         return manifest
 
 
+def publish_evidence_persona_bundle_v1(
+    course_id: str,
+    selections: Sequence[EvidencePersonaBundleReleaseSelection],
+    *,
+    actor: str,
+    note: str = "",
+) -> CourseReleaseManifestV5:
+    """Atomically replace V2 evidence and its exact V1 persona bindings.
+
+    This maintenance operation intentionally starts from V5.  A course must
+    already have one exact persona binding for every published lesson before
+    evidence and persona artifacts can be re-signed together.  All candidate
+    artifacts are resolved and validated before a new immutable manifest is
+    written; the existing V1 pointer remains the sole activation commit point.
+    """
+
+    course_id = _validated_id(course_id)
+    selected = tuple(selections)
+    if not selected:
+        raise ContentValidationFailed(
+            "A joint evidence/persona publication requires at least one lesson selection."
+        )
+    lesson_ids = [item.lesson_id for item in selected]
+    if lesson_ids != sorted(set(lesson_ids)):
+        raise ContentValidationFailed(
+            "Joint evidence/persona selections must be unique and sorted by lesson_id."
+        )
+
+    preflight_pointer = _load_pointer(course_id, required=False)
+    if preflight_pointer is None:
+        raise ContentNotFound(f"No active release for course {course_id}.")
+    preflight_release = get_current_release(course_id)
+    if not isinstance(preflight_release, CourseReleaseManifestV5):
+        raise ContentConflict(
+            "Joint evidence/persona publication is supported only for an active "
+            "course-release/v5. Publish V2 evidence and initial persona packs first."
+        )
+    _materialize_v5_evidence_persona_items(preflight_release, selected)
+
+    with _release_operation_lock():
+        observed_pointer = _load_pointer(course_id, required=False)
+        if _pointer_identity(observed_pointer) != _pointer_identity(preflight_pointer):
+            raise ContentConflict(
+                "Active release changed after the joint evidence/persona bundle "
+                "was prepared; retry publication."
+            )
+        current = get_current_release(course_id)
+        if not isinstance(current, CourseReleaseManifestV5):
+            raise ContentConflict(
+                "The active release is no longer course-release/v5; retry publication."
+            )
+        items = _materialize_v5_evidence_persona_items(current, selected)
+        if current.items == items:
+            _synchronize_workflows_without_pointer_change(
+                current,
+                actor=actor,
+                note=(
+                    note
+                    or "Joint evidence/persona publication already points to these artifacts."
+                ),
+                action="publish",
+            )
+            return current
+
+        manifest, manifest_path = _write_release_manifest(
+            course_id=course_id,
+            operation="publish",
+            items=items,
+            actor=actor,
+            note=(
+                note
+                or "Atomically publish the reviewed evidence and persona bundle."
+            ),
+            parent=current,
+        )
+        if not isinstance(manifest, CourseReleaseManifestV5):
+            manifest_path.unlink(missing_ok=True)
+            raise content_data.ContentIntegrityError(
+                "The joint evidence/persona bundle did not materialize a V5 release."
+            )
+        _commit_release(
+            manifest,
+            actor=actor,
+            note=(
+                note
+                or f"Published evidence and persona bundle in {manifest.release_id}."
+            ),
+            action="publish",
+            previous_pointer=observed_pointer,
+            cleanup_paths=[manifest_path],
+        )
+        return manifest
+
+
 def bootstrap_legacy_release(
     course_id: str,
     selections: Sequence[LegacyReleaseSelection],
@@ -1859,6 +1965,93 @@ def _materialize_v5_persona_items(
         payload = item.model_dump(mode="json")
         payload["persona_pack"] = descriptor.model_dump(mode="json")
         upgraded.append(CourseReleaseItemV5.model_validate(payload))
+    return tuple(sorted(upgraded, key=lambda item: item.lesson_id))
+
+
+def _materialize_v5_evidence_persona_items(
+    current: CourseReleaseManifestV5,
+    selections: Sequence[EvidencePersonaBundleReleaseSelection],
+) -> tuple[CourseReleaseItemV5, ...]:
+    """Resolve and validate a complete V5 maintenance bundle."""
+
+    selection_by_lesson = {item.lesson_id: item for item in selections}
+    current_lesson_ids = [item.lesson_id for item in current.items]
+    if set(selection_by_lesson) != set(current_lesson_ids):
+        missing = sorted(set(current_lesson_ids) - set(selection_by_lesson))
+        extra = sorted(set(selection_by_lesson) - set(current_lesson_ids))
+        details = [
+            *(f"missing:{lesson_id}" for lesson_id in missing),
+            *(f"unknown:{lesson_id}" for lesson_id in extra),
+        ]
+        raise ContentValidationFailed(
+            "The joint evidence/persona bundle must select every lesson in the "
+            "active release"
+            + (": " + ", ".join(details) if details else ".")
+        )
+
+    upgraded: list[CourseReleaseItemV5] = []
+    for item in current.items:
+        selection = selection_by_lesson[item.lesson_id]
+        corpus, evidence_descriptor = runtime_artifacts.load_evidence_corpus(
+            course_id=item.course_id,
+            lesson_id=item.lesson_id,
+            corpus_id=selection.corpus_id,
+            corpus_version=selection.corpus_version,
+            corpus_checksum=selection.corpus_checksum,
+            schema_version=selection.evidence_schema_version,
+        )
+        if not isinstance(corpus, EvidenceCorpusV2) or not isinstance(
+            evidence_descriptor,
+            EvidenceSupplementDescriptorV2,
+        ):
+            raise ContentValidationFailed(
+                f"Evidence selection for {item.lesson_id} is not a sealed V2 corpus."
+            )
+        if (
+            evidence_descriptor != item.evidence_corpus
+            and corpus.supersedes_checksum != item.evidence_corpus.checksum
+        ):
+            raise ContentConflict(
+                f"Evidence corpus {corpus.corpus_id} does not supersede the exact "
+                f"published corpus for {item.lesson_id}."
+            )
+
+        base_payload = item.model_dump(mode="json")
+        base_payload.pop("persona_pack")
+        base_payload["evidence_corpus"] = evidence_descriptor.model_dump(mode="json")
+        evidence_item = CourseReleaseItemV4.model_validate(base_payload)
+        package = _load_release_item_v4(evidence_item)
+
+        pack, persona_descriptor = runtime_artifacts.load_persona_pack(
+            course_id=item.course_id,
+            lesson_id=item.lesson_id,
+            pack_id=selection.pack_id,
+            pack_version=selection.pack_version,
+            pack_checksum=selection.pack_checksum,
+        )
+        primary = next(
+            (
+                runtime_artifacts.load_runtime_scenario(candidate)
+                for candidate in item.scenarios
+                if candidate.artifact_id == item.primary_scenario_id
+            ),
+            None,
+        )
+        if primary is None:
+            raise ContentValidationFailed(
+                f"Lesson {item.lesson_id} requires one primary scenario before "
+                "joint evidence/persona publication."
+            )
+        _validate_persona_pack_bindings(
+            pack=pack,
+            package=package,
+            scenario=primary,
+            evidence=corpus,
+        )
+        payload = evidence_item.model_dump(mode="json")
+        payload["persona_pack"] = persona_descriptor.model_dump(mode="json")
+        upgraded.append(CourseReleaseItemV5.model_validate(payload))
+
     return tuple(sorted(upgraded, key=lambda item: item.lesson_id))
 
 

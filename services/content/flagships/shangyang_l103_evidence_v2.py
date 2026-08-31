@@ -28,7 +28,10 @@ from services.contracts.evidence_v2 import (
 SHANGYANG_V1_CHECKSUM = (
     "06ab368e3f54051f21e56e4047ab9efb8f447cb81e2ef68620105995db4ce633"
 )
-SHANGYANG_V2_CREATED_AT = datetime(2026, 8, 31, 0, 0, tzinfo=timezone.utc)
+SHANGYANG_V2_CHECKSUM = (
+    "e198a2a492a926ecef444aa230dacbe5b446a19bbc8e823714c334b2149d765c"
+)
+SHANGYANG_V3_CREATED_AT = datetime(2026, 8, 31, 7, 30, tzinfo=timezone.utc)
 
 
 def _boundary(
@@ -296,6 +299,27 @@ ANSWER_SLOTS = tuple(
                 term_groups=(("具体税率", "税率", "田租比例", "伤亡人数", "斩首数字", "确切人数", "徭役天数", "每户田亩", "精确数值"),),
                 boundary_ids=("shangyang-boundary-11-unsupported-exact-data",),
             ),
+            _slot(
+                "shangyang-slot-17-shiji-source-distance",
+                "《史记·商君列传》的史料价值与现场边界",
+                response_mode="boundary",
+                question_form="evidence_boundary",
+                term_groups=(
+                    ("《史记·商君列传》", "商君列传", "史记"),
+                    ("为什么重要", "价值", "重要"),
+                    ("现场记录", "现场笔录", "第一手记录"),
+                ),
+                passage_ids=(
+                    "shangyang-p003",
+                    "shangyang-p004",
+                    "shangyang-p031",
+                    "shangyang-p033",
+                ),
+                boundary_ids=(
+                    "shangyang-boundary-01-transmitted-distance",
+                ),
+                api_synthesis_allowed=True,
+            ),
         ),
         key=lambda item: item.slot_id,
     )
@@ -457,10 +481,10 @@ def _passage_slots() -> dict[str, tuple[str, ...]]:
 
 def build_shangyang_evidence_v2(
     *,
-    sealed_at: datetime = SHANGYANG_V2_CREATED_AT,
-    sealed_by: str = "content-reviewer-shangyang-v2",
+    sealed_at: datetime = SHANGYANG_V3_CREATED_AT,
+    sealed_by: str = "content-reviewer-shangyang-v3",
 ) -> EvidenceCorpusV2:
-    """Build the sealed, checksummed L103 V2 corpus without publishing it."""
+    """Build the current sealed L103 corpus using the V2 contract schema."""
 
     v1 = build_shangyang_evidence_draft()
     v1_by_id = {item.passage_id: item for item in v1.passages}
@@ -545,21 +569,22 @@ def build_shangyang_evidence_v2(
         corpus_id=SHANGYANG_CORPUS_ID,
         course_id=COURSE_ID,
         lesson_id=LESSON_ID,
-        corpus_version=2,
+        corpus_version=3,
         status="sealed",
-        title="L103 商鞅变法正式证据库 V2",
+        title="L103 商鞅变法正式证据库 V3",
         scope_note=(
-            "仅服务 C-prequin-state/L103 的精确发布。V2 保留 V1 的三十个稳定片段 ID，"
+            "仅服务 C-prequin-state/L103 的精确发布。V3 保留前版全部四十八个稳定片段 ID，"
             "并将传世文献、商鞅方升、睡虎地秦简、后世评价、现代法治边界与人物知识范围"
-            "拆成可独立引用的原子片段。API 只能综合受支持槽位列出的当前片段；未发布的精确"
+            "拆成可独立引用的原子片段，并显式支持《史记·商君列传》的史料价值与现场边界追问。"
+            "API 只能综合受支持槽位列出的当前片段；未发布的精确"
             "税率、伤亡和个案数字必须返回依据不足。"
         ),
-        supersedes_checksum=SHANGYANG_V1_CHECKSUM,
+        supersedes_checksum=SHANGYANG_V2_CHECKSUM,
         sources=v1.sources,
         boundaries=BOUNDARIES,
         answer_slots=ANSWER_SLOTS,
         passages=tuple(sorted(passages, key=lambda item: item.passage_id)),
-        created_at=SHANGYANG_V2_CREATED_AT,
+        created_at=SHANGYANG_V3_CREATED_AT,
         sealed_at=sealed_at,
         sealed_by=sealed_by,
         checksum="0" * 64,
@@ -575,7 +600,8 @@ __all__ = [
     "ANSWER_SLOTS",
     "BOUNDARIES",
     "SHANGYANG_V1_CHECKSUM",
-    "SHANGYANG_V2_CREATED_AT",
+    "SHANGYANG_V2_CHECKSUM",
+    "SHANGYANG_V3_CREATED_AT",
     "build_shangyang_evidence_corpus_v2",
     "build_shangyang_evidence_v2",
 ]

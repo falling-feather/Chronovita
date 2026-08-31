@@ -17,7 +17,7 @@ from services.contracts.persona_v1 import (
     sign_persona_pack,
 )
 
-SHANGYANG_PERSONA_CREATED_AT = datetime(2026, 8, 30, 21, 0, tzinfo=timezone.utc)
+SHANGYANG_PERSONA_CREATED_AT = datetime(2026, 8, 31, 7, 35, tzinfo=timezone.utc)
 SHANGYANG_COURSE_CHECKSUM = (
     "149560ce57cd86b4f12ee75293f62dca27b9f0e15242b568b1a19c9338f6536f"
 )
@@ -25,7 +25,7 @@ SHANGYANG_SCENARIO_CHECKSUM = (
     "eddb9370bc7ad0cd8080784c68f15db25ecba11ffed4f2d272e8588d10f87cbd"
 )
 SHANGYANG_EVIDENCE_CHECKSUM = (
-    "e198a2a492a926ecef444aa230dacbe5b446a19bbc8e823714c334b2149d765c"
+    "73658c57df6ca4323a13b3305021608d5a4aa59351129927a9eeaa769c20fdfc"
 )
 
 
@@ -465,14 +465,14 @@ def build_shangyang_persona_pack_v1(
         pack_id="shangyang-persona-pack",
         course_id="C-prequin-state",
         lesson_id="L103",
-        pack_version=1,
+        pack_version=2,
         course_content_version=1,
         course_checksum=SHANGYANG_COURSE_CHECKSUM,
         scenario_id="shangyang-institutional-reform",
         scenario_version=1,
         scenario_checksum=SHANGYANG_SCENARIO_CHECKSUM,
         evidence_corpus_id="shangyang-evidence",
-        evidence_version=2,
+        evidence_version=3,
         evidence_checksum=SHANGYANG_EVIDENCE_CHECKSUM,
         profiles=tuple(sorted(profiles, key=lambda item: item.person_id)),
         scenario_voice_bindings=tuple(

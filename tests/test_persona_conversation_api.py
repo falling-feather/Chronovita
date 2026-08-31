@@ -136,7 +136,7 @@ class PersonaConversationApiTests(unittest.TestCase):
             "L101",
         )
         self.assertEqual(created["revision"], 1)
-        self.assertEqual(created["release_no"], 7)
+        self.assertEqual(created["release_no"], 8)
         self.assertEqual(created["release_checksum"], resources.release_checksum)
         self.assertEqual(
             created["persona_pack_checksum"],

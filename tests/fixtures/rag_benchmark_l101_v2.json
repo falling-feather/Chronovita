@@ -2,7 +2,7 @@
   "schema_version": "rag-benchmark-l101/v2",
   "course_id": "C-prequin-state",
   "lesson_id": "L101",
-  "release_no": 7,
+  "release_no": 8,
   "description": "L101《大禹治水》EvidenceCorpusV2 的60题自然问法 FTS Top 5 基准。题目覆盖全部受支持回答槽、同义改写和证据边界，不以照抄片段标题制造命中。",
   "cases": [
     {"case_id":"L101-V2-001","slot_id":"dayu-slot-source-layers","question":"听到大禹治水故事时，怎样分清传说、后世文献、考古发现和现代研究？","expected_passage_ids":["dayu-p001","dayu-p004","dayu-p043","dayu-p044"]},

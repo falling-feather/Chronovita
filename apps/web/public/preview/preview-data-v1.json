@@ -2408,9 +2408,9 @@
         "公共工程怎样可能扩大首领权威，又会给普通劳作者带来哪些代价？",
         "如果新发现一条可确认年代的文字材料，你会怎样修改现有结论？"
       ],
-      "release_checksum": "96a8f151aaed219397a6a66f0c1f5508ea30095929c15f0e868c70c8c66e356d",
-      "release_id": "rel-28b5624648-0007",
-      "release_no": 7,
+      "release_checksum": "95a9ad6e27a2110bd7f3cd3846bedf7384a8c47665175b2d3472b75b270a5c2f",
+      "release_id": "rel-28b5624648-0008",
+      "release_no": 8,
       "saga_material": {
         "assets": [
           "dayu-classroom-intro"
@@ -2903,9 +2903,9 @@
         "用‘废井田、土地私有’一句话概括改革会遗漏哪些边界？",
         "秦国后来强盛为什么不能只归因于商鞅一个人或一次变法？"
       ],
-      "release_checksum": "96a8f151aaed219397a6a66f0c1f5508ea30095929c15f0e868c70c8c66e356d",
-      "release_id": "rel-28b5624648-0007",
-      "release_no": 7,
+      "release_checksum": "95a9ad6e27a2110bd7f3cd3846bedf7384a8c47665175b2d3472b75b270a5c2f",
+      "release_id": "rel-28b5624648-0008",
+      "release_no": 8,
       "saga_material": {
         "assets": [
           "shangyang-classroom-intro"
@@ -6549,9 +6549,9 @@
         "video_sha256": "1bb20fd03c34fa13195709989b4dfaf92c343b304a49b5b4998beda20883886c",
         "video_width": 1920
       },
-      "release_checksum": "96a8f151aaed219397a6a66f0c1f5508ea30095929c15f0e868c70c8c66e356d",
-      "release_id": "rel-28b5624648-0007",
-      "release_no": 7
+      "release_checksum": "95a9ad6e27a2110bd7f3cd3846bedf7384a8c47665175b2d3472b75b270a5c2f",
+      "release_id": "rel-28b5624648-0008",
+      "release_no": 8
     },
     "C-prequin-state/L103": {
       "asset_urls": {
@@ -6590,11 +6590,11 @@
         "video_sha256": "f03debeaced13dc80b272800c5f239f670f5c76846f3d86acbfc6f093fa35c71",
         "video_width": 1920
       },
-      "release_checksum": "96a8f151aaed219397a6a66f0c1f5508ea30095929c15f0e868c70c8c66e356d",
-      "release_id": "rel-28b5624648-0007",
-      "release_no": 7
+      "release_checksum": "95a9ad6e27a2110bd7f3cd3846bedf7384a8c47665175b2d3472b75b270a5c2f",
+      "release_id": "rel-28b5624648-0008",
+      "release_no": 8
     }
   },
-  "release_identity": "C-prequin-state#7:96a8f151aaed",
+  "release_identity": "C-prequin-state#8:95a9ad6e27a2",
   "schema_version": "chronovita-pages-preview/v1"
 }

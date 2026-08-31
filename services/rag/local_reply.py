@@ -105,6 +105,31 @@ _SUPPORTED_EVIDENCE_CHECKSUMS: dict[tuple[str, str], str] = {
     ): "06ab368e3f54051f21e56e4047ab9efb8f447cb81e2ef68620105995db4ce633",
 }
 
+# V2 is the contract schema, not a one-off artifact version.  These are the
+# exact reviewed lineage parents from which the published reply-state corpora
+# may descend.  The release loader still pins the child artifact byte-for-byte;
+# this additional guard makes Release #7 and its Release #8 successor both
+# eligible without accepting an unrelated corpus lineage.
+_SUPPORTED_V2_EVIDENCE_PARENT_CHECKSUMS: dict[
+    tuple[str, str], frozenset[str]
+] = {
+    (
+        "C-prequin-state",
+        "L101",
+    ): frozenset(
+        {"ae736fd34b31fc99907e0a33b518dd2fd360530af95d2717e3a54832b2c1ff49"}
+    ),
+    (
+        "C-prequin-state",
+        "L103",
+    ): frozenset(
+        {
+            "06ab368e3f54051f21e56e4047ab9efb8f447cb81e2ef68620105995db4ce633",
+            "e198a2a492a926ecef444aa230dacbe5b446a19bbc8e823714c334b2149d765c",
+        }
+    ),
+}
+
 # EvidenceCorpusV2 publishes the reviewed reply state together with the
 # passages.  These aliases preserve the V1 diagnostic state names for existing
 # clients while the new ``slot_ids`` field exposes the actual V2 authority.
@@ -126,6 +151,7 @@ _V2_SLOT_STATE_IDS: dict[str, str] = {
     "shangyang-slot-12-sleeping-tiger-slips": "L103.text-layers",
     "shangyang-slot-13-book-of-lord-shang": "L103.text-layers",
     "shangyang-slot-15-evaluation": "L103.state-capacity",
+    "shangyang-slot-17-shiji-source-distance": "L103.text-layers",
 }
 
 _V2_LEGACY_STATE_SLOTS: dict[str, tuple[str, ...]] = {
@@ -786,10 +812,12 @@ def fit_local_reply(
 
     corpus = resources.evidence_corpus
     if isinstance(corpus, EvidenceCorpusV2):
-        if not verify_evidence_checksum(
-            corpus
-        ) or corpus.supersedes_checksum != _SUPPORTED_EVIDENCE_CHECKSUMS.get(
-            lesson_key
+        if (
+            not verify_evidence_checksum(corpus)
+            or corpus.supersedes_checksum
+            not in _SUPPORTED_V2_EVIDENCE_PARENT_CHECKSUMS.get(
+                lesson_key, frozenset()
+            )
         ):
             return None
         return _fit_v2_local_reply(

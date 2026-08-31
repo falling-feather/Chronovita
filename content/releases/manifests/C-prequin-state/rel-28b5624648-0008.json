@@ -1,0 +1,137 @@
+{
+  "schema_version": "course-release/v5",
+  "release_id": "rel-28b5624648-0008",
+  "release_no": 8,
+  "course_id": "C-prequin-state",
+  "operation": "publish",
+  "parent_release_id": "rel-28b5624648-0007",
+  "restored_from_release_id": null,
+  "created_at": "2026-08-30T23:35:08.931488Z",
+  "created_by": "content-publisher-admin",
+  "note": "双旗舰课 EvidenceCorpusV2 与 PersonaPackV1 已按精确证据血缘、人物知识边界和场景路线完成联合审校并原子重签发布。",
+  "items": [
+    {
+      "lesson_id": "L101",
+      "course_id": "C-prequin-state",
+      "content_version": 1,
+      "source_path": "sealed/L101-v001.json",
+      "source_checksum": "49ca4556d2c840491f072bfceb7b294b2af854db6d5a6e67f4bf3496ef45c03e",
+      "course_package": {
+        "kind": "course-package",
+        "schema_version": "course-package/v1",
+        "artifact_id": "pkg-L101",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 1,
+        "checksum": "8bdd1ed01fd56b4ef92d6760dbca60b28b81dcaac8d15d2f4dbc5c92645b15f5",
+        "path": "runtime/v1/course-packages/C-prequin-state/L101/v001-8bdd1ed01fd56b4ef92d6760dbca60b28b81dcaac8d15d2f4dbc5c92645b15f5.json"
+      },
+      "scenarios": [
+        {
+          "kind": "scenario-template",
+          "schema_version": "scenario-template/v1",
+          "artifact_id": "dayu-crisis-governance",
+          "course_id": "C-prequin-state",
+          "lesson_id": "L101",
+          "version": 1,
+          "checksum": "8bd70a0e3f6dded9b6f6a24196ef79cd5009b0da9efc59c97fcd1a7926650d63",
+          "path": "runtime/v1/scenarios/C-prequin-state/L101/dayu-crisis-governance/v001-8bd70a0e3f6dded9b6f6a24196ef79cd5009b0da9efc59c97fcd1a7926650d63.json"
+        }
+      ],
+      "primary_scenario_id": "dayu-crisis-governance",
+      "evidence_corpus": {
+        "kind": "evidence-corpus",
+        "schema_version": "evidence-corpus/v2",
+        "artifact_id": "dayu-evidence",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 2,
+        "checksum": "723fb44df49358d810bcc2ecfa895c25c950da9a0b5387d38b2fad17334f920b",
+        "path": "runtime/v2/evidence/C-prequin-state/L101/dayu-evidence/v002-723fb44df49358d810bcc2ecfa895c25c950da9a0b5387d38b2fad17334f920b.json"
+      },
+      "lesson_presentation": {
+        "kind": "lesson-presentation",
+        "schema_version": "lesson-presentation/v1",
+        "artifact_id": "dayu-classroom-intro",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 2,
+        "checksum": "2c74590e1655f0bbfc0d632557a71b691d599d6ca858e3676938efd825608d17",
+        "path": "runtime/v1/presentations/C-prequin-state/L101/dayu-classroom-intro/v002-2c74590e1655f0bbfc0d632557a71b691d599d6ca858e3676938efd825608d17.json"
+      },
+      "persona_pack": {
+        "kind": "persona-pack",
+        "schema_version": "persona-pack/v1",
+        "artifact_id": "dayu-persona-pack",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 1,
+        "checksum": "217c4c58e522b4cad6f54ffaa9c1a0da47a9c0de0b3f51e57ec4c595787e885e",
+        "path": "runtime/v1/personas/C-prequin-state/L101/dayu-persona-pack/v001-217c4c58e522b4cad6f54ffaa9c1a0da47a9c0de0b3f51e57ec4c595787e885e.json"
+      },
+      "audience": "published"
+    },
+    {
+      "lesson_id": "L103",
+      "course_id": "C-prequin-state",
+      "content_version": 1,
+      "source_path": "sealed/L103-v001.json",
+      "source_checksum": "d6e55dfac0486d0f167921d125aa53959cbd104741c0f9e10a414086dd9a2dd5",
+      "course_package": {
+        "kind": "course-package",
+        "schema_version": "course-package/v1",
+        "artifact_id": "pkg-L103",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L103",
+        "version": 1,
+        "checksum": "149560ce57cd86b4f12ee75293f62dca27b9f0e15242b568b1a19c9338f6536f",
+        "path": "runtime/v1/course-packages/C-prequin-state/L103/v001-149560ce57cd86b4f12ee75293f62dca27b9f0e15242b568b1a19c9338f6536f.json"
+      },
+      "scenarios": [
+        {
+          "kind": "scenario-template",
+          "schema_version": "scenario-template/v1",
+          "artifact_id": "shangyang-institutional-reform",
+          "course_id": "C-prequin-state",
+          "lesson_id": "L103",
+          "version": 1,
+          "checksum": "eddb9370bc7ad0cd8080784c68f15db25ecba11ffed4f2d272e8588d10f87cbd",
+          "path": "runtime/v1/scenarios/C-prequin-state/L103/shangyang-institutional-reform/v001-eddb9370bc7ad0cd8080784c68f15db25ecba11ffed4f2d272e8588d10f87cbd.json"
+        }
+      ],
+      "primary_scenario_id": "shangyang-institutional-reform",
+      "evidence_corpus": {
+        "kind": "evidence-corpus",
+        "schema_version": "evidence-corpus/v2",
+        "artifact_id": "shangyang-evidence",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L103",
+        "version": 3,
+        "checksum": "73658c57df6ca4323a13b3305021608d5a4aa59351129927a9eeaa769c20fdfc",
+        "path": "runtime/v2/evidence/C-prequin-state/L103/shangyang-evidence/v003-73658c57df6ca4323a13b3305021608d5a4aa59351129927a9eeaa769c20fdfc.json"
+      },
+      "lesson_presentation": {
+        "kind": "lesson-presentation",
+        "schema_version": "lesson-presentation/v1",
+        "artifact_id": "shangyang-classroom-intro",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L103",
+        "version": 2,
+        "checksum": "8d45b2d666afff7da6ca394c6e02ebffebae099f28107f07803250e331f2b89a",
+        "path": "runtime/v1/presentations/C-prequin-state/L103/shangyang-classroom-intro/v002-8d45b2d666afff7da6ca394c6e02ebffebae099f28107f07803250e331f2b89a.json"
+      },
+      "persona_pack": {
+        "kind": "persona-pack",
+        "schema_version": "persona-pack/v1",
+        "artifact_id": "shangyang-persona-pack",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L103",
+        "version": 2,
+        "checksum": "eaa16e20d77a868e5023779ebce65a09171a7bf7297e2f392e031e127c4cb960",
+        "path": "runtime/v1/personas/C-prequin-state/L103/shangyang-persona-pack/v002-eaa16e20d77a868e5023779ebce65a09171a7bf7297e2f392e031e127c4cb960.json"
+      },
+      "audience": "published"
+    }
+  ],
+  "checksum": "95a9ad6e27a2110bd7f3cd3846bedf7384a8c47665175b2d3472b75b270a5c2f"
+}

@@ -2,13 +2,20 @@ from __future__ import annotations
 
 import json
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
+from services.content import workflow
 from services.content.flagships.shangyang_l103 import build_shangyang_evidence_draft
 from services.content.flagships.shangyang_l103_evidence_v2 import (
-    SHANGYANG_V1_CHECKSUM,
+    SHANGYANG_V2_CHECKSUM,
     build_shangyang_evidence_v2,
 )
-from services.contracts.evidence_v1 import verify_evidence_checksum
+from services.contracts.evidence_v1 import RagAskRequestV1, verify_evidence_checksum
+from services.rag.local_reply import fit_local_reply
+from services.rag.query import plan_rag_query
+from services.rag.retrieval import HybridEvidenceRetriever
+from services.rag.routing import route_rag_query
 
 
 class ShangyangEvidenceV2Tests(unittest.TestCase):
@@ -20,8 +27,8 @@ class ShangyangEvidenceV2Tests(unittest.TestCase):
     def test_v2_preserves_stable_ids_and_reaches_formal_content_depth(self) -> None:
         corpus = self.corpus
         self.assertEqual(corpus.schema_version, "evidence-corpus/v2")
-        self.assertEqual(corpus.corpus_version, 2)
-        self.assertEqual(corpus.supersedes_checksum, SHANGYANG_V1_CHECKSUM)
+        self.assertEqual(corpus.corpus_version, 3)
+        self.assertEqual(corpus.supersedes_checksum, SHANGYANG_V2_CHECKSUM)
         self.assertTrue(verify_evidence_checksum(corpus))
         self.assertEqual(len(corpus.sources), 10)
         self.assertEqual(len(corpus.passages), 48)
@@ -157,6 +164,99 @@ class ShangyangEvidenceV2Tests(unittest.TestCase):
             "shangyang-boundary-06-modern-rule-of-law",
             by_id["shangyang-p048"].boundary_ids,
         )
+
+    def test_shiji_value_and_source_distance_question_has_an_exact_reviewed_slot(
+        self,
+    ) -> None:
+        slot = next(
+            item
+            for item in self.corpus.answer_slots
+            if item.slot_id == "shangyang-slot-17-shiji-source-distance"
+        )
+        self.assertEqual(slot.status, "supported")
+        self.assertEqual(slot.response_mode, "boundary")
+        self.assertEqual(slot.question_form, "evidence_boundary")
+        self.assertEqual(
+            slot.passage_ids,
+            (
+                "shangyang-p003",
+                "shangyang-p004",
+                "shangyang-p031",
+                "shangyang-p033",
+            ),
+        )
+        self.assertEqual(
+            slot.boundary_ids,
+            ("shangyang-boundary-01-transmitted-distance",),
+        )
+        self.assertTrue(slot.api_synthesis_allowed)
+
+        question = (
+            "《史记·商君列传》为什么重要，又为什么不能视为变法现场记录？"
+        )
+        self.assertTrue(
+            all(
+                any(term in question for term in group)
+                for group in slot.term_groups
+            )
+        )
+
+        passages = {item.passage_id: item for item in self.corpus.passages}
+        grounded = [passages[passage_id] for passage_id in slot.passage_ids]
+        self.assertTrue(
+            all(slot.slot_id in passage.answer_slot_ids for passage in grounded)
+        )
+        self.assertGreaterEqual(len({item.source_id for item in grounded}), 2)
+        self.assertGreaterEqual(len({item.evidence_kind for item in grounded}), 2)
+        self.assertIn(
+            "shangyang-boundary-01-transmitted-distance",
+            {
+                boundary_id
+                for passage in grounded
+                for boundary_id in passage.boundary_ids
+            },
+        )
+
+        resources = workflow.get_published_lesson_resources(
+            "C-prequin-state",
+            "L103",
+        ).model_copy(update={"evidence_corpus": self.corpus})
+        request = RagAskRequestV1(
+            course_id=resources.course_id,
+            lesson_id=resources.lesson_id,
+            persona_mode="expert",
+            question=question,
+        )
+        plan = plan_rag_query(resources, question)
+        with TemporaryDirectory(
+            prefix="chronovita-shangyang-shiji-slot-"
+        ) as temp_dir:
+            batch = HybridEvidenceRetriever(
+                Path(temp_dir) / "rag.sqlite3"
+            ).retrieve_many(
+                resources,
+                plan.retrieval_queries,
+                limit=8,
+            )
+        fit = fit_local_reply(resources, request, None, plan, batch)
+        self.assertIsNotNone(fit)
+        assert fit is not None
+        self.assertEqual(
+            fit.slot_ids,
+            ("shangyang-slot-17-shiji-source-distance",),
+        )
+        self.assertEqual(fit.passage_ids, slot.passage_ids)
+        self.assertEqual(fit.boundary_ids, slot.boundary_ids)
+        self.assertTrue(fit.answer_slot_supported)
+        self.assertEqual(fit.reason, "matched_published_v2_slot")
+        decision = route_rag_query(
+            plan,
+            batch,
+            local_fit=fit,
+            require_local_fit=True,
+        )
+        self.assertEqual(decision.target, "local_template")
+        self.assertFalse(decision.external_api_allowed)
 
     def test_unsupported_exact_data_slot_rejects_each_unpublished_number_family(self) -> None:
         slot = next(

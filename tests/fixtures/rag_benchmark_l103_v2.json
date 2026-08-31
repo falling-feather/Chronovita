@@ -2,7 +2,7 @@
   "schema_version": "rag-benchmark-l103-v2/v1",
   "course_id": "C-prequin-state",
   "lesson_id": "L103",
-  "release_no": 7,
+  "release_no": 8,
   "evidence_schema_version": "evidence-corpus/v2",
   "cases": [
     {
@@ -318,6 +318,27 @@
       "slot_id": "shangyang-slot-15-evaluation",
       "question": "《韩非子》后来怎样同时看商鞅之法的功效与不足？",
       "expected_passage_ids": ["shangyang-p022", "shangyang-p043"]
+    },
+
+    {
+      "slot_id": "shangyang-slot-17-shiji-source-distance",
+      "question": "《史记·商君列传》为什么重要，又为什么不能视为变法现场记录？",
+      "expected_passage_ids": ["shangyang-p003", "shangyang-p004", "shangyang-p031", "shangyang-p033"]
+    },
+    {
+      "slot_id": "shangyang-slot-17-shiji-source-distance",
+      "question": "《商君列传》的史料价值在哪里，为什么司马迁写下的廷议不能当作变法现场笔录？",
+      "expected_passage_ids": ["shangyang-p003", "shangyang-p031", "shangyang-p033"]
+    },
+    {
+      "slot_id": "shangyang-slot-17-shiji-source-distance",
+      "question": "西汉《史记》距离改革两百多年，它仍有什么史料价值，又为何不属于第一手记录？",
+      "expected_passage_ids": ["shangyang-p004", "shangyang-p031", "shangyang-p033"]
+    },
+    {
+      "slot_id": "shangyang-slot-17-shiji-source-distance",
+      "question": "用《史记·商君列传》研究改革为什么重要？阅读人物对白时怎样守住‘不是现场记录’的边界？",
+      "expected_passage_ids": ["shangyang-p003", "shangyang-p031", "shangyang-p033"]
     }
   ]
 }

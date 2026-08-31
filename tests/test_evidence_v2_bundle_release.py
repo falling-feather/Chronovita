@@ -8,12 +8,6 @@ import unittest
 
 from services import content
 from services.content import runtime_artifacts, workflow
-from services.content.flagships.dayu_l101_evidence_v2 import (
-    build_dayu_evidence_v2,
-)
-from services.content.flagships.shangyang_l103_evidence_v2 import (
-    build_shangyang_evidence_v2,
-)
 from services.contracts.evidence_v1 import sign_evidence_contract
 from services.contracts.evidence_v1 import RagAskRequestV1
 from services.contracts.evidence_v2 import EvidenceCorpusV2
@@ -30,6 +24,7 @@ from tests.release_fixture import activate_v3_release_5
 
 
 REPOSITORY_CONTENT = Path(__file__).resolve().parents[1] / "content"
+V4_RELEASE_ID = "rel-28b5624648-0006"
 
 
 def _copy_published_content(target: Path) -> None:
@@ -47,11 +42,28 @@ def _selection(corpus: EvidenceCorpusV2) -> workflow.EvidenceBundleReleaseSelect
     )
 
 
+def _load_historical_v2_corpora(root: Path) -> tuple[EvidenceCorpusV2, ...]:
+    """Load the immutable V2 artifacts before the fixture removes runtime/v2."""
+
+    content.configure(root)
+    release = workflow.get_release("C-prequin-state", V4_RELEASE_ID)
+    if not isinstance(release, CourseReleaseManifestV4):
+        raise AssertionError("Historical release #6 must remain course-release/v4.")
+    corpora = tuple(
+        runtime_artifacts.load_release_evidence(item.evidence_corpus)
+        for item in release.items
+    )
+    if not all(isinstance(corpus, EvidenceCorpusV2) for corpus in corpora):
+        raise AssertionError("Historical release #6 must bind EvidenceCorpusV2.")
+    return corpora
+
+
 class EvidenceV2BundleReleaseTests(unittest.TestCase):
     def test_two_lesson_v2_evidence_is_activated_in_one_v4_release(self):
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             _copy_published_content(root)
+            dayu, shangyang = _load_historical_v2_corpora(root)
             activate_v3_release_5(root)
             content.configure(root)
             try:
@@ -59,12 +71,6 @@ class EvidenceV2BundleReleaseTests(unittest.TestCase):
                 self.assertIsInstance(previous, CourseReleaseManifestV3)
                 self.assertEqual(previous.release_no, 5)
 
-                dayu = build_dayu_evidence_v2(
-                    sealed_by="content-publisher-admin"
-                )
-                shangyang = build_shangyang_evidence_v2(
-                    sealed_by="content-publisher-admin"
-                )
                 runtime_artifacts.stage_evidence_corpus(dayu)
                 runtime_artifacts.stage_evidence_corpus(shangyang)
 
@@ -120,13 +126,11 @@ class EvidenceV2BundleReleaseTests(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             _copy_published_content(root)
+            dayu, shangyang = _load_historical_v2_corpora(root)
             activate_v3_release_5(root)
             content.configure(root)
             try:
                 previous = workflow.get_current_release("C-prequin-state")
-                dayu = build_dayu_evidence_v2(
-                    sealed_by="content-publisher-admin"
-                )
                 runtime_artifacts.stage_evidence_corpus(dayu)
                 record = workflow.get_workflow("L101")
                 self.assertIsNotNone(record)
@@ -179,9 +183,6 @@ class EvidenceV2BundleReleaseTests(unittest.TestCase):
                 )
                 stale = sign_evidence_contract(stale)
                 runtime_artifacts.stage_evidence_corpus(stale)
-                shangyang = build_shangyang_evidence_v2(
-                    sealed_by="content-publisher-admin"
-                )
                 runtime_artifacts.stage_evidence_corpus(shangyang)
                 with self.assertRaisesRegex(
                     workflow.ContentConflict,

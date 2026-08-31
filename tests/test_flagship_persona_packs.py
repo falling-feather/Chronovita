@@ -191,10 +191,10 @@ class FlagshipPersonaPackTests(unittest.TestCase):
                         if passage.evidence_kind == "teaching_explanation":
                             self.assertEqual(profile.persona_kind, "composite_group")
 
-    def test_packs_pin_the_active_release_seven_artifacts(self):
+    def test_packs_pin_the_active_release_eight_artifacts(self):
         manifest = _active_manifest()
         self.assertEqual(manifest["schema_version"], "course-release/v5")
-        self.assertEqual(manifest["release_no"], 7)
+        self.assertEqual(manifest["release_no"], 8)
         items = {item["lesson_id"]: item for item in manifest["items"]}
         for pack in (self.dayu_pack, self.shangyang_pack):
             item = items[pack.lesson_id]

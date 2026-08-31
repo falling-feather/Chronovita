@@ -3,7 +3,7 @@
   "lesson_id": "L103",
   "course_id": "C-prequin-state",
   "state": "published",
-  "revision": 10,
+  "revision": 11,
   "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
   "validation": {
     "schema_version": "content-validation/v1",
@@ -19,8 +19,8 @@
   "sealed_checksum": "d6e55dfac0486d0f167921d125aa53959cbd104741c0f9e10a414086dd9a2dd5",
   "published_course_id": "C-prequin-state",
   "published_version": 1,
-  "published_release_id": "rel-28b5624648-0007",
-  "updated_at": "2026-08-30T21:17:12.268379Z",
+  "published_release_id": "rel-28b5624648-0008",
+  "updated_at": "2026-08-30T23:35:08.973371Z",
   "history": [
     {
       "sequence": 1,
@@ -141,7 +141,19 @@
       "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
       "sealed_version": null,
       "release_id": "rel-28b5624648-0007"
+    },
+    {
+      "sequence": 11,
+      "action": "publish",
+      "from_state": "published",
+      "to_state": "published",
+      "actor": "content-publisher-admin",
+      "note": "双旗舰课 EvidenceCorpusV2 与 PersonaPackV1 已按精确证据血缘、人物知识边界和场景路线完成联合审校并原子重签发布。",
+      "occurred_at": "2026-08-30T23:35:08.973371Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0008"
     }
   ],
-  "checksum": "32102ec322c6716bc6b3eb789f5489805adac40d95dfeb6bcd3f0af13d02edfc"
+  "checksum": "3eaf2cbc3d5bd1e5c912ae96f38409fa52605efae9b6443b3a9b701b5e7cffa8"
 }

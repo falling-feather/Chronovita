@@ -22,9 +22,9 @@ class PagesPreviewTests(unittest.TestCase):
             (ROOT / "content" / pointer["manifest_path"]).read_text(encoding="utf-8")
         )
         self.assertEqual(manifest["schema_version"], "course-release/v5")
-        self.assertEqual(manifest["release_no"], 7)
+        self.assertEqual(manifest["release_no"], 8)
         self.assertIn(
-            f'{manifest["course_id"]}#7:{manifest["checksum"][:12]}',
+            f'{manifest["course_id"]}#8:{manifest["checksum"][:12]}',
             payload["release_identity"],
         )
         for lesson_id in ("L101", "L103"):
@@ -38,7 +38,7 @@ class PagesPreviewTests(unittest.TestCase):
             presentation = payload["presentations"][
                 f"C-prequin-state/{lesson_id}"
             ]
-            self.assertEqual(presentation["release_no"], 7)
+            self.assertEqual(presentation["release_no"], 8)
             self.assertEqual(
                 presentation["release_checksum"], manifest["checksum"]
             )
