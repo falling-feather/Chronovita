@@ -3,7 +3,7 @@ name: Teacher release
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v0.9.*"
 
 permissions:
   actions: read

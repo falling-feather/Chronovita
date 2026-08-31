@@ -1,10 +1,10 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V1.0.5**；L101/L103 已完成 48 条本地优先路由验收、离线六回合人物链和 accounts 浏览器整链。规则引擎始终先结算，模型只能在当前发布证据与人物边界内润色表达，失败时回退本地台词；人物对话按账号、发布、证据和回合原子持久化并可刷新恢复。GitHub Pages 仍只提供无需登录和 API 的只读内容预览。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V1.0.6**；L101/L103 已完成 48 条本地优先路由验收、离线六回合人物链和 accounts 浏览器整链，并进入可离线复核的 Windows 课堂候选发行阶段。规则引擎始终先结算，模型只能在当前发布证据与人物边界内润色表达，失败时回退本地台词；人物对话按账号、发布、证据和回合原子持久化并可刷新恢复。GitHub Pages 仍只提供无需登录和 API 的只读内容预览。
 
 [纯前端预览](https://falling-feather.github.io/Chronovita/) · [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](doc/00-项目总纲.md) · [开发者文档](doc/01-开发者文档.md) · [项目规划](doc/02-项目规划.md) · [开发历史](doc/03-开发历史.md)
 
-当前内容发布为 Release #8（`rel-28b5624648-0008`）：L101 精确复用 evidence v2 与 persona v1，L103 升级到 evidence v3 与 persona v2；L103 的 64 题离线 FTS 基准 Top 5 命中率为 100%。V1.0.6 只负责生成和复核新的 Windows 课堂候选包。
+当前内容发布为 Release #8（`rel-28b5624648-0008`）：L101 精确复用 evidence v2 与 persona v1，L103 升级到 evidence v3 与 persona v2；L103 的 64 题离线 FTS 基准 Top 5 命中率为 100%。V1.0.6 发行链只接受与应用版本一致的 `v0.10.x` 或 `v1.x.x` 标签，并生成 Windows ZIP、SHA-256 与许可清单；本地候选产物位于 `data/release-artifacts/v1.0.6/`，不等同于已公开 GitHub Release。
 
 ## 一句话定位
 

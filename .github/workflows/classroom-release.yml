@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - "v0.10.*"
+      - "v1.*.*"
 
 permissions:
   contents: read
@@ -32,6 +33,40 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: apps/api/requirements.lock
+
+      - name: Validate classroom tag and version contract
+        shell: powershell
+        run: |
+          $appVersion = (& python -c "from services.version import APP_VERSION; print(APP_VERSION)").Trim()
+          if (
+            $LASTEXITCODE -ne 0 `
+            -or $appVersion -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$'
+          ) {
+            throw "services/version.py must declare a semantic APP_VERSION."
+          }
+
+          if ($env:GITHUB_EVENT_NAME -eq "push") {
+            if ($env:GITHUB_REF_TYPE -ne "tag") {
+              throw "Classroom release pushes must come from a tag."
+            }
+            $tag = [regex]::Match(
+              $env:GITHUB_REF_NAME,
+              '^v(?<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+            )
+            if (-not $tag.Success) {
+              throw "Classroom release tags must use vMAJOR.MINOR.PATCH."
+            }
+            $tagVersion = $tag.Groups["version"].Value
+            if ($tagVersion -notmatch '^(?:0\.10\.[0-9]+|1\.[0-9]+\.[0-9]+)$') {
+              throw "Only v0.10.x and v1.x.x tags may trigger classroom releases."
+            }
+            if ($tagVersion -ne $appVersion) {
+              throw "Classroom tag version does not match services/version.py."
+            }
+          }
+
+          "CLASSROOM_VERSION=$appVersion" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -80,7 +115,10 @@ jobs:
       - name: Build and verify deterministic classroom archive
         shell: powershell
         run: |
-          $version = python -c "from services.version import APP_VERSION; print(APP_VERSION)"
+          $version = $env:CLASSROOM_VERSION
+          if ($version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') {
+            throw "Validated classroom version is unavailable."
+          }
           $sourceCommit = git rev-parse HEAD
           $output = Join-Path $env:RUNNER_TEMP "classroom-release"
           python scripts/build_classroom_release.py build `
@@ -98,8 +136,6 @@ jobs:
           python scripts/build_classroom_release.py verify `
             --archive $archive[0].FullName
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          "CLASSROOM_VERSION=$version" |
-            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CLASSROOM_OUTPUT=$output" |
             Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CLASSROOM_ARCHIVE=$($archive[0].FullName)" |
