@@ -19,18 +19,18 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from services import content
-from services.content import runtime_artifacts, workflow
-from services.content.flagships.dayu_l101 import (
+from services import content  # noqa: E402
+from services.content import runtime_artifacts, workflow  # noqa: E402
+from services.content.flagships.dayu_l101 import (  # noqa: E402
     COURSE_ID,
     DAYU_PRESENTATION_ID,
     build_dayu_presentation,
 )
-from services.content.flagships.shangyang_l103 import (
+from services.content.flagships.shangyang_l103 import (  # noqa: E402
     SHANGYANG_PRESENTATION_ID,
     build_shangyang_presentation,
 )
-from services.contracts.evidence_v1 import LessonPresentationV1
+from services.contracts.evidence_v1 import LessonPresentationV1  # noqa: E402
 
 
 MEDIA_PUBLISHER = "content-publisher-admin"
@@ -178,7 +178,9 @@ def publish_flagship_media(
         after = workflow.get_published_lesson_resources(COURSE_ID, media.lesson_id)
         if (
             release.schema_version != release_schema_version
-            or record.state != "published"
+            or record.published_course_id != COURSE_ID
+            or record.published_version != before.content_version
+            or record.published_release_id != release.release_id
             or after.content_version != before.content_version
             or after.evidence_corpus.checksum != evidence.checksum
             or after.lesson_presentation.checksum != presentation.checksum

@@ -1,10 +1,10 @@
 # 历史未来课堂 · Chronovita
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V1.0.6**；L101/L103 已完成 48 条本地优先路由验收、离线六回合人物链和 accounts 浏览器整链，并进入可离线复核的 Windows 课堂候选发行阶段。规则引擎始终先结算，模型只能在当前发布证据与人物边界内润色表达，失败时回退本地台词；人物对话按账号、发布、证据和回合原子持久化并可刷新恢复。GitHub Pages 仍只提供无需登录和 API 的只读内容预览。
+> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前开发版本 **V1.1.0**；教师内容仓库的课文可在预览、审校和封存后，以新的不可变 V5 Release 同步到学生端。规则引擎、证据库和人物边界仍按精确发布绑定，未随课文适配的模块不会被误记为已同步。GitHub Pages 仍只提供无需登录和 API 的只读内容预览。
 
-[纯前端预览](https://falling-feather.github.io/Chronovita/) · [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](doc/00-项目总纲.md) · [开发者文档](doc/01-开发者文档.md) · [项目规划](doc/02-项目规划.md) · [开发历史](doc/03-开发历史.md)
+[纯前端预览](https://falling-feather.github.io/Chronovita/) · [远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](doc/00-项目总纲.md) · [开发者文档](doc/01-开发者文档.md) · [项目规划](doc/02-项目规划.md) · [开发历史](doc/03-开发历史.md) · [课程同步台账](doc/04-课程同步台账.md)
 
-当前内容发布为 Release #8（`rel-28b5624648-0008`）：L101 精确复用 evidence v2 与 persona v1，L103 升级到 evidence v3 与 persona v2；L103 的 64 题离线 FTS 基准 Top 5 命中率为 100%。V1.0.6 发行链只接受与应用版本一致的 `v0.10.x` 或 `v1.x.x` 标签，并生成 Windows ZIP、SHA-256 与许可清单；本地候选产物位于 `data/release-artifacts/v1.0.6/`，不等同于已公开 GitHub Release。
+当前内容发布为 Release #9（`rel-28b5624648-0009`，manifest `e5a13517888fa3b6f01396855268379040bd3983f1d3bfaec930b7328b9f6ecd`）：L101 已采用教师内容 PR #11 的《夏朝的建立与「家天下」》，练、问、创、人物语义和视频仍沿用上一发布并在台账中标为待同步；L103 保持 Release #8 的已验收制品。最后一份独立验证的 Windows 候选包仍是 V1.0.6，本次内容提交不冒充新的公开发行。
 
 ## 一句话定位
 

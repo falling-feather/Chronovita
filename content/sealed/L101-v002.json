@@ -261,11 +261,11 @@
     }
   ],
   "teacher_notes": "从已实装课程 L101 导入，供教师二次修订。\n\n同步来源：falling-feather/Chronovita-Course-Content PR #11；commit 10ad1a351e75f781bf780b6347b048d861f8a8e0；源封存 checksum 7a857cf4698e19d76f6fbc997143cb988db91d45b1f75d6b915b8fef3e8fe829。",
-  "status": "draft",
-  "version": 0,
+  "status": "sealed",
+  "version": 2,
   "created_at": "2026-08-13T01:57:23.425133Z",
-  "updated_at": "2026-09-03T21:59:57.650108Z",
-  "sealed_at": null,
-  "sealed_by": null,
-  "checksum": null
+  "updated_at": "2026-09-03T21:47:48.352503Z",
+  "sealed_at": "2026-09-03T21:47:48.352503Z",
+  "sealed_by": "content-sync-pr11-reviewer",
+  "checksum": "86c34eaaac8e887b99af14e3dc2dea4d26ed9166d780768f9f19786eb5f1809d"
 }

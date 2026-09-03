@@ -14,6 +14,7 @@ from services.contracts.evidence_v2 import EvidenceCorpusV2
 from services.contracts.persona_v1 import PersonaPackV1, sign_persona_pack
 from services.contracts.release_v2 import CourseReleaseManifestV5
 from scripts import publish_flagship_agent_bundle as flagship_publisher
+from tests.release_fixture import activate_v5_release_8
 
 
 COURSE_ID = "C-prequin-state"
@@ -293,6 +294,7 @@ class EvidencePersonaBundleReleaseTests(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             _copy_published_content(root)
+            activate_v5_release_8(root)
             content.configure(root)
             try:
                 pointer = root / "releases/active/C-prequin-state.json"

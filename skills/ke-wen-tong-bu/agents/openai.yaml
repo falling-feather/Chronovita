@@ -1,0 +1,4 @@
+interface:
+  display_name: "课文同步"
+  short_description: "校验教师内容 PR，将课文发布到学生端并维护同步台账"
+  default_prompt: "使用 $ke-wen-tong-bu 同步最新教师课文到学生端并更新课程同步台账。"

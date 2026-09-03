@@ -36,6 +36,7 @@ from services.contracts.release_v2 import (
     CourseReleaseManifestV4,
     CourseReleaseManifestV5,
     EvidenceSupplementDescriptorV2,
+    PersonaSupplementDescriptorV1,
     ReleaseSupplementDescriptorV1,
 )
 from services.contracts.v1 import (
@@ -841,6 +842,7 @@ def publish_version(
     scenario_selections: Sequence[ScenarioReleaseSelection] | None = None,
     evidence_selection: EvidenceReleaseSelection | None = None,
     presentation_selection: PresentationReleaseSelection | None = None,
+    persona_selection: PersonaBundleReleaseSelection | None = None,
 ) -> tuple[CourseReleaseManifestAny, ContentWorkflowRecord]:
     preflight_source = content_data.get_sealed_package(lesson_id, version)
     preflight_pointer = _load_pointer(preflight_source.course_id, required=False)
@@ -872,6 +874,15 @@ def publish_version(
         evidence_selection=evidence_selection,
         presentation_selection=presentation_selection,
     )
+    preflight_persona = _resolve_release_persona(
+        preflight_source,
+        current_item=preflight_current_item,
+        selection=persona_selection,
+    )
+    if preflight_persona is not None and preflight_supplements is None:
+        raise ContentValidationFailed(
+            "Persona publication requires pinned V2 evidence and presentation resources."
+        )
     with _release_operation_lock():
         record = _load_workflow(lesson_id)
         observed_pointer = _load_pointer(record.course_id, required=False)
@@ -879,9 +890,17 @@ def publish_version(
             raise ContentConflict(
                 "Active release changed after publication preparation began; retry publication."
             )
-        if record.state not in {"sealed", "published"}:
+        published_maintenance = bool(
+            preflight_pointer is not None
+            and preflight_current_item is not None
+            and preflight_current_item.content_version == version
+            and record.published_course_id == record.course_id
+            and record.published_version == version
+            and record.published_release_id == preflight_pointer.release_id
+        )
+        if record.state not in {"sealed", "published"} and not published_maintenance:
             raise InvalidTransition(f"Cannot publish content in {record.state} state.")
-        if record.sealed_version != version:
+        if not published_maintenance and record.sealed_version != version:
             raise ContentConflict(
                 "Only the workflow's approved sealed version can be published."
             )
@@ -894,7 +913,7 @@ def publish_version(
             )
 
         sealed = content_data.get_sealed_package(lesson_id, version)
-        if sealed.checksum != record.sealed_checksum:
+        if not published_maintenance and sealed.checksum != record.sealed_checksum:
             raise content_data.ContentIntegrityError(
                 "Workflow and sealed source checksum disagree."
             )
@@ -939,7 +958,7 @@ def publish_version(
                 evidence_corpus=evidence_descriptor,
                 lesson_presentation=presentation_descriptor,
             )
-            if isinstance(current_item, CourseReleaseItemV5):
+            if isinstance(current_item, CourseReleaseItemV5) or preflight_persona:
                 if not isinstance(
                     supplemented_item.evidence_corpus,
                     EvidenceSupplementDescriptorV2,
@@ -950,7 +969,7 @@ def publish_version(
                     )
                 item = CourseReleaseItemV5(
                     **supplemented_item.model_dump(mode="json"),
-                    persona_pack=current_item.persona_pack,
+                    persona_pack=preflight_persona,
                 )
                 _load_release_item_v5(item)
             else:
@@ -2834,6 +2853,48 @@ def _resolve_release_supplements(
                 + ", ".join(details)
             )
     return evidence_descriptor, presentation_descriptor
+
+
+def _resolve_release_persona(
+    sealed: content_data.LessonContentPackage,
+    *,
+    current_item: ReleaseItem
+    | CourseReleaseItemV2
+    | CourseReleaseItemV3
+    | CourseReleaseItemV4
+    | CourseReleaseItemV5
+    | None,
+    selection: PersonaBundleReleaseSelection | None,
+) -> PersonaSupplementDescriptorV1 | None:
+    """Resolve the exact persona pack used by a single-lesson publication.
+
+    A V5 content update changes the bound course checksum. Callers may therefore
+    select a newly sealed persona pack in the same atomic release instead of
+    temporarily downgrading the course or weakening cross-artifact validation.
+    """
+
+    if selection is None:
+        if not isinstance(current_item, CourseReleaseItemV5):
+            return None
+        pack = runtime_artifacts.load_release_persona(current_item.persona_pack)
+        return runtime_artifacts.descriptor_for_persona(pack)
+
+    if selection.lesson_id != sealed.lesson_id:
+        raise ContentValidationFailed(
+            "Persona selection belongs to another lesson."
+        )
+    pack, descriptor = runtime_artifacts.load_persona_pack(
+        course_id=sealed.course_id,
+        lesson_id=sealed.lesson_id,
+        pack_id=selection.pack_id,
+        pack_version=selection.pack_version,
+        pack_checksum=selection.pack_checksum,
+    )
+    if (pack.course_id, pack.lesson_id) != (sealed.course_id, sealed.lesson_id):
+        raise ContentValidationFailed(
+            "Persona selection belongs to another course or lesson."
+        )
+    return descriptor
 
 
 def _selection_preserves_current_v2_evidence(
