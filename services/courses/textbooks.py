@@ -56,3 +56,10 @@ def load_textbooks() -> dict[str, TextbookCourse]:
             raise content.ContentIntegrityError(f"Invalid textbook snapshot: {path.name}")
         result[book.course_id] = book
     return result
+
+
+def lesson_reading_checksum(course_id: str, lesson: TextbookLesson) -> str:
+    return hashlib.sha256(json.dumps(
+        {"course_id": course_id, "lesson": lesson.model_dump(mode="json")},
+        ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+    ).encode("utf-8")).hexdigest()

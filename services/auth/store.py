@@ -24,6 +24,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine import Connection, Engine, RowMapping
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from services.persistence.db import kv_table
 
 from .models import AuditEvent, SessionRecord, UserRecord, UserRole, normalize_roles
 
@@ -53,6 +54,10 @@ class LastAdminInvariantViolation(AuthStoreError):
 
 class AuditHeadBusy(AuthStoreError):
     code = "audit_head_busy"
+
+
+class AccountConflict(AuthStoreError):
+    code = "account_changed"
 
 
 @dataclass(frozen=True)
@@ -218,6 +223,10 @@ class AuthStore:
         enabled: bool | None = None,
         password_hash: str | None = None,
         audit: AuditWrite | None = None,
+        profile_data: dict | None = None,
+        expected_profile_revision: int | None = None,
+        expected_auth_version: int | None = None,
+        expected_password_hash: str | None = None,
     ) -> UserRecord:
         now = _utc_now()
         try:
@@ -230,6 +239,22 @@ class AuthStore:
                 if row is None:
                     raise UserNotFound(f"user not found: {user_id}")
                 current = _user_from_row(row)
+                if (expected_auth_version is not None and current.auth_version != expected_auth_version
+                        or expected_password_hash is not None and current.password_hash != expected_password_hash):
+                    raise AccountConflict("账号已发生变化，请重新登录后再试。")
+                if profile_data is not None or (display_name is not None and display_name != current.display_name):
+                    condition = (kv_table.c.namespace == "account_profile") & (kv_table.c.key == user_id)
+                    stored = connection.execute(select(kv_table.c.data).where(condition)).scalar_one_or_none()
+                    existing_profile = json.loads(stored) if stored is not None else {}
+                    revision = existing_profile.get("revision", 0)
+                    if profile_data is not None and expected_profile_revision != revision:
+                        raise AccountConflict("资料已在其他页面更新，请重新载入后修改。")
+                    profile_values = dict(data=_json_dump({**(profile_data if profile_data is not None else existing_profile), "revision": revision + 1}),
+                                          updated_at=now)
+                    if stored is None:
+                        connection.execute(insert(kv_table).values(namespace="account_profile", key=user_id, **profile_values))
+                    else:
+                        connection.execute(update(kv_table).where(condition).values(**profile_values))
                 next_roles = (
                     normalize_roles(roles) if roles is not None else current.roles
                 )
@@ -294,9 +319,24 @@ class AuthStore:
                     )
         except (LastAdminInvariantViolation, UserNotFound):
             raise
-        except SQLAlchemyError as exc:
+        except (SQLAlchemyError, json.JSONDecodeError) as exc:
             raise AuthStoreError("identity user update failed") from exc
         return updated
+
+    def get_profile(self, user_id: str) -> tuple[UserRecord, dict]:
+        try:
+            with self._identity_change_transaction() as connection:
+                row = connection.execute(select(users_table).where(users_table.c.user_id == user_id)
+                                         .with_for_update()).mappings().first()
+                if row is None:
+                    raise UserNotFound("Account not found")
+                raw = connection.execute(select(kv_table.c.data).where(
+                    (kv_table.c.namespace == "account_profile") & (kv_table.c.key == user_id)
+                )).scalar_one_or_none()
+                return _user_from_row(row), json.loads(raw) if raw is not None else {}
+        except (SQLAlchemyError, ValueError) as exc:
+            raise AuthStoreError("profile storage read failed") from exc
+
 
     def create_session(
         self,

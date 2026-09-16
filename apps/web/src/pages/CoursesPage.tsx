@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Empty, Spin } from 'antd';
+import { Alert, Button, Empty, Spin } from 'antd';
 import { ArrowRightOutlined, CloseOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { api, type CourseSummary, type Era } from '../utils/api';
 import CourseCoverPicture from '../features/courses/CourseCoverPicture';
@@ -30,9 +30,12 @@ export default function CoursesPage() {
   const gridRef = useRef<HTMLElement | null>(null);
   const [eras, setEras] = useState<Era[]>([]);
   const [items, setItems] = useState<CourseSummary[]>([]);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
   const [loading, setLoading] = useState(true);
   const [entered, setEntered] = useState(false);
   const [eraCourses, setEraCourses] = useState<CourseSummary[] | null>(null);
+  const [eraError, setEraError] = useState(false);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setEntered(true));
@@ -45,17 +48,24 @@ export default function CoursesPage() {
 
   useEffect(() => {
     setLoading(true);
+    let active = true;
+    setError('');
     api.courses({ era: courseEra, section, q })
-      .then((response) => setItems(response.items))
-      .finally(() => setLoading(false));
-  }, [courseEra, q, section]);
+      .then((response) => { if (active) setItems(response.items); })
+      .catch(() => { if (active) setError('课程暂时载入失败，已保留现有列表，请重试。'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [courseEra, q, section, retry]);
 
   useEffect(() => {
+    let active = true;
     setEraCourses(null);
+    setEraError(false);
     api.courses({ era: mapEraId })
-      .then((response) => setEraCourses(response.items))
-      .catch(() => setEraCourses([]));
-  }, [mapEraId]);
+      .then((response) => { if (active) setEraCourses(response.items); })
+      .catch(() => { if (active) setEraError(true); });
+    return () => { active = false; };
+  }, [mapEraId, retry]);
 
   const eraTabs = useMemo(
     () => [{ id: 'all', name: '全部', period: '所有时代' }, ...eras],
@@ -143,7 +153,9 @@ export default function CoursesPage() {
                 查看全部 <ArrowRightOutlined />
               </button>
             </div>
-            {eraCourses === null ? (
+            {eraError ? (
+              <Alert type="warning" message="时代课程暂未载入" action={<Button onClick={() => setRetry((value) => value + 1)}>重试</Button>} />
+            ) : eraCourses === null ? (
               <div className="chrono-erapanel-loading"><Spin size="small" /></div>
             ) : eraCourses.length === 0 ? (
               <p className="chrono-erapanel-empty">这个时代的课程仍在整理。</p>
@@ -189,6 +201,7 @@ export default function CoursesPage() {
           <EnvironmentOutlined aria-hidden="true" />
         </header>
 
+        {error ? <Alert type="warning" showIcon message={error} action={<Button onClick={() => setRetry((value) => value + 1)}>重试</Button>} /> : null}
         <div className="chrono-catalogue-filters" aria-label="课程筛选">
           <div className="chrono-filter-line">
             <span>时代</span>

@@ -75,7 +75,7 @@ async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw await apiResponseError(r);
   }
-  return r.json() as Promise<T>;
+  return r.status === 204 ? undefined as T : r.json() as Promise<T>;
 }
 
 async function adminFetch<T>(token: string, path: string, init?: RequestInit): Promise<T> {
@@ -109,6 +109,12 @@ async function adminFile(token: string, path: string): Promise<Blob> {
 }
 
 export interface Era { id: string; name: string; period: string; summary: string }
+export interface AccountProfile {
+  user_id: string; username: string; display_name: string; revision: number;
+  email: string; grade: '' | '七年级' | '八年级' | '九年级'; bio: string;
+  avatar_data_url: string; reading_size: 'standard' | 'large';
+}
+export type ProfileUpdate = Omit<AccountProfile, 'user_id' | 'username' | 'revision'> & { expected_revision: number; expected_user_id: string };
 export interface CourseSummary {
   id: string; era_id: string; title: string; subtitle: string;
   cover_color: string; section: string; lesson_count: number;
@@ -897,6 +903,10 @@ function learningSubmissionQuery(params: {
 }
 
 export const api = {
+  profile: () => jsonFetch<AccountProfile>('/profile/'),
+  saveProfile: (body: ProfileUpdate) => jsonFetch<AccountProfile>('/profile/', { method: 'PUT', body: JSON.stringify(body) }),
+  changeOwnPassword: (current_password: string, new_password: string, expected_user_id: string) =>
+    jsonFetch<void>('/profile/password', { method: 'POST', body: JSON.stringify({ current_password, new_password, expected_user_id }) }),
   eras: () => jsonFetch<{ items: Era[] }>('/courses/eras'),
   courses: (params: { era?: string; section?: string; q?: string } = {}) => {
     const qs = new URLSearchParams();
@@ -957,10 +967,10 @@ export const api = {
   sagaTemplates: () => jsonFetch<{ items: SagaTemplate[] }>(`/practice/saga/templates`),
   sagaStart: (lesson_id: string) => jsonFetch<SagaState>(`/practice/saga/start`, { method: 'POST', body: JSON.stringify({ lesson_id }) }),
   sagaGet: (saga_id: string) => jsonFetch<SagaState>(`/practice/saga/${saga_id}`),
-  progressList: () => jsonFetch<{ items: ProgressItem[] }>(`/learning/progress`),
+  progressList: () => jsonFetch<{ items: ProgressItem[]; total_lessons?: number }>(`/learning/progress`),
   progressLatest: () => jsonFetch<{ item: ProgressItem | null }>(`/learning/progress/latest`),
   progressGet: (lesson_id: string) => jsonFetch<{ item: ProgressItem | null }>(`/learning/progress/${lesson_id}`),
-  progressTouch: (body: { lesson_id: string; layer: string; completed?: boolean }) =>
+  progressTouch: (body: { lesson_id: string; layer: string; completed?: boolean; teacher_text_checksum?: string }) =>
     jsonFetch<{ ok: boolean; item: ProgressItem }>(`/learning/progress/touch`, { method: 'POST', body: JSON.stringify(body) }),
   learningSubmissions: (params: { course_id?: string; lesson_id?: string; limit?: number } = {}) =>
     jsonFetch<{ items: LearningSubmissionListItem[] }>(
@@ -1390,6 +1400,8 @@ export interface ProgressItem {
   last_layer: string;
   layers: { watch: boolean; practice: boolean; ask: boolean; create: boolean };
   updated_at: string;
+  reading_status?: 'reading' | 'completed' | 'outdated' | 'unverified' | 'unavailable';
+  reading_confirmed_at?: string | null;
 }
 
 export interface SagaTemplate {

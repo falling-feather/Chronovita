@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { ApiError } from '../utils/api';
+import { ApiError, api, type AccountProfile } from '../utils/api';
 import { authApi } from './client';
 import {
   hasPermission as principalHasPermission,
@@ -31,6 +31,8 @@ interface AuthContextValue {
   restore: () => Promise<void>;
   invalidate: () => void;
   can: (permission: AuthPermission) => boolean;
+  profile: AccountProfile | null;
+  applyProfile: (profile: AccountProfile) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -40,8 +42,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [principal, setPrincipal] = useState<Principal | null>(null);
   const [lastSession, setLastSession] = useState<SessionResponse | null>(null);
+  const [storedProfile, setStoredProfile] = useState<AccountProfile | null>(null);
+  const profile = storedProfile?.user_id === principal?.user_id ? storedProfile : null;
+  const applyProfile = useCallback((value: AccountProfile) => {
+    setStoredProfile(value);
+    setPrincipal((current) => current?.user_id === value.user_id
+      ? { ...current, display_name: value.display_name } : current);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    if (mode === 'accounts' && principal?.user_id) {
+      api.profile().then((value) => {
+        if (active) setStoredProfile((current) => current?.user_id === value.user_id
+          && current.revision > value.revision ? current : value);
+      }).catch(() => {});
+    }
+    return () => { active = false; };
+  }, [mode, principal?.user_id]);
+
+  useEffect(() => {
+    document.documentElement.dataset.readingSize = profile?.reading_size ?? 'standard';
+    return () => { delete document.documentElement.dataset.readingSize; };
+  }, [profile?.reading_size]);
 
   const invalidate = useCallback(() => {
+    setStoredProfile(null);
     setPrincipal(null);
     setLastSession(null);
     setStatus((current) => current === 'legacy' ? current : 'anonymous');
@@ -87,6 +113,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [restore]);
 
   useEffect(() => {
+    if (mode !== 'accounts' || status !== 'authenticated') return;
+    let active = true;
+    const checkCurrentAccount = () => {
+      authApi.me().then(({ principal: current }) => {
+        if (active) setPrincipal(current);
+      }).catch(() => {});
+    };
+    window.addEventListener('focus', checkCurrentAccount);
+    return () => { active = false; window.removeEventListener('focus', checkCurrentAccount); };
+  }, [mode, status]);
+
+  useEffect(() => {
     const onSessionInvalid = () => {
       if (mode === 'accounts') invalidate();
     };
@@ -105,12 +143,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     if (mode === 'legacy-local') return;
-    try {
-      await authApi.logout();
-    } finally {
-      // 网络故障时也先关闭当前页面权限；HttpOnly Cookie 只能由服务端清除。
-      invalidate();
-    }
+    await authApi.logout();
+    invalidate();
   }, [invalidate, mode]);
 
   const refreshSession = useCallback(async () => {
@@ -138,8 +172,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     restore,
     invalidate,
     can,
+    profile,
+    applyProfile,
   }), [
     can,
+    profile,
+    applyProfile,
     invalidate,
     lastSession,
     login,

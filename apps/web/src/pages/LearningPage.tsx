@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Drawer, Empty, Progress, Spin, Tag } from 'antd';
+import { Alert, Button, Drawer, Empty, Spin, Tag } from 'antd';
 import {
   ArrowRightOutlined,
   BookOutlined,
@@ -7,7 +7,8 @@ import {
   ClockCircleOutlined,
   FileDoneOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { readingComplete, readingLabel, resumeLayer } from '../features/classroom/readingProgress';
 import { useAuth } from '../auth/AuthContext';
 import CourseCoverPicture from '../features/courses/CourseCoverPicture';
 import {
@@ -37,15 +38,6 @@ function formatTime(iso: string): string {
   return date.toLocaleDateString('zh-CN');
 }
 
-function progressPct(item: ProgressItem): number {
-  return Math.round([
-    item.layers.watch,
-    item.layers.practice,
-    item.layers.ask,
-    item.layers.create,
-  ].filter(Boolean).length * 25);
-}
-
 function feedbackLabel(item: LearningSubmissionListItem): { label: string; color: string } {
   const status = item.latest_feedback?.completion_status;
   if (status === 'completed') return { label: '教师确认完成', color: 'green' };
@@ -57,7 +49,11 @@ function feedbackLabel(item: LearningSubmissionListItem): { label: string; color
 export default function LearningPage() {
   const auth = useAuth();
   const nav = useNavigate();
-  const [tab, setTab] = useState<'progress' | 'submissions'>('progress');
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'submissions' ? 'submissions' : 'progress';
+  const setTab = (value: string) => setParams(value === 'submissions' ? { tab: value } : {}, { replace: true });
+  const [totalLessons, setTotalLessons] = useState(0);
+  const [retry, setRetry] = useState(0);
   const [items, setItems] = useState<ProgressItem[]>([]);
   const [submissions, setSubmissions] = useState<LearningSubmissionListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +61,14 @@ export default function LearningPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detail, setDetail] = useState<LearningSubmissionDetail | null>(null);
+  const owner = auth.principal?.user_id ?? auth.mode;
+  const [loadedOwner, setLoadedOwner] = useState<string | null>(null);
+  const hasCurrentData = loadedOwner !== null && loadedOwner === owner;
+
+  useEffect(() => {
+    setItems([]); setSubmissions([]); setDetail(null); setDetailOpen(false);
+    setLoadedOwner(null);
+  }, [owner]);
 
   useEffect(() => {
     let active = true;
@@ -78,23 +82,27 @@ export default function LearningPage() {
     ]).then(([progress, submitted]) => {
       if (!active) return;
       setItems(progress.items || []);
+      setTotalLessons(progress.total_lessons ?? 0);
       setSubmissions(submitted.items || []);
+      setLoadedOwner(owner);
     }).catch((loadError) => {
-      if (active) setError(loadError instanceof Error ? loadError.message.replace(/^\d{3}\s+/, '') : '学习记录载入失败');
+      if (active) setError(loadError instanceof TypeError ? '网络连接失败，学习记录暂不可用，请重试。'
+        : loadError instanceof Error ? loadError.message.replace(/^\d{3}\s+/, '') : '学习记录载入失败');
     }).finally(() => {
       if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, [auth.mode]);
+  }, [auth.mode, owner, retry]);
 
   const stats = useMemo(() => ({
-    lessons: items.length,
-    completedLessons: items.filter((item) => progressPct(item) === 100).length,
+    lessons: items.filter((item) => item.reading_status !== 'unavailable').length,
+    completedLessons: items.filter(readingComplete).length,
     submissions: submissions.length,
     feedback: submissions.filter((item) => item.latest_feedback).length,
   }), [items, submissions]);
 
   const openDetail = async (submissionId: string) => {
+    setDetail(null);
     setDetailOpen(true);
     setDetailLoading(true);
     try {
@@ -113,17 +121,17 @@ export default function LearningPage() {
         <div className="chrono-learning-hero-copy">
           <p>PERSONAL · HISTORY DESK</p>
           <h1>{auth.principal?.display_name ?? '本地学徒'}的学习长卷</h1>
-          <span>继续课堂、整理本机书案，并查看你主动提交给教师的成果与反馈。</span>
+          <span>阅读统计只记录本人确认的当前课文，不代表测验掌握度；互动完成标记仅是历史活动记录。</span>
         </div>
         <dl>
-          <div><dt>{stats.lessons}</dt><dd>学习课时</dd></div>
-          <div><dt>{stats.completedLessons}</dt><dd>完成四阶段</dd></div>
-          <div><dt>{stats.submissions}</dt><dd>提交版本</dd></div>
-          <div><dt>{stats.feedback}</dt><dd>教师反馈</dd></div>
+          <div><dt>{hasCurrentData ? stats.lessons : '—'}</dt><dd>有活动记录的当前课号</dd></div>
+          <div><dt>{hasCurrentData ? `${stats.completedLessons}/${totalLessons}` : '—'}</dt><dd>本人确认已读当前课文</dd></div>
+          <div><dt>{hasCurrentData ? stats.submissions : '—'}</dt><dd>已载入提交版本（最多 100）</dd></div>
+          <div><dt>{hasCurrentData ? stats.feedback : '—'}</dt><dd>其中有教师反馈</dd></div>
         </dl>
       </header>
 
-      {error ? <Alert type="warning" showIcon closable message={error} onClose={() => setError('')} /> : null}
+      {error ? <Alert type="warning" showIcon message={error} action={<Button onClick={() => setRetry((value) => value + 1)}>重试</Button>} /> : null}
 
       <nav className="chrono-learning-tabs" aria-label="学习记录分类">
         <button type="button" className={tab === 'progress' ? 'active' : ''} onClick={() => setTab('progress')}>
@@ -134,13 +142,12 @@ export default function LearningPage() {
         </button>
       </nav>
 
-      {loading ? (
+      {loading || (loadedOwner !== null && !hasCurrentData) ? (
         <div className="chrono-learning-loading"><Spin /><span>正在展开学习长卷…</span></div>
-      ) : tab === 'progress' ? (
+      ) : !hasCurrentData && error ? <Empty description="学习记录暂不可用，恢复连接后可重试。" /> : tab === 'progress' ? (
         items.length > 0 ? (
           <section className="chrono-learning-progress-grid">
             {items.map((item) => {
-              const pct = progressPct(item);
               return (
                 <article key={item.lesson_id}>
                   <CourseCoverPicture
@@ -152,18 +159,18 @@ export default function LearningPage() {
                     <p>{item.lesson_id} · 上次进入{LAYER_LABEL[item.last_layer] ?? item.last_layer}</p>
                     <h2>{item.title ?? item.lesson_id}</h2>
                     <div className="chrono-learning-stage-marks">
-                      {(['watch', 'practice', 'ask', 'create'] as const).map((layer) => (
+                      <span>{readingLabel(item)}</span>
+                      {(['practice', 'ask', 'create'] as const).map((layer) => (
                         <span className={item.layers[layer] ? 'done' : ''} key={layer}>
                           {item.layers[layer] ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-                          {LAYER_LABEL[layer]}
+                          {LAYER_LABEL[layer]}{item.layers[layer] ? '有完成记录' : '无完成记录'}
                         </span>
                       ))}
                     </div>
-                    <Progress percent={pct} showInfo={false} strokeColor="#b7873f" trailColor="rgba(57, 72, 68, .1)" />
                     <footer>
                       <time>{formatTime(item.updated_at)}</time>
-                      <Button type="link" onClick={() => item.course_id
-                        ? nav(`/courses/${item.course_id}/lessons/${item.lesson_id}?layer=${item.last_layer}`)
+                      <Button type="link" disabled={item.reading_status === 'unavailable'} onClick={() => item.course_id
+                        ? nav(`/courses/${item.course_id}/lessons/${item.lesson_id}?layer=${resumeLayer(item)}`)
                         : nav('/courses')}
                       >继续学习 <ArrowRightOutlined /></Button>
                     </footer>

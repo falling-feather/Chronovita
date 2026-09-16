@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -25,7 +25,7 @@ from services.contracts.learning_v1 import (
     SubmissionId,
 )
 from services.contracts.v1 import ContractId
-from services.courses import get_lesson
+from services.courses import get_lesson, list_courses
 from services.learning_assets import (
     LearningAssetStoreError,
     LearningFeedbackIntegrityError,
@@ -63,6 +63,8 @@ class ProgressItem(BaseModel):
     last_layer: str = "watch"
     layers: ProgressLayers = Field(default_factory=ProgressLayers)
     updated_at: str
+    reading_status: Literal["reading", "completed", "outdated", "unverified", "unavailable"] = "unverified"
+    reading_confirmed_at: str | None = None
 
 
 class StoredProgress(BaseModel):
@@ -73,6 +75,8 @@ class StoredProgress(BaseModel):
     last_layer: str = "watch"
     layers: ProgressLayers = Field(default_factory=ProgressLayers)
     updated_at: str
+    teacher_text_checksum: str | None = None
+    reading_confirmed_at: str | None = None
 
 
 class TouchRequest(BaseModel):
@@ -81,6 +85,7 @@ class TouchRequest(BaseModel):
     lesson_id: ContractId
     layer: str = "watch"
     completed: bool = False
+    teacher_text_checksum: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
 
 
 class SubmissionListItem(BaseModel):
@@ -148,11 +153,19 @@ def _parse_progress(
 
 
 def _enrich(record: StoredProgress) -> ProgressItem:
-    item = record.model_dump(exclude={"user_id"})
+    item = record.model_dump(exclude={"user_id", "teacher_text_checksum"})
     lesson = get_lesson(record.lesson_id)
     if lesson:
         item["course_id"] = lesson.course_id
         item["title"] = lesson.title
+        if record.teacher_text_checksum is None:
+            item["reading_status"] = "unverified"
+        elif record.teacher_text_checksum != lesson.teacher_text_checksum:
+            item["reading_status"] = "outdated"
+        else:
+            item["reading_status"] = "completed" if record.reading_confirmed_at else "reading"
+    else:
+        item["reading_status"] = "unavailable"
     return ProgressItem.model_validate(item)
 
 
@@ -187,7 +200,8 @@ async def list_progress(
     context: AuthContext = Depends(require_student_context),
 ):
     records = _list_for_owner(_owner_id(context))
-    return {"items": [_enrich(item).model_dump() for item in records]}
+    return {"items": [_enrich(item).model_dump() for item in records],
+            "total_lessons": sum(course.lesson_count for course in list_courses())}
 
 
 @router.get("/progress/latest")
@@ -195,7 +209,9 @@ async def latest_progress(
     context: AuthContext = Depends(require_student_context),
 ):
     records = _list_for_owner(_owner_id(context))
-    return {"item": _enrich(records[0]).model_dump() if records else None}
+    available = next((item for record in records
+                      if (item := _enrich(record)).reading_status != "unavailable"), None)
+    return {"item": available.model_dump() if available else None}
 
 
 @router.get("/progress/{lesson_id}")
@@ -216,6 +232,12 @@ async def touch_progress(
     req: TouchRequest,
     context: AuthContext = Depends(require_student_context),
 ):
+    lesson = get_lesson(req.lesson_id)
+    if lesson is None:
+        raise HTTPException(404, detail={"code": "lesson_not_found", "message": "该课时已撤下或不存在。"})
+    if (req.layer == "watch" and req.teacher_text_checksum is not None
+            and req.teacher_text_checksum != lesson.teacher_text_checksum):
+        raise HTTPException(409, detail={"code": "reading_changed", "message": "课文已更新，请刷新后再确认已读。"})
     if req.layer not in _LAYERS:
         raise HTTPException(
             status_code=422,
@@ -235,16 +257,25 @@ async def touch_progress(
                 lesson_id=req.lesson_id,
             )
             layers = current.layers.model_dump()
+            reading_checksum = current.teacher_text_checksum
+            confirmed_at = current.reading_confirmed_at
         else:
             layers = {layer: False for layer in _LAYER_ORDER}
+            reading_checksum = lesson.teacher_text_checksum if req.layer == "watch" and not req.completed else None
+            confirmed_at = None
         if req.completed:
             layers[req.layer] = True
+            if req.layer == "watch" and req.teacher_text_checksum is not None:
+                reading_checksum = req.teacher_text_checksum
+                confirmed_at = datetime.now(timezone.utc).isoformat()
         next_record = StoredProgress(
             user_id=owner_id,
             lesson_id=req.lesson_id,
             last_layer=req.layer,
             layers=layers,
             updated_at=datetime.now(timezone.utc).isoformat(),
+            teacher_text_checksum=reading_checksum,
+            reading_confirmed_at=confirmed_at,
         )
         if persistence.kv_compare_and_set(
             _NS,

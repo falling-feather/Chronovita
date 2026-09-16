@@ -3275,6 +3275,10 @@ select {
   scrollbar-width: thin;
 }
 
+html[data-reading-size=large] .chrono-reading-body p { font-size: 22px; line-height: 1.95; }
+.chrono-reading-confirm { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-soft); }
+.chrono-reading-confirm p { font-size: 12px; color: var(--text-mute); }
+
 .chrono-reading-sidebar > * {
   flex-shrink: 0;
 }

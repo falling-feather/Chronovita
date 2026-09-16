@@ -25,6 +25,9 @@ function dataset(): Promise<StaticPreviewDataset> {
       .then(async (response) => {
         if (!response.ok) throw new Error(`静态课程数据载入失败（${response.status}）`);
         return response.json() as Promise<StaticPreviewDataset>;
+      }).catch((error) => {
+        datasetPromise = null;
+        throw error;
       });
   }
   return datasetPromise;
@@ -61,11 +64,19 @@ export async function staticPreviewJsonFetch<T>(path: string, init?: RequestInit
     const era = url.searchParams.get('era');
     const section = url.searchParams.get('section');
     const q = url.searchParams.get('q')?.trim().toLocaleLowerCase('zh-CN');
+    const matches = (course: CourseSummary) => {
+      if (!q) return true;
+      const lessons = Object.values(source.lessons).filter((lesson) => lesson.course_id === course.id);
+      const text = [course.title, course.subtitle, ...lessons.flatMap((lesson) => [
+        lesson.title, lesson.abstract, ...lesson.keywords.map((item) => item.word),
+        ...(lesson.people ?? []).map((person) => person.name),
+      ])].join('\n').toLocaleLowerCase('zh-CN');
+      return q.split(/\s+/).every((term) => text.includes(term));
+    };
     const items = source.courses.filter((course) => (
       (!era || era === 'all' || course.era_id === era)
       && (!section || section === 'all' || course.section === section)
-      && (!q || course.title.toLocaleLowerCase('zh-CN').includes(q)
-        || course.subtitle.toLocaleLowerCase('zh-CN').includes(q))
+      && matches(course)
     ));
     return { items, total: items.length } as T;
   }

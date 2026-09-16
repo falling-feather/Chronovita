@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, ValidationError
 from services import content as content_data
 from services.contracts.v1 import CoursePackageV1
 from services.content.workflow import PublishedCourseSnapshot
-from .textbooks import load_textbooks, TextbookCourse
+from .textbooks import load_textbooks, TextbookCourse, lesson_reading_checksum
 from services.content.asset_identity import identity, name_forms
 
 
@@ -151,13 +151,23 @@ def list_eras() -> list[Era]:
 
 def list_courses(era_id: Optional[str] = None, section: Optional[str] = None,
                  q: Optional[str] = None) -> list[CourseSummary]:
-    items = [_textbook_course(book).summary for book in _ordered_books()]
+    books = _ordered_books()
+    if q and q.strip():
+        terms = q.casefold().split()
+        def matches(book):
+            parts = [book.title]
+            for lesson in book.lessons:
+                parts.extend([lesson.title, lesson.abstract])
+                parts.extend(k.word for k in lesson.keywords)
+                parts.extend(p.name for p in lesson.people)
+            haystack = "\n".join(parts).casefold()
+            return all(term in haystack for term in terms)
+        books = [book for book in books if matches(book)]
+    items = [_textbook_course(book).summary for book in books]
     if era_id and era_id != "all":
         items = [item for item in items if item.era_id == era_id]
     if section and section != "all":
         items = [item for item in items if item.section == section]
-    if q:
-        items = [item for item in items if q.casefold() in (item.title + item.subtitle).casefold()]
     return items
 
 
@@ -230,7 +240,7 @@ def get_lesson(lesson_id: str) -> Optional[Lesson]:
                 interaction_figures=release.figures if release else legacy_figures,
                 map_points=[point.model_dump(mode="json") for point in text.map_points],
                 source_refs=[ref.model_dump(mode="json") for ref in text.source_refs],
-                teacher_text_checksum=book.text_checksum,
+                teacher_text_checksum=lesson_reading_checksum(book.course_id, text),
                 reading_media_available=bool(release and release.rag_available and _reading_matches(text, release)),
                 **practice,
             )

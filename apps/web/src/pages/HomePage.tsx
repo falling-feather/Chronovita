@@ -1,3 +1,4 @@
+import { resumeLayer } from '../features/classroom/readingProgress';
 import {
   useCallback,
   useEffect,
@@ -235,7 +236,7 @@ export default function HomePage() {
     [course],
   );
   const resumePath = resume?.course_id
-    ? `/courses/${resume.course_id}/lessons/${resume.lesson_id}?layer=${resume.last_layer}`
+    ? `/courses/${resume.course_id}/lessons/${resume.lesson_id}?layer=${resumeLayer(resume)}`
     : flagships[0]
       ? `/courses/${FLAGSHIP_COURSE_ID}/lessons/${flagships[0].id}?layer=watch`
       : `/courses/${FLAGSHIP_COURSE_ID}`;
@@ -301,7 +302,8 @@ export default function HomePage() {
             {loading ? (
               <span>正在读取课堂记录…</span>
             ) : resume ? (
-              <span>上次停在「{progressLayerLabel(resume.last_layer)}」· {resume.title}</span>
+              <span>{['outdated', 'unverified'].includes(resume.reading_status ?? 'unverified')
+                ? '先核对当前课文' : `上次停在「${progressLayerLabel(resume.last_layer)}」`} · {resume.title}</span>
             ) : (
               <span>从“大禹治水”开始第一份历史卷宗</span>
             )}

@@ -8,7 +8,8 @@ import {
   ClockCircleOutlined,
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
-import { api, type Lesson, type LessonPresentationResponse } from '../../utils/api';
+import { api, type Lesson, type LessonPresentationResponse, type ProgressItem } from '../../utils/api';
+import { readingComplete, readingLabel } from '../../features/classroom/readingProgress';
 import {
   CLASSROOM_STAGES,
   classroomStage,
@@ -47,6 +48,10 @@ export default function LessonPage() {
   const [presentation, setPresentation] = useState<LessonPresentationResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [progress, setProgress] = useState<ProgressItem | null>(null);
+  const [progressError, setProgressError] = useState('');
+  const [progressRetry, setProgressRetry] = useState(0);
+  const [savingRead, setSavingRead] = useState(false);
   const enteredStagesRef = useRef(new Set<string>());
 
   const learningIdentity = useMemo<LearningScopeIdentity | null>(() => {
@@ -126,9 +131,28 @@ export default function LessonPage() {
   }, [courseId, lessonId]);
 
   useEffect(() => {
-    if (!lessonId) return;
-    api.progressTouch({ lesson_id: lessonId, layer }).catch(() => {});
-  }, [lessonId, layer]);
+    if (!lesson || lesson.id !== lessonId || IS_STATIC_PREVIEW) return;
+    let active = true;
+    setProgressError('');
+    api.progressTouch({ lesson_id: lessonId, layer,
+      ...(layer === 'watch' && lesson.teacher_text_checksum ? { teacher_text_checksum: lesson.teacher_text_checksum } : {}),
+    }).then((response) => { if (active) setProgress(response.item); })
+      .catch(() => { if (active) setProgressError('学习记录暂未同步，不影响阅读。请恢复网络后重试。'); });
+    return () => { active = false; };
+  }, [lessonId, lesson, layer, progressRetry]);
+
+  const confirmReading = useCallback(async () => {
+    if (!lesson?.teacher_text_checksum || savingRead) return;
+    setSavingRead(true); setProgressError('');
+    try {
+      const response = await api.progressTouch({ lesson_id: lesson.id, layer: 'watch',
+        completed: true, teacher_text_checksum: lesson.teacher_text_checksum });
+      setProgress(response.item);
+    } catch (failure) {
+      setProgressError(failure instanceof TypeError ? '网络连接失败，已读确认未保存，请重试。'
+        : failure instanceof Error ? failure.message.replace(/^\d{3}\s+/, '') : '已读确认未保存，请重试。');
+    } finally { setSavingRead(false); }
+  }, [lesson, savingRead]);
 
   const openLayer = useCallback((nextLayer: ClassroomLayer, options?: { question?: string; personId?: string }) => {
     setParams((current) => {
@@ -156,7 +180,8 @@ export default function LessonPage() {
 
   const content = useMemo(() => {
     if (!lesson || !interactionLesson) return null;
-    if (layer === 'watch') return <LessonWatch lesson={lesson} />;
+    if (layer === 'watch') return <LessonWatch lesson={lesson} onReadComplete={IS_STATIC_PREVIEW ? undefined : confirmReading}
+      readComplete={readingComplete(progress?.lesson_id === lesson.id ? progress : null)} savingRead={savingRead} />;
     if (layer === 'practice') {
       return <LessonPractice lesson={interactionLesson} onOpenDossier={() => openLayer('create')} />;
     }
@@ -180,7 +205,7 @@ export default function LessonPage() {
         />
       </Suspense>
     );
-  }, [layer, lesson, interactionLesson, openLayer, params, presentation]);
+  }, [layer, lesson, interactionLesson, openLayer, params, presentation, confirmReading, progress, savingRead]);
 
   if (loading) return <div className="chrono-page-loading"><Spin /><span>正在核对课时发布…</span></div>;
   if (!lesson) {
@@ -230,7 +255,8 @@ export default function LessonPage() {
       <nav className="chrono-stage-rail" aria-label="课堂四阶段">
         {CLASSROOM_STAGES.map((stage) => {
           const active = stage.layer === layer;
-          const visited = stage.index < activeStage.index;
+          const currentProgress = progress?.lesson_id === lesson.id ? progress : null;
+          const visited = stage.layer === 'watch' ? readingComplete(currentProgress) : Boolean(currentProgress?.layers[stage.layer]);
           return (
             <button
               key={stage.layer}
@@ -260,6 +286,10 @@ export default function LessonPage() {
       ) : null}
 
       <div className={`chrono-lesson-workspace companion-floating${layer === 'ask' ? ' consult-wide' : ''}${layer === 'watch' ? ' observe-wide' : ''}`}>
+        {progressError ? <Alert type="warning" showIcon message={progressError}
+          action={<><Button onClick={() => setProgressRetry((value) => value + 1)}>重试同步</Button>
+            <Button onClick={() => window.location.reload()}>刷新课文</Button></>} /> : null}
+        {!IS_STATIC_PREVIEW && layer === 'watch' ? <p role="status">{readingLabel(progress?.lesson_id === lesson.id ? progress : null)}</p> : null}
         <main>{content}</main>
       </div>
 

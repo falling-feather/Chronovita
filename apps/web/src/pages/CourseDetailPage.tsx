@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Progress, Spin } from 'antd';
+import { Alert, Button, Spin } from 'antd';
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
@@ -12,6 +12,7 @@ import type { CourseDetail, ProgressItem } from '../utils/api';
 import { api } from '../utils/api';
 import { CLASSROOM_STAGES } from '../features/classroom/classroomModel';
 import CourseCoverPicture from '../features/courses/CourseCoverPicture';
+import { readingComplete, readingLabel, resumeLayer } from '../features/classroom/readingProgress';
 
 export default function CourseDetailPage() {
   const { courseId = '' } = useParams();
@@ -19,24 +20,35 @@ export default function CourseDetailPage() {
   const [data, setData] = useState<CourseDetail | null>(null);
   const [progress, setProgress] = useState<ProgressItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
+  const [progressUnavailable, setProgressUnavailable] = useState(false);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setError('');
+    setProgressUnavailable(false);
     Promise.all([
       api.course(courseId),
-      api.progressList().then((response) => response.items).catch(() => []),
+      api.progressList().then((response) => response.items).catch(() => {
+        if (active) setProgressUnavailable(true);
+        return [];
+      }),
     ]).then(([course, items]) => {
       if (!active) return;
       setData(course);
       setProgress(items);
-    }).catch(() => {
-      if (active) setData(null);
+    }).catch((failure) => {
+      if (active) {
+        setData(null);
+        setError(failure instanceof Error ? failure.message : '课程载入失败，请重试。');
+      }
     }).finally(() => {
       if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, [courseId]);
+  }, [courseId, retry]);
 
   const progressByLesson = useMemo(
     () => new Map(progress.map((item) => [item.lesson_id, item])),
@@ -44,13 +56,16 @@ export default function CourseDetailPage() {
   );
 
   if (loading) return <div className="chrono-page-loading"><Spin /><span>正在展开课程路线…</span></div>;
-  if (!data) return <div className="chrono-empty">课程不存在或当前发布暂不可读。</div>;
+  if (!data) return <Alert type="warning" showIcon message={error || '课程暂不可用'}
+    action={<Button onClick={() => setRetry((value) => value + 1)}>重试</Button>} />;
 
   const course = data.summary;
   const firstFlagship = data.lessons[0];
 
   return (
     <div className="chrono-course-route-page">
+      {progressUnavailable ? <Alert type="warning" showIcon message="阅读记录暂未载入，当前不显示完成度。"
+        action={<Button onClick={() => setRetry((value) => value + 1)}>重试</Button>} /> : null}
       <button className="chrono-back-link" type="button" onClick={() => nav('/courses')}>
         <ArrowLeftOutlined /> 返回课程中心
       </button>
@@ -107,8 +122,7 @@ export default function CourseDetailPage() {
         <ol className="chrono-route-nodes">
           {data.lessons.map((lesson, index) => {
             const item = progressByLesson.get(lesson.id);
-            const completedStages = item ? Object.values(item.layers).filter(Boolean).length : 0;
-            const percent = completedStages * 25;
+            const percent = readingComplete(item) ? 100 : 0;
             return (
               <li key={lesson.id}>
                 <div className="chrono-route-marker">
@@ -118,10 +132,10 @@ export default function CourseDetailPage() {
                   role="link"
                   tabIndex={0}
                   aria-label={`${item ? '继续' : '进入'}课时：${lesson.title}`}
-                  onClick={() => nav(`/courses/${course.id}/lessons/${lesson.id}?layer=${item?.last_layer ?? 'watch'}`)}
+                  onClick={() => nav(`/courses/${course.id}/lessons/${lesson.id}?layer=${item ? resumeLayer(item) : 'watch'}`)}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') {
-                      nav(`/courses/${course.id}/lessons/${lesson.id}?layer=${item?.last_layer ?? 'watch'}`);
+                      nav(`/courses/${course.id}/lessons/${lesson.id}?layer=${item ? resumeLayer(item) : 'watch'}`);
                     }
                   }}
                 >
@@ -133,8 +147,7 @@ export default function CourseDetailPage() {
                   <h3>{lesson.title}</h3>
                   <p>按本课课文、人物与关键词阅读。</p>
                   <div className="chrono-route-node-progress">
-                    <Progress percent={percent} showInfo={false} strokeColor="#65AAA0" />
-                    <span>{item ? `已完成 ${completedStages} / 4 阶段` : '尚未开始'}</span>
+                    <span>{progressUnavailable ? '阅读状态未知' : readingLabel(item)}</span>
                     <Button type="link">
                       {item ? '继续学习' : '进入课时'} <ArrowRightOutlined />
                     </Button>

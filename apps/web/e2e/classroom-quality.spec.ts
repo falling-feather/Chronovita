@@ -68,12 +68,17 @@ test('桌面首页减弱动态且山河图可完整键盘操作', async ({ page 
   await page.keyboard.press('+');
   await expect(page.locator('.chrono-eramap-zoom-level')).toHaveText('124%');
   await page.keyboard.press('ArrowRight');
+  await expect(page.locator('.chrono-erapanel-name')).toHaveText('秦汉');
   await page.keyboard.press('Home');
   await expect(page.locator('.chrono-eramap-zoom-level')).toHaveText('100%');
 
   const firstCity = page.locator('.chrono-city-node').first();
   await firstCity.press('Enter');
   await expect(page.locator('.chrono-map-city-card.is-visible')).toBeVisible();
+
+  await page.getByRole('tab', { name: /^秦汉/ }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('.chrono-erapanel-name')).toHaveText('魏晋南北朝');
 
   const dimensions = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,

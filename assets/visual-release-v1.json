@@ -1,6 +1,6 @@
 {
   "schema": "chronovita-visual-release/v1",
-  "release_version": "1.1.2",
+  "release_version": "1.1.3",
   "policy": {
     "student_visuals": "Product visuals are original generated illustrations, project-authored procedural graphics, or explicitly attributed public-domain reference data.",
     "historical_boundary": "Decorative images are teaching illustrations, never primary evidence, historical photographs, or claims of exact reconstruction.",

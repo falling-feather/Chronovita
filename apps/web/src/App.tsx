@@ -1,7 +1,6 @@
 import {
   App as AntdApp,
   Avatar,
-  Badge,
   Button,
   Dropdown,
   Input,
@@ -123,8 +122,7 @@ function UserSlot() {
       await auth.logout();
       nav('/login', { replace: true });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '退出失败');
-      nav('/login', { replace: true });
+      toast.error('退出请求未完成，请恢复网络后重试。');
     }
   };
 
@@ -186,15 +184,15 @@ function UserSlot() {
       ) : auth.principal ? (
         <>
           {isStudent && (
-            <Badge dot>
+            <Tooltip title="查看教师反馈">
               <Button
                 type="text"
                 className="chrono-shell-icon-button"
                 icon={<BellOutlined />}
-                aria-label="查看学习通知"
-                onClick={() => nav('/profile?tab=2')}
+                aria-label="查看教师反馈"
+                onClick={() => nav('/learning?tab=submissions')}
               />
-            </Badge>
+            </Tooltip>
           )}
           <Dropdown
             trigger={['click']}
@@ -221,6 +219,9 @@ function UserSlot() {
                   onClick: () => nav(principalLandingPath(auth.principal)),
                 },
                 {
+                  key: 'profile', icon: <UserOutlined />, label: '个人中心', onClick: () => nav('/profile'),
+                },
+                {
                   key: 'refresh',
                   icon: <ReloadOutlined />,
                   label: '刷新会话',
@@ -237,7 +238,7 @@ function UserSlot() {
             }}
           >
             <Button type="text" className="chrono-account-trigger">
-              <Avatar icon={<UserOutlined />} />
+              <Avatar src={auth.profile?.avatar_data_url || undefined} icon={<UserOutlined />} />
               <span>{auth.principal.display_name}</span>
             </Button>
           </Dropdown>
@@ -358,6 +359,9 @@ function AppRoutes() {
             <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
             <Route path="/learning" element={<LearningPage />} />
             <Route path="/practice" element={<PracticePage />} />
+          </Route>
+
+          <Route element={<RequireRoles roles={[...STUDENT_ROLES, ...CONTENT_ROLES]} />}>
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 

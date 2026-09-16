@@ -175,7 +175,9 @@ export function LessonWatchMedia({
   );
 }
 
-export default function LessonWatch({ lesson }: { lesson: Lesson }) {
+export default function LessonWatch({ lesson, onReadComplete, readComplete = false, savingRead = false }: {
+  lesson: Lesson; onReadComplete?: () => void; readComplete?: boolean; savingRead?: boolean;
+}) {
   const sidebarRef = useRef<HTMLElement>(null);
   const keywords = useMemo(() => normalizeReadingKeywords(lesson.keywords ?? []), [lesson.keywords]);
   const [selectedWord, setSelectedWord] = useState('');
@@ -226,6 +228,12 @@ export default function LessonWatch({ lesson }: { lesson: Lesson }) {
             renderBodyBlock(paragraph, index, keywords, keywordNumbers, selectedWord, selectKeyword)
           ))}
         </div>
+        {onReadComplete ? <footer className="chrono-reading-confirm">
+          <Button type="primary" disabled={readComplete} loading={savingRead} onClick={onReadComplete}>
+            {readComplete ? '已确认读完当前课文' : '我已读完这篇课文'}
+          </Button>
+          <p>这是本人的阅读确认，不代表测验成绩或掌握程度。</p>
+        </footer> : null}
       </article>
 
       <aside ref={sidebarRef} className="chrono-reading-sidebar" aria-label="关键词与知识点">
