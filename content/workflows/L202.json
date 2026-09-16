@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L202",
+  "course_id": "C-prequin-thought",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "127ccbe24f0e3d510610649a9eedc67d3b92ac0c45ffcbd3c86fc51594ca1e13",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.461475Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.461475Z",
+      "draft_fingerprint": "127ccbe24f0e3d510610649a9eedc67d3b92ac0c45ffcbd3c86fc51594ca1e13",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "e636c3a9af46aa51bf8ab6dee0050df3e20c54fe0dd970a85309271f17e83f28"
+}

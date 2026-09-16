@@ -28,7 +28,9 @@ from services.contracts.persona_v1 import verify_persona_checksum
 from services.contracts.v1 import course_package_from_legacy
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-ACTIVE_POINTER = REPO_ROOT / "content" / "releases" / "active" / "C-prequin-state.json"
+AUTHORING_MANIFEST = (
+    REPO_ROOT / "content/releases/manifests/C-prequin-state/rel-28b5624648-0008.json"
+)
 
 DAYU_KINDS = {
     "person-7c4825d9": "transmitted_memory",
@@ -47,11 +49,8 @@ SHANGYANG_KINDS = {
 }
 
 
-def _active_manifest() -> dict:
-    pointer = json.loads(ACTIVE_POINTER.read_text(encoding="utf-8"))
-    return json.loads(
-        (REPO_ROOT / "content" / pointer["manifest_path"]).read_text(encoding="utf-8")
-    )
+def _authoring_manifest() -> dict:
+    return json.loads(AUTHORING_MANIFEST.read_text(encoding="utf-8"))
 
 
 class FlagshipPersonaPackTests(unittest.TestCase):
@@ -191,8 +190,8 @@ class FlagshipPersonaPackTests(unittest.TestCase):
                         if passage.evidence_kind == "teaching_explanation":
                             self.assertEqual(profile.persona_kind, "composite_group")
 
-    def test_packs_pin_the_active_release_eight_artifacts(self):
-        manifest = _active_manifest()
+    def test_packs_pin_the_historical_authoring_release_eight_artifacts(self):
+        manifest = _authoring_manifest()
         self.assertEqual(manifest["schema_version"], "course-release/v5")
         self.assertEqual(manifest["release_no"], 8)
         items = {item["lesson_id"]: item for item in manifest["items"]}

@@ -1,0 +1,42 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L601",
+  "course_id": "C-weijin-fusion",
+  "state": "draft",
+  "revision": 2,
+  "draft_fingerprint": "1de0302f4185c3a4bda6b26ce8bdc5320347f1cbc1826a62e3e5ebbdb2fcee82",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-16T06:11:56.843335Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.546920Z",
+      "draft_fingerprint": "bc6855368531fd63fe0ad7f954d2a7cd021c9e0957ad302912c125581fb39bd2",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T06:11:56.843335Z",
+      "draft_fingerprint": "1de0302f4185c3a4bda6b26ce8bdc5320347f1cbc1826a62e3e5ebbdb2fcee82",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "c06f7bd3abab0e4e9600a2f34af2c883d5d792244a348741c288eb8adbb0a44a"
+}

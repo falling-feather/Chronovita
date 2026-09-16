@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L903",
+  "course_id": "C-suitang-culture",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "6d40d9540dd1277c799b666b7599e04d5462e710537464fb5ecea9249185303b",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.663431Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.663431Z",
+      "draft_fingerprint": "6d40d9540dd1277c799b666b7599e04d5462e710537464fb5ecea9249185303b",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "8a2685ef5bdfaffb1def7d1efb0f57e98f7565e31338e325e699f4ae32ee12ca"
+}

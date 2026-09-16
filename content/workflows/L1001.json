@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L1001",
+  "course_id": "C-songyuan-song",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "556e6334bcdfa9dd0697babe047dec442d4abc02bf3e9780558bfa289c4158cb",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.680957Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.680957Z",
+      "draft_fingerprint": "556e6334bcdfa9dd0697babe047dec442d4abc02bf3e9780558bfa289c4158cb",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "6942f161cadb827a100ec1954391c47998e010cc6b8c60f78b94e8878eb8f736"
+}

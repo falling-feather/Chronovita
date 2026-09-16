@@ -31,7 +31,7 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
         self.assertIsNotNone(release)
         self.assertIsInstance(release, CourseReleaseManifestV5)
         self.assertEqual(release.schema_version, "course-release/v5")
-        self.assertEqual(release.release_no, 8)
+        self.assertEqual(release.release_no, 10)
         self.assertEqual(
             {item.evidence_corpus.schema_version for item in release.items},
             {"evidence-corpus/v2"},
@@ -79,7 +79,7 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
 
             result = publish_flagship_media(temp_content)
 
-            self.assertEqual(result["final_release_no"], 8)
+            self.assertEqual(result["final_release_no"], 10)
             self.assertEqual(result["release_schema_version"], "course-release/v5")
             self.assertEqual(before_hash, hashlib.sha256(pointer.read_bytes()).hexdigest())
             self.assertEqual(before_count, len(list(manifests.glob("*.json"))))
@@ -109,7 +109,7 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
             current = workflow.get_current_release("C-prequin-state")
             self.assertIsInstance(current, CourseReleaseManifestV5)
             self.assertEqual(result["release_schema_version"], "course-release/v5")
-            self.assertEqual(result["final_release_no"], 10)
+            self.assertEqual(result["final_release_no"], before.release_no + 2)
             self.assertEqual(
                 {item.lesson_id: item.persona_pack.checksum for item in current.items},
                 persona_checksums,

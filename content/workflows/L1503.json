@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L1503",
+  "course_id": "C-mingqing-late",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "a471277323918e7cd8936b7cc87a947c107b5f365a80c76bd974a8aed86f360a",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.896645Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.896645Z",
+      "draft_fingerprint": "a471277323918e7cd8936b7cc87a947c107b5f365a80c76bd974a8aed86f360a",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "c947ef36c550503edc4a94ed4ef14671a26aa8608aa74c6314c30adad89241d1"
+}

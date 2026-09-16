@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L403",
+  "course_id": "C-qinhan-founding",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "c7a28559583dd6ecee2aad43c0ee781e0351676f9355faa692d9a33b3b700ae7",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.487809Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.487809Z",
+      "draft_fingerprint": "c7a28559583dd6ecee2aad43c0ee781e0351676f9355faa692d9a33b3b700ae7",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "145d2e7650e50cba467422abf12e319cd648cc69e2b5aca9a337ece960759753"
+}

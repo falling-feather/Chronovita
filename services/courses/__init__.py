@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, ValidationError
 from services import content as content_data
 from services.contracts.v1 import CoursePackageV1
 from services.content.workflow import PublishedCourseSnapshot
+from .textbooks import load_textbooks, TextbookCourse
 
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -2942,16 +2943,40 @@ def course_summary_for_lesson(lesson: Lesson) -> CourseSummary | None:
 
 
 def get_course(course_id: str) -> Optional[Course]:
+    books = load_textbooks()
+    book = books.get(course_id)
+    if book is not None:
+        return _textbook_course(book)
     packages = _content_packages_by_course()
     base = COURSE_INDEX.get(course_id)
     if base:
-        return _merge_course(base, packages.get(course_id, []))
+        return _remaining_course(_merge_course(base, packages.get(course_id, [])), books)
     if course_id in packages:
         return _content_course(course_id, packages[course_id])
     return None
 
 
 def get_lesson(lesson_id: str) -> Optional[Lesson]:
+    books = load_textbooks()
+    for book in books.values():
+        for text in book.lessons:
+            if text.lesson_id == lesson_id:
+                base = LESSON_INDEX.get(lesson_id)
+                for snapshot in content_data.load_published_snapshots():
+                    if snapshot.package.lesson_id == lesson_id:
+                        base = _lesson_from_content(snapshot)
+                        break
+                if base is None:
+                    base = Lesson(id=lesson_id, course_id=book.course_id,
+                                  num=text.lesson_no, title=text.title,
+                                  duration=text.duration, abstract=text.abstract, body=[])
+                return base.model_copy(update={
+                    "course_id": book.course_id, "num": text.lesson_no,
+                    "title": text.title, "abstract": text.abstract,
+                    "body": text.body, "duration": text.duration,
+                    "era": book.era, "unit": book.title,
+                    "keywords": [Keyword(**word.model_dump()) for word in text.keywords],
+                })
     for snapshot in content_data.load_published_snapshots():
         if snapshot.package.lesson_id == lesson_id:
             return _lesson_from_content(snapshot)
@@ -2965,7 +2990,43 @@ def _all_courses() -> list[Course]:
         items.append(_merge_course(course, packages.pop(course.summary.id, [])))
     for course_id, course_packages in packages.items():
         items.append(_content_course(course_id, course_packages))
-    return items
+    books = load_textbooks()
+    items = [remaining for item in items
+             if (remaining := _remaining_course(item, books)) is not None]
+    result = [_textbook_course(books.pop(item.summary.id))
+              if item.summary.id in books else item for item in items]
+    result.extend(_textbook_course(book) for book in books.values())
+    return result
+
+
+def _remaining_course(course: Course, books: dict[str, TextbookCourse]) -> Course | None:
+    if course.summary.id in books:
+        return course
+    owners = {lesson.lesson_id: book.course_id
+              for book in books.values() for lesson in book.lessons}
+    lessons = [lesson for lesson in course.lessons
+               if owners.get(lesson.id, course.summary.id) == course.summary.id]
+    if not lessons:
+        return None
+    return course.model_copy(update={
+        "lessons": lessons,
+        "summary": course.summary.model_copy(update={"lesson_count": len(lessons)}),
+    })
+
+
+def _textbook_course(book: TextbookCourse) -> Course:
+    base = COURSE_INDEX.get(book.course_id)
+    return Course(
+        summary=CourseSummary(
+            id=book.course_id, era_id=book.era_id, title=book.title,
+            subtitle=base.summary.subtitle if base else book.era,
+            cover_color=base.summary.cover_color if base else CONTENT_COVER_COLOR,
+            section=book.section, lesson_count=len(book.lessons),
+        ),
+        intro=base.intro if base else book.title,
+        lessons=[LessonSummary(id=item.lesson_id, num=item.lesson_no,
+                 title=item.title, duration=item.duration) for item in book.lessons],
+    )
 
 
 def _content_packages_by_course() -> dict[str, list[PublishedCourseSnapshot]]:

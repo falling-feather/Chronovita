@@ -2,56 +2,16 @@
   "schema_version": "content-workflow/v1",
   "lesson_id": "L101",
   "course_id": "C-prequin-state",
-  "state": "validated",
-  "revision": 25,
-  "draft_fingerprint": "a9d821405edbce1581acf924a044dce58387a4ba2a4b2a192074dd4a226cfb76",
-  "validation": {
-    "schema_version": "content-validation/v1",
-    "validator_version": "course-minimum/v1",
-    "lesson_id": "L101",
-    "draft_fingerprint": "a9d821405edbce1581acf924a044dce58387a4ba2a4b2a192074dd4a226cfb76",
-    "valid": true,
-    "issues": [
-      {
-        "code": "person_ai_boundary",
-        "severity": "warning",
-        "field": "people.0",
-        "message": "Persona and historical boundaries should be completed before AI character use."
-      },
-      {
-        "code": "person_ai_boundary",
-        "severity": "warning",
-        "field": "people.1",
-        "message": "Persona and historical boundaries should be completed before AI character use."
-      },
-      {
-        "code": "person_ai_boundary",
-        "severity": "warning",
-        "field": "people.2",
-        "message": "Persona and historical boundaries should be completed before AI character use."
-      },
-      {
-        "code": "person_ai_boundary",
-        "severity": "warning",
-        "field": "people.3",
-        "message": "Persona and historical boundaries should be completed before AI character use."
-      },
-      {
-        "code": "interactive_objective_missing",
-        "severity": "warning",
-        "field": "saga_material",
-        "message": "Reserve a saga or sandbox objective for later interactive learning."
-      }
-    ],
-    "validated_at": "2026-09-03T21:59:57.675620Z",
-    "validated_by": "content-sync-pr11-author"
-  },
-  "sealed_version": 3,
-  "sealed_checksum": "94c150d78b0a0038c5d6192c77f10c4240d0daba0f77a1375f89e4994cd02eba",
+  "state": "draft",
+  "revision": 40,
+  "draft_fingerprint": "b2801f225e36aa436f403c3e1afc53194b13347109de8c7b79c0e4ca55e99ada",
+  "validation": null,
+  "sealed_version": 5,
+  "sealed_checksum": "50899c4a61aa9e75ad3fb8a8cd00197fdc83dc0d80814fdb881c047547845b21",
   "published_course_id": "C-prequin-state",
-  "published_version": 3,
-  "published_release_id": "rel-28b5624648-0009",
-  "updated_at": "2026-09-03T21:59:57.675620Z",
+  "published_version": 5,
+  "published_release_id": "rel-28b5624648-0010",
+  "updated_at": "2026-09-14T17:06:07.344361Z",
   "history": [
     {
       "sequence": 1,
@@ -352,7 +312,187 @@
       "draft_fingerprint": "a9d821405edbce1581acf924a044dce58387a4ba2a4b2a192074dd4a226cfb76",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 26,
+      "action": "save",
+      "from_state": "validated",
+      "to_state": "draft",
+      "actor": "content-sync-pr16-import",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-06T23:12:39.649236Z",
+      "draft_fingerprint": "de972993b35136821dd108e8bafb9bd88f25473270a32b4188032be2f2df7c58",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 27,
+      "action": "validation_passed",
+      "from_state": "draft",
+      "to_state": "validated",
+      "actor": "content-sync-pr16-import",
+      "note": "Minimum content validation passed.",
+      "occurred_at": "2026-09-06T23:12:39.660951Z",
+      "draft_fingerprint": "de972993b35136821dd108e8bafb9bd88f25473270a32b4188032be2f2df7c58",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 28,
+      "action": "submit_review",
+      "from_state": "validated",
+      "to_state": "in_review",
+      "actor": "content-sync-pr16-author",
+      "note": "Teacher lesson passed local preview and is ready for review.",
+      "occurred_at": "2026-09-06T23:16:09.190915Z",
+      "draft_fingerprint": "de972993b35136821dd108e8bafb9bd88f25473270a32b4188032be2f2df7c58",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 29,
+      "action": "approve",
+      "from_state": "in_review",
+      "to_state": "approved",
+      "actor": "content-sync-pr16-reviewer",
+      "note": "Teacher lesson identity, layout and source metadata verified.",
+      "occurred_at": "2026-09-06T23:16:09.205041Z",
+      "draft_fingerprint": "de972993b35136821dd108e8bafb9bd88f25473270a32b4188032be2f2df7c58",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 30,
+      "action": "seal",
+      "from_state": "approved",
+      "to_state": "sealed",
+      "actor": "content-sync-pr16-reviewer",
+      "note": "Sealed immutable source version 4.",
+      "occurred_at": "2026-09-06T23:16:09.233351Z",
+      "draft_fingerprint": "de972993b35136821dd108e8bafb9bd88f25473270a32b4188032be2f2df7c58",
+      "sealed_version": 4,
+      "release_id": null
+    },
+    {
+      "sequence": 31,
+      "action": "save",
+      "from_state": "sealed",
+      "to_state": "draft",
+      "actor": "content-sync-pr16-author",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-06T23:16:09.253237Z",
+      "draft_fingerprint": "7a6553792663a4de880aad2a57f954c704e0167db10ae21c8c45c2728ade6c16",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 32,
+      "action": "validation_passed",
+      "from_state": "draft",
+      "to_state": "validated",
+      "actor": "content-sync-pr16-author",
+      "note": "Minimum content validation passed.",
+      "occurred_at": "2026-09-06T23:16:09.267908Z",
+      "draft_fingerprint": "7a6553792663a4de880aad2a57f954c704e0167db10ae21c8c45c2728ade6c16",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 33,
+      "action": "submit_review",
+      "from_state": "validated",
+      "to_state": "in_review",
+      "actor": "content-sync-pr16-author",
+      "note": "Teacher lesson passed local preview and is ready for review.",
+      "occurred_at": "2026-09-06T23:16:09.278432Z",
+      "draft_fingerprint": "7a6553792663a4de880aad2a57f954c704e0167db10ae21c8c45c2728ade6c16",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 34,
+      "action": "approve",
+      "from_state": "in_review",
+      "to_state": "approved",
+      "actor": "content-sync-pr16-reviewer",
+      "note": "Teacher lesson identity, layout and source metadata verified.",
+      "occurred_at": "2026-09-06T23:16:09.289949Z",
+      "draft_fingerprint": "7a6553792663a4de880aad2a57f954c704e0167db10ae21c8c45c2728ade6c16",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 35,
+      "action": "seal",
+      "from_state": "approved",
+      "to_state": "sealed",
+      "actor": "content-sync-pr16-reviewer",
+      "note": "Sealed immutable source version 5.",
+      "occurred_at": "2026-09-06T23:16:09.312166Z",
+      "draft_fingerprint": "7a6553792663a4de880aad2a57f954c704e0167db10ae21c8c45c2728ade6c16",
+      "sealed_version": 5,
+      "release_id": null
+    },
+    {
+      "sequence": 36,
+      "action": "publish",
+      "from_state": "sealed",
+      "to_state": "published",
+      "actor": "content-sync-pr16-publisher",
+      "note": "PR #16 text synchronized from 1e19d7167f83e2fe46ecddcd8bd588cc3319216f; pending practice, ask, create, persona semantics and video remain pinned.",
+      "occurred_at": "2026-09-06T23:16:09.882715Z",
+      "draft_fingerprint": "7a6553792663a4de880aad2a57f954c704e0167db10ae21c8c45c2728ade6c16",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0010"
+    },
+    {
+      "sequence": 37,
+      "action": "save",
+      "from_state": "published",
+      "to_state": "draft",
+      "actor": "content-sync-pr16-author",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-06T23:16:10.517756Z",
+      "draft_fingerprint": "de972993b35136821dd108e8bafb9bd88f25473270a32b4188032be2f2df7c58",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 38,
+      "action": "validation_passed",
+      "from_state": "draft",
+      "to_state": "validated",
+      "actor": "content-sync-pr16-author",
+      "note": "Minimum content validation passed.",
+      "occurred_at": "2026-09-06T23:16:10.528867Z",
+      "draft_fingerprint": "de972993b35136821dd108e8bafb9bd88f25473270a32b4188032be2f2df7c58",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 39,
+      "action": "save",
+      "from_state": "validated",
+      "to_state": "validated",
+      "actor": "teacher-text-sync",
+      "note": "Draft saved without substantive content changes.",
+      "occurred_at": "2026-09-08T02:22:04.688029Z",
+      "draft_fingerprint": "de972993b35136821dd108e8bafb9bd88f25473270a32b4188032be2f2df7c58",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 40,
+      "action": "save",
+      "from_state": "validated",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.344361Z",
+      "draft_fingerprint": "b2801f225e36aa436f403c3e1afc53194b13347109de8c7b79c0e4ca55e99ada",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "d3671c8c9f5c1abc379d51cb22cddd32f0d02f157f5b8b591a15dc0a3475d2b3"
+  "checksum": "223c8e6d8668e2c609e0a5a3f3e9339dfce53d6d8fff9eaa2fe38a8465427da2"
 }

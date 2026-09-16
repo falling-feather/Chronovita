@@ -27,7 +27,7 @@ const STATUS_LABEL: Record<LearningCompletionStatus, string> = {
 };
 
 const LESSON_LABELS: Record<string, string> = {
-  L101: '大禹治水：洪水记忆与早期国家',
+  L101: '夏朝的建立与「家天下」',
   L103: '商鞅变法：富国强兵与制度代价',
 };
 

@@ -19,13 +19,14 @@ class RagBenchmarkL101V2Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.benchmark = json.loads(BENCHMARK_PATH.read_text(encoding="utf-8"))
-        cls.release = workflow.get_current_release("C-prequin-state")
-        cls.resources = workflow.get_published_lesson_resources(
+        cls.release = workflow.get_release("C-prequin-state", "rel-28b5624648-0008")
+        cls.resources = workflow.get_release_lesson_resources(
             "C-prequin-state",
             "L101",
+            cls.release.release_id,
         )
 
-    def test_fixture_is_scoped_to_current_release_eight_and_exact_v2_ids(self) -> None:
+    def test_fixture_is_scoped_to_historical_release_eight_and_exact_v2_ids(self) -> None:
         benchmark = self.benchmark
         release = self.release
         resources = self.resources

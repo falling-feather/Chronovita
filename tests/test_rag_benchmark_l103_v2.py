@@ -26,10 +26,11 @@ class RagBenchmarkL103V2Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.benchmark = json.loads(BENCHMARK_PATH.read_text(encoding="utf-8"))
-        cls.release = workflow.get_current_release(COURSE_ID)
-        cls.resources = workflow.get_published_lesson_resources(
+        cls.release = workflow.get_release(COURSE_ID, "rel-28b5624648-0008")
+        cls.resources = workflow.get_release_lesson_resources(
             COURSE_ID,
             LESSON_ID,
+            cls.release.release_id,
         )
 
     def test_fixture_targets_release_eight_and_exact_v2_corpus(self) -> None:

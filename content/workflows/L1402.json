@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L1402",
+  "course_id": "C-mingqing-thought",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "aa3eb1f7f9504dac3e4ae0bb3c50f9adaff1a53cc126871d16905df0e206f60b",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.849859Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.849859Z",
+      "draft_fingerprint": "aa3eb1f7f9504dac3e4ae0bb3c50f9adaff1a53cc126871d16905df0e206f60b",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "b5782c0d0614fd6239b7e41db81e233ce9dc68af64e319d1281b3f62a327d3b7"
+}

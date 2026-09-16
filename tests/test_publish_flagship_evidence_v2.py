@@ -59,7 +59,7 @@ class PublishFlagshipEvidenceV2Tests(unittest.TestCase):
                 result = publish_flagship_evidence_v2(root)
                 after = tuple((root / "releases" / "manifests").rglob("*.json"))
                 self.assertEqual(result["status"], "already-published")
-                self.assertEqual(result["release_no"], 8)
+                self.assertEqual(result["release_no"], 10)
                 self.assertEqual(len(before), len(after))
                 current = workflow.get_current_release("C-prequin-state")
                 self.assertIsInstance(current, CourseReleaseManifestV5)

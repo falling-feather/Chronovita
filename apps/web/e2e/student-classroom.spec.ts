@@ -31,7 +31,7 @@ const FLAGSHIPS: FlagshipLesson[] = [
   },
   {
     lessonId: 'L103',
-    title: '商鞅变法',
+    title: '西周分封与宗法',
     freeInput: '听取意见',
     question: '为何不能把睡虎地秦简都说成我的亲笔法令？',
     personMode: true,

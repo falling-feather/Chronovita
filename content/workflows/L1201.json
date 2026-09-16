@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L1201",
+  "course_id": "C-mingqing-system",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "75d1206d427fcb576fbf28f1a03d6ef8b2e5d53cd02443387c3e58813567bf1a",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.759086Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.759086Z",
+      "draft_fingerprint": "75d1206d427fcb576fbf28f1a03d6ef8b2e5d53cd02443387c3e58813567bf1a",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "b93219baefda96a9bfc6f2f7ca7e39750ee0a9f4819fbc95d4feccf516344b89"
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L1102",
+  "course_id": "C-songyuan-mongol",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "c8733f8f7ba320da348a15501f42de0f53f43730449876df47bdfb1f30690471",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.732277Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.732277Z",
+      "draft_fingerprint": "c8733f8f7ba320da348a15501f42de0f53f43730449876df47bdfb1f30690471",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "976f93aa454927db7bf860f938129df1e28500c09b63e13d76af723b7f2febd7"
+}

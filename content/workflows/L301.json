@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L301",
+  "course_id": "C-qin-han",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "d71c0f0671614691210a532d7af11509ca39694911947b09b5761b362c0627d0",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.912882Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.912882Z",
+      "draft_fingerprint": "d71c0f0671614691210a532d7af11509ca39694911947b09b5761b362c0627d0",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "93f8b6469408e96e6b5412db034d380ce9473fe5d1cf6662351148ae0b5a9446"
+}

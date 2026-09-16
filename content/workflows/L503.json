@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L503",
+  "course_id": "C-qinhan-thought",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "a85f10d098d944939af74c0d13ce0f4d6ddbfee04ba9d8e38f40cfac4bff0566",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.530184Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.530184Z",
+      "draft_fingerprint": "a85f10d098d944939af74c0d13ce0f4d6ddbfee04ba9d8e38f40cfac4bff0566",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "b48e8d73dd4229389cf8104e0be9a1a621f46f14e6aad10e9fe4fddcd27eca5a"
+}

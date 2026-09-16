@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L401",
+  "course_id": "C-qin-han-transition",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "6270b4fd0d29b371dd93591d0de849e7d1df2640bf070f104c052392382c3123",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.282946Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.282946Z",
+      "draft_fingerprint": "6270b4fd0d29b371dd93591d0de849e7d1df2640bf070f104c052392382c3123",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "1a34206b3c1d66063fc12630fd0d04bce65c6315767ef69b113561af49188cfe"
+}

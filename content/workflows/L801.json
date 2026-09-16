@@ -1,0 +1,30 @@
+{
+  "schema_version": "content-workflow/v1",
+  "lesson_id": "L801",
+  "course_id": "C-suitang-tang",
+  "state": "draft",
+  "revision": 1,
+  "draft_fingerprint": "a520067b3d6f5abf3fa36a60777b9ee8c279f87d567cc2f2fb27a9c3a28354c1",
+  "validation": null,
+  "sealed_version": null,
+  "sealed_checksum": null,
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-09-14T17:06:07.303526Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.303526Z",
+      "draft_fingerprint": "a520067b3d6f5abf3fa36a60777b9ee8c279f87d567cc2f2fb27a9c3a28354c1",
+      "sealed_version": null,
+      "release_id": null
+    }
+  ],
+  "checksum": "c3a9b7359e53d43929e5e2621160fd215ebb15b728f4723b4b4ce6e2d17a5cb0"
+}

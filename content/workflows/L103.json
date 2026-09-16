@@ -2,25 +2,16 @@
   "schema_version": "content-workflow/v1",
   "lesson_id": "L103",
   "course_id": "C-prequin-state",
-  "state": "published",
-  "revision": 12,
-  "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
-  "validation": {
-    "schema_version": "content-validation/v1",
-    "validator_version": "course-minimum/v1",
-    "lesson_id": "L103",
-    "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
-    "valid": true,
-    "issues": [],
-    "validated_at": "2026-08-13T02:32:38.927375Z",
-    "validated_by": "content-publisher-admin"
-  },
+  "state": "draft",
+  "revision": 15,
+  "draft_fingerprint": "bef366298a611492642010eaa5cf043e7be3c1e392d636cc8b1d7d742374bfbe",
+  "validation": null,
   "sealed_version": 1,
   "sealed_checksum": "d6e55dfac0486d0f167921d125aa53959cbd104741c0f9e10a414086dd9a2dd5",
   "published_course_id": "C-prequin-state",
   "published_version": 1,
-  "published_release_id": "rel-28b5624648-0009",
-  "updated_at": "2026-09-03T21:47:48.930817Z",
+  "published_release_id": "rel-28b5624648-0010",
+  "updated_at": "2026-09-14T17:06:07.385726Z",
   "history": [
     {
       "sequence": 1,
@@ -165,7 +156,43 @@
       "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
       "sealed_version": null,
       "release_id": "rel-28b5624648-0009"
+    },
+    {
+      "sequence": 13,
+      "action": "publish",
+      "from_state": "published",
+      "to_state": "published",
+      "actor": "teacher-text-sync",
+      "note": "Preserve pre-task interactive release.",
+      "occurred_at": "2026-09-08T02:23:03.003826Z",
+      "draft_fingerprint": "60b7781d5c3d3e22dd3c9dc7f231a328a576864a833f31569283f1526a336a82",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0010"
+    },
+    {
+      "sequence": 14,
+      "action": "save",
+      "from_state": "published",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-08T02:26:28.053781Z",
+      "draft_fingerprint": "0d3ab349fe5d18567575203c3bdba423dee6c6ae5a821571bbf55ab1182743b0",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 15,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-14T17:06:07.385726Z",
+      "draft_fingerprint": "bef366298a611492642010eaa5cf043e7be3c1e392d636cc8b1d7d742374bfbe",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "b19e8de96decace4f86582a429efbb3bd8d116a34035e7c9e84319f8d5ed81d3"
+  "checksum": "02f5b02f9149e1722d1a048ad20ea57f332d536be9d2ae60774643f94200f5b9"
 }

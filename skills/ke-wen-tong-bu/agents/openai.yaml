@@ -1,4 +1,4 @@
 interface:
   display_name: "课文同步"
-  short_description: "校验教师内容 PR，将课文发布到学生端并维护同步台账"
-  default_prompt: "使用 $ke-wen-tong-bu 同步最新教师课文到学生端并更新课程同步台账。"
+  short_description: "按最新课程快照覆盖目录与课文，过滤导出噪声，配套不一致只登记"
+  default_prompt: "使用 $ke-wen-tong-bu 按最新教师 PR 快照覆盖课程目录和课文，登记配套不一致，验证后关闭已承接 PR；严格保持课文同步范围。"

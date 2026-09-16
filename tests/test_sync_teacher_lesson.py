@@ -17,9 +17,9 @@ from services.content import workflow
 REPOSITORY_CONTENT = Path(__file__).resolve().parents[1] / "content"
 COURSE_ID = "C-prequin-state"
 LESSON_ID = "L101"
-SOURCE_PR = 11
-SOURCE_COMMIT = "10ad1a351e75f781bf780b6347b048d861f8a8e0"
-SOURCE_CHECKSUM = "7a857cf4698e19d76f6fbc997143cb988db91d45b1f75d6b915b8fef3e8fe829"
+SOURCE_PR = 16
+SOURCE_COMMIT = "1e19d7167f83e2fe46ecddcd8bd588cc3319216f"
+SOURCE_CHECKSUM = "ac7b09fe8f09af7f19d971cbe3f6faa15f4454bfe7ce9787043bfb7f3a0be3fe"
 
 
 class TeacherLessonSyncTests(unittest.TestCase):
@@ -29,7 +29,7 @@ class TeacherLessonSyncTests(unittest.TestCase):
             shutil.copytree(REPOSITORY_CONTENT, root)
             content.configure(root)
             try:
-                compatibility = content.get_sealed_package(LESSON_ID, 3)
+                compatibility = content.get_sealed_package(LESSON_ID, 5)
                 self.assertIn(COMPATIBILITY_NOTE, compatibility.teacher_notes)
                 content.save_draft(
                     _as_teacher_draft(compatibility),
@@ -44,18 +44,18 @@ class TeacherLessonSyncTests(unittest.TestCase):
                     source_pr=SOURCE_PR,
                     source_commit=SOURCE_COMMIT,
                     source_checksum=SOURCE_CHECKSUM,
-                    author="content-sync-pr11-author",
-                    reviewer="content-sync-pr11-reviewer",
-                    publisher="content-sync-pr11-publisher",
+                    author="content-sync-pr16-author",
+                    reviewer="content-sync-pr16-reviewer",
+                    publisher="content-sync-pr16-publisher",
                 )
 
                 restored = content.get_draft(LESSON_ID)
-                exact = content.get_sealed_package(LESSON_ID, 2)
+                exact = content.get_sealed_package(LESSON_ID, 4)
                 record = workflow.get_workflow(LESSON_ID)
                 self.assertEqual(result["status"], "already-published")
-                self.assertEqual(result["release_no"], 9)
-                self.assertEqual(result["exact_source_version"], 2)
-                self.assertEqual(result["student_source_version"], 3)
+                self.assertEqual(result["release_no"], 10)
+                self.assertEqual(result["exact_source_version"], 4)
+                self.assertEqual(result["student_source_version"], 5)
                 self.assertEqual(len(workflow.list_releases(COURSE_ID)), release_count)
                 self.assertIsNotNone(restored)
                 assert restored is not None
@@ -73,9 +73,9 @@ class TeacherLessonSyncTests(unittest.TestCase):
                     source_pr=SOURCE_PR,
                     source_commit=SOURCE_COMMIT,
                     source_checksum=SOURCE_CHECKSUM,
-                    author="content-sync-pr11-author",
-                    reviewer="content-sync-pr11-reviewer",
-                    publisher="content-sync-pr11-publisher",
+                    author="content-sync-pr16-author",
+                    reviewer="content-sync-pr16-reviewer",
+                    publisher="content-sync-pr16-publisher",
                 )
 
                 self.assertEqual(repeated["status"], "already-published")
