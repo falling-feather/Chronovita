@@ -121,6 +121,7 @@ export interface Keyword { word: string; pinyin: string; gloss: string }
 export interface PersonCard {
   person_id?: string; name: string; role?: string; summary?: string;
   persona?: string; boundaries?: string[];
+  asset_id?: string; supplemental?: boolean; source_refs?: SourceRef[];
 }
 export interface MapPoint {
   label: string; region?: string; lat?: number | null; lng?: number | null; note?: string; kind?: string;
@@ -506,10 +507,14 @@ export interface Lesson {
   seed_canvas: { id: string; label: string }[];
   unit?: string; era?: string;
   people?: PersonCard[]; map_points?: MapPoint[]; source_refs?: SourceRef[];
+  interaction_people?: PersonCard[]; interaction_figures?: string[];
   facts?: string[]; qa_points?: string[]; level_goals?: string[];
   saga_material?: MaterialPlaceholder | null; sandbox_material?: MaterialPlaceholder | null;
   content_status?: string; content_version?: number; sealed_at?: string | null; sealed_by?: string | null;
   content_checksum?: string | null;
+  teacher_text_checksum?: string | null;
+  rag_available?: boolean;
+  reading_media_available?: boolean;
   release_id?: string | null; release_no?: number | null; release_checksum?: string | null;
   scenario_refs: LessonScenarioRef[]; primary_scenario_id: string | null;
 }
@@ -865,6 +870,7 @@ export interface LearningSubmissionListItem {
   submission_id: string; student_id: string; student_display_name: string;
   student_username?: string | null; course_id: string; lesson_id: string;
   version: number; title: string; body_excerpt: string;
+  lesson_title?: string | null;
   sticky_note_count: number; stroke_count: number; event_count: number;
   canvas_node_count: number; submitted_at: string; checksum: string;
   latest_feedback?: LearningFeedback | null;

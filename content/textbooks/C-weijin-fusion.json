@@ -12,7 +12,7 @@
     "L603": "7419b6d40b48f9fd2d27c9ba34fe1f289e46c4a9b1163ee9a154069305bb91d9",
     "L604": "efa22af71de5c61ebce882253ca2f79b6dd80977f0ccaa22a2aeccb2afd29eca"
   },
-  "text_checksum": "0e67f204ab8efbb7fdb497f035414246175415b2619f6b1a87d4c0b5736c059d",
+  "text_checksum": "8c7f5df857b142f86578203af645c2b56b6f2b548fdcde40d0fbebf8114b3286",
   "lessons": [
     {
       "lesson_id": "L601",
@@ -54,6 +54,79 @@
           "word": "三国鼎立",
           "pinyin": "sān guó dǐng lì",
           "gloss": "魏 蜀汉 孙吴三个政权并立的局面；形成于三世纪前期"
+        }
+      ],
+      "people": [
+        {
+          "name": "曹操",
+          "role": "汉末政治家和军事家",
+          "summary": "统一北方并为魏国建立奠定基础",
+          "persona": "从政治号召 军事行动和经济措施理解其崛起",
+          "boundaries": []
+        },
+        {
+          "name": "刘备",
+          "role": "蜀汉建立者",
+          "summary": "在荆州和益州逐步建立政权",
+          "persona": "联系联盟与地理条件观察其发展",
+          "boundaries": []
+        },
+        {
+          "name": "孙权",
+          "role": "孙吴建立者",
+          "summary": "巩固江东并参与赤壁之战",
+          "persona": "关注长江水军与区域经营",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "官渡",
+          "region": "今河南中牟东北一带",
+          "lat": null,
+          "lng": null,
+          "note": "曹操与袁绍决战之地",
+          "kind": "battle"
+        },
+        {
+          "label": "赤壁",
+          "region": "今湖北赤壁附近长江沿岸",
+          "lat": null,
+          "lng": null,
+          "note": "孙刘联军与曹军交战区域",
+          "kind": "battle"
+        },
+        {
+          "label": "成都",
+          "region": "今四川成都",
+          "lat": null,
+          "lng": null,
+          "note": "蜀汉都城",
+          "kind": "capital"
+        },
+        {
+          "label": "建业",
+          "region": "今江苏南京",
+          "lat": null,
+          "lng": null,
+          "note": "孙吴主要都城",
+          "kind": "capital"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《三国志》",
+          "source": "传世史书",
+          "url_or_path": "《三国志》",
+          "citation_note": "记载汉末至三国人物和政权兴替",
+          "reliability": "pending"
+        },
+        {
+          "title": "三国时期出土简牍",
+          "source": "考古文字材料",
+          "url_or_path": "长沙走马楼等地三国简牍",
+          "citation_note": "补充地方行政 赋税和社会生活信息",
+          "reliability": "pending"
         }
       ]
     },
@@ -98,6 +171,63 @@
           "pinyin": "wèi jìn fēng dù",
           "gloss": "魏晋士人重视个性 精神自由和人物气质的文化风貌"
         }
+      ],
+      "people": [
+        {
+          "name": "王弼",
+          "role": "曹魏玄学家",
+          "summary": "重新注释《老子》和《周易》",
+          "persona": "通过有无与本末问题理解玄学思考",
+          "boundaries": []
+        },
+        {
+          "name": "嵇康",
+          "role": "文学家和思想家",
+          "summary": "以文章 音乐和人生选择表达对自然的重视",
+          "persona": "联系政治风险理解拒绝仕途的选择",
+          "boundaries": []
+        },
+        {
+          "name": "阮籍",
+          "role": "诗人和名士",
+          "summary": "以含蓄方式表达乱世中的忧惧",
+          "persona": "避免把文学形象等同于全部历史事实",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "洛阳",
+          "region": "今河南洛阳",
+          "lat": null,
+          "lng": null,
+          "note": "曹魏和西晋政治文化中心",
+          "kind": "capital"
+        },
+        {
+          "label": "山阳",
+          "region": "今河南焦作一带",
+          "lat": null,
+          "lng": null,
+          "note": "后世竹林七贤故事联系的地区",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《三国志》及裴松之注",
+          "source": "传世史书",
+          "url_or_path": "《三国志》及裴松之注",
+          "citation_note": "保存魏晋人物经历和多种早期记载",
+          "reliability": "pending"
+        },
+        {
+          "title": "《世说新语》",
+          "source": "志人小说",
+          "url_or_path": "《世说新语》",
+          "citation_note": "记录魏晋人物言谈和文化形象；具有文学加工特点",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -140,6 +270,71 @@
           "word": "改用汉姓",
           "pinyin": "gǎi yòng hàn xìng",
           "gloss": "北魏皇族和部分鲜卑贵族采用汉式姓氏的措施；加强与中原士族联系"
+        }
+      ],
+      "people": [
+        {
+          "name": "冯太后",
+          "role": "北魏实际执政者",
+          "summary": "推动俸禄 户籍和基层管理改革",
+          "persona": "说明孝文帝改革具有前期基础",
+          "boundaries": []
+        },
+        {
+          "name": "拓跋宏（北魏孝文帝）",
+          "role": "北魏皇帝",
+          "summary": "迁都洛阳并调整制度和习俗",
+          "persona": "从国家治理和族群交往理解改革",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "平城",
+          "region": "今山西大同一带",
+          "lat": null,
+          "lng": null,
+          "note": "北魏前期都城",
+          "kind": "capital"
+        },
+        {
+          "label": "洛阳",
+          "region": "今河南洛阳",
+          "lat": null,
+          "lng": null,
+          "note": "北魏孝文帝迁都后的政治文化中心",
+          "kind": "capital"
+        },
+        {
+          "label": "北部六镇",
+          "region": "今内蒙古中部至河北北部一带",
+          "lat": null,
+          "lng": null,
+          "note": "北魏北部军事防线和后来动荡集中地区",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《魏书》",
+          "source": "传世史书",
+          "url_or_path": "《魏书》",
+          "citation_note": "记载北魏政权和孝文帝改革",
+          "reliability": "pending"
+        },
+        {
+          "title": "北魏墓志与造像题记",
+          "source": "考古文字材料",
+          "url_or_path": "洛阳及北方地区北魏墓志 造像题记",
+          "citation_note": "反映姓名 官职 信仰和族群交往",
+          "reliability": "pending"
+        },
+        {
+          "title": "汉魏洛阳城遗址",
+          "source": "考古遗址",
+          "url_or_path": "汉魏洛阳故城",
+          "citation_note": "用于认识北魏迁都后的城市格局",
+          "reliability": "pending"
         }
       ]
     },
@@ -188,6 +383,79 @@
           "word": "佛教中国化",
           "pinyin": "fó jiào zhōng guó huà",
           "gloss": "佛教与中国语言 思想和礼俗长期互动形成的新变化"
+        }
+      ],
+      "people": [
+        {
+          "name": "鸠摩罗什",
+          "role": "译经僧",
+          "summary": "在长安主持翻译多部重要佛经",
+          "persona": "突出集体译场和语言转换作用",
+          "boundaries": []
+        },
+        {
+          "name": "慧远",
+          "role": "东晋僧人",
+          "summary": "在庐山组织僧团并讨论宗教与礼法",
+          "persona": "说明佛教融入本土社会的过程",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "长安",
+          "region": "今陕西西安",
+          "lat": null,
+          "lng": null,
+          "note": "鸠摩罗什主持译经的重要城市",
+          "kind": "capital"
+        },
+        {
+          "label": "庐山",
+          "region": "今江西九江一带",
+          "lat": null,
+          "lng": null,
+          "note": "慧远长期活动地区",
+          "kind": "site"
+        },
+        {
+          "label": "云冈石窟",
+          "region": "今山西大同",
+          "lat": null,
+          "lng": null,
+          "note": "北魏重要佛教石窟",
+          "kind": "site"
+        },
+        {
+          "label": "龙门石窟",
+          "region": "今河南洛阳",
+          "lat": null,
+          "lng": null,
+          "note": "北魏迁都后持续营造的石窟",
+          "kind": "site"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《高僧传》",
+          "source": "僧人传记",
+          "url_or_path": "《高僧传》",
+          "citation_note": "记载早期译经僧和佛教传播活动",
+          "reliability": "pending"
+        },
+        {
+          "title": "云冈石窟造像与题记",
+          "source": "考古艺术材料",
+          "url_or_path": "云冈石窟",
+          "citation_note": "反映北魏佛教艺术和多地区文化联系",
+          "reliability": "pending"
+        },
+        {
+          "title": "龙门石窟造像与题记",
+          "source": "考古艺术材料",
+          "url_or_path": "龙门石窟",
+          "citation_note": "反映迁都洛阳后的造像风格和信仰活动",
+          "reliability": "pending"
         }
       ]
     }

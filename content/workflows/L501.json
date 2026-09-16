@@ -3,15 +3,15 @@
   "lesson_id": "L501",
   "course_id": "C-qinhan-thought",
   "state": "draft",
-  "revision": 1,
-  "draft_fingerprint": "e7f9dbe30f00344ac32342c163a400a1fe90e409fbd11f154c8aa6999fe86891",
+  "revision": 2,
+  "draft_fingerprint": "ac65ea2ef4905558d424783f8d93f14f3c8dc8eab5870444aa8042626a92af99",
   "validation": null,
   "sealed_version": null,
   "sealed_checksum": null,
   "published_course_id": null,
   "published_version": null,
   "published_release_id": null,
-  "updated_at": "2026-09-14T17:06:07.505788Z",
+  "updated_at": "2026-09-16T10:01:48.317201Z",
   "history": [
     {
       "sequence": 1,
@@ -24,7 +24,19 @@
       "draft_fingerprint": "e7f9dbe30f00344ac32342c163a400a1fe90e409fbd11f154c8aa6999fe86891",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T10:01:48.317201Z",
+      "draft_fingerprint": "ac65ea2ef4905558d424783f8d93f14f3c8dc8eab5870444aa8042626a92af99",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "b6508a745231893d468f564627057ab89c6d201d9db73a9eb77f4e01b041a33c"
+  "checksum": "f5b88c95a9e9ddda0d1f48f95062a681be116052ef10a79699249c8fc3864151"
 }

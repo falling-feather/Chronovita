@@ -61,9 +61,78 @@
       "gloss": "唐玄宗开元年间政治较稳定和经济文化繁荣的局面"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "武则天",
+      "role": "武周皇帝",
+      "summary": "由参政到称帝并扩大人才选拔",
+      "persona": "结合政治能力 权力斗争和史书立场综合评价",
+      "boundaries": []
+    },
+    {
+      "name": "唐玄宗",
+      "role": "唐朝皇帝",
+      "summary": "开元前期整顿政治并推动盛世形成",
+      "persona": "区分统治前后期的不同表现",
+      "boundaries": []
+    },
+    {
+      "name": "姚崇",
+      "role": "开元宰相",
+      "summary": "参与裁减冗官和整顿吏治",
+      "persona": "说明盛世形成依靠官僚群体和制度运行",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "洛阳",
+      "region": "今河南洛阳",
+      "lat": null,
+      "lng": null,
+      "note": "武周时期的重要政治中心",
+      "kind": "capital"
+    },
+    {
+      "label": "长安",
+      "region": "今陕西西安",
+      "lat": null,
+      "lng": null,
+      "note": "唐玄宗时期主要都城和政治文化中心",
+      "kind": "capital"
+    },
+    {
+      "label": "扬州",
+      "region": "今江苏扬州",
+      "lat": null,
+      "lng": null,
+      "note": "开元时期繁荣的运河商业城市",
+      "kind": "city"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《旧唐书·则天皇后本纪》",
+      "source": "传世史书",
+      "url_or_path": "《旧唐书·则天皇后本纪》",
+      "citation_note": "记载武则天参政 称帝和政策活动",
+      "reliability": "pending"
+    },
+    {
+      "title": "《资治通鉴》唐纪",
+      "source": "编年史书",
+      "url_or_path": "《资治通鉴》唐纪",
+      "citation_note": "记录武周至开元时期政治事件",
+      "reliability": "pending"
+    },
+    {
+      "title": "唐代墓志与城市遗址",
+      "source": "考古材料",
+      "url_or_path": "洛阳 长安地区唐代墓志与遗址",
+      "citation_note": "补充官员经历 人口流动和城市生活信息",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -115,7 +184,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.314130Z",
-  "updated_at": "2026-09-14T17:06:07.314130Z",
+  "updated_at": "2026-09-16T10:01:47.995778Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

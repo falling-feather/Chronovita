@@ -11,7 +11,7 @@
     "L502": "9e03c2f1379ebf257d418e1e0a436f915fcb6913ab4d56bdc25ba06f18d389e3",
     "L503": "7a68c9e1d91103e53812e75f0b45df6a1f369decec45ffee701f159fda17ce6e"
   },
-  "text_checksum": "0d66c08c7da27bdc65c9395fcff8648e5ac47f5b89847051a847279db93a047a",
+  "text_checksum": "096955061d4befc6479fa4a09ce3c47398557ae47b2e42f9b80a5702a3873a42",
   "lessons": [
     {
       "lesson_id": "L501",
@@ -64,6 +64,78 @@
           "pinyin": "shí lù jīng shén",
           "gloss": "力求如实记录历史的写作追求；强调不虚美也不隐恶"
         }
+      ],
+      "people": [
+        {
+          "name": "司马迁",
+          "role": "西汉史学家",
+          "summary": "继承父志撰写《史记》并开创纪传体通史",
+          "persona": "联系个人经历 史料搜集和历史写作方法",
+          "boundaries": []
+        },
+        {
+          "name": "司马谈",
+          "role": "西汉太史令",
+          "summary": "司马迁之父并提出编写贯通古今史书的愿望",
+          "persona": "说明史官家庭和父志对司马迁的影响",
+          "boundaries": []
+        },
+        {
+          "name": "李陵",
+          "role": "西汉将领",
+          "summary": "兵败投降匈奴后引发朝廷争议并牵连司马迁",
+          "persona": "用于理解司马迁获罪及其人生转折",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "夏阳",
+          "region": "今陕西韩城一带",
+          "lat": null,
+          "lng": null,
+          "note": "传统记载中的司马迁故乡",
+          "kind": "place"
+        },
+        {
+          "label": "长安",
+          "region": "今陕西西安一带",
+          "lat": null,
+          "lng": null,
+          "note": "司马迁任职和接触朝廷典籍的政治中心",
+          "kind": "capital"
+        },
+        {
+          "label": "司马迁游历区域",
+          "region": "黄河 长江流域及其他地区",
+          "lat": null,
+          "lng": null,
+          "note": "司马迁考察遗迹和搜集历史材料的广阔范围",
+          "kind": "route"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《史记·太史公自序》",
+          "source": "传世文献",
+          "url_or_path": "《史记·太史公自序》",
+          "citation_note": "记录司马氏史官传统和《史记》的写作宗旨",
+          "reliability": "pending"
+        },
+        {
+          "title": "《报任安书》",
+          "source": "传世文献",
+          "url_or_path": "《报任安书》",
+          "citation_note": "司马迁自述获罪经历和继续著书的原因",
+          "reliability": "pending"
+        },
+        {
+          "title": "《汉书·司马迁传》",
+          "source": "传世文献",
+          "url_or_path": "《汉书·司马迁传》",
+          "citation_note": "保存司马迁生平和《史记》流传的相关记载",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -113,6 +185,78 @@
           "pinyin": "bái hǔ tōng yì",
           "gloss": "整理白虎观经学讨论成果的著作；反映东汉官方经学解释"
         }
+      ],
+      "people": [
+        {
+          "name": "刘炟（汉章帝）",
+          "role": "东汉皇帝",
+          "summary": "召集官员和学者举行白虎观会议",
+          "persona": "说明国家整合经学解释的政治目的",
+          "boundaries": []
+        },
+        {
+          "name": "班固",
+          "role": "东汉史学家和经学家",
+          "summary": "参与整理白虎观会议相关讨论成果",
+          "persona": "联系会议讨论与《白虎通义》的文本形成",
+          "boundaries": []
+        },
+        {
+          "name": "郑玄",
+          "role": "东汉经学家",
+          "summary": "研习并融会不同经说并为多部经典作注",
+          "persona": "展示学术整合不只来自朝廷会议",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "长安",
+          "region": "今陕西西安一带",
+          "lat": null,
+          "lng": null,
+          "note": "西汉官学和皇家藏书整理的重要中心",
+          "kind": "capital"
+        },
+        {
+          "label": "白虎观",
+          "region": "东汉洛阳宫城区域",
+          "lat": null,
+          "lng": null,
+          "note": "公元79年经学会议举行地点",
+          "kind": "site"
+        },
+        {
+          "label": "洛阳",
+          "region": "今河南洛阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "东汉都城和经学活动中心",
+          "kind": "capital"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《汉书·艺文志》",
+          "source": "传世文献",
+          "url_or_path": "《汉书·艺文志》",
+          "citation_note": "保存西汉典籍整理和学术分类的相关材料",
+          "reliability": "pending"
+        },
+        {
+          "title": "《后汉书·章帝纪》",
+          "source": "传世文献",
+          "url_or_path": "《后汉书·章帝纪》",
+          "citation_note": "记载汉章帝时期白虎观经学会议",
+          "reliability": "pending"
+        },
+        {
+          "title": "《白虎通义》",
+          "source": "汉代经学文献",
+          "url_or_path": "《白虎通义》",
+          "citation_note": "保存东汉朝廷对经义和制度关系的解释",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -161,6 +305,85 @@
           "word": "勾股术",
           "pinyin": "gōu gǔ shù",
           "gloss": "利用直角三角形边长关系计算的方法；用于测量和工程问题"
+        }
+      ],
+      "people": [
+        {
+          "name": "蔡伦",
+          "role": "东汉官员和技术改进者",
+          "summary": "总结前人经验并扩大造纸原料来源",
+          "persona": "强调技术改进建立在既有实践之上",
+          "boundaries": []
+        },
+        {
+          "name": "张衡",
+          "role": "东汉学者",
+          "summary": "研究天文 历法并制造候风地动仪",
+          "persona": "区分传世文字记载 原器和现代复原模型",
+          "boundaries": []
+        },
+        {
+          "name": "刘徽",
+          "role": "魏晋时期数学家",
+          "summary": "为《九章算术》作注并系统解释其中算法",
+          "persona": "用于说明数学文本在后世继续整理和发展",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "洛阳",
+          "region": "今河南洛阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "蔡伦和张衡从事宫廷技术活动的东汉都城",
+          "kind": "capital"
+        },
+        {
+          "label": "旱滩坡",
+          "region": "今甘肃武威一带",
+          "lat": null,
+          "lng": null,
+          "note": "东汉带字纸实物的出土地之一",
+          "kind": "site"
+        },
+        {
+          "label": "西北汉代遗址群",
+          "region": "今甘肃及周边地区",
+          "lat": null,
+          "lng": null,
+          "note": "发现多种汉代纸张和简牍实物的区域",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《后汉书·蔡伦传》",
+          "source": "传世文献",
+          "url_or_path": "《后汉书·蔡伦传》",
+          "citation_note": "记载蔡伦于公元105年报告改进制纸方法",
+          "reliability": "pending"
+        },
+        {
+          "title": "《后汉书·张衡列传》",
+          "source": "传世文献",
+          "url_or_path": "《后汉书·张衡列传》",
+          "citation_note": "记载张衡制造候风地动仪及其运行现象",
+          "reliability": "pending"
+        },
+        {
+          "title": "汉代纸张实物",
+          "source": "考古实物材料",
+          "url_or_path": "西北地区汉代纸张考古发现",
+          "citation_note": "用于认识蔡伦以前和以后的植物纤维纸发展",
+          "reliability": "pending"
+        },
+        {
+          "title": "《九章算术》",
+          "source": "传世科技文献",
+          "url_or_path": "《九章算术》",
+          "citation_note": "保存秦汉数学问题分类和算法体系",
+          "reliability": "pending"
         }
       ]
     }

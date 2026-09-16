@@ -9,7 +9,7 @@
   "source_checksums": {
     "L403": "fcc456f680bf8a94ee49ec04c0a6352a7fcb440b9c10900fe52e4690adfc1177"
   },
-  "text_checksum": "5deea19025829eb1f1ec394b5196cdb3a068eac9d4fb5090a729352895faed77",
+  "text_checksum": "9481bd1cce1f23003f7d6f559c440a4ac266613374b394444448f37f7bfd0173",
   "lessons": [
     {
       "lesson_id": "L403",
@@ -62,6 +62,86 @@
           "word": "黄巾起义",
           "pinyin": "huáng jīn qǐ yì",
           "gloss": "公元184年张角领导的起义；加速东汉统治瓦解"
+        }
+      ],
+      "people": [
+        {
+          "name": "王莽",
+          "role": "新朝建立者",
+          "summary": "代汉建立新朝并推行多项制度改革",
+          "persona": "从改革目标 执行困难和社会环境理解失败原因",
+          "boundaries": []
+        },
+        {
+          "name": "刘秀（汉光武帝）",
+          "role": "东汉建立者",
+          "summary": "在新朝末年战争中兴起并重新建立汉朝",
+          "persona": "突出战后重建和豪族支持的双重影响",
+          "boundaries": []
+        },
+        {
+          "name": "张角",
+          "role": "黄巾起义领袖",
+          "summary": "利用太平道组织民众发动反抗东汉的起义",
+          "persona": "说明社会危机与地方组织扩大的关系",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "昆阳",
+          "region": "今河南叶县一带",
+          "lat": null,
+          "lng": null,
+          "note": "绿林军击败新朝主力的重要战场",
+          "kind": "battle"
+        },
+        {
+          "label": "洛阳",
+          "region": "今河南洛阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "东汉都城和中央政治中心",
+          "kind": "capital"
+        },
+        {
+          "label": "南阳",
+          "region": "今河南南阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "刘秀起兵和地方豪族活动的重要区域",
+          "kind": "region"
+        },
+        {
+          "label": "黄巾起义区域",
+          "region": "黄河中下游及其他多个地区",
+          "lat": null,
+          "lng": null,
+          "note": "公元184年起义波及的主要范围",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《汉书·王莽传》",
+          "source": "传世文献",
+          "url_or_path": "《汉书·王莽传》",
+          "citation_note": "记载王莽建立新朝和改制过程",
+          "reliability": "pending"
+        },
+        {
+          "title": "《后汉书·光武帝纪》",
+          "source": "传世文献",
+          "url_or_path": "《后汉书·光武帝纪》",
+          "citation_note": "记载刘秀建立东汉和恢复统治",
+          "reliability": "pending"
+        },
+        {
+          "title": "《后汉书·皇甫嵩传》",
+          "source": "传世文献",
+          "url_or_path": "《后汉书·皇甫嵩传》",
+          "citation_note": "保存黄巾起义和镇压过程的相关记载",
+          "reliability": "pending"
         }
       ]
     }

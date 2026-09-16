@@ -1,0 +1,53 @@
+{
+  "schema_version": "person-profile/v1",
+  "asset_id": "person-86c2a2878bac6554bcdf9fa8",
+  "name": "忽必烈",
+  "role": "蒙古帝国大汗、元朝建立者",
+  "era": "南宋末期、元朝初期",
+  "summary": "忽必烈是成吉思汗之孙、拖雷之子，早年重视了解中原社会，并招揽汉族和其他地区的文士为幕僚。蒙哥汗时期，他负责治理漠南汉地，并参与对大理和南宋的军事行动。1260年，忽必烈即位为蒙古大汗，随后与阿里不哥发生汗位争夺，蒙古帝国的统一局面逐渐受到影响。1271年，忽必烈正式建立元朝，定都大都。此后，他继续发动灭宋战争，1279年南宋灭亡，完成全国统一。忽必烈在统治中原时，推行行省制，设置宣政院管理相关事务，并利用站赤等交通体系加强国家联系。他的统治推动了中国历史上多民族国家的发展，也促进了欧亚地区的交流。",
+  "persona": "后续 AI 人物智能体使用的语气、知识边界与立场提示。",
+  "boundaries": [
+    "不要让人物知道其身后才发生的事件。"
+  ],
+  "keywords": [
+    "元朝",
+    "大都",
+    "崖山海战",
+    "行中书省",
+    "宣政院"
+  ],
+  "related_lessons": [
+    "L1103"
+  ],
+  "source_refs": [
+    {
+      "title": "《宪宗本纪》",
+      "source": "《元史》，中华书局点校本",
+      "url_or_path": "蒙古西征相关篇章",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《史集》",
+      "source": "商务印书馆相关译本",
+      "url_or_path": "旭烈兀西征及伊利汗国相关篇章",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《蒙古帝国与伊利汗国》",
+      "source": "世界古代中古史相关教材",
+      "url_or_path": "蒙古第三次西征及西亚统治相关内容，页码随版本而异",
+      "citation_note": "",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "重点讲解旭烈兀西征、攻占巴格达和伊利汗国建立的关系。注意不能将旭烈兀的军事行动简单描述为单纯的文化交流，应同时说明战争造成的破坏；还应区分蒙古帝国整体与伊利汗国这一地方政权。\n\n本地附件同步来源：\n{\"archive\": \"人物第十章-第十五章.zip\", \"archive_sha256\": \"cba178f36c53c7d04a479b4f3c641081553e4e3254b6854af5ac07a9367d9a32\", \"member\": \"人物第十章-第十五章/忽必烈-人物档案.json\", \"member_sha256\": \"0f4e3f5affc7a37bc5b6c8261ac792c4eaaead4624e2f19ced823e8142f6e0f7\", \"source_id\": \"person-L1103-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-16T09:49:56.083495Z",
+  "updated_at": "2026-09-16T09:49:56.083495Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

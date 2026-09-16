@@ -3267,12 +3267,21 @@ select {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  align-self: start;
+  position: sticky;
+  top: 96px;
+  max-height: calc(100vh - 114px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.chrono-reading-sidebar > * {
+  flex-shrink: 0;
 }
 
 .chrono-knowledge-desk {
-  position: sticky;
+  position: relative;
   z-index: 4;
-  top: 162px;
   padding: 20px;
   color: var(--cv-paper-100);
   background:
@@ -3563,6 +3572,12 @@ select {
 
   .chrono-knowledge-desk {
     position: static;
+  }
+
+  .chrono-reading-sidebar {
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
 
   .chrono-knowledge-note.is-open {

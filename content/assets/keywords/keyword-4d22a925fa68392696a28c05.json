@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-4d22a925fa68392696a28c05",
+  "word": "纪传体通史",
+  "pinyin": "jì zhuàn tǐ tōng shǐ",
+  "gloss": "以人物传记为主体并贯通多个时代的史书体例",
+  "era": "秦汉",
+  "category": "文献",
+  "examples": [
+    "本课结合“纪传体通史”说明以人物传记为主体并贯通多个时代的史书体例。",
+    "讲解“纪传体通史”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "司马迁"
+  ],
+  "related_lessons": [
+    "L501"
+  ],
+  "source_refs": [
+    {
+      "title": "L501《司马迁与《史记》》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L501.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l501-06.json\", \"member_sha256\": \"f66cef29b9a5947ee674dc7cafd53619f91157bcd37b2e881f4508c796d740dd\", \"source_id\": \"keyword-l501-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.799685Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

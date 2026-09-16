@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-0dd8863ccb3bbbe06270694e",
+  "word": "官渡之战",
+  "pinyin": "guān dù zhī zhàn",
+  "gloss": "公元200年曹操击败袁绍的战役；推动北方力量走向统一",
+  "era": "魏晋南北朝",
+  "category": "事件",
+  "examples": [
+    "本课结合“官渡之战”说明公元200年曹操击败袁绍的战役；推动北方力量走向统一。",
+    "讲解“官渡之战”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "曹操"
+  ],
+  "related_lessons": [
+    "L601"
+  ],
+  "source_refs": [
+    {
+      "title": "L601《三国鼎立》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L601.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l601-01.json\", \"member_sha256\": \"84e8fd4b457fdb818d4e7e927f08769c24a605fef95a62e1d83558689611d91b\", \"source_id\": \"keyword-l601-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.927084Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

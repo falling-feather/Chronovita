@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Alert, Button } from 'antd';
 import {
   BulbOutlined,
@@ -13,13 +13,6 @@ import type { Keyword, Lesson, LessonPresentationResponse } from '../../utils/ap
 import { parseContentBlock, parseContentMarkup, type InlineMark } from '../../utils/contentMarkup';
 import { emitLearningEvent } from '../../features/classroom/learningLedger';
 import { normalizeReadingKeywords, splitReadingText } from './lessonReadingModel';
-
-const READING_LENSES = [
-  { index: '壹', title: '传说记忆', note: '先问故事由谁、在何时讲述' },
-  { index: '贰', title: '传世文献', note: '辨认成书、编定与流传年代' },
-  { index: '叁', title: '考古观察', note: '只从遗物与遗迹推出可支持的判断' },
-  { index: '肆', title: '课堂解释', note: '把现代分析与古代材料分开' },
-] as const;
 
 const MARK_CLASS: Record<InlineMark, string> = {
   bold: 'is-bold',
@@ -125,7 +118,7 @@ export function LessonWatchMedia({
           type="info"
           showIcon
           message="本课暂未配备导读短片"
-          description="课文、关键词与后续课堂仍可正常学习。"
+          description="可直接阅读教师课文；未与新课文对齐的旧短片不在这里展示。"
         />
       </section>
     );
@@ -183,6 +176,7 @@ export function LessonWatchMedia({
 }
 
 export default function LessonWatch({ lesson }: { lesson: Lesson }) {
+  const sidebarRef = useRef<HTMLElement>(null);
   const keywords = useMemo(() => normalizeReadingKeywords(lesson.keywords ?? []), [lesson.keywords]);
   const [selectedWord, setSelectedWord] = useState('');
   const selectedKeyword = keywords.find((keyword) => keyword.word === selectedWord) ?? null;
@@ -199,6 +193,7 @@ export default function LessonWatch({ lesson }: { lesson: Lesson }) {
   }, [lesson.id]);
 
   const selectKeyword = (keyword: Keyword) => {
+    sidebarRef.current?.scrollTo({ top: 0 });
     setSelectedWord(keyword.word);
     if (selectedWord === keyword.word) return;
     emitLearningEvent({
@@ -226,15 +221,6 @@ export default function LessonWatch({ lesson }: { lesson: Lesson }) {
           </div>
         </header>
 
-        <ol className="chrono-reading-lenses" aria-label="四种阅读视角">
-          {READING_LENSES.map((lens) => (
-            <li key={lens.index}>
-              <span>{lens.index}</span>
-              <div><strong>{lens.title}</strong><small>{lens.note}</small></div>
-            </li>
-          ))}
-        </ol>
-
         <div className="chrono-reading-body chrono-serif">
           {lesson.body.map((paragraph, index) => (
             renderBodyBlock(paragraph, index, keywords, keywordNumbers, selectedWord, selectKeyword)
@@ -242,7 +228,7 @@ export default function LessonWatch({ lesson }: { lesson: Lesson }) {
         </div>
       </article>
 
-      <aside className="chrono-reading-sidebar" aria-label="关键词与知识点">
+      <aside ref={sidebarRef} className="chrono-reading-sidebar" aria-label="关键词与知识点">
         <section className="chrono-knowledge-desk">
           <header>
             <span><BulbOutlined /></span>
@@ -315,6 +301,7 @@ export default function LessonWatch({ lesson }: { lesson: Lesson }) {
                   <strong>{person.name}</strong>
                   {person.role ? <small>{person.role}</small> : null}
                   <p>{person.summary || person.persona}</p>
+                  {person.supplemental ? <small>维基百科参考补充 · 待审校</small> : null}
                 </article>
               ))}
             </div>

@@ -18,6 +18,9 @@ class TextbookLesson(BaseModel):
     body: list[str]
     duration: str
     keywords: list[content.KeywordCard]
+    people: list[content.PersonCard]
+    map_points: list[content.MapPoint]
+    source_refs: list[content.SourceRef]
 
 
 class TextbookCourse(BaseModel):

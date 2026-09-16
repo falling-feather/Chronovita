@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-3bb4213b880be20685a3354a",
+  "word": "山海关",
+  "pinyin": "shān hǎi guān",
+  "gloss": "连接辽西与华北的重要关隘；明清易代时发生关键战事",
+  "era": "明清",
+  "category": "地点",
+  "examples": [
+    "本课结合“山海关”说明连接辽西与华北的重要关隘；明清易代时发生关键战事。",
+    "讲解“山海关”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L1303"
+  ],
+  "source_refs": [
+    {
+      "title": "L1303《明亡与南明》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1303.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1303-02.json\", \"member_sha256\": \"176459bbd6e26695daa2139193083d75bf652be7cbb0616d0712bd30638436da\", \"source_id\": \"keyword-l1303-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.504697Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

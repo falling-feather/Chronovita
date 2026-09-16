@@ -180,7 +180,7 @@ export default function LessonCompanion({
 
   const ask = async () => {
     const prompt = question.trim();
-    if (!prompt || loading || !presentation) return;
+    if (!prompt || loading || !(lesson.rag_available ?? Boolean(presentation))) return;
     const personaMode: RagPersonaMode = speaker === EXPERT_VALUE ? 'expert' : 'person';
     setLoading(true);
     setError('');
@@ -285,7 +285,7 @@ export default function LessonCompanion({
 
           {pane === 'ask' ? (
             <div className="chrono-companion-pane chrono-companion-ask-pane">
-              {!presentation ? (
+              {!(lesson.rag_available ?? Boolean(presentation)) ? (
                 <div className="chrono-companion-simple-state">
                   <BookOutlined />
                   <strong>本课使用基础问答</strong>

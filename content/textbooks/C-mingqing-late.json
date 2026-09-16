@@ -11,7 +11,7 @@
     "L1502": "9d668bd629be5397ccfc4f6bac55d17ab6c9d0010de7efae9988dcb5c416b4a1",
     "L1503": "0dec8b91035aabbd77628466803ac9966d3b0fe85d9213af5e0054915ed5b04e"
   },
-  "text_checksum": "236d6568bc06df343cafe3c2dde27fd7d14d97747eb1ebbe89fbea2989564c44",
+  "text_checksum": "6822e6fee55d236af9869df6809ba8ff6df64c76f50ec76670c9967a1caa325f",
   "lessons": [
     {
       "lesson_id": "L1501",
@@ -63,6 +63,72 @@
           "word": "三元里民众",
           "pinyin": "sān yuán lǐ mín zhòng",
           "gloss": "广州三元里一带组织起来抵抗英军的民众；体现民间抗争力量"
+        }
+      ],
+      "people": [
+        {
+          "name": "林则徐",
+          "role": "清朝钦差大臣",
+          "summary": "在广州查禁鸦片并主持虎门销烟",
+          "persona": "联系社会危害 国家法令和外交压力理解禁烟",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "虎门",
+          "region": "今广东东莞虎门一带",
+          "lat": null,
+          "lng": null,
+          "note": "公元1839年公开销毁鸦片地点",
+          "kind": "site"
+        },
+        {
+          "label": "三元里",
+          "region": "今广东广州白云区一带",
+          "lat": null,
+          "lng": null,
+          "note": "公元1841年民众抗英地点",
+          "kind": "battle"
+        },
+        {
+          "label": "南京",
+          "region": "今江苏南京",
+          "lat": null,
+          "lng": null,
+          "note": "公元1842年中英签订条约地点",
+          "kind": "city"
+        },
+        {
+          "label": "五处通商口岸",
+          "region": "广州 厦门 福州 宁波 上海",
+          "lat": null,
+          "lng": null,
+          "note": "《南京条约》规定开放的沿海港口",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "林则徐奏稿与书信",
+          "source": "清代官员文书",
+          "url_or_path": "《林则徐全集》相关奏稿",
+          "citation_note": "记录禁烟政策和虎门销烟过程",
+          "reliability": "pending"
+        },
+        {
+          "title": "《南京条约》文本",
+          "source": "条约文献",
+          "url_or_path": "中英《南京条约》",
+          "citation_note": "保存赔款 开港和割让香港岛等条款",
+          "reliability": "pending"
+        },
+        {
+          "title": "三元里抗英地方记载",
+          "source": "地方文献与遗址",
+          "url_or_path": "广东地方志 三元里相关碑刻与遗址",
+          "citation_note": "反映乡民组织和战斗记忆",
+          "reliability": "pending"
         }
       ]
     },
@@ -116,6 +182,86 @@
           "word": "湘军",
           "pinyin": "xiāng jūn",
           "gloss": "曾国藩以湖南团练为基础建立的地方军队；成为镇压太平军主力"
+        }
+      ],
+      "people": [
+        {
+          "name": "洪秀全",
+          "role": "太平天国主要领导人",
+          "summary": "创立拜上帝会并建立太平天国",
+          "persona": "结合宗教动员 政权建设和内部矛盾理解",
+          "boundaries": []
+        },
+        {
+          "name": "洪仁玕",
+          "role": "太平天国后期重要官员",
+          "summary": "提出《资政新篇》并尝试调整政权建设",
+          "persona": "说明改革方案与战争现实之间的距离",
+          "boundaries": []
+        },
+        {
+          "name": "曾国藩",
+          "role": "湘军统帅",
+          "summary": "组织地方军队并攻取天京",
+          "persona": "联系战争需要理解地方军事力量兴起",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "金田",
+          "region": "今广西桂平金田镇",
+          "lat": null,
+          "lng": null,
+          "note": "公元1851年太平天国起义地点",
+          "kind": "site"
+        },
+        {
+          "label": "天京",
+          "region": "今江苏南京",
+          "lat": null,
+          "lng": null,
+          "note": "太平天国首都和公元1864年决战地点",
+          "kind": "capital"
+        },
+        {
+          "label": "长江中下游",
+          "region": "今湖北 安徽 江苏 浙江等地",
+          "lat": null,
+          "lng": null,
+          "note": "太平军与清军长期争夺的主要区域",
+          "kind": "region"
+        },
+        {
+          "label": "湖南",
+          "region": "今湖南省",
+          "lat": null,
+          "lng": null,
+          "note": "湘军组织和发展的主要地区",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《天朝田亩制度》",
+          "source": "太平天国制度文献",
+          "url_or_path": "《天朝田亩制度》",
+          "citation_note": "呈现土地平均和社会组织设想",
+          "reliability": "pending"
+        },
+        {
+          "title": "《资政新篇》",
+          "source": "太平天国政治文献",
+          "url_or_path": "洪仁玕《资政新篇》",
+          "citation_note": "反映后期发展工商和制度改革设想",
+          "reliability": "pending"
+        },
+        {
+          "title": "湘军奏稿与地方志",
+          "source": "清军和地方记录",
+          "url_or_path": "曾国藩奏稿及战区地方志",
+          "citation_note": "记录地方军队组织 战争和社会影响",
+          "reliability": "pending"
         }
       ]
     },
@@ -185,6 +331,94 @@
           "word": "辛亥革命",
           "pinyin": "xīn hài gé mìng",
           "gloss": "公元1911年爆发并推动清帝退位的革命；结束中国君主制度"
+        }
+      ],
+      "people": [
+        {
+          "name": "李鸿章",
+          "role": "晚清洋务派官员",
+          "summary": "兴办近代企业并参与建立北洋水师",
+          "persona": "从自强实践和制度限制两方面理解",
+          "boundaries": []
+        },
+        {
+          "name": "康有为",
+          "role": "维新派代表",
+          "summary": "推动戊戌变法并主张制度改革",
+          "persona": "联系甲午战败理解改革要求",
+          "boundaries": []
+        },
+        {
+          "name": "孙中山",
+          "role": "民主革命领导人",
+          "summary": "组织革命团体并推动建立共和国",
+          "persona": "说明革命需要组织 宣传和多方社会力量",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "上海",
+          "region": "今上海",
+          "lat": null,
+          "lng": null,
+          "note": "江南机器制造总局所在地和近代工业中心",
+          "kind": "city"
+        },
+        {
+          "label": "威海卫",
+          "region": "今山东威海",
+          "lat": null,
+          "lng": null,
+          "note": "甲午战争中北洋水师最后基地",
+          "kind": "battle"
+        },
+        {
+          "label": "马关",
+          "region": "今日本下关",
+          "lat": null,
+          "lng": null,
+          "note": "公元1895年清日议和签约地点",
+          "kind": "city"
+        },
+        {
+          "label": "武昌",
+          "region": "今湖北武汉武昌区",
+          "lat": null,
+          "lng": null,
+          "note": "公元1911年武昌起义爆发地",
+          "kind": "city"
+        },
+        {
+          "label": "南京",
+          "region": "今江苏南京",
+          "lat": null,
+          "lng": null,
+          "note": "中华民国临时政府成立地",
+          "kind": "capital"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "洋务企业档案与遗址",
+          "source": "近代企业材料",
+          "url_or_path": "江南机器制造总局 福州船政局等档案遗址",
+          "citation_note": "反映洋务工业 教育和技术活动",
+          "reliability": "pending"
+        },
+        {
+          "title": "《马关条约》文本",
+          "source": "条约文献",
+          "url_or_path": "中日《马关条约》",
+          "citation_note": "保存割地 赔款和通商等具体条款",
+          "reliability": "pending"
+        },
+        {
+          "title": "辛亥革命档案与革命文献",
+          "source": "近代档案",
+          "url_or_path": "武昌起义档案 同盟会文献及清帝退位诏书",
+          "citation_note": "记录革命组织 各省响应和帝制结束",
+          "reliability": "pending"
         }
       ]
     }

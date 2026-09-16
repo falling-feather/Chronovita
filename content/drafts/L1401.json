@@ -51,9 +51,64 @@
       "gloss": "王阳明弟子整理的语录 书信和问答集；保存心学主要观点"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "王阳明",
+      "role": "明代思想家和官员",
+      "summary": "发展心学并强调知行合一和致良知",
+      "persona": "把思想概念放入人生经历和实际行动理解",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "余姚",
+      "region": "今浙江余姚",
+      "lat": null,
+      "lng": null,
+      "note": "王阳明出生地",
+      "kind": "city"
+    },
+    {
+      "label": "龙场",
+      "region": "今贵州修文一带",
+      "lat": null,
+      "lng": null,
+      "note": "王阳明被贬并形成重要思想转变之地",
+      "kind": "site"
+    },
+    {
+      "label": "南赣地区",
+      "region": "今江西南部及周边",
+      "lat": null,
+      "lng": null,
+      "note": "王阳明任官 平乱和推行地方治理地区",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《传习录》",
+      "source": "思想语录与书信集",
+      "url_or_path": "《传习录》",
+      "citation_note": "保存王阳明讲学 书信和弟子问答",
+      "reliability": "pending"
+    },
+    {
+      "title": "《王文成公全书》",
+      "source": "文集",
+      "url_or_path": "《王文成公全书》",
+      "citation_note": "保存王阳明奏疏 诗文和政务材料",
+      "reliability": "pending"
+    },
+    {
+      "title": "明代地方志与相关碑刻",
+      "source": "地方历史材料",
+      "url_or_path": "贵州 江西 浙江相关地方志碑刻",
+      "citation_note": "补充龙场经历 讲学和地方治理活动",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +160,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.833869Z",
-  "updated_at": "2026-09-14T17:06:07.833869Z",
+  "updated_at": "2026-09-16T10:01:48.968486Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-0c654c01442a9a0614e938bb",
+  "word": "折冲府",
+  "pinyin": "zhé chōng fǔ",
+  "gloss": "唐代管理和训练府兵的基层军事组织",
+  "era": "隋唐",
+  "category": "制度",
+  "examples": [
+    "本课结合“折冲府”说明唐代管理和训练府兵的基层军事组织。",
+    "讲解“折冲府”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L703"
+  ],
+  "source_refs": [
+    {
+      "title": "L703《均田制、租庸调制与府兵制》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L703.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l703-04.json\", \"member_sha256\": \"6640d381956d4f511da2e652871156797d0ecd3ed6d83ad2e8b8a26e5a6fd2f2\", \"source_id\": \"keyword-l703-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.324748Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

@@ -61,9 +61,72 @@
       "gloss": "清代广州获准与西方商人交易并承担管理责任的商人组织"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "弘历（乾隆帝）",
+      "role": "清朝皇帝",
+      "summary": "在位时期形成针对西方海商的广州一口通商",
+      "persona": "区分贸易管理和完全断绝联系",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "月港",
+      "region": "今福建漳州海澄一带",
+      "lat": null,
+      "lng": null,
+      "note": "隆庆开关后民间海外贸易港口",
+      "kind": "port"
+    },
+    {
+      "label": "广州",
+      "region": "今广东广州",
+      "lat": null,
+      "lng": null,
+      "note": "十八世纪西方海商主要贸易口岸",
+      "kind": "port"
+    },
+    {
+      "label": "宁波",
+      "region": "今浙江宁波",
+      "lat": null,
+      "lng": null,
+      "note": "清初开放的海关口岸之一",
+      "kind": "port"
+    },
+    {
+      "label": "台湾",
+      "region": "今台湾地区",
+      "lat": null,
+      "lng": null,
+      "note": "郑氏政权活动和清初海疆政策相关区域",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《明实录》海禁与倭寇记载",
+      "source": "官方编年史料",
+      "url_or_path": "《明实录》",
+      "citation_note": "记录明代海禁 沿海冲突和政策调整",
+      "reliability": "pending"
+    },
+    {
+      "title": "粤海关档案",
+      "source": "清代贸易档案",
+      "url_or_path": "清代粤海关档案",
+      "citation_note": "反映广州贸易 税收和外商管理",
+      "reliability": "pending"
+    },
+    {
+      "title": "广州十三行与外销品遗存",
+      "source": "城市与贸易材料",
+      "url_or_path": "广州十三行遗址及外销瓷等实物",
+      "citation_note": "展示一口通商下的市场和商品流动",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -115,7 +178,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.778143Z",
-  "updated_at": "2026-09-14T17:06:07.778143Z",
+  "updated_at": "2026-09-16T10:01:48.830996Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

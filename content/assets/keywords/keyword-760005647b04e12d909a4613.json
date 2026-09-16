@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-760005647b04e12d909a4613",
+  "word": "巨鹿之战",
+  "pinyin": "jù lù zhī zhàn",
+  "gloss": "公元前207年的反秦战争；项羽率军击败秦军主力",
+  "era": "秦汉",
+  "category": "事件",
+  "examples": [
+    "本课结合“巨鹿之战”说明公元前207年的反秦战争；项羽率军击败秦军主力。",
+    "讲解“巨鹿之战”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "项羽"
+  ],
+  "related_lessons": [
+    "L401"
+  ],
+  "source_refs": [
+    {
+      "title": "L401《秦亡与楚汉相争》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L401.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l401-02.json\", \"member_sha256\": \"eb78d385e436b62a3458b8718e2f5b1320003237595978a2efbb791058cc0af3\", \"source_id\": \"keyword-l401-02\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l401-02.json\", \"member_sha256\": \"eb78d385e436b62a3458b8718e2f5b1320003237595978a2efbb791058cc0af3\", \"source_id\": \"keyword-l401-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.559643Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

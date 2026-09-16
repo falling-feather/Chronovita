@@ -51,9 +51,79 @@
       "gloss": "日本和美洲白银经跨区域贸易流入中国的经济网络"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "利玛窦",
+      "role": "来华耶稣会士",
+      "summary": "通过语言 礼仪和知识交流进入晚明士人社会",
+      "persona": "同时呈现传教目的与文化适应",
+      "boundaries": []
+    },
+    {
+      "name": "徐光启",
+      "role": "明代学者和官员",
+      "summary": "与利玛窦合作翻译《几何原本》",
+      "persona": "突出中国学者对知识选择和转化的主动作用",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "澳门",
+      "region": "今澳门",
+      "lat": null,
+      "lng": null,
+      "note": "葡萄牙贸易和耶稣会士进入中国的重要节点",
+      "kind": "port"
+    },
+    {
+      "label": "肇庆",
+      "region": "今广东肇庆",
+      "lat": null,
+      "lng": null,
+      "note": "利玛窦在中国内地早期居住地区",
+      "kind": "city"
+    },
+    {
+      "label": "北京",
+      "region": "今北京",
+      "lat": null,
+      "lng": null,
+      "note": "利玛窦公元1601年进入的明朝都城",
+      "kind": "capital"
+    },
+    {
+      "label": "马尼拉",
+      "region": "今菲律宾马尼拉",
+      "lat": null,
+      "lng": null,
+      "note": "美洲白银与中国商品交换的重要港口",
+      "kind": "port"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《利玛窦中国札记》",
+      "source": "来华传教士记录",
+      "url_or_path": "《利玛窦中国札记》",
+      "citation_note": "记录利玛窦来华经历和对明代社会的观察",
+      "reliability": "pending"
+    },
+    {
+      "title": "《几何原本》明代译本",
+      "source": "翻译科技文献",
+      "url_or_path": "利玛窦 徐光启译《几何原本》",
+      "citation_note": "展示晚明数学术语和证明方法交流",
+      "reliability": "pending"
+    },
+    {
+      "title": "明代赋役与海外贸易档案",
+      "source": "财政贸易材料",
+      "url_or_path": "明代一条鞭法文书及马尼拉贸易记录",
+      "citation_note": "反映折银征税和跨太平洋白银流动",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +175,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.805370Z",
-  "updated_at": "2026-09-14T17:06:07.805370Z",
+  "updated_at": "2026-09-16T10:01:48.898748Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

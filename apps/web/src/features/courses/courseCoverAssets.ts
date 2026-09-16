@@ -50,6 +50,17 @@ export function isCourseCoverId(courseId: string): courseId is CourseCoverId {
   return COURSE_COVER_ID_SET.has(courseId);
 }
 
+const TEACHER_COURSE_COVERS: Record<string, CourseCoverId> = {
+  'C-qin-han': 'C-prequin-unify',
+  'C-qin-han-transition': 'C-qinhan-founding',
+  'C-tang': 'C-suitang-system',
+  'C-silk-road': 'C-suitang-tang',
+};
+
+export function resolveCourseCoverId(courseId: string): CourseCoverId | null {
+  return isCourseCoverId(courseId) ? courseId : TEACHER_COURSE_COVERS[courseId] ?? null;
+}
+
 export function courseCoverUrl(courseId: CourseCoverId, width: CourseCoverWidth, format: 'avif' | 'webp') {
   return publicAssetUrl(`${COURSE_COVER_ROOT}/${courseId}-${width}.${format}`);
 }

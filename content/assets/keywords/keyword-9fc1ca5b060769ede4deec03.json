@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-9fc1ca5b060769ede4deec03",
+  "word": "休养生息",
+  "pinyin": "xiū yǎng shēng xī",
+  "gloss": "汉初恢复社会生产的治理政策；强调减轻负担并稳定秩序",
+  "era": "秦汉",
+  "category": "思想",
+  "examples": [
+    "本课结合“休养生息”说明汉初恢复社会生产的治理政策；强调减轻负担并稳定秩序。",
+    "讲解“休养生息”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "刘恒（汉文帝）",
+    "刘启（汉景帝）"
+  ],
+  "related_lessons": [
+    "L402"
+  ],
+  "source_refs": [
+    {
+      "title": "L402《文景之治与汉武大一统》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L402.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l402-01.json\", \"member_sha256\": \"9fbba07fab0dee41662df9a2a76b69b1e8c70b0c12f3d7e471adac93978f3545\", \"source_id\": \"keyword-l402-01\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l402-01.json\", \"member_sha256\": \"9fbba07fab0dee41662df9a2a76b69b1e8c70b0c12f3d7e471adac93978f3545\", \"source_id\": \"keyword-l402-01\"}\n课时待关联或对应课文缺稿；本次保留素材，不生成旧课文或互动内容。",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.593798Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

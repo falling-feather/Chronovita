@@ -11,7 +11,7 @@
     "L202": "8740797749e2b00e353d1204239c91643099941dd4c96a36c72d3b679f13da94",
     "L203": "de3bc60a9f2cda43d9ac05599a9d6fbb0be6ccefcce6878df46a8f0f64408c1d"
   },
-  "text_checksum": "1c22159414c5aef296779f6a6a5dec7858bf514985593890ab3d4c06d7584fbd",
+  "text_checksum": "347c2ce1a7a7c785305db13d568d2c8f940608374e66cc6aebf165b5c95c0d3d",
   "lessons": [
     {
       "lesson_id": "L201",
@@ -74,6 +74,64 @@
           "pinyin": "rú jiā",
           "gloss": "由孔子学说发展而来的思想学派；重视学习 修养和社会责任"
         }
+      ],
+      "people": [
+        {
+          "name": "孔子",
+          "role": "春秋晚期思想家和教育家",
+          "summary": "通过讲学、问答和政治实践提出仁、礼及教育主张的思想家",
+          "persona": "重点说明孔子如何回应社会秩序变化；结合具体经历解释其思想",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "曲阜",
+          "region": "今山东曲阜一带",
+          "lat": null,
+          "lng": null,
+          "note": "鲁国重要城邑；与孔子的出生、讲学和活动传统相关",
+          "kind": "city"
+        },
+        {
+          "label": "鲁国",
+          "region": "今山东南部一带",
+          "lat": null,
+          "lng": null,
+          "note": "孔子所在的诸侯国；保留较多周礼传统",
+          "kind": "state"
+        },
+        {
+          "label": "周游列国路线",
+          "region": "今河南、安徽、江苏等地的部分区域",
+          "lat": null,
+          "lng": null,
+          "note": "孔子与弟子游历诸侯国并传播学说的传统路线",
+          "kind": "route"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《论语》",
+          "source": "传世文献",
+          "url_or_path": "《论语》",
+          "citation_note": "孔子及弟子问答、学习教育和仁礼思想的主要材料",
+          "reliability": "pending"
+        },
+        {
+          "title": "《史记·孔子世家》",
+          "source": "传世文献",
+          "url_or_path": "《史记·孔子世家》",
+          "citation_note": "记载孔子生平、从政经历、周游列国和弟子传承",
+          "reliability": "pending"
+        },
+        {
+          "title": "《礼记·中庸》",
+          "source": "传世文献",
+          "url_or_path": "《礼记·中庸》",
+          "citation_note": "保存后世对孔子及儒家思想的概括性表述；用于了解儒家传统的发展",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -127,6 +185,49 @@
           "pinyin": "dào dé jīng",
           "gloss": "保存老子思想的重要传世文献；由短章和譬喻组成"
         }
+      ],
+      "people": [
+        {
+          "name": "老子",
+          "role": "春秋时期思想家",
+          "summary": "从事物变化和政治生活出发提出道、无为等思想的道家人物",
+          "persona": "结合传世故事和思想文本说明其历史形象；避免把相关传说当作完整生平",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "楚国",
+          "region": "今湖北、湖南及周边地区",
+          "lat": null,
+          "lng": null,
+          "note": "春秋战国时期南方重要诸侯国；传统记载中的老子所属之国",
+          "kind": "state"
+        },
+        {
+          "label": "周王室",
+          "region": "今河南洛阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "传统故事中老子曾经任职的政治中心",
+          "kind": "political_center"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《道德经》",
+          "source": "传世文献",
+          "url_or_path": "《道德经》",
+          "citation_note": "保存道、无为、自然及政治处世思想的主要材料",
+          "reliability": "pending"
+        },
+        {
+          "title": "《史记·老子韩非列传》",
+          "source": "传世文献",
+          "url_or_path": "《史记·老子韩非列传》",
+          "citation_note": "保存老子生平传说及后世对其思想身份的记载",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -179,6 +280,57 @@
           "word": "《韩非子》",
           "pinyin": "hán fēi zǐ",
           "gloss": "保存韩非及法家论述的传世文献；多用政论 寓言和历史故事"
+        }
+      ],
+      "people": [
+        {
+          "name": "韩非",
+          "role": "战国末期思想家",
+          "summary": "从国家治理和君臣关系出发系统阐述法、术、势的法家思想家",
+          "persona": "重点解释法家思想回应的现实问题；同时呈现权力集中可能带来的社会压力",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "韩国",
+          "region": "今河南中部、山西南部一带",
+          "lat": null,
+          "lng": null,
+          "note": "战国时期国土较小的诸侯国；韩非的政治活动与其相关",
+          "kind": "state"
+        },
+        {
+          "label": "新郑",
+          "region": "今河南新郑一带",
+          "lat": null,
+          "lng": null,
+          "note": "战国时期韩国都城；可用于观察韩非所处的政治环境",
+          "kind": "capital"
+        },
+        {
+          "label": "秦国",
+          "region": "今陕西关中及周边地区",
+          "lat": null,
+          "lng": null,
+          "note": "韩非出使并最终死于其中的强国；后来吸收法家治理方式",
+          "kind": "state"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《韩非子》",
+          "source": "传世文献",
+          "url_or_path": "《韩非子》",
+          "citation_note": "法、术、势及以法治国思想的主要材料；含有政论和寓言",
+          "reliability": "pending"
+        },
+        {
+          "title": "《史记·老子韩非列传》",
+          "source": "传世文献",
+          "url_or_path": "《史记·老子韩非列传》",
+          "citation_note": "保存韩非生平、出使秦国和身后遭遇的传统记载",
+          "reliability": "pending"
         }
       ]
     }

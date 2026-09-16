@@ -2103,8 +2103,10 @@ def _lesson_to_content_package(lesson: courses_data.Lesson) -> LessonContentPack
             for item in lesson.keywords
         ],
         people=[
-            content.PersonCard(name=name, role="", summary=f"{name} 与本课相关，待教师补充人物档案。")
-            for name in lesson.figures
+            content.PersonCard(**{
+                key: person[key] for key in content.PersonCard.model_fields if key in person
+            })
+            for person in lesson.people
         ],
         map_points=[content.MapPoint.model_validate(item) for item in lesson.map_points],
         source_refs=[content.SourceRef.model_validate(item) for item in lesson.source_refs],

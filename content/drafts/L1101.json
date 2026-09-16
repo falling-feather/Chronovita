@@ -46,9 +46,71 @@
       "gloss": "蒙古大汗的护卫和宫廷服务组织；成员与大汗关系密切"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "铁木真（成吉思汗）",
+      "role": "蒙古汗国建立者",
+      "summary": "统一蒙古各部并建立新的军事政治组织",
+      "persona": "结合个人行动与草原社会条件解释其崛起",
+      "boundaries": []
+    },
+    {
+      "name": "札木合",
+      "role": "蒙古草原首领",
+      "summary": "曾与铁木真结盟后成为主要竞争者",
+      "persona": "说明草原联盟关系会随权力竞争变化",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "斡难河上游",
+      "region": "今蒙古国东北部一带",
+      "lat": null,
+      "lng": null,
+      "note": "公元1206年蒙古大会相关地区",
+      "kind": "site"
+    },
+    {
+      "label": "蒙古高原",
+      "region": "今蒙古国及中国内蒙古部分地区",
+      "lat": null,
+      "lng": null,
+      "note": "蒙古各部统一的核心空间",
+      "kind": "region"
+    },
+    {
+      "label": "中都",
+      "region": "今北京",
+      "lat": null,
+      "lng": null,
+      "note": "金朝都城和蒙古对金战争重要目标",
+      "kind": "capital"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《蒙古秘史》",
+      "source": "蒙古历史文献",
+      "url_or_path": "《蒙古秘史》",
+      "citation_note": "保存铁木真早年和蒙古统一的历史记忆",
+      "reliability": "pending"
+    },
+    {
+      "title": "《元史·太祖本纪》",
+      "source": "传世史书",
+      "url_or_path": "《元史·太祖本纪》",
+      "citation_note": "记载成吉思汗统一和征战过程",
+      "reliability": "pending"
+    },
+    {
+      "title": "《史集》",
+      "source": "波斯文史书",
+      "url_or_path": "拉施特《史集》",
+      "citation_note": "从蒙古帝国西部保存王族和征战信息",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -95,7 +157,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.715671Z",
-  "updated_at": "2026-09-14T17:06:07.715671Z",
+  "updated_at": "2026-09-16T10:01:48.692490Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

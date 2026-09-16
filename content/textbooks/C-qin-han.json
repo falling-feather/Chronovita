@@ -11,7 +11,7 @@
     "L302": "d32f4dc4a994ecdd86e8b7abab4d040bc6925fe52d3e5d8717f06e862fa7d4b4",
     "L303": "da135f8fd85df2e8a539b9e9fbf236e2c817cbcaca3a50d675e14e18a8c341b1"
   },
-  "text_checksum": "23659e0006c01b520c256d66349fc4a877b01a9217aa240359706e5758dd899b",
+  "text_checksum": "5ca8d5109aa311c8508cc7bafd45ac063b8f4716150fda0bc6c55960e1fa4726",
   "lessons": [
     {
       "lesson_id": "L301",
@@ -58,6 +58,78 @@
           "word": "函谷关",
           "pinyin": "hán gǔ guān",
           "gloss": "关中通向东方的重要关隘；秦国防守和进取的地理通道"
+        }
+      ],
+      "people": [
+        {
+          "name": "苏秦",
+          "role": "战国时期纵横家",
+          "summary": "传统记载中游说六国合纵抗秦的外交人物",
+          "persona": "用于说明合纵的外交逻辑；标明其事迹主要依靠传世记载",
+          "boundaries": []
+        },
+        {
+          "name": "张仪",
+          "role": "战国时期纵横家",
+          "summary": "传统记载中推动连横、分别与秦国交往的外交人物",
+          "persona": "用于说明连横如何利用诸侯之间的利益差异",
+          "boundaries": []
+        },
+        {
+          "name": "范雎",
+          "role": "战国时期秦国大臣",
+          "summary": "传统记载中与秦国远交近攻方针相关的政治人物",
+          "persona": "说明外交策略与秦国地理和军事条件之间的联系",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "函谷关",
+          "region": "今河南灵宝一带",
+          "lat": null,
+          "lng": null,
+          "note": "秦国关中通向东方的重要关隘；连接战争和外交格局",
+          "kind": "pass"
+        },
+        {
+          "label": "关中",
+          "region": "今陕西中部一带",
+          "lat": null,
+          "lng": null,
+          "note": "秦国核心区域；地形和农业条件支持其长期竞争",
+          "kind": "region"
+        },
+        {
+          "label": "临淄",
+          "region": "今山东淄博一带",
+          "lat": null,
+          "lng": null,
+          "note": "齐国都城；战国东方强国的政治中心",
+          "kind": "capital"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《战国策》",
+          "source": "传世文献",
+          "url_or_path": "《战国策》",
+          "citation_note": "保存苏秦、张仪等纵横家游说和诸侯外交的传统记载",
+          "reliability": "pending"
+        },
+        {
+          "title": "《史记·范雎蔡泽列传》",
+          "source": "传世文献",
+          "url_or_path": "《史记·范雎蔡泽列传》",
+          "citation_note": "保存范雎经历及远交近攻相关的传统叙述",
+          "reliability": "pending"
+        },
+        {
+          "title": "《史记·六国年表》",
+          "source": "传世文献",
+          "url_or_path": "《史记·六国年表》",
+          "citation_note": "用于梳理战国诸侯国之间的战争和政治变化",
+          "reliability": "pending"
         }
       ]
     },
@@ -107,6 +179,78 @@
           "word": "秦国军队",
           "pinyin": "qín guó jūn duì",
           "gloss": "秦国用于统一战争的军事力量；依靠动员 后勤和持续作战"
+        }
+      ],
+      "people": [
+        {
+          "name": "嬴政（秦始皇）",
+          "role": "战国末期秦国国君",
+          "summary": "在战国末期掌握秦国政权并发动统一战争的君主",
+          "persona": "重点说明个人决策与秦国长期国力、制度和战争条件之间的关系",
+          "boundaries": []
+        },
+        {
+          "name": "王翦",
+          "role": "秦国将领",
+          "summary": "在灭楚战争中主持秦军、以持久作战取胜的将领",
+          "persona": "用于说明统一战争对兵力、后勤和稳健战略的要求",
+          "boundaries": []
+        },
+        {
+          "name": "李信",
+          "role": "秦国将领",
+          "summary": "早期进攻楚国并遭遇挫败的秦国将领",
+          "persona": "与王翦的不同策略形成对照；突出战争准备的重要性",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "邯郸",
+          "region": "今河北邯郸一带",
+          "lat": null,
+          "lng": null,
+          "note": "赵国都城；秦军东进过程中攻占的重要城市",
+          "kind": "capital"
+        },
+        {
+          "label": "寿春",
+          "region": "今安徽寿县一带",
+          "lat": null,
+          "lng": null,
+          "note": "战国末期楚国都城；灭楚战争的重要目标",
+          "kind": "capital"
+        },
+        {
+          "label": "临淄",
+          "region": "今山东淄博一带",
+          "lat": null,
+          "lng": null,
+          "note": "齐国都城；秦灭六国的最后重要目标",
+          "kind": "capital"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《史记·秦始皇本纪》",
+          "source": "传世文献",
+          "url_or_path": "《史记·秦始皇本纪》",
+          "citation_note": "记载秦王嬴政亲政、灭六国和完成统一的传统叙述",
+          "reliability": "pending"
+        },
+        {
+          "title": "《史记·白起王翦列传》",
+          "source": "传世文献",
+          "url_or_path": "《史记·白起王翦列传》",
+          "citation_note": "记载王翦灭楚及秦国将领相关事迹",
+          "reliability": "pending"
+        },
+        {
+          "title": "《战国策》",
+          "source": "传世文献",
+          "url_or_path": "《战国策》",
+          "citation_note": "保存战国诸侯外交、战争和游说活动的相关记载",
+          "reliability": "pending"
         }
       ]
     },
@@ -160,6 +304,64 @@
           "word": "里耶秦简",
           "pinyin": "lǐ yē qín jiǎn",
           "gloss": "湖南里耶出土的秦代简牍；保存县级行政和日常事务文书"
+        }
+      ],
+      "people": [
+        {
+          "name": "嬴政（秦始皇）",
+          "role": "战国末期秦国国君",
+          "summary": "在战国末期掌握秦国政权并发动统一战争的君主",
+          "persona": "重点说明个人决策与秦国长期国力、制度和战争条件之间的关系",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "咸阳",
+          "region": "今陕西咸阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "秦朝都城；统一政权发布政令和调度资源的重要中心",
+          "kind": "capital"
+        },
+        {
+          "label": "里耶",
+          "region": "今湖南龙山县里耶镇一带",
+          "lat": null,
+          "lng": null,
+          "note": "里耶秦简出土地；反映秦代县级行政运行",
+          "kind": "site"
+        },
+        {
+          "label": "驰道网络",
+          "region": "连接咸阳与关东及边地的道路系统",
+          "lat": null,
+          "lng": null,
+          "note": "秦朝连接都城、地方和军事区域的交通设施",
+          "kind": "route"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《史记·秦始皇本纪》",
+          "source": "传世文献",
+          "url_or_path": "《史记·秦始皇本纪》",
+          "citation_note": "记载秦统一后帝号、郡县和统一措施的传统叙述",
+          "reliability": "pending"
+        },
+        {
+          "title": "里耶秦简",
+          "source": "考古出土文字材料",
+          "url_or_path": "里耶秦简",
+          "citation_note": "保存秦代县级行政文书；用于观察制度的日常运行",
+          "reliability": "pending"
+        },
+        {
+          "title": "睡虎地秦简",
+          "source": "考古出土文字材料",
+          "url_or_path": "睡虎地秦简",
+          "citation_note": "保存秦代法律和行政相关简牍；用于了解国家管理规范",
+          "reliability": "pending"
         }
       ]
     }

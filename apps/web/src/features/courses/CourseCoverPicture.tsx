@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import {
   COURSE_COVER_META,
   courseCoverUrl,
-  isCourseCoverId,
+  resolveCourseCoverId,
   type CourseCoverWidth,
 } from './courseCoverAssets';
 
@@ -21,7 +21,8 @@ export default function CourseCoverPicture({
   className = '',
   fallbackColor = '#5d665f',
 }: CourseCoverPictureProps) {
-  if (!isCourseCoverId(courseId)) {
+  const coverId = resolveCourseCoverId(courseId);
+  if (!coverId) {
     return (
       <span
         className={`chrono-course-cover-fallback ${className}`.trim()}
@@ -32,14 +33,14 @@ export default function CourseCoverPicture({
   }
 
   const height = Math.round((width * 9) / 16);
-  const style = { '--course-cover-focus': COURSE_COVER_META[courseId].focus } as CSSProperties;
+  const style = { '--course-cover-focus': COURSE_COVER_META[coverId].focus } as CSSProperties;
 
   return (
     <picture className={`chrono-course-cover-picture ${className}`.trim()} style={style} aria-hidden="true">
-      <source srcSet={courseCoverUrl(courseId, width, 'avif')} type="image/avif" />
-      <source srcSet={courseCoverUrl(courseId, width, 'webp')} type="image/webp" />
+      <source srcSet={courseCoverUrl(coverId, width, 'avif')} type="image/avif" />
+      <source srcSet={courseCoverUrl(coverId, width, 'webp')} type="image/webp" />
       <img
-        src={courseCoverUrl(courseId, width, 'webp')}
+        src={courseCoverUrl(coverId, width, 'webp')}
         alt=""
         width={width}
         height={height}

@@ -39,11 +39,11 @@
       "reliability": "pending"
     }
   ],
-  "teacher_notes": "\n\n同步来源：falling-feather/Chronovita-Course-Content PR #132；commit 92197111f402410a519d5b48e26056ef4b9f5e7f；源 ID keyword-l105-04；源 checksum 205b09802c3281d2d47eeb27f0f6bc90ebdac62ea67a63e979dd9980e32ae093。",
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l105-04.json\", \"member_sha256\": \"6a4f06169cfb283c656eb58729f37ffe8b71c81d56a5f3173f27f0162c77b9ce\", \"source_id\": \"keyword-l105-04\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l105-04.json\", \"member_sha256\": \"6a4f06169cfb283c656eb58729f37ffe8b71c81d56a5f3173f27f0162c77b9ce\", \"source_id\": \"keyword-l105-04\"}",
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T13:36:29.390884Z",
-  "updated_at": "2026-09-14T19:06:40.785777Z",
+  "updated_at": "2026-09-16T09:49:53.040126Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

@@ -6,9 +6,16 @@ import {
   COURSE_COVER_META,
   courseCoverUrl,
   isCourseCoverId,
+  resolveCourseCoverId,
 } from './courseCoverAssets';
 
 describe('course cover assets', () => {
+  it('maps teacher course identities to the matching historical theme', () => {
+    expect(resolveCourseCoverId('C-qin-han')).toBe('C-prequin-unify');
+    expect(resolveCourseCoverId('C-tang')).toBe('C-suitang-system');
+    expect(resolveCourseCoverId('C-silk-road')).toBe('C-suitang-tang');
+    expect(resolveCourseCoverId('unknown')).toBeNull();
+  });
   it('binds exactly one cover identity to each current course', () => {
     expect(COURSE_COVER_IDS).toHaveLength(15);
     expect(new Set(COURSE_COVER_IDS).size).toBe(15);

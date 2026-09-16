@@ -56,9 +56,64 @@
       "gloss": "湖南里耶出土的秦代简牍；保存县级行政和日常事务文书"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "嬴政（秦始皇）",
+      "role": "战国末期秦国国君",
+      "summary": "在战国末期掌握秦国政权并发动统一战争的君主",
+      "persona": "重点说明个人决策与秦国长期国力、制度和战争条件之间的关系",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "咸阳",
+      "region": "今陕西咸阳一带",
+      "lat": null,
+      "lng": null,
+      "note": "秦朝都城；统一政权发布政令和调度资源的重要中心",
+      "kind": "capital"
+    },
+    {
+      "label": "里耶",
+      "region": "今湖南龙山县里耶镇一带",
+      "lat": null,
+      "lng": null,
+      "note": "里耶秦简出土地；反映秦代县级行政运行",
+      "kind": "site"
+    },
+    {
+      "label": "驰道网络",
+      "region": "连接咸阳与关东及边地的道路系统",
+      "lat": null,
+      "lng": null,
+      "note": "秦朝连接都城、地方和军事区域的交通设施",
+      "kind": "route"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《史记·秦始皇本纪》",
+      "source": "传世文献",
+      "url_or_path": "《史记·秦始皇本纪》",
+      "citation_note": "记载秦统一后帝号、郡县和统一措施的传统叙述",
+      "reliability": "pending"
+    },
+    {
+      "title": "里耶秦简",
+      "source": "考古出土文字材料",
+      "url_or_path": "里耶秦简",
+      "citation_note": "保存秦代县级行政文书；用于观察制度的日常运行",
+      "reliability": "pending"
+    },
+    {
+      "title": "睡虎地秦简",
+      "source": "考古出土文字材料",
+      "url_or_path": "睡虎地秦简",
+      "citation_note": "保存秦代法律和行政相关简牍；用于了解国家管理规范",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -110,7 +165,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.940260Z",
-  "updated_at": "2026-09-14T17:06:07.940260Z",
+  "updated_at": "2026-09-16T10:01:49.215090Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

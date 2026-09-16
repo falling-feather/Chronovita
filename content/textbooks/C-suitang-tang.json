@@ -10,7 +10,7 @@
     "L801": "3ecd8d588f40fc20ed2d089762de7c4fabb24b0f5df1185a5473adea4a86fc2f",
     "L802": "600411f15ba2256d4ef2a798238c108de6bcb9e036ae5aea71362158040f8b64"
   },
-  "text_checksum": "5ec7150958eb87b675c3f4ed09264e463b40b9155b32cf5a73bb891570543d4a",
+  "text_checksum": "b26dcb8084dd0d6d38c45dcbcd8f6869536a45e54073c0a5239be4b3d8f65e2c",
   "lessons": [
     {
       "lesson_id": "L801",
@@ -67,6 +67,78 @@
           "word": "《贞观政要》",
           "pinyin": "zhēn guān zhèng yào",
           "gloss": "唐代吴兢编纂的政治文献；记录贞观君臣问答和治国经验"
+        }
+      ],
+      "people": [
+        {
+          "name": "唐太宗",
+          "role": "唐朝皇帝",
+          "summary": "推动唐初恢复并形成贞观政治",
+          "persona": "结合政变背景 政策选择和晚年问题全面认识",
+          "boundaries": []
+        },
+        {
+          "name": "魏征",
+          "role": "唐初大臣",
+          "summary": "多次向唐太宗提出批评和建议",
+          "persona": "用于理解纳谏的作用与君臣张力",
+          "boundaries": []
+        },
+        {
+          "name": "房玄龄",
+          "role": "唐初宰相",
+          "summary": "参与制定政令并协助处理中央政务",
+          "persona": "说明贞观政治依赖官僚群体",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "长安",
+          "region": "今陕西西安",
+          "lat": null,
+          "lng": null,
+          "note": "唐朝都城和玄武门之变发生地",
+          "kind": "capital"
+        },
+        {
+          "label": "漠南地区",
+          "region": "今内蒙古中部一带",
+          "lat": null,
+          "lng": null,
+          "note": "唐与东突厥交往和战争区域",
+          "kind": "region"
+        },
+        {
+          "label": "吐蕃",
+          "region": "青藏高原地区",
+          "lat": null,
+          "lng": null,
+          "note": "文成公主入藏和唐蕃交往相关地区",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《旧唐书·太宗本纪》",
+          "source": "传世史书",
+          "url_or_path": "《旧唐书·太宗本纪》",
+          "citation_note": "记载唐太宗即位 政策和边疆活动",
+          "reliability": "pending"
+        },
+        {
+          "title": "《贞观政要》",
+          "source": "政治文献",
+          "url_or_path": "《贞观政要》",
+          "citation_note": "记录贞观君臣讨论并总结治国经验",
+          "reliability": "pending"
+        },
+        {
+          "title": "唐初墓志与诏令材料",
+          "source": "文字材料",
+          "url_or_path": "唐初墓志 诏令及相关文书",
+          "citation_note": "补充官员经历和制度运行信息",
+          "reliability": "pending"
         }
       ]
     },
@@ -125,6 +197,78 @@
           "word": "开元盛世",
           "pinyin": "kāi yuán shèng shì",
           "gloss": "唐玄宗开元年间政治较稳定和经济文化繁荣的局面"
+        }
+      ],
+      "people": [
+        {
+          "name": "武则天",
+          "role": "武周皇帝",
+          "summary": "由参政到称帝并扩大人才选拔",
+          "persona": "结合政治能力 权力斗争和史书立场综合评价",
+          "boundaries": []
+        },
+        {
+          "name": "唐玄宗",
+          "role": "唐朝皇帝",
+          "summary": "开元前期整顿政治并推动盛世形成",
+          "persona": "区分统治前后期的不同表现",
+          "boundaries": []
+        },
+        {
+          "name": "姚崇",
+          "role": "开元宰相",
+          "summary": "参与裁减冗官和整顿吏治",
+          "persona": "说明盛世形成依靠官僚群体和制度运行",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "洛阳",
+          "region": "今河南洛阳",
+          "lat": null,
+          "lng": null,
+          "note": "武周时期的重要政治中心",
+          "kind": "capital"
+        },
+        {
+          "label": "长安",
+          "region": "今陕西西安",
+          "lat": null,
+          "lng": null,
+          "note": "唐玄宗时期主要都城和政治文化中心",
+          "kind": "capital"
+        },
+        {
+          "label": "扬州",
+          "region": "今江苏扬州",
+          "lat": null,
+          "lng": null,
+          "note": "开元时期繁荣的运河商业城市",
+          "kind": "city"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《旧唐书·则天皇后本纪》",
+          "source": "传世史书",
+          "url_or_path": "《旧唐书·则天皇后本纪》",
+          "citation_note": "记载武则天参政 称帝和政策活动",
+          "reliability": "pending"
+        },
+        {
+          "title": "《资治通鉴》唐纪",
+          "source": "编年史书",
+          "url_or_path": "《资治通鉴》唐纪",
+          "citation_note": "记录武周至开元时期政治事件",
+          "reliability": "pending"
+        },
+        {
+          "title": "唐代墓志与城市遗址",
+          "source": "考古材料",
+          "url_or_path": "洛阳 长安地区唐代墓志与遗址",
+          "citation_note": "补充官员经历 人口流动和城市生活信息",
+          "reliability": "pending"
         }
       ]
     }

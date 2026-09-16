@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-dbbdb25bb4b1cee6e493f34f",
+  "word": "马尼拉大帆船",
+  "pinyin": "mǎ ní lā dà fān chuán",
+  "gloss": "往返美洲与菲律宾的西班牙贸易船队；运送白银和亚洲商品",
+  "era": "明清",
+  "category": "技术",
+  "examples": [
+    "本课结合“马尼拉大帆船”说明往返美洲与菲律宾的西班牙贸易船队；运送白银和亚洲商品。",
+    "讲解“马尼拉大帆船”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L1302"
+  ],
+  "source_refs": [
+    {
+      "title": "L1302《耶稣会士与白银贸易》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1302.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1302-04.json\", \"member_sha256\": \"7b42a6d87b75a7d9cb8858dd4a5e77698fac731ebc4568ac1110121cbf9e3179\", \"source_id\": \"keyword-l1302-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.454105Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

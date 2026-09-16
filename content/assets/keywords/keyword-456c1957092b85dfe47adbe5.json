@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-456c1957092b85dfe47adbe5",
+  "word": "中国同盟会",
+  "pinyin": "zhōng guó tóng méng huì",
+  "gloss": "公元1905年在东京成立的革命组织；联合多个反清革命团体",
+  "era": "明清",
+  "category": "群体",
+  "examples": [
+    "本课结合“中国同盟会”说明公元1905年在东京成立的革命组织；联合多个反清革命团体。",
+    "讲解“中国同盟会”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "孙中山"
+  ],
+  "related_lessons": [
+    "L1503"
+  ],
+  "source_refs": [
+    {
+      "title": "L1503《洋务运动、甲午战争与辛亥革命》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1503.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1503-08.json\", \"member_sha256\": \"b161a284d722fb0b6b17937e91ee929e454c3b4c8ab29dc063e44c951023b539\", \"source_id\": \"keyword-l1503-08\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.992640Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

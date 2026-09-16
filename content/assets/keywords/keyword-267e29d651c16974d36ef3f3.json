@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-267e29d651c16974d36ef3f3",
+  "word": "驰道",
+  "pinyin": "chí dào",
+  "gloss": "秦朝修筑的国家道路；用于军事 行政和物资运输",
+  "era": "秦汉",
+  "category": "技术",
+  "examples": [
+    "本课结合“驰道”说明秦朝修筑的国家道路；用于军事 行政和物资运输。",
+    "讲解“驰道”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "嬴政（秦始皇）"
+  ],
+  "related_lessons": [
+    "L303"
+  ],
+  "source_refs": [
+    {
+      "title": "L303《郡县制与书同文车同轨》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L303.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l303-06.json\", \"member_sha256\": \"8bd23a050ca97219149fc87e221dec6e57766f3d6b42364142ed9bf629ca719e\", \"source_id\": \"keyword-l303-06\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l303-06.json\", \"member_sha256\": \"8bd23a050ca97219149fc87e221dec6e57766f3d6b42364142ed9bf629ca719e\", \"source_id\": \"keyword-l303-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.527058Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

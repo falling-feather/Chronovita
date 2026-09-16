@@ -51,9 +51,71 @@
       "gloss": "王夫之评论历代政治和历史变化的著作"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "顾炎武",
+      "role": "明清之际学者",
+      "summary": "以实地考察和文献辨析研究制度与社会",
+      "persona": "突出经世责任与严谨方法结合",
+      "boundaries": []
+    },
+    {
+      "name": "王夫之",
+      "role": "明清之际思想家",
+      "summary": "从气的变化和历史条件讨论哲学与政治",
+      "persona": "联系南明经历和隐居著述理解思想",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "昆山",
+      "region": "今江苏昆山",
+      "lat": null,
+      "lng": null,
+      "note": "顾炎武故乡和早年活动地区",
+      "kind": "city"
+    },
+    {
+      "label": "华北地区",
+      "region": "今河北 山西 山东等地",
+      "lat": null,
+      "lng": null,
+      "note": "顾炎武长期游历和实地考察区域",
+      "kind": "region"
+    },
+    {
+      "label": "衡阳",
+      "region": "今湖南衡阳",
+      "lat": null,
+      "lng": null,
+      "note": "王夫之隐居著述和船山学术形成地区",
+      "kind": "city"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《日知录》",
+      "source": "学术笔记",
+      "url_or_path": "顾炎武《日知录》",
+      "citation_note": "反映顾炎武经世 考据和社会责任思想",
+      "reliability": "pending"
+    },
+    {
+      "title": "《顾亭林诗文集》",
+      "source": "个人文集",
+      "url_or_path": "《顾亭林诗文集》",
+      "citation_note": "保存顾炎武生平 交往和抗清经历",
+      "reliability": "pending"
+    },
+    {
+      "title": "《船山遗书》",
+      "source": "思想著作汇编",
+      "url_or_path": "《船山遗书》",
+      "citation_note": "保存王夫之经学 哲学和历史著作",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +167,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.857261Z",
-  "updated_at": "2026-09-14T17:06:07.857261Z",
+  "updated_at": "2026-09-16T10:01:49.029621Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-b064e5d884396ba34aef0576",
+  "word": "白虎观会议",
+  "pinyin": "bái hǔ guān huì yì",
+  "gloss": "公元79年汉章帝主持的经学会议；讨论并协调五经解释",
+  "era": "秦汉",
+  "category": "事件",
+  "examples": [
+    "本课结合“白虎观会议”说明公元79年汉章帝主持的经学会议；讨论并协调五经解释。",
+    "讲解“白虎观会议”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "刘炟（汉章帝）"
+  ],
+  "related_lessons": [
+    "L502"
+  ],
+  "source_refs": [
+    {
+      "title": "L502《今古文经学与白虎观》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L502.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l502-05.json\", \"member_sha256\": \"d1d65b25505819b061ac16146cd7cda5da6e98207bdca6770a13e5c8a2087ca7\", \"source_id\": \"keyword-l502-05\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.853773Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

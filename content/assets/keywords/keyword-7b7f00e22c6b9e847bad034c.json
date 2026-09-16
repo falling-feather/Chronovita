@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-7b7f00e22c6b9e847bad034c",
+  "word": "以法治国",
+  "pinyin": "yǐ fǎ zhì guó",
+  "gloss": "以公开规则和赏罚治理国家；强调法令的统一执行",
+  "era": "先秦",
+  "category": "思想",
+  "examples": [
+    "本课结合“以法治国”说明以公开规则和赏罚治理国家；强调法令的统一执行。",
+    "讲解“以法治国”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "韩非"
+  ],
+  "related_lessons": [
+    "L203"
+  ],
+  "source_refs": [
+    {
+      "title": "L203《韩非与法家》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L203.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l203-06.json\", \"member_sha256\": \"9b5f1b585c79a2efd01b540a09a16f345fbea596df00da8da9abb432473d4c51\", \"source_id\": \"keyword-l203-06\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l203-06.json\", \"member_sha256\": \"9b5f1b585c79a2efd01b540a09a16f345fbea596df00da8da9abb432473d4c51\", \"source_id\": \"keyword-l203-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.320761Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

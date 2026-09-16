@@ -1,0 +1,58 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-3f04a64055b69e1ea434cdb6",
+  "word": "甲骨文",
+  "pinyin": "jiǎ gǔ wén",
+  "gloss": "商代晚期刻写在龟甲和兽骨上的文字；多用于记录占卜",
+  "era": "先秦",
+  "category": "文献",
+  "examples": [
+    "本课结合“甲骨文”说明商代晚期刻写在龟甲和兽骨上的文字；多用于记录占卜。",
+    "讲解“甲骨文”时，应联系本课叙事理解它在先秦历史中的作用。"
+  ],
+  "related_people": [
+    "盘庚",
+    "帝辛"
+  ],
+  "related_lessons": [
+    "L102"
+  ],
+  "source_refs": [
+    {
+      "title": "在甲骨文中触摸厚重历史",
+      "source": "中华人民共和国教育部",
+      "url_or_path": "https://www.moe.gov.cn/jyb_xwfb/s5147/201911/t20191104_406743.html",
+      "citation_note": "介绍甲骨文的名称、载体和占卜记录功能",
+      "reliability": "pending"
+    },
+    {
+      "title": "甲骨文研究的继往开来",
+      "source": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2019/1104/c219457-31435711.html",
+      "citation_note": "介绍殷墟甲骨文的内容及其对研究商代社会的价值",
+      "reliability": "pending"
+    },
+    {
+      "title": "安阳殷墟 幽微之处见文脉",
+      "source": "河南省文物局",
+      "url_or_path": "https://wwj.henan.gov.cn/2023/03-22/2711866.html",
+      "citation_note": "介绍殷墟、甲骨文和商代占卜活动",
+      "reliability": "pending"
+    },
+    {
+      "title": "司母戊大方鼎亮相河南安阳",
+      "source": "中华人民共和国文化和旅游部",
+      "url_or_path": "https://www.mct.gov.cn/whzx/tpxw/200509/t20050920_828201.htm",
+      "citation_note": "介绍后母戊鼎的形制、用途和铸造技术价值",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l102-06.json\", \"member_sha256\": \"08f6fec06f3920d834270efe7088097f83413f1b47e45b7bf33d4eb250fc70f9\", \"source_id\": \"keyword-l102-06\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l102-06.json\", \"member_sha256\": \"08f6fec06f3920d834270efe7088097f83413f1b47e45b7bf33d4eb250fc70f9\", \"source_id\": \"keyword-l102-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T13:36:29.107267Z",
+  "updated_at": "2026-09-16T09:49:52.841635Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

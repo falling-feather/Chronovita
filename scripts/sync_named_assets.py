@@ -7,49 +7,15 @@ import json
 import re
 import subprocess
 import sys
-import unicodedata
 from pathlib import Path
+from zipfile import ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from services import content  # noqa: E402
-
-
-def identity(name: str) -> str:
-    return re.sub(r"\s+", "", unicodedata.normalize("NFKC", name)).casefold()
-
-
-def asset_id(kind: str, name: str) -> str:
-    return kind + "-" + hashlib.sha256(identity(name).encode("utf-8")).hexdigest()[:24]
-
-
-def name_forms(name: str) -> set[str]:
-    normalized = identity(name)
-    return {normalized, *filter(None, re.split(r'[()]', normalized))}
-
-
-def person_lessons(name: str, names: dict[str, list[str]]) -> list[str]:
-    key = identity(name)
-    if key in names:
-        return names[key]
-    matches = [lessons for other, lessons in names.items()
-               if name_forms(name) & name_forms(other)]
-    return matches[0] if len(matches) == 1 else []
-
-
-def split_people(values: list[str], names: list[str]) -> list[str]:
-    known = {identity(name): name for name in names}
-    pattern = '|'.join(re.escape(key) for key in sorted(known, key=len, reverse=True))
-    result = []
-    for value in values:
-        normalized = identity(value)
-        matches = list(re.finditer(pattern, normalized)) if pattern else []
-        remainder = re.sub(pattern, '', normalized) if pattern else normalized
-        if matches and not remainder.strip('；;、,，/|'):
-            result.extend(known[match.group()] for match in matches)
-        else:
-            result.append(value.strip())
-    return list(dict.fromkeys(result))
+from services.content.asset_identity import (  # noqa: E402
+    identity, asset_id, person_lessons, split_people,
+)
 
 
 def git(checkout: Path, *args: str) -> str:
@@ -64,14 +30,149 @@ def documents(checkout: Path, commit: str, suffixes: tuple[str, ...]):
             for path in paths if path.endswith(suffixes)]
 
 
+def archive_profiles(paths: list[Path]) -> list[tuple[str, dict, dict]]:
+    """Read data only; never extract or execute archive contents."""
+    result = []
+    for path in paths:
+        archive_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+        with ZipFile(path) as bundle:
+            entries = [entry for entry in bundle.infolist() if not entry.is_dir()]
+            if len(entries) > 2000 or sum(e.file_size for e in entries) > 32 * 1024 * 1024:
+                raise ValueError(f"Archive exceeds import limits: {path.name}")
+            for entry in entries:
+                parts = entry.filename.replace("\\", "/").split("/")
+                if ".." in parts or entry.filename.startswith(("/", "\\")):
+                    raise ValueError(f"Unsafe archive member: {entry.filename}")
+                if not entry.filename.endswith(".json"):
+                    continue
+                raw = bundle.read(entry)
+                data = json.loads(raw.decode("utf-8-sig"))
+                kind = "person" if "name" in data else "keyword"
+                model = content.PersonProfilePackage if kind == "person" else content.KeywordProfilePackage
+                profile = model.model_validate(data)
+                if profile.status == "sealed" and not content.verify_package_checksum(profile):
+                    raise ValueError(f"Invalid source checksum: {entry.filename}")
+                result.append((kind, profile.model_dump(mode="json"), {
+                    "archive": path.name, "archive_sha256": archive_hash,
+                    "member": entry.filename, "member_sha256": hashlib.sha256(raw).hexdigest(),
+                    "source_id": profile.asset_id,
+                }))
+    return result
+
+
+def merge_archive_profiles(records: list[tuple[str, dict, dict]]) -> list[tuple[str, dict, list[dict]]]:
+    groups = {}
+    for kind, data, origin in records:
+        key = (kind, identity(data["name" if kind == "person" else "word"]))
+        groups.setdefault(key, []).append((data, origin))
+    merged = []
+    lifecycle = {"asset_id", "created_at", "updated_at", "sealed_at", "sealed_by",
+                 "checksum", "version", "status"}
+    list_fields = {"related_lessons", "related_people", "keywords", "source_refs"}
+    for (kind, _), versions in groups.items():
+        combined = dict(versions[0][0])
+        for data, _ in versions[1:]:
+            for field, value in data.items():
+                if field in lifecycle:
+                    continue
+                if field in {"name", "word"} and identity(combined[field]) == identity(value):
+                    continue
+                if field in list_fields:
+                    combined[field] = list(combined.get(field, []))
+                    for item in value:
+                        if item not in combined[field]:
+                            combined[field].append(item)
+                elif combined.get(field) != value:
+                    raise ValueError(f"Conflicting archive content: {combined.get('name', combined.get('word'))}/{field}")
+        merged.append((kind, combined, [origin for _, origin in versions]))
+    return merged
+
+
+def import_archives(paths: list[Path], checkout: Path, *, apply: bool = False) -> dict:
+    from services.courses.textbooks import load_textbooks
+
+    books = load_textbooks()
+    lesson_ids = {lesson.lesson_id for book in books.values() for lesson in book.lessons}
+    names = {}
+    for book in books.values():
+        for lesson in documents(checkout, book.source_commit, (".json",)):
+            if not {"lesson_id", "body", "unit", "version"} <= lesson.keys():
+                continue
+            if lesson["lesson_id"] not in lesson_ids:
+                continue
+            for person in lesson["people"]:
+                names.setdefault(identity(person["name"]), []).append(lesson["lesson_id"])
+    records = archive_profiles(paths)
+    existing = content.list_assets()
+    prepared = []
+    for kind, data, origins in merge_archive_profiles(records):
+        name = data["name" if kind == "person" else "word"]
+        matches = [item for item in existing if item.kind == kind and identity(item.title) == identity(name)]
+        if len(matches) > 1:
+            raise ValueError(f"Multiple existing assets: {name}")
+        target = matches[0].asset_id if matches else asset_id(kind, name)
+        if any(item.asset_id == target and item.kind == kind and identity(item.title) != identity(name)
+               for item in existing):
+            raise ValueError(f"Asset ID collision: {name}")
+        # Real missing lesson IDs are retained; placeholder IDs are not.
+        related = [value for value in data["related_lessons"] if re.fullmatch(r"L\d+", value)]
+        if kind == "person":
+            related = person_lessons(name, names)
+        related = sorted(set(related))
+        note = data["teacher_notes"] + "\n\n本地附件同步来源：\n" + "\n".join(
+            json.dumps(origin, ensure_ascii=False, sort_keys=True) for origin in origins
+        )
+        if not related or set(related) - lesson_ids:
+            note += "\n课时待关联或对应课文缺稿；本次保留素材，不生成旧课文或互动内容。"
+        values = dict(data, asset_id=target, related_lessons=related, teacher_notes=note,
+                      status="draft", version=0, checksum=None, sealed_at=None, sealed_by=None)
+        if kind == "person":
+            values["keywords"] = list(dict.fromkeys(
+                part.strip() for value in values["keywords"]
+                for part in re.split("[；;、\\n]", value) if part.strip()))
+        model = content.PersonProfilePackage if kind == "person" else content.KeywordProfilePackage
+        profile = model.model_validate(values)
+        prepared.append((kind, profile, {
+            "kind": kind, "name": name, "asset_id": target, "origins": origins,
+            "lessons": related, "missing_lessons": sorted(set(related) - lesson_ids),
+            "existed": bool(matches),
+        }))
+    person_names = list(dict.fromkeys(
+        [item.title for item in existing if item.kind == "person"]
+        + [profile.name for kind, profile, _ in prepared if kind == "person"]))
+    for kind, profile, row in prepared:
+        if kind == "keyword":
+            profile.related_people = split_people(profile.related_people, person_names)
+        getter = content.get_person_profile if kind == "person" else content.get_keyword_profile
+        current = getter(profile.asset_id)
+        ignored = {"created_at", "updated_at"}
+        row["changed"] = current is None or current.model_dump(exclude=ignored) != profile.model_dump(exclude=ignored)
+    if apply:
+        for kind, profile, row in prepared:
+            if row["changed"]:
+                saver = content.save_person_profile if kind == "person" else content.save_keyword_profile
+                saver(profile)
+    return {"source_records": len(records), "unique_assets": len(prepared),
+            "assets": [row for _, _, row in prepared]}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkout", type=Path, required=True)
-    parser.add_argument("--repository", required=True)
-    parser.add_argument("--course-pr", type=int, nargs='+', required=True)
-    parser.add_argument("--prs", type=int, nargs="+", required=True)
+    parser.add_argument("--repository")
+    parser.add_argument("--course-pr", type=int, nargs='+')
+    parser.add_argument("--prs", type=int, nargs="+")
+    parser.add_argument("--archives", type=Path, nargs="+")
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
+    if args.archives:
+        if args.prs or args.course_pr or args.repository:
+            parser.error("--archives cannot be combined with PR import arguments")
+        print(json.dumps(import_archives(args.archives, args.checkout, apply=args.apply),
+                         ensure_ascii=False, indent=2))
+        return
+    if not (args.repository and args.course_pr and args.prs):
+        parser.error("PR import requires --repository, --course-pr and --prs")
     course_docs = [d for number in args.course_pr
                    for d in documents(args.checkout, f'refs/remotes/origin/pr/{number}', ('.json',))
                    if 'lesson_id' in d and 'body' in d and 'unit' in d and 'version' in d]

@@ -57,7 +57,8 @@ def normalized(snapshot: dict) -> dict:
     lessons = [TextbookLesson(
         lesson_id=s.lesson_id, lesson_no=s.lesson_no, title=s.title.strip(),
         abstract=s.abstract.strip(), body=[p.replace("\r\n", "\n").strip() for p in s.body if p.strip()],
-        duration=s.duration, keywords=s.keywords,
+        duration=s.duration, keywords=s.keywords, people=s.people,
+        map_points=s.map_points, source_refs=s.source_refs,
     ).model_dump(mode="json") for s in sources]
     payload = dict(course_id=first.course_id, title=first.course_title,
                    era=first.era, era_id=first.era_id, section=first.section,

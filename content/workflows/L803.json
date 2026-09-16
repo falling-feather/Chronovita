@@ -3,15 +3,15 @@
   "lesson_id": "L803",
   "course_id": "C-silk-road",
   "state": "draft",
-  "revision": 1,
-  "draft_fingerprint": "e087d7701ac0dad74314492ef45b3f5e4a924559c392888462c0fa4a03f13e6a",
+  "revision": 2,
+  "draft_fingerprint": "b6693bcbcceee40efbca4548257aa2971abac65fa080a23493fedf722168feb2",
   "validation": null,
   "sealed_version": null,
   "sealed_checksum": null,
   "published_course_id": null,
   "published_version": null,
   "published_release_id": null,
-  "updated_at": "2026-09-14T17:06:07.624842Z",
+  "updated_at": "2026-09-16T10:01:48.481348Z",
   "history": [
     {
       "sequence": 1,
@@ -24,7 +24,19 @@
       "draft_fingerprint": "e087d7701ac0dad74314492ef45b3f5e4a924559c392888462c0fa4a03f13e6a",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T10:01:48.481348Z",
+      "draft_fingerprint": "b6693bcbcceee40efbca4548257aa2971abac65fa080a23493fedf722168feb2",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "1263ff86c26014322e5e55f92cf7994903d5f7762b0bcb9acf3c509d2c39cf39"
+  "checksum": "c567389bbf4788ae21341a602beb671d5a8a2a8b53b139b28c6beed1e7d1cbd5"
 }

@@ -10,7 +10,7 @@
     "L701": "76220b01848324ed6f762fb1f85c9c6d0e01831623dab1fd0d5dc653707cf292",
     "L703": "096596a4407429bddf390ffb593dcce48b7595c4920fbc9bb31c14aa7911a25f"
   },
-  "text_checksum": "0d9c4a9202c3dcdd1fa07891856c07d4fa229db97bd618cfcfa938e591e5b8d3",
+  "text_checksum": "73c3c46b2dea5df9bb023f91592f8cfd415708f2bbfffb39e67c62c47ce9b81a",
   "lessons": [
     {
       "lesson_id": "L701",
@@ -58,6 +58,86 @@
           "pinyin": "suí mò qǐ yì",
           "gloss": "隋朝末年各地反抗力量发动的起事；加速隋朝瓦解"
         }
+      ],
+      "people": [
+        {
+          "name": "杨坚（隋文帝）",
+          "role": "隋文帝",
+          "summary": "建立隋朝并完成南北统一",
+          "persona": "从制度整顿和社会恢复理解统一基础",
+          "boundaries": []
+        },
+        {
+          "name": "杨广（隋炀帝）",
+          "role": "隋炀帝",
+          "summary": "推动运河建设并多次发动战争",
+          "persona": "同时观察工程长期作用和当时社会负担",
+          "boundaries": []
+        },
+        {
+          "name": "李渊（唐高祖）",
+          "role": "唐朝建立者",
+          "summary": "隋末起兵并于公元618年建立唐朝",
+          "persona": "用于说明隋唐政权更替",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "大兴城",
+          "region": "今陕西西安",
+          "lat": null,
+          "lng": null,
+          "note": "隋朝都城和唐长安城基础",
+          "kind": "capital"
+        },
+        {
+          "label": "洛阳",
+          "region": "今河南洛阳",
+          "lat": null,
+          "lng": null,
+          "note": "隋炀帝营建的东都和运河交通中心",
+          "kind": "capital"
+        },
+        {
+          "label": "江都",
+          "region": "今江苏扬州",
+          "lat": null,
+          "lng": null,
+          "note": "隋炀帝晚年所在地区",
+          "kind": "city"
+        },
+        {
+          "label": "隋代大运河",
+          "region": "连接海河 黄河 淮河 长江 钱塘江水系",
+          "lat": null,
+          "lng": null,
+          "note": "南北漕运与交通网络",
+          "kind": "route"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《隋书》",
+          "source": "传世史书",
+          "url_or_path": "《隋书》",
+          "citation_note": "记载隋朝制度 工程 战争和政权兴亡",
+          "reliability": "pending"
+        },
+        {
+          "title": "隋唐长安城遗址",
+          "source": "考古遗址",
+          "url_or_path": "隋大兴唐长安城遗址",
+          "citation_note": "反映都城规划和城市规模",
+          "reliability": "pending"
+        },
+        {
+          "title": "大运河遗产与考古材料",
+          "source": "工程遗址",
+          "url_or_path": "隋唐大运河相关河段和遗址",
+          "citation_note": "用于认识河道走向 建设过程和长期使用",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -100,6 +180,64 @@
           "word": "兵农合一",
           "pinyin": "bīng nóng hé yī",
           "gloss": "士兵平时从事农业生产并按期服役的组织特点"
+        }
+      ],
+      "people": [
+        {
+          "name": "宇文泰",
+          "role": "西魏实际掌权者",
+          "summary": "推动府兵组织形成",
+          "persona": "说明府兵制经历长期发展",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "关中",
+          "region": "今陕西中部一带",
+          "lat": null,
+          "lng": null,
+          "note": "西魏北周府兵发展和唐前期政治中心地区",
+          "kind": "region"
+        },
+        {
+          "label": "敦煌",
+          "region": "今甘肃敦煌",
+          "lat": null,
+          "lng": null,
+          "note": "出土唐代户籍和赋役文书的重要地区",
+          "kind": "site"
+        },
+        {
+          "label": "吐鲁番",
+          "region": "今新疆吐鲁番",
+          "lat": null,
+          "lng": null,
+          "note": "出土高昌和唐代土地户籍文书的重要地区",
+          "kind": "site"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《唐六典》田赋与兵制记载",
+          "source": "制度文献",
+          "url_or_path": "《唐六典》",
+          "citation_note": "记载唐代土地 赋役和府兵管理制度",
+          "reliability": "pending"
+        },
+        {
+          "title": "敦煌吐鲁番户籍与手实",
+          "source": "出土文字材料",
+          "url_or_path": "敦煌吐鲁番出土文书",
+          "citation_note": "记录家庭人口 土地和赋役承担情况",
+          "reliability": "pending"
+        },
+        {
+          "title": "唐代折冲府相关墓志",
+          "source": "考古文字材料",
+          "url_or_path": "唐代墓志与府兵资料",
+          "citation_note": "补充府兵身份和服役经历",
+          "reliability": "pending"
         }
       ]
     }

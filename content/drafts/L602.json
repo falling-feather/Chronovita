@@ -46,9 +46,63 @@
       "gloss": "魏晋士人重视个性 精神自由和人物气质的文化风貌"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "王弼",
+      "role": "曹魏玄学家",
+      "summary": "重新注释《老子》和《周易》",
+      "persona": "通过有无与本末问题理解玄学思考",
+      "boundaries": []
+    },
+    {
+      "name": "嵇康",
+      "role": "文学家和思想家",
+      "summary": "以文章 音乐和人生选择表达对自然的重视",
+      "persona": "联系政治风险理解拒绝仕途的选择",
+      "boundaries": []
+    },
+    {
+      "name": "阮籍",
+      "role": "诗人和名士",
+      "summary": "以含蓄方式表达乱世中的忧惧",
+      "persona": "避免把文学形象等同于全部历史事实",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "洛阳",
+      "region": "今河南洛阳",
+      "lat": null,
+      "lng": null,
+      "note": "曹魏和西晋政治文化中心",
+      "kind": "capital"
+    },
+    {
+      "label": "山阳",
+      "region": "今河南焦作一带",
+      "lat": null,
+      "lng": null,
+      "note": "后世竹林七贤故事联系的地区",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《三国志》及裴松之注",
+      "source": "传世史书",
+      "url_or_path": "《三国志》及裴松之注",
+      "citation_note": "保存魏晋人物经历和多种早期记载",
+      "reliability": "pending"
+    },
+    {
+      "title": "《世说新语》",
+      "source": "志人小说",
+      "url_or_path": "《世说新语》",
+      "citation_note": "记录魏晋人物言谈和文化形象；具有文学加工特点",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -95,7 +149,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.555022Z",
-  "updated_at": "2026-09-14T17:06:07.555022Z",
+  "updated_at": "2026-09-16T10:01:49.280839Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

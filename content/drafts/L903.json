@@ -66,9 +66,72 @@
       "gloss": "来自中亚粟特地区的商人群体；活跃于唐代长安及丝绸之路贸易"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "阿倍仲麻吕",
+      "role": "日本遣唐留学生和唐朝官员",
+      "summary": "长期留居唐朝并以晁衡之名任官",
+      "persona": "用于说明跨国学习和个人迁徙",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "长安",
+      "region": "今陕西西安",
+      "lat": null,
+      "lng": null,
+      "note": "唐代政治中心和丝绸之路东端重要城市",
+      "kind": "capital"
+    },
+    {
+      "label": "撒马尔罕",
+      "region": "今乌兹别克斯坦撒马尔罕",
+      "lat": null,
+      "lng": null,
+      "note": "粟特地区重要城市和陆路交通节点",
+      "kind": "city"
+    },
+    {
+      "label": "广州",
+      "region": "今广东广州",
+      "lat": null,
+      "lng": null,
+      "note": "唐代海上贸易重要港口",
+      "kind": "port"
+    },
+    {
+      "label": "奈良",
+      "region": "今日本奈良",
+      "lat": null,
+      "lng": null,
+      "note": "遣唐使往来和吸收唐文化的重要地区",
+      "kind": "city"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "大秦景教流行中国碑",
+      "source": "碑刻文字材料",
+      "url_or_path": "西安碑林藏大秦景教流行中国碑",
+      "citation_note": "记录景教群体对入唐和传播过程的自述",
+      "reliability": "pending"
+    },
+    {
+      "title": "唐长安城考古遗址",
+      "source": "城市考古材料",
+      "url_or_path": "隋大兴唐长安城遗址",
+      "citation_note": "反映都城道路 坊市和建筑布局",
+      "reliability": "pending"
+    },
+    {
+      "title": "唐代粟特墓葬与墓志",
+      "source": "考古材料",
+      "url_or_path": "西安 太原等地粟特人墓葬与墓志",
+      "citation_note": "反映外来人口生活 身份和宗教文化",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -120,7 +183,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.659067Z",
-  "updated_at": "2026-09-14T17:06:07.659067Z",
+  "updated_at": "2026-09-16T10:01:48.559669Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

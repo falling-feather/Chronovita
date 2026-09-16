@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-45fb2471c8b3a242d153695a",
+  "word": "本纪",
+  "pinyin": "běn jì",
+  "gloss": "《史记》中按年代记述帝王大事的篇章类别",
+  "era": "秦汉",
+  "category": "文献",
+  "examples": [
+    "本课结合“本纪”说明《史记》中按年代记述帝王大事的篇章类别。",
+    "讲解“本纪”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "司马迁",
+    "班固"
+  ],
+  "related_lessons": [
+    "L501"
+  ],
+  "source_refs": [
+    {
+      "title": "L501《司马迁与《史记》》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L501.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l501-03.json\", \"member_sha256\": \"23bc04c1c703b4b1cfb5e1b65f57405b0c3ece48675707139db04005079beed9\", \"source_id\": \"keyword-l501-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.764212Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

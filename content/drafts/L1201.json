@@ -51,9 +51,63 @@
       "gloss": "明代皇帝或司礼监依皇帝意旨对奏章作出正式批示的程序"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "朱元璋（明太祖）",
+      "role": "明太祖",
+      "summary": "建立明朝并通过废相集中中央权力",
+      "persona": "联系元末经历和官僚控制理解制度选择",
+      "boundaries": []
+    },
+    {
+      "name": "胡惟庸",
+      "role": "明初丞相",
+      "summary": "因专权和谋反指控被处死并引发大案",
+      "persona": "区分官方罪状与可以确认的制度结果",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "南京",
+      "region": "今江苏南京",
+      "lat": null,
+      "lng": null,
+      "note": "明初都城和胡惟庸案发生的政治中心",
+      "kind": "capital"
+    },
+    {
+      "label": "北京",
+      "region": "今北京",
+      "lat": null,
+      "lng": null,
+      "note": "明成祖迁都后内阁运作的中心",
+      "kind": "capital"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《明太祖实录》",
+      "source": "官方编年史料",
+      "url_or_path": "《明太祖实录》",
+      "citation_note": "记载胡惟庸案和明初中央机构调整",
+      "reliability": "pending"
+    },
+    {
+      "title": "《明史·胡惟庸传》",
+      "source": "传世史书",
+      "url_or_path": "《明史·胡惟庸传》",
+      "citation_note": "汇总胡惟庸经历和案件叙述",
+      "reliability": "pending"
+    },
+    {
+      "title": "明代奏章与会典材料",
+      "source": "制度文献",
+      "url_or_path": "《大明会典》及明代奏章",
+      "citation_note": "反映内阁票拟和中央政务程序",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +159,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.755376Z",
-  "updated_at": "2026-09-14T17:06:07.755376Z",
+  "updated_at": "2026-09-16T10:01:48.774214Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

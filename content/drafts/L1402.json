@@ -51,9 +51,78 @@
       "gloss": "关注社会现实并希望用学问改善国家治理和百姓生活的思想倾向"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "黄宗羲",
+      "role": "明清之际思想家",
+      "summary": "从明亡经验反思君主制度和公共治理",
+      "persona": "在十七世纪儒家语境中理解其政治批判",
+      "boundaries": []
+    },
+    {
+      "name": "黄尊素",
+      "role": "明末东林党官员",
+      "summary": "因反对魏忠贤受到迫害并影响黄宗羲经历",
+      "persona": "用于说明家庭遭遇与思想形成关系",
+      "boundaries": []
+    },
+    {
+      "name": "魏忠贤",
+      "role": "明末宦官",
+      "summary": "掌权期间打击东林官员并加剧政治冲突",
+      "persona": "避免把明亡全部归结为单一人物",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "余姚",
+      "region": "今浙江余姚",
+      "lat": null,
+      "lng": null,
+      "note": "黄宗羲故乡和学术活动地区",
+      "kind": "city"
+    },
+    {
+      "label": "东林书院",
+      "region": "今江苏无锡",
+      "lat": null,
+      "lng": null,
+      "note": "明末讲学和政治议论的重要场所",
+      "kind": "site"
+    },
+    {
+      "label": "宁波地区",
+      "region": "今浙江宁波一带",
+      "lat": null,
+      "lng": null,
+      "note": "黄宗羲晚年讲学和浙东学术活动中心",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《明夷待访录》",
+      "source": "政治思想著作",
+      "url_or_path": "黄宗羲《明夷待访录》",
+      "citation_note": "呈现黄宗羲对君主 法律 学校和经济的思考",
+      "reliability": "pending"
+    },
+    {
+      "title": "《黄宗羲全集》相关文集",
+      "source": "个人文集",
+      "url_or_path": "《黄宗羲全集》",
+      "citation_note": "保存黄宗羲生平 讲学和政治活动材料",
+      "reliability": "pending"
+    },
+    {
+      "title": "明末东林党相关档案与史书",
+      "source": "政治历史材料",
+      "url_or_path": "《明史》相关列传及明末档案",
+      "citation_note": "补充黄尊素遭遇和明末政治环境",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +174,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.845857Z",
-  "updated_at": "2026-09-14T17:06:07.845857Z",
+  "updated_at": "2026-09-16T10:01:48.999992Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

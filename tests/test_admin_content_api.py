@@ -309,11 +309,14 @@ class AdminContentApiTests(unittest.TestCase):
         with ZipFile(BytesIO(archive_download.content)) as archive_zip:
             self.assertIn("课程归档清单.json", archive_zip.namelist())
 
+        from tests.release_fixture import install_teacher_text
+        install_teacher_text(lesson_id)
         public_lesson = self.client.get(
             f"/api/v1/courses/{course_id}/lessons/{lesson_id}"
         )
         self.assertEqual(public_lesson.status_code, 200, public_lesson.text)
         self.assertEqual(public_lesson.json()["content_status"], "published")
+        self.assertTrue(public_lesson.json()["teacher_text_checksum"])
         self.assertEqual(public_lesson.json()["body"], payload["body"])
         self.assertEqual(public_lesson.json()["release_id"], release_id)
         self.assertEqual(public_lesson.json()["release_no"], 2)
@@ -345,9 +348,10 @@ class AdminContentApiTests(unittest.TestCase):
         )
         self.assertEqual(rolled_back.status_code, 200, rolled_back.text)
         self.assertEqual(rolled_back.json()["release"]["operation"], "rollback")
+        # Withdrawing an interaction release does not withdraw the teacher text.
         self.assertEqual(
             self.client.get(f"/api/v1/courses/{course_id}/lessons/{lesson_id}").status_code,
-            404,
+            200,
         )
 
     def test_public_api_returns_stable_503_for_corrupt_active_release(self):
@@ -379,6 +383,8 @@ class AdminContentApiTests(unittest.TestCase):
             )
             self.assertEqual(response.status_code, 200, response.text)
 
+        from tests.release_fixture import install_teacher_text
+        install_teacher_text(lesson_id)
         pointer_path = content.release_dir() / "active" / f"{course_id}.json"
         original_pointer = pointer_path.read_text(encoding="utf-8")
         pointer = json.loads(original_pointer)
@@ -482,6 +488,8 @@ class AdminContentApiTests(unittest.TestCase):
             published.json()["release"]["items"][0]["primary_scenario_id"],
             scenario["scenario_id"],
         )
+        from tests.release_fixture import install_teacher_text
+        install_teacher_text(payload["lesson_id"])
         lesson = self.client.get(
             f"/api/v1/courses/{payload['course_id']}/lessons/{payload['lesson_id']}"
         )
@@ -863,6 +871,8 @@ class AdminContentApiTests(unittest.TestCase):
         )
         self.assertEqual(migrated.status_code, 200, migrated.text)
         self.assertEqual(migrated.json()["release"]["created_by"], "trusted-admin")
+        from tests.release_fixture import install_teacher_text
+        install_teacher_text("legacy-api-lesson")
         legacy_lesson = self.client.get(
             "/api/v1/courses/C-legacy-api/lessons/legacy-api-lesson"
         )

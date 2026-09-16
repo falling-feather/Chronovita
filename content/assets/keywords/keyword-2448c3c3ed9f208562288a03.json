@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-2448c3c3ed9f208562288a03",
+  "word": "三玄",
+  "pinyin": "sān xuán",
+  "gloss": "《周易》《老子》《庄子》的合称；魏晋玄学讨论的重要经典",
+  "era": "魏晋南北朝",
+  "category": "文献",
+  "examples": [
+    "本课结合“三玄”说明《周易》《老子》《庄子》的合称；魏晋玄学讨论的重要经典。",
+    "讲解“三玄”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "王弼"
+  ],
+  "related_lessons": [
+    "L602"
+  ],
+  "source_refs": [
+    {
+      "title": "L602《清谈玄学与竹林七贤》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L602.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l602-02.json\", \"member_sha256\": \"88cf1efa4c3f208873d224e8e245466d51acffa6f1d7dc3314f02a0520a10584\", \"source_id\": \"keyword-l602-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.988984Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

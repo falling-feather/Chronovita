@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-485d17107e193773cb197fb0",
+  "word": "《南京条约》",
+  "pinyin": "nán jīng tiáo yuē",
+  "gloss": "公元1842年清政府与英国签订的不平等条约；规定赔款 开港和割地",
+  "era": "明清",
+  "category": "文献",
+  "examples": [
+    "本课结合“《南京条约》”说明公元1842年清政府与英国签订的不平等条约；规定赔款 开港和割地。",
+    "讲解“《南京条约》”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L1501"
+  ],
+  "source_refs": [
+    {
+      "title": "L1501《鸦片战争与三元里》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1501.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1501-04.json\", \"member_sha256\": \"7828ff3ac25c2d44771a4349a986146d0339a48f6321d23d5bed955f2804c99b\", \"source_id\": \"keyword-l1501-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.783361Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

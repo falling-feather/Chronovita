@@ -46,9 +46,64 @@
       "gloss": "士兵平时从事农业生产并按期服役的组织特点"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "宇文泰",
+      "role": "西魏实际掌权者",
+      "summary": "推动府兵组织形成",
+      "persona": "说明府兵制经历长期发展",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "关中",
+      "region": "今陕西中部一带",
+      "lat": null,
+      "lng": null,
+      "note": "西魏北周府兵发展和唐前期政治中心地区",
+      "kind": "region"
+    },
+    {
+      "label": "敦煌",
+      "region": "今甘肃敦煌",
+      "lat": null,
+      "lng": null,
+      "note": "出土唐代户籍和赋役文书的重要地区",
+      "kind": "site"
+    },
+    {
+      "label": "吐鲁番",
+      "region": "今新疆吐鲁番",
+      "lat": null,
+      "lng": null,
+      "note": "出土高昌和唐代土地户籍文书的重要地区",
+      "kind": "site"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《唐六典》田赋与兵制记载",
+      "source": "制度文献",
+      "url_or_path": "《唐六典》",
+      "citation_note": "记载唐代土地 赋役和府兵管理制度",
+      "reliability": "pending"
+    },
+    {
+      "title": "敦煌吐鲁番户籍与手实",
+      "source": "出土文字材料",
+      "url_or_path": "敦煌吐鲁番出土文书",
+      "citation_note": "记录家庭人口 土地和赋役承担情况",
+      "reliability": "pending"
+    },
+    {
+      "title": "唐代折冲府相关墓志",
+      "source": "考古文字材料",
+      "url_or_path": "唐代墓志与府兵资料",
+      "citation_note": "补充府兵身份和服役经历",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -95,7 +150,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.608844Z",
-  "updated_at": "2026-09-14T17:06:07.608844Z",
+  "updated_at": "2026-09-16T10:01:48.432119Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

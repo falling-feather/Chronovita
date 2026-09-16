@@ -61,9 +61,93 @@
       "gloss": "刘邦于公元前202年建立的王朝；都城设在长安"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "陈胜",
+      "role": "秦末起义领袖",
+      "summary": "与吴广在大泽乡发动起义并建立张楚政权",
+      "persona": "说明秦末社会矛盾和普通戍卒反抗的扩大",
+      "boundaries": []
+    },
+    {
+      "name": "项羽",
+      "role": "西楚霸王",
+      "summary": "在巨鹿之战中击败秦军主力并参与推翻秦朝",
+      "persona": "结合军事优势与联盟困境分析楚汉战争",
+      "boundaries": []
+    },
+    {
+      "name": "刘邦",
+      "role": "汉朝建立者",
+      "summary": "率军入关灭秦并在楚汉战争中取得胜利",
+      "persona": "突出根据地 后勤 联盟和用人对战争的作用",
+      "boundaries": []
+    },
+    {
+      "name": "韩信",
+      "role": "汉军将领",
+      "summary": "率军开辟北方战场并帮助刘邦形成战略优势",
+      "persona": "用于说明多战场配合对战争结果的影响",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "大泽乡",
+      "region": "今安徽宿州一带",
+      "lat": null,
+      "lng": null,
+      "note": "陈胜吴广起义发生地",
+      "kind": "event"
+    },
+    {
+      "label": "巨鹿",
+      "region": "今河北平乡一带",
+      "lat": null,
+      "lng": null,
+      "note": "项羽击败秦军主力的重要战场",
+      "kind": "battle"
+    },
+    {
+      "label": "关中",
+      "region": "今陕西中部一带",
+      "lat": null,
+      "lng": null,
+      "note": "刘邦进入并经营的战略根据地",
+      "kind": "region"
+    },
+    {
+      "label": "垓下",
+      "region": "今安徽北部一带",
+      "lat": null,
+      "lng": null,
+      "note": "楚汉战争末期决战地点",
+      "kind": "battle"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《史记·陈涉世家》",
+      "source": "传世文献",
+      "url_or_path": "《史记·陈涉世家》",
+      "citation_note": "记载陈胜吴广起义及秦末社会反抗",
+      "reliability": "pending"
+    },
+    {
+      "title": "《史记·项羽本纪》",
+      "source": "传世文献",
+      "url_or_path": "《史记·项羽本纪》",
+      "citation_note": "记载巨鹿之战 项羽分封和楚汉战争",
+      "reliability": "pending"
+    },
+    {
+      "title": "睡虎地秦简",
+      "source": "考古出土文字材料",
+      "url_or_path": "睡虎地秦简",
+      "citation_note": "保存秦代法律材料；用于理解秦法及相关争议",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -115,7 +199,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.277046Z",
-  "updated_at": "2026-09-14T17:06:07.277046Z",
+  "updated_at": "2026-09-16T10:01:47.918234Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

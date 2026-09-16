@@ -3,15 +3,15 @@
   "lesson_id": "L302",
   "course_id": "C-qin-han",
   "state": "draft",
-  "revision": 1,
-  "draft_fingerprint": "de629784d79615bde17dec4d32ee0531073cc926eb123d28a9e8291b9b482f4f",
+  "revision": 2,
+  "draft_fingerprint": "566c1dbe78582534fbc16b41e185961ebc4f15ad7e1203eba40a9db3bb74459f",
   "validation": null,
   "sealed_version": null,
   "sealed_checksum": null,
   "published_course_id": null,
   "published_version": null,
   "published_release_id": null,
-  "updated_at": "2026-09-14T17:06:07.931962Z",
+  "updated_at": "2026-09-16T10:01:49.200223Z",
   "history": [
     {
       "sequence": 1,
@@ -24,7 +24,19 @@
       "draft_fingerprint": "de629784d79615bde17dec4d32ee0531073cc926eb123d28a9e8291b9b482f4f",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T10:01:49.200223Z",
+      "draft_fingerprint": "566c1dbe78582534fbc16b41e185961ebc4f15ad7e1203eba40a9db3bb74459f",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "842b910ba79fc3725689ddcbb98813302a5cd020a1ce4536c341877d5557080f"
+  "checksum": "ac23b670b6cfd992167f1525a45793347e191456d2a1a7174defff9306313d46"
 }

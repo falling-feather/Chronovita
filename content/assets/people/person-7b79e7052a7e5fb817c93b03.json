@@ -1,0 +1,52 @@
+{
+  "schema_version": "person-profile/v1",
+  "asset_id": "person-7b79e7052a7e5fb817c93b03",
+  "name": "萧绰（承天太后）",
+  "role": "辽朝政治家、辽圣宗时期的摄政太后",
+  "era": "辽朝中期、北宋初期",
+  "summary": "萧绰是辽景宗皇后，辽景宗去世后，因辽圣宗年幼而临朝摄政，成为辽朝重要的政治和军事领导者。她在执政期间重视整顿政务、协调贵族关系，并努力巩固辽朝的统治。面对北宋与辽朝之间长期存在的军事冲突，萧绰积极参与军事决策。1004年，她与辽圣宗率军南下，迫使北宋面临较大军事压力。此后，辽宋双方在澶州订立澶渊之盟，形成相对稳定的边境关系。萧绰在辽朝政治中发挥了重要作用，既维护了辽朝的统治，也推动了辽宋关系从长期战争转向相对稳定的和平交往。她是辽朝历史上具有重要影响力的女性政治人物。",
+  "persona": "后续 AI 人物智能体使用的语气、知识边界与立场提示。",
+  "boundaries": [
+    "不要让人物知道其身后才发生的事件。"
+  ],
+  "keywords": [
+    "辽朝",
+    "澶州",
+    "澶渊之盟",
+    "宋辽关系"
+  ],
+  "related_lessons": [
+    "L1002"
+  ],
+  "source_refs": [
+    {
+      "title": "《景宗萧皇后传》",
+      "source": "《辽史》，中华书局点校本",
+      "url_or_path": "卷七十一，相关篇章",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《圣宗本纪》",
+      "source": "《辽史》，中华书局点校本",
+      "url_or_path": "澶州之战及澶渊之盟相关记载",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《续资治通鉴长编》",
+      "source": "中华书局点校本",
+      "url_or_path": "宋真宗景德年间宋辽关系相关记载",
+      "citation_note": "",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "重点讲解萧绰摄政、参与辽宋战争和推动辽朝政治稳定的作用。注意她不是北宋方面的决策者，而是辽朝的重要政治领导者；讲解澶渊之盟时，应从宋辽双方的立场分别分析，避免只从北宋角度理解。\n\n本地附件同步来源：\n{\"archive\": \"人物第十章-第十五章.zip\", \"archive_sha256\": \"cba178f36c53c7d04a479b4f3c641081553e4e3254b6854af5ac07a9367d9a32\", \"member\": \"人物第十章-第十五章/萧绰（承天太后）-人物档案.json\", \"member_sha256\": \"3c237d2f55b3a2196d7cefa7926d3fdcc03be76bbabc0ac995b6058a95e03ca0\", \"source_id\": \"person-L1002-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-16T09:49:56.259326Z",
+  "updated_at": "2026-09-16T09:49:56.259326Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

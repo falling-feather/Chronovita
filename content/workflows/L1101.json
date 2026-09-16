@@ -3,15 +3,15 @@
   "lesson_id": "L1101",
   "course_id": "C-songyuan-mongol",
   "state": "draft",
-  "revision": 1,
-  "draft_fingerprint": "e378f1e0d618cb4bf5d0fcced213054ea8cf05b0ce42c34d19ffa75f62c75ea3",
+  "revision": 2,
+  "draft_fingerprint": "4eac2801532ce248bea72a8fad2303d854c18bedb03cf7d923356bda67090cc4",
   "validation": null,
   "sealed_version": null,
   "sealed_checksum": null,
   "published_course_id": null,
   "published_version": null,
   "published_release_id": null,
-  "updated_at": "2026-09-14T17:06:07.718880Z",
+  "updated_at": "2026-09-16T10:01:48.704088Z",
   "history": [
     {
       "sequence": 1,
@@ -24,7 +24,19 @@
       "draft_fingerprint": "e378f1e0d618cb4bf5d0fcced213054ea8cf05b0ce42c34d19ffa75f62c75ea3",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T10:01:48.704088Z",
+      "draft_fingerprint": "4eac2801532ce248bea72a8fad2303d854c18bedb03cf7d923356bda67090cc4",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "2de00322fb52ee73c19c20e0c7e4b3eb14305c9a1c396eaa5cb611800e88f1fe"
+  "checksum": "627f13cbfe0ebaa4a934262e9523c348c41ea04dd60091e3856d9eb8dcae4987"
 }

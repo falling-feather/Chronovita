@@ -46,9 +46,71 @@
       "gloss": "北魏皇族和部分鲜卑贵族采用汉式姓氏的措施；加强与中原士族联系"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "冯太后",
+      "role": "北魏实际执政者",
+      "summary": "推动俸禄 户籍和基层管理改革",
+      "persona": "说明孝文帝改革具有前期基础",
+      "boundaries": []
+    },
+    {
+      "name": "拓跋宏（北魏孝文帝）",
+      "role": "北魏皇帝",
+      "summary": "迁都洛阳并调整制度和习俗",
+      "persona": "从国家治理和族群交往理解改革",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "平城",
+      "region": "今山西大同一带",
+      "lat": null,
+      "lng": null,
+      "note": "北魏前期都城",
+      "kind": "capital"
+    },
+    {
+      "label": "洛阳",
+      "region": "今河南洛阳",
+      "lat": null,
+      "lng": null,
+      "note": "北魏孝文帝迁都后的政治文化中心",
+      "kind": "capital"
+    },
+    {
+      "label": "北部六镇",
+      "region": "今内蒙古中部至河北北部一带",
+      "lat": null,
+      "lng": null,
+      "note": "北魏北部军事防线和后来动荡集中地区",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《魏书》",
+      "source": "传世史书",
+      "url_or_path": "《魏书》",
+      "citation_note": "记载北魏政权和孝文帝改革",
+      "reliability": "pending"
+    },
+    {
+      "title": "北魏墓志与造像题记",
+      "source": "考古文字材料",
+      "url_or_path": "洛阳及北方地区北魏墓志 造像题记",
+      "citation_note": "反映姓名 官职 信仰和族群交往",
+      "reliability": "pending"
+    },
+    {
+      "title": "汉魏洛阳城遗址",
+      "source": "考古遗址",
+      "url_or_path": "汉魏洛阳故城",
+      "citation_note": "用于认识北魏迁都后的城市格局",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -95,7 +157,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.566937Z",
-  "updated_at": "2026-09-14T17:06:07.566937Z",
+  "updated_at": "2026-09-16T10:01:49.303923Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

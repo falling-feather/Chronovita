@@ -3,7 +3,7 @@ name: GitHub Pages preview
 on:
   push:
     branches:
-      - codex/v0.10-classroom
+      - codex/v1-agent-routing
   workflow_dispatch:
 
 permissions:

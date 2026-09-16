@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-d20f3e04c904040153249a7d",
+  "word": "小国寡民",
+  "pinyin": "xiǎo guó guǎ mín",
+  "gloss": "老子描绘的简朴社会图景；强调减少竞争和欲望",
+  "era": "先秦",
+  "category": "思想",
+  "examples": [
+    "本课结合“小国寡民”说明老子描绘的简朴社会图景；强调减少竞争和欲望。",
+    "讲解“小国寡民”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "老子"
+  ],
+  "related_lessons": [
+    "L202"
+  ],
+  "source_refs": [
+    {
+      "title": "L202《老子与道家》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L202.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l202-06.json\", \"member_sha256\": \"9f4470d37b3b240be166ea71a089f639f62398089be0062d133e207b84abf5f2\", \"source_id\": \"keyword-l202-06\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l202-06.json\", \"member_sha256\": \"9f4470d37b3b240be166ea71a089f639f62398089be0062d133e207b84abf5f2\", \"source_id\": \"keyword-l202-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.246391Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

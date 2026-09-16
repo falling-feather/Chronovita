@@ -51,9 +51,86 @@
       "gloss": "隋朝末年各地反抗力量发动的起事；加速隋朝瓦解"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "杨坚（隋文帝）",
+      "role": "隋文帝",
+      "summary": "建立隋朝并完成南北统一",
+      "persona": "从制度整顿和社会恢复理解统一基础",
+      "boundaries": []
+    },
+    {
+      "name": "杨广（隋炀帝）",
+      "role": "隋炀帝",
+      "summary": "推动运河建设并多次发动战争",
+      "persona": "同时观察工程长期作用和当时社会负担",
+      "boundaries": []
+    },
+    {
+      "name": "李渊（唐高祖）",
+      "role": "唐朝建立者",
+      "summary": "隋末起兵并于公元618年建立唐朝",
+      "persona": "用于说明隋唐政权更替",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "大兴城",
+      "region": "今陕西西安",
+      "lat": null,
+      "lng": null,
+      "note": "隋朝都城和唐长安城基础",
+      "kind": "capital"
+    },
+    {
+      "label": "洛阳",
+      "region": "今河南洛阳",
+      "lat": null,
+      "lng": null,
+      "note": "隋炀帝营建的东都和运河交通中心",
+      "kind": "capital"
+    },
+    {
+      "label": "江都",
+      "region": "今江苏扬州",
+      "lat": null,
+      "lng": null,
+      "note": "隋炀帝晚年所在地区",
+      "kind": "city"
+    },
+    {
+      "label": "隋代大运河",
+      "region": "连接海河 黄河 淮河 长江 钱塘江水系",
+      "lat": null,
+      "lng": null,
+      "note": "南北漕运与交通网络",
+      "kind": "route"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《隋书》",
+      "source": "传世史书",
+      "url_or_path": "《隋书》",
+      "citation_note": "记载隋朝制度 工程 战争和政权兴亡",
+      "reliability": "pending"
+    },
+    {
+      "title": "隋唐长安城遗址",
+      "source": "考古遗址",
+      "url_or_path": "隋大兴唐长安城遗址",
+      "citation_note": "反映都城规划和城市规模",
+      "reliability": "pending"
+    },
+    {
+      "title": "大运河遗产与考古材料",
+      "source": "工程遗址",
+      "url_or_path": "隋唐大运河相关河段和遗址",
+      "citation_note": "用于认识河道走向 建设过程和长期使用",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +182,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.597022Z",
-  "updated_at": "2026-09-14T17:06:07.597022Z",
+  "updated_at": "2026-09-16T10:01:48.401332Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

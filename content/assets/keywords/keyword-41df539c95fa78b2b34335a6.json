@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-41df539c95fa78b2b34335a6",
+  "word": "戊戌变法",
+  "pinyin": "wù xū biàn fǎ",
+  "gloss": "公元1898年康有为 梁启超等推动的政治改革；实行时间短暂",
+  "era": "明清",
+  "category": "事件",
+  "examples": [
+    "本课结合“戊戌变法”说明公元1898年康有为 梁启超等推动的政治改革；实行时间短暂。",
+    "讲解“戊戌变法”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "康有为"
+  ],
+  "related_lessons": [
+    "L1503"
+  ],
+  "source_refs": [
+    {
+      "title": "L1503《洋务运动、甲午战争与辛亥革命》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1503.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1503-07.json\", \"member_sha256\": \"ba4e0c88a8fd9d4b7a7deb7c52e62cf38085e2e122ad7dbd1ab49409e7c7eab8\", \"source_id\": \"keyword-l1503-07\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.985122Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

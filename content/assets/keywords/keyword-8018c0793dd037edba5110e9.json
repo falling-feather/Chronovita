@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-8018c0793dd037edba5110e9",
+  "word": "五口通商",
+  "pinyin": "wǔ kǒu tōng shāng",
+  "gloss": "《南京条约》开放广州 厦门 福州 宁波 上海与英国通商的规定",
+  "era": "明清",
+  "category": "经济",
+  "examples": [
+    "本课结合“五口通商”说明《南京条约》开放广州 厦门 福州 宁波 上海与英国通商的规定。",
+    "讲解“五口通商”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L1501"
+  ],
+  "source_refs": [
+    {
+      "title": "L1501《鸦片战争与三元里》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1501.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1501-06.json\", \"member_sha256\": \"55f744da1922dd4cf4b5d4d5e7145bcf499fbf2e678ce2dff4b51f9e540bd8c1\", \"source_id\": \"keyword-l1501-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.802811Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

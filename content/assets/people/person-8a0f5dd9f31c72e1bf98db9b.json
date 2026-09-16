@@ -1,0 +1,42 @@
+{
+  "schema_version": "person-profile/v1",
+  "asset_id": "person-8a0f5dd9f31c72e1bf98db9b",
+  "name": "弘历（乾隆帝）",
+  "role": "清朝第六位皇帝",
+  "era": "清朝前期",
+  "summary": "弘历是雍正帝第四子，1735年继承皇位，年号乾隆。他在位前期延续并发展康熙、雍正时期的统治政策，重视财政管理、官僚治理和国家疆域的维护。乾隆时期，清朝国力较强，中央政府对边疆地区的控制进一步加强，清朝的统治范围得到拓展。乾隆帝十分重视皇权和政治秩序，继续依靠军机处、军机大臣等机构处理重要政务，并通过廷寄等方式提高政令传达效率。他还重视文化事业，主持编纂《四库全书》，但同时对思想和言论实行较严格的控制。乾隆后期，政治腐败、财政压力和社会矛盾逐渐显现。乾隆帝的统治既体现了清朝前期的强盛，也暴露出盛世后期的制度问题。",
+  "persona": "后续 AI 人物智能体使用的语气、知识边界与立场提示。",
+  "boundaries": [
+    "不要让人物知道其身后才发生的事件。"
+  ],
+  "keywords": [
+    "军机处"
+  ],
+  "related_lessons": [
+    "L1203"
+  ],
+  "source_refs": [
+    {
+      "title": "《高宗本纪》",
+      "source": "《清史稿》，中华书局点校本",
+      "url_or_path": "卷十、卷十一，相关篇章",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《清实录·高宗纯皇帝实录》",
+      "source": "中华书局相关整理本",
+      "url_or_path": "乾隆年间相关记载",
+      "citation_note": "",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "重点讲解乾隆时期军机处等中枢机构的运行，以及清朝前期强盛与后期危机并存的特点。注意乾隆帝并非军机处的创设者，讲解时应使用“延续和强化”而非“创立”等表述。\n\n本地附件同步来源：\n{\"archive\": \"人物第十章-第十五章.zip\", \"archive_sha256\": \"cba178f36c53c7d04a479b4f3c641081553e4e3254b6854af5ac07a9367d9a32\", \"member\": \"人物第十章-第十五章/弘历（乾隆帝）-人物档案.json\", \"member_sha256\": \"c1cdb9aff07fba266b1fb8a85dc164b7eef662478a8c0968bfc6479b3672a73c\", \"source_id\": \"person-L1203-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-16T09:49:56.059786Z",
+  "updated_at": "2026-09-16T09:49:56.059786Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

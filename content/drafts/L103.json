@@ -70,176 +70,81 @@
   ],
   "people": [
     {
-      "name": "商鞅",
-      "role": "传世叙事中的改革主持者",
-      "summary": "卫鞅入秦后在秦孝公支持下推动制度调整，后受封商地，史称商鞅。",
-      "persona": "强调规则清楚、赏罚兑现与国家执行能力，同时承认现存对白来自后世材料。角色化教学表达，不是史料原话。",
-      "boundaries": [
-        "只依据本课已发布的《史记》《商君书》、方升与秦简片段回答。",
-        "不得把《商君书》全部句子自称为本人原话。",
-        "不得知道自己身后一百多年形成的睡虎地秦简内容。"
-      ]
+      "name": "姬发（周武王）",
+      "role": "西周开国君主",
+      "summary": "灭商后建立周王朝的周王",
+      "persona": "作为西周政治秩序的开端人物出现；不展开重复的牧野之战叙述",
+      "boundaries": []
     },
     {
-      "name": "秦孝公",
-      "role": "传世叙事中的改革支持者",
-      "summary": "为改变秦国处境而求贤并提供政治支持，是改革窗口的重要角色。",
-      "persona": "从国家竞争、支持联盟和长期执行角度追问改革。角色化教学表达，不是史料原话。",
-      "boundaries": [
-        "求贤、辩论与任用依据后世传世叙事有限表达。",
-        "不虚构密诏、私人情感或逐字宫廷对话。",
-        "不能把秦后来统一预言为必然结果。"
-      ]
+      "name": "姬旦（周公）",
+      "role": "西周初期政治家",
+      "summary": "辅佐周成王并主持平定东方叛乱的周王室贵族",
+      "persona": "重点说明其辅政、平乱和建设地方统治网络的作用",
+      "boundaries": []
     },
     {
-      "name": "旧贵族代表",
-      "role": "受世袭特权调整影响的合成人群",
-      "summary": "集中呈现旧身份秩序、政治参与和利益受损者对改革的异议。",
-      "persona": "追问改革程序、权力集中和旧秩序被改变的风险。角色化教学表达，不是史料原话。",
-      "boundaries": [
-        "这是课堂合成人群，不假冒甘龙、杜挚等某位人物的原话。",
-        "不把所有贵族写成同一种立场。",
-        "可以批评改革，但不得补写阴谋和暴力现场。"
-      ]
+      "name": "姬诵（周成王）",
+      "role": "西周早期周王",
+      "summary": "周武王去世后继位的周王；早年由周公辅佐",
+      "persona": "用于说明西周初期王权交接和周公辅政的背景",
+      "boundaries": []
     },
     {
-      "name": "农耕家庭代表",
-      "role": "承担生产、赋役与家庭风险的合成人群",
-      "summary": "观察奖励耕战、户籍、征发和尺度统一怎样进入普通家庭。",
-      "persona": "从收成、赋役、服兵役和家庭安全追问政策代价。角色化教学表达，不是史料原话。",
-      "boundaries": [
-        "不虚构某户的精确田亩、税额和伤亡。",
-        "不能声称代表所有秦国农户。",
-        "关卡数值是教学模型，不是出土账册。"
-      ]
-    },
-    {
-      "name": "军功士卒",
-      "role": "通过服役争取身份机会的合成人群",
-      "summary": "展示军功爵可能带来的上升通道与战争风险。",
-      "persona": "同时说明获得爵位的希望、军纪约束和战场代价。角色化教学表达，不是史料原话。",
-      "boundaries": [
-        "不是某场战役具名士卒的自述。",
-        "不提供未经课程片段支持的斩首数、爵级和赏田。",
-        "不把军功通道等同于现代平等。"
-      ]
-    },
-    {
-      "name": "县廷吏员",
-      "role": "执行登记、征收与司法的合成基层官吏",
-      "summary": "连接中央法令与地方日常，展示执行能力和行政负担。",
-      "persona": "要求规则可登记、可核验、可执行，也说明追责压力。角色化教学表达，不是史料原话。",
-      "boundaries": [
-        "依据较晚秦简理解成熟秦制，不自称直接奉行商鞅手令。",
-        "不把秦简每条规定倒推到公元前四世纪中叶。",
-        "遇到超出证据库的具体案件回答‘依据不足’。"
-      ]
+      "name": "姬宫湦（周幽王）",
+      "role": "西周末代周王",
+      "summary": "犬戎攻破镐京时在位的西周末代周王",
+      "persona": "重点说明西周王室控制力减弱和都城东迁的历史结果",
+      "boundaries": []
     }
   ],
   "map_points": [
     {
-      "label": "栎阳",
-      "region": "今陕西西安阎良附近",
-      "lat": 34.66,
-      "lng": 109.23,
-      "note": "秦孝公前期都城与早期改革叙事的重要空间；精确宫廷场景来自后世文献，地图不复原路线。",
-      "kind": "reform_context"
+      "label": "镐京",
+      "region": "今陕西西安一带",
+      "lat": null,
+      "lng": null,
+      "note": "西周王都；周王室统治中心",
+      "kind": "capital"
     },
     {
-      "label": "咸阳",
-      "region": "今陕西咸阳一带",
-      "lat": 34.35,
-      "lng": 108.71,
-      "note": "传世材料把迁都与后续制度调整联系于此；城市范围与现代坐标不能简单重合。",
-      "kind": "capital_region"
+      "label": "洛邑",
+      "region": "今河南洛阳一带",
+      "lat": null,
+      "lng": null,
+      "note": "周朝东部政治中心；周平王东迁后的都城",
+      "kind": "capital"
     },
     {
-      "label": "商於地区",
-      "region": "今陕西商洛至河南西部相关区域",
-      "lat": 33.87,
-      "lng": 109.94,
-      "note": "后世叙事以受封商地解释‘商君/商鞅’称号；不据此绘制个人活动精确路线。",
-      "kind": "memory_region"
-    },
-    {
-      "label": "云梦睡虎地",
-      "region": "湖北省孝感市云梦县",
-      "lat": 31.02,
-      "lng": 113.75,
-      "note": "1975年出土秦简；材料主要晚于商鞅最初变法，用于观察成熟秦制而非原令。",
-      "kind": "excavated_text_site"
+      "label": "琉璃河遗址",
+      "region": "今北京房山",
+      "lat": null,
+      "lng": null,
+      "note": "西周燕国都城遗址；出土城址、墓葬和青铜器铭文",
+      "kind": "site"
     }
   ],
   "source_refs": [
     {
-      "title": "义务教育历史课程标准（2022年版）",
-      "source": "中华人民共和国教育部",
-      "url_or_path": "https://www.moe.gov.cn/srcsite/A26/s8001/202204/t20220420_619921.html",
-      "citation_note": "用于七年级历史核心素养、证据意识与适龄表达；只保存自写摘要。",
-      "reliability": "reviewed"
+      "title": "琉璃河遗址：西周分封制的力证",
+      "source": "北京市房山区人民政府",
+      "url_or_path": "https://www.bjfsh.gov.cn/zhxw/fsdt/202507/t20250725_40091097_fs.shtml",
+      "citation_note": "介绍琉璃河遗址、燕国城址和青铜器铭文所反映的西周分封",
+      "reliability": "pending"
     },
     {
-      "title": "义务教育教科书·中国历史七年级上册目录与课程位置",
-      "source": "人民教育出版社",
-      "url_or_path": "https://www.pep.com.cn/products/jc/czjks/201802/t20180227_1922743.shtml",
-      "citation_note": "用于确认战国社会变革的学段位置，不复制教材正文。",
-      "reliability": "reviewed"
-    },
-    {
-      "title": "《史记·商君列传》",
-      "source": "司马迁；中国哲学书电子化计划底本索引",
-      "url_or_path": "https://ctext.org/shiji/shang-jun-lie-zhuan/zhs",
-      "citation_note": "西汉成书的商鞅生平与改革叙事；具体对白和情节按后世记载呈现。",
-      "reliability": "reviewed"
-    },
-    {
-      "title": "《韩非子·定法》",
-      "source": "中国哲学书电子化计划底本索引",
-      "url_or_path": "https://ctext.org/hanfeizi/ding-fa/zh",
-      "citation_note": "较晚战国时期对商鞅之法与申不害之术的思想评价。",
-      "reliability": "reviewed"
-    },
-    {
-      "title": "《商君书》",
-      "source": "中国哲学书电子化计划底本索引",
-      "url_or_path": "https://ctext.org/shang-jun-shu/zh",
-      "citation_note": "理解商鞅学派与法、农战思想的重要传世文本；篇章年代和作者需分层。",
-      "reliability": "disputed"
-    },
-    {
-      "title": "Dating a Pre-Imperial Text: The Case Study of the Book of Lord Shang",
-      "source": "Yuri Pines / Early China / Cambridge University Press",
-      "url_or_path": "https://www.cambridge.org/core/journals/early-china/article/dating-a-preimperial-text-the-case-study-of-the-book-of-lord-shang/199B57467F51A62EBD492DE47DA3360A",
-      "citation_note": "用于《商君书》累积成书、篇章分层和作者边界。",
-      "reliability": "reviewed"
-    },
-    {
-      "title": "商鞅方升——每月一珍",
-      "source": "上海博物馆",
-      "url_or_path": "https://www.shanghaimuseum.net/mu/show/202411/4335e32d-3cce-4602-955b-17ed7e0b9e59/",
-      "citation_note": "用于公元前344年标准量器的器形、容量、铭文与后刻诏文。",
-      "reliability": "reviewed"
-    },
-    {
-      "title": "云梦睡虎地秦简",
-      "source": "湖北省博物馆",
-      "url_or_path": "https://www.hbww.org.cn/zgzb/p/6912.html",
-      "citation_note": "用于出土地点、法律文献范围与统一前后年代概览。",
-      "reliability": "reviewed"
-    },
-    {
-      "title": "湖北简牍地理，一窥湖北简牍之风采",
-      "source": "湖北省文物考古研究院",
-      "url_or_path": "https://www.hbww.org.cn/yjy_mtbd/p/8892.html",
-      "citation_note": "用于睡虎地秦简战国晚期至秦始皇时期的书写年代和内容边界。",
-      "reliability": "reviewed"
-    },
-    {
-      "title": "秦文化的历史特点与当代价值",
+      "title": "周代礼制发展史",
       "source": "全国哲学社会科学工作办公室",
-      "url_or_path": "https://www.nopss.gov.cn/n1/2022/0706/c219544-32467522.html",
-      "citation_note": "用于县制、迁都、耕战与秦长期国家建设的现代综合解释。",
-      "reliability": "reviewed"
+      "url_or_path": "https://www.nopss.gov.cn/n1/2024/0509/c373410-40232165.html",
+      "citation_note": "介绍周代礼制、宗法关系和政治秩序",
+      "reliability": "pending"
+    },
+    {
+      "title": "中国古代选官标准和方式的演变",
+      "source": "中华人民共和国司法部",
+      "url_or_path": "https://legalinfo.moj.gov.cn/zhfxfzwh/fzwhfsgs/202303/t20230308_473682.html",
+      "citation_note": "介绍西周分封体系和贵族等级关系",
+      "reliability": "pending"
     }
   ],
   "facts": [
@@ -331,7 +236,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-08-13T02:32:38.869677Z",
-  "updated_at": "2026-09-14T17:06:07.377231Z",
+  "updated_at": "2026-09-16T10:01:48.071791Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

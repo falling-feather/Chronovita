@@ -35,13 +35,9 @@ class PagesPreviewTests(unittest.TestCase):
                 lesson["scenario_refs"][0]["scenario_id"],
             )
             self.assertTrue(lesson["scenario_refs"][0]["primary"])
-            presentation = payload["presentations"][
-                f"C-prequin-state/{lesson_id}"
-            ]
-            self.assertEqual(presentation["release_no"], manifest["release_no"])
-            self.assertEqual(
-                presentation["release_checksum"], manifest["checksum"]
-            )
+            self.assertNotIn(f"C-prequin-state/{lesson_id}", payload["presentations"])
+        self.assertEqual(len(payload["lessons"]), 46)
+        self.assertNotIn("C-qinhan-founding/L402", payload["lessons"])
 
     def test_committed_preview_matches_deterministic_builder(self) -> None:
         committed = json.loads(

@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-ae356879d4cb262cfc75f3a3",
+  "word": "市易法",
+  "pinyin": "shì yì fǎ",
+  "gloss": "王安石变法中的市场措施；由官府收购货物并向部分商人放贷",
+  "era": "宋元",
+  "category": "制度",
+  "examples": [
+    "本课结合“市易法”说明王安石变法中的市场措施；由官府收购货物并向部分商人放贷。",
+    "讲解“市易法”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "王安石"
+  ],
+  "related_lessons": [
+    "L1003"
+  ],
+  "source_refs": [
+    {
+      "title": "L1003《交子、市易和海贸》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1003.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1003-05.json\", \"member_sha256\": \"bf755ee522708f71d4f7f47b82b279d1b2a663601a2740c6de39232ff1806e5a\", \"source_id\": \"keyword-l1003-05\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:54.887587Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

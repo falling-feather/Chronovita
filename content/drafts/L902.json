@@ -51,9 +51,78 @@
       "gloss": "玄奘口述并由辩机整理的地理见闻；记录中亚和南亚多地情况"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "玄奘",
+      "role": "唐代僧人和翻译家",
+      "summary": "西行印度求法并在长安主持译经",
+      "persona": "突出求知动机 旅程实践和集体翻译",
+      "boundaries": []
+    },
+    {
+      "name": "戒贤",
+      "role": "那烂陀寺高僧",
+      "summary": "向玄奘讲授瑜伽行派学说",
+      "persona": "说明跨区域师生交流",
+      "boundaries": []
+    },
+    {
+      "name": "辩机",
+      "role": "唐代僧人",
+      "summary": "根据玄奘口述整理《大唐西域记》",
+      "persona": "强调文献形成也依赖协作者",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "长安",
+      "region": "今陕西西安",
+      "lat": null,
+      "lng": null,
+      "note": "玄奘出发和回国后译经的中心",
+      "kind": "capital"
+    },
+    {
+      "label": "高昌",
+      "region": "今新疆吐鲁番一带",
+      "lat": null,
+      "lng": null,
+      "note": "玄奘西行途中受到支持的绿洲政权",
+      "kind": "city"
+    },
+    {
+      "label": "那烂陀寺",
+      "region": "今印度比哈尔邦",
+      "lat": null,
+      "lng": null,
+      "note": "玄奘在印度长期学习之地",
+      "kind": "site"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《大唐大慈恩寺三藏法师传》",
+      "source": "僧人传记",
+      "url_or_path": "《大唐大慈恩寺三藏法师传》",
+      "citation_note": "记载玄奘求法旅程和译经活动",
+      "reliability": "pending"
+    },
+    {
+      "title": "《大唐西域记》",
+      "source": "地理见闻文献",
+      "url_or_path": "《大唐西域记》",
+      "citation_note": "记录七世纪中亚和南亚地理社会信息",
+      "reliability": "pending"
+    },
+    {
+      "title": "大雁塔与大慈恩寺遗存",
+      "source": "建筑与考古材料",
+      "url_or_path": "西安大慈恩寺大雁塔",
+      "citation_note": "反映玄奘译经和经像保存活动",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +174,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.648908Z",
-  "updated_at": "2026-09-14T17:06:07.648908Z",
+  "updated_at": "2026-09-16T10:01:48.535574Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

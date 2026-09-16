@@ -11,7 +11,7 @@
     "L1102": "d083cba2028f907b55429dc0aa7aef63c9a9abe03e1bd0053e12be3fddb42837",
     "L1103": "b5501883f248c150820900114b79ae47db7cb6aa6f9248a601a0e5191b76f190"
   },
-  "text_checksum": "fc523be8656a9196c988c8acca196d1f07ff51f34fb4937c03c4c43d39f625f9",
+  "text_checksum": "76d8f47dbfa9687c6fd6662034bb3f4fd1e3ebf1f0d42e874f39e8672db0cc45",
   "lessons": [
     {
       "lesson_id": "L1101",
@@ -53,6 +53,71 @@
           "word": "怯薛",
           "pinyin": "qiè xuē",
           "gloss": "蒙古大汗的护卫和宫廷服务组织；成员与大汗关系密切"
+        }
+      ],
+      "people": [
+        {
+          "name": "铁木真（成吉思汗）",
+          "role": "蒙古汗国建立者",
+          "summary": "统一蒙古各部并建立新的军事政治组织",
+          "persona": "结合个人行动与草原社会条件解释其崛起",
+          "boundaries": []
+        },
+        {
+          "name": "札木合",
+          "role": "蒙古草原首领",
+          "summary": "曾与铁木真结盟后成为主要竞争者",
+          "persona": "说明草原联盟关系会随权力竞争变化",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "斡难河上游",
+          "region": "今蒙古国东北部一带",
+          "lat": null,
+          "lng": null,
+          "note": "公元1206年蒙古大会相关地区",
+          "kind": "site"
+        },
+        {
+          "label": "蒙古高原",
+          "region": "今蒙古国及中国内蒙古部分地区",
+          "lat": null,
+          "lng": null,
+          "note": "蒙古各部统一的核心空间",
+          "kind": "region"
+        },
+        {
+          "label": "中都",
+          "region": "今北京",
+          "lat": null,
+          "lng": null,
+          "note": "金朝都城和蒙古对金战争重要目标",
+          "kind": "capital"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《蒙古秘史》",
+          "source": "蒙古历史文献",
+          "url_or_path": "《蒙古秘史》",
+          "citation_note": "保存铁木真早年和蒙古统一的历史记忆",
+          "reliability": "pending"
+        },
+        {
+          "title": "《元史·太祖本纪》",
+          "source": "传世史书",
+          "url_or_path": "《元史·太祖本纪》",
+          "citation_note": "记载成吉思汗统一和征战过程",
+          "reliability": "pending"
+        },
+        {
+          "title": "《史集》",
+          "source": "波斯文史书",
+          "url_or_path": "拉施特《史集》",
+          "citation_note": "从蒙古帝国西部保存王族和征战信息",
+          "reliability": "pending"
         }
       ]
     },
@@ -101,6 +166,79 @@
           "word": "伊利汗国",
           "pinyin": "yī lì hán guó",
           "gloss": "旭烈兀在波斯地区建立的蒙古汗国"
+        }
+      ],
+      "people": [
+        {
+          "name": "拔都",
+          "role": "第二次西征统帅",
+          "summary": "率军进入东欧并建立钦察汗国",
+          "persona": "结合汗位变化理解军队东返",
+          "boundaries": []
+        },
+        {
+          "name": "旭烈兀",
+          "role": "第三次西征统帅",
+          "summary": "率军进入西亚并建立伊利汗国",
+          "persona": "关注巴格达陷落和西进受阻",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "撒马尔罕",
+          "region": "今乌兹别克斯坦撒马尔罕",
+          "lat": null,
+          "lng": null,
+          "note": "第一次西征攻占的中亚重要城市",
+          "kind": "city"
+        },
+        {
+          "label": "基辅",
+          "region": "今乌克兰基辅",
+          "lat": null,
+          "lng": null,
+          "note": "第二次西征中被蒙古军攻占的罗斯城市",
+          "kind": "city"
+        },
+        {
+          "label": "布达佩斯地区",
+          "region": "今匈牙利中部",
+          "lat": null,
+          "lng": null,
+          "note": "第二次西征进入中欧的重要区域",
+          "kind": "region"
+        },
+        {
+          "label": "巴格达",
+          "region": "今伊拉克巴格达",
+          "lat": null,
+          "lng": null,
+          "note": "公元1258年被旭烈兀军队攻占",
+          "kind": "city"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《史集》",
+          "source": "波斯文史书",
+          "url_or_path": "拉施特《史集》",
+          "citation_note": "记载蒙古王族和中亚西亚征服",
+          "reliability": "pending"
+        },
+        {
+          "title": "《世界征服者史》",
+          "source": "波斯文史书",
+          "url_or_path": "志费尼《世界征服者史》",
+          "citation_note": "记录花剌子模战争和蒙古统治",
+          "reliability": "pending"
+        },
+        {
+          "title": "《蒙古秘史》与《元史》",
+          "source": "蒙古与汉文史料",
+          "url_or_path": "《蒙古秘史》《元史》",
+          "citation_note": "补充西征决策和蒙古诸王活动",
+          "reliability": "pending"
         }
       ]
     },
@@ -159,6 +297,79 @@
           "word": "站赤",
           "pinyin": "zhàn chì",
           "gloss": "元代驿站交通系统；承担使者往来 文书传递和物资供应"
+        }
+      ],
+      "people": [
+        {
+          "name": "忽必烈",
+          "role": "元朝建立者",
+          "summary": "建立元朝 完成统一并调整行政制度",
+          "persona": "联系大汗与中原皇帝双重身份理解政策",
+          "boundaries": []
+        },
+        {
+          "name": "阿里不哥",
+          "role": "蒙古汗位竞争者",
+          "summary": "蒙哥去世后与忽必烈争夺汗位",
+          "persona": "说明元朝建立伴随蒙古帝国内部变化",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "开平",
+          "region": "今内蒙古正蓝旗一带",
+          "lat": null,
+          "lng": null,
+          "note": "公元1260年忽必烈即位地区",
+          "kind": "capital"
+        },
+        {
+          "label": "大都",
+          "region": "今北京",
+          "lat": null,
+          "lng": null,
+          "note": "元朝主要都城",
+          "kind": "capital"
+        },
+        {
+          "label": "临安",
+          "region": "今浙江杭州",
+          "lat": null,
+          "lng": null,
+          "note": "南宋都城；公元1276年元军进入",
+          "kind": "capital"
+        },
+        {
+          "label": "崖山",
+          "region": "今广东江门新会南部",
+          "lat": null,
+          "lng": null,
+          "note": "公元1279年宋元海战地点",
+          "kind": "battle"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《元史·世祖本纪》",
+          "source": "传世史书",
+          "url_or_path": "《元史·世祖本纪》",
+          "citation_note": "记载忽必烈即位 建元和统一战争",
+          "reliability": "pending"
+        },
+        {
+          "title": "《元典章》",
+          "source": "制度文献",
+          "url_or_path": "《元典章》",
+          "citation_note": "保存元朝行政 财政和司法制度材料",
+          "reliability": "pending"
+        },
+        {
+          "title": "元代驿站文书与地图",
+          "source": "文字与地图材料",
+          "url_or_path": "元代站赤文书 行省地图及相关碑刻",
+          "citation_note": "反映地方治理和交通网络",
+          "reliability": "pending"
         }
       ]
     }

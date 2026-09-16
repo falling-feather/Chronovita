@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-abcc85a20e767e547eb8e41d",
+  "word": "函谷关",
+  "pinyin": "hán gǔ guān",
+  "gloss": "关中通向东方的重要关隘；秦国防守和进取的地理通道",
+  "era": "秦汉",
+  "category": "地点",
+  "examples": [
+    "本课结合“函谷关”说明关中通向东方的重要关隘；秦国防守和进取的地理通道。",
+    "讲解“函谷关”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L301"
+  ],
+  "source_refs": [
+    {
+      "title": "L301《战国七雄与远交近攻》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L301.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l301-06.json\", \"member_sha256\": \"bdd37e4d1d554c5aaaec5bf6d76e07cfc2fa76c0b596f48847044bc642771657\", \"source_id\": \"keyword-l301-06\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l301-06.json\", \"member_sha256\": \"bdd37e4d1d554c5aaaec5bf6d76e07cfc2fa76c0b596f48847044bc642771657\", \"source_id\": \"keyword-l301-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.389850Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

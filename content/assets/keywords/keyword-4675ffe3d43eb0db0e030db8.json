@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-4675ffe3d43eb0db0e030db8",
+  "word": "海禁",
+  "pinyin": "hǎi jìn",
+  "gloss": "明清政府限制民间出海和私人海外贸易的政策",
+  "era": "明清",
+  "category": "制度",
+  "examples": [
+    "本课结合“海禁”说明明清政府限制民间出海和私人海外贸易的政策。",
+    "讲解“海禁”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L1203"
+  ],
+  "source_refs": [
+    {
+      "title": "L1203《海禁与广州一口通商》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1203.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1203-01.json\", \"member_sha256\": \"eee9bce5542ec03b02aa41c97322a7ca02c94337a8b749f2b4401ed1c76b5d0e\", \"source_id\": \"keyword-l1203-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.265360Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

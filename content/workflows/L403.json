@@ -3,15 +3,15 @@
   "lesson_id": "L403",
   "course_id": "C-qinhan-founding",
   "state": "draft",
-  "revision": 1,
-  "draft_fingerprint": "c7a28559583dd6ecee2aad43c0ee781e0351676f9355faa692d9a33b3b700ae7",
+  "revision": 2,
+  "draft_fingerprint": "a3186ce41b7025fc30e715099a94ea6360371c817827b01b9ca4540f3d696936",
   "validation": null,
   "sealed_version": null,
   "sealed_checksum": null,
   "published_course_id": null,
   "published_version": null,
   "published_release_id": null,
-  "updated_at": "2026-09-14T17:06:07.487809Z",
+  "updated_at": "2026-09-16T10:01:48.280865Z",
   "history": [
     {
       "sequence": 1,
@@ -24,7 +24,19 @@
       "draft_fingerprint": "c7a28559583dd6ecee2aad43c0ee781e0351676f9355faa692d9a33b3b700ae7",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T10:01:48.280865Z",
+      "draft_fingerprint": "a3186ce41b7025fc30e715099a94ea6360371c817827b01b9ca4540f3d696936",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "145d2e7650e50cba467422abf12e319cd648cc69e2b5aca9a337ece960759753"
+  "checksum": "b642235ea66e1d1876e26eae813918867ea6a64fd0db3d9dab84189c5a02227b"
 }

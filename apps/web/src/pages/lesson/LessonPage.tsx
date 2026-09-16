@@ -105,9 +105,11 @@ export default function LessonPage() {
     let active = true;
     setLoading(true);
     setError('');
+    const lessonRequest = api.lesson(courseId, lessonId);
     Promise.all([
-      api.lesson(courseId, lessonId),
-      api.lessonPresentation(courseId, lessonId).catch(() => null),
+      lessonRequest,
+      lessonRequest.then((current) => current.reading_media_available === false
+        ? null : api.lessonPresentation(courseId, lessonId).catch(() => null)),
     ]).then(([nextLesson, nextPresentation]) => {
       if (!active) return;
       setLesson(nextLesson);
@@ -145,16 +147,23 @@ export default function LessonPage() {
   const nextStage = CLASSROOM_STAGES[stageIndex + 1];
   const previousStage = CLASSROOM_STAGES[stageIndex - 1];
 
+  // Reading profiles follow teacher text; practice keeps its published identities.
+  const interactionLesson = useMemo(() => lesson ? {
+    ...lesson,
+    people: lesson.interaction_people ?? lesson.people,
+    figures: lesson.interaction_figures ?? lesson.figures,
+  } : null, [lesson]);
+
   const content = useMemo(() => {
-    if (!lesson) return null;
+    if (!lesson || !interactionLesson) return null;
     if (layer === 'watch') return <LessonWatch lesson={lesson} />;
     if (layer === 'practice') {
-      return <LessonPractice lesson={lesson} onOpenDossier={() => openLayer('create')} />;
+      return <LessonPractice lesson={interactionLesson} onOpenDossier={() => openLayer('create')} />;
     }
     if (layer === 'ask') {
       return (
         <LessonAsk
-          lesson={lesson}
+          lesson={interactionLesson}
           presentation={presentation}
           initialQuestion={params.get('question') ?? undefined}
           initialPersonId={params.get('person') ?? undefined}
@@ -165,13 +174,13 @@ export default function LessonPage() {
       <Suspense fallback={<div className="chrono-create-loading"><Spin /></div>}>
         <LessonCreate
           key={lesson.id}
-          lesson={lesson}
+          lesson={interactionLesson}
           active
           onOpenPractice={() => openLayer('practice')}
         />
       </Suspense>
     );
-  }, [layer, lesson, openLayer, params, presentation]);
+  }, [layer, lesson, interactionLesson, openLayer, params, presentation]);
 
   if (loading) return <div className="chrono-page-loading"><Spin /><span>正在核对课时发布…</span></div>;
   if (!lesson) {
@@ -203,14 +212,14 @@ export default function LessonPage() {
               <SafetyCertificateOutlined />
               <div>
                 <strong>正式课堂资料</strong>
-                <span>课文、短片、情境与依据已完成校验</span>
+                <span>按教师当前课文阅读</span>
               </div>
               <span className="chrono-lesson-release-state">可学习</span>
             </>
           ) : (
             <>
               <ClockCircleOutlined />
-              <div><strong>基础课堂资料</strong><span>沿用四阶段学习流程</span></div>
+              <div><strong>教师课文</strong><span>人物与关键词按本课内容展示</span></div>
             </>
           )}
         </div>
@@ -246,7 +255,7 @@ export default function LessonPage() {
           type="info"
           showIcon
           message="纯前端内容预览"
-          description="当前公开页面可浏览课程、课文、关键词与两门旗舰课短片；登录、历史推演、RAG 问答、卷宗保存和教师功能仍只在本地课堂服务中运行。"
+          description="当前页面提供教师课文、人物与关键词预览；互动与学习保存请使用本地课堂服务。"
         />
       ) : null}
 
@@ -254,9 +263,9 @@ export default function LessonPage() {
         <main>{content}</main>
       </div>
 
-      {!IS_STATIC_PREVIEW ? (
+      {!IS_STATIC_PREVIEW && interactionLesson ? (
         <LessonCompanion
-          lesson={lesson}
+          lesson={interactionLesson}
           presentation={presentation}
           onOpenConsult={(question, personId) => openLayer('ask', { question, personId })}
         />

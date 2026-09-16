@@ -58,7 +58,7 @@ export default function LessonAsk({
   initialQuestion?: string;
   initialPersonId?: string;
 }) {
-  if (!presentation) return <LegacyLessonAsk lesson={lesson} />;
+  if (!(lesson.rag_available ?? Boolean(presentation))) return <LegacyLessonAsk lesson={lesson} />;
   return (
     <EvidenceLessonAsk
       lesson={lesson}

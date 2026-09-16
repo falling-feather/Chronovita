@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-3304828d665744412675f603",
+  "word": "竹林七贤",
+  "pinyin": "zhú lín qī xián",
+  "gloss": "后世对嵇康 阮籍等七位魏晋士人的合称；形象具有文化象征意义",
+  "era": "魏晋南北朝",
+  "category": "群体",
+  "examples": [
+    "本课结合“竹林七贤”说明后世对嵇康 阮籍等七位魏晋士人的合称；形象具有文化象征意义。",
+    "讲解“竹林七贤”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "嵇康",
+    "阮籍"
+  ],
+  "related_lessons": [
+    "L602"
+  ],
+  "source_refs": [
+    {
+      "title": "L602《清谈玄学与竹林七贤》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L602.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l602-04.json\", \"member_sha256\": \"4ec381893f340a98e4a1583b51abbb0f5e50a0d6bb868a8cf2995c304ebae523\", \"source_id\": \"keyword-l602-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.007689Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

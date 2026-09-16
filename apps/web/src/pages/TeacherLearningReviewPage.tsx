@@ -26,11 +26,6 @@ const STATUS_LABEL: Record<LearningCompletionStatus, string> = {
   completed: '确认完成',
 };
 
-const LESSON_LABELS: Record<string, string> = {
-  L101: '夏朝的建立与「家天下」',
-  L103: '商鞅变法：富国强兵与制度代价',
-};
-
 function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -110,7 +105,7 @@ export default function TeacherLearningReviewPage() {
       item.student_username ?? '',
       item.title,
       item.lesson_id,
-      LESSON_LABELS[item.lesson_id] ?? '',
+      item.lesson_title ?? '',
     ].some((value) => value.toLocaleLowerCase('zh-CN').includes(needle)));
   }, [items, query]);
 
@@ -205,7 +200,7 @@ export default function TeacherLearningReviewPage() {
                   <small>{formatDateTime(item.submitted_at)}</small>
                 </div>
                 <strong>{item.title}</strong>
-                <p>{LESSON_LABELS[item.lesson_id] ?? item.lesson_id} · 第 {item.version} 版</p>
+                <p>{item.lesson_title ?? `已撤下课时 ${item.lesson_id}`} · 第 {item.version} 版</p>
                 {item.latest_feedback ? (
                   <Tag color={item.latest_feedback.completion_status === 'completed' ? 'green' : item.latest_feedback.completion_status === 'changes_requested' ? 'volcano' : 'gold'}>
                     {STATUS_LABEL[item.latest_feedback.completion_status]}

@@ -91,6 +91,8 @@ class DayuEndToEndTests(unittest.TestCase):
                 )
             )["release"]
             self.assertEqual(release["schema_version"], "course-release/v2")
+            from tests.release_fixture import install_teacher_text
+            install_teacher_text("dayu-e2e")
 
             lesson = self._response_json(
                 first_client.get("/api/v1/courses/C-dayu-e2e/lessons/dayu-e2e")

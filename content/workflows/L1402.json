@@ -3,15 +3,15 @@
   "lesson_id": "L1402",
   "course_id": "C-mingqing-thought",
   "state": "draft",
-  "revision": 1,
-  "draft_fingerprint": "aa3eb1f7f9504dac3e4ae0bb3c50f9adaff1a53cc126871d16905df0e206f60b",
+  "revision": 2,
+  "draft_fingerprint": "13ba0ac84aeda7f92af5ddfd4c82d3183bcede4ad12aa216082e715044828976",
   "validation": null,
   "sealed_version": null,
   "sealed_checksum": null,
   "published_course_id": null,
   "published_version": null,
   "published_release_id": null,
-  "updated_at": "2026-09-14T17:06:07.849859Z",
+  "updated_at": "2026-09-16T10:01:49.013318Z",
   "history": [
     {
       "sequence": 1,
@@ -24,7 +24,19 @@
       "draft_fingerprint": "aa3eb1f7f9504dac3e4ae0bb3c50f9adaff1a53cc126871d16905df0e206f60b",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T10:01:49.013318Z",
+      "draft_fingerprint": "13ba0ac84aeda7f92af5ddfd4c82d3183bcede4ad12aa216082e715044828976",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "b5782c0d0614fd6239b7e41db81e233ce9dc68af64e319d1281b3f62a327d3b7"
+  "checksum": "43c20a17b83a463504d41f40246f02334412152a6578267b536df91095383ba7"
 }

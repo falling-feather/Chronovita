@@ -46,9 +46,56 @@
       "gloss": "特定官员通过密封奏折直接向皇帝报告情况的制度"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "胤禛（雍正帝）",
+      "role": "清朝皇帝",
+      "summary": "因处理西北军务推动军机处形成",
+      "persona": "从信息速度和皇权控制理解制度设置",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "北京紫禁城",
+      "region": "今北京故宫",
+      "lat": null,
+      "lng": null,
+      "note": "军机处和养心殿所在的清代政治中心",
+      "kind": "palace"
+    },
+    {
+      "label": "西北军务地区",
+      "region": "今甘肃 青海 新疆及周边",
+      "lat": null,
+      "lng": null,
+      "note": "雍正时期紧急军事信息的重要来源",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "中国第一历史档案馆军机处档案",
+      "source": "清代档案",
+      "url_or_path": "军机处录副奏折与廷寄档",
+      "citation_note": "反映军机处处理奏折和传递谕旨的流程",
+      "reliability": "pending"
+    },
+    {
+      "title": "《清史稿·军机大臣年表》",
+      "source": "传世史书",
+      "url_or_path": "《清史稿·军机大臣年表》",
+      "citation_note": "记录军机处人员和制度沿革",
+      "reliability": "pending"
+    },
+    {
+      "title": "清宫军机处建筑遗存",
+      "source": "建筑与宫廷遗存",
+      "url_or_path": "北京故宫军机处",
+      "citation_note": "反映军机处靠近内廷的空间位置",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -95,7 +142,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.766501Z",
-  "updated_at": "2026-09-14T17:06:07.766501Z",
+  "updated_at": "2026-09-16T10:01:48.801722Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

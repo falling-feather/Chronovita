@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-553f456e7d7856af1682337f",
+  "word": "有教无类",
+  "pinyin": "yǒu jiào wú lèi",
+  "gloss": "不以出身区别受教育者；主张不同身份的人都可以学习",
+  "era": "先秦",
+  "category": "思想",
+  "examples": [
+    "本课结合“有教无类”说明不以出身区别受教育者；主张不同身份的人都可以学习。",
+    "讲解“有教无类”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "孔子"
+  ],
+  "related_lessons": [
+    "L201"
+  ],
+  "source_refs": [
+    {
+      "title": "L201《孔子与儒家》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L201.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l201-06.json\", \"member_sha256\": \"50a07f1b8374469d6e138579741f61dba6ec498f126c524d5938fa09fcd8a80d\", \"source_id\": \"keyword-l201-06\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l201-06.json\", \"member_sha256\": \"50a07f1b8374469d6e138579741f61dba6ec498f126c524d5938fa09fcd8a80d\", \"source_id\": \"keyword-l201-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.146199Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

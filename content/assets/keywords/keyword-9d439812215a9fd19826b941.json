@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-9d439812215a9fd19826b941",
+  "word": "长安城",
+  "pinyin": "cháng ān chéng",
+  "gloss": "隋唐时期大型都城；街道整齐；宫城 皇城 坊市分区设置",
+  "era": "隋唐",
+  "category": "地点",
+  "examples": [
+    "本课结合“长安城”说明隋唐时期大型都城；街道整齐；宫城 皇城 坊市分区设置。",
+    "讲解“长安城”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L903"
+  ],
+  "source_refs": [
+    {
+      "title": "L903《丝绸之路与世界中的长安》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L903.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l903-02.json\", \"member_sha256\": \"4b481d2d838cf13c4e1baa0fd3d6f9c9518959216b7503f48e36910c088ed125\", \"source_id\": \"keyword-l903-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.615782Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-294eb9a15427317b3b8954f8",
+  "word": "实录精神",
+  "pinyin": "shí lù jīng shén",
+  "gloss": "力求如实记录历史的写作追求；强调不虚美也不隐恶",
+  "era": "秦汉",
+  "category": "思想",
+  "examples": [
+    "本课结合“实录精神”说明力求如实记录历史的写作追求；强调不虚美也不隐恶。",
+    "讲解“实录精神”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "司马迁"
+  ],
+  "related_lessons": [
+    "L501"
+  ],
+  "source_refs": [
+    {
+      "title": "L501《司马迁与《史记》》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L501.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l501-07.json\", \"member_sha256\": \"fa38aaeef1ee7d10b992f830c48ef113cf24c377be1b7bd7279cba773afa59df\", \"source_id\": \"keyword-l501-07\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.809728Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

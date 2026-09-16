@@ -75,13 +75,6 @@
       "summary": "传世文献中记载的商朝末代君主；后世常称商纣王",
       "persona": "说明暴虐失德的形象主要来自后世文献的道德评价，并结合考古材料认识晚商社会",
       "boundaries": []
-    },
-    {
-      "name": "周武王",
-      "role": "周王",
-      "summary": "传统文献记载中在牧野之战击败商军的周王",
-      "persona": "重点说明牧野之战在传统叙事中的位置，不把战役细节全部视为同时代记录",
-      "boundaries": []
     }
   ],
   "map_points": [
@@ -206,7 +199,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-01T18:13:49.441954Z",
-  "updated_at": "2026-09-14T17:06:07.357417Z",
+  "updated_at": "2026-09-16T10:01:48.038904Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

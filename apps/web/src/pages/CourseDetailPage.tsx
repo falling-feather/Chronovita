@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import type { CourseDetail, ProgressItem } from '../utils/api';
 import { api } from '../utils/api';
-import { CLASSROOM_STAGES, isFlagshipLesson } from '../features/classroom/classroomModel';
+import { CLASSROOM_STAGES } from '../features/classroom/classroomModel';
 import CourseCoverPicture from '../features/courses/CourseCoverPicture';
 
 export default function CourseDetailPage() {
@@ -47,8 +47,7 @@ export default function CourseDetailPage() {
   if (!data) return <div className="chrono-empty">课程不存在或当前发布暂不可读。</div>;
 
   const course = data.summary;
-  const flagshipCount = data.lessons.filter((lesson) => isFlagshipLesson(lesson.id)).length;
-  const firstFlagship = data.lessons.find((lesson) => isFlagshipLesson(lesson.id)) ?? data.lessons[0];
+  const firstFlagship = data.lessons[0];
 
   return (
     <div className="chrono-course-route-page">
@@ -68,18 +67,18 @@ export default function CourseDetailPage() {
           <h1>{course.title}</h1>
           <p className="chrono-course-subtitle">{course.subtitle}</p>
           <p className="chrono-course-identity">{course.section} · 历史主题课程</p>
-          <p>{data.intro}</p>
+          {data.intro ? <p>{data.intro}</p> : null}
         </div>
         <aside>
           <ClockCircleOutlined />
           <strong>{data.lessons.length} 个课时节点</strong>
-          <span>{flagshipCount} 门旗舰课 · 每门约 35—45 分钟</span>
+          <span>按教师课时顺序学习</span>
           {firstFlagship ? (
             <Button
               type="primary"
               onClick={() => nav(`/courses/${course.id}/lessons/${firstFlagship.id}?layer=watch`)}
             >
-              从旗舰课开始 <ArrowRightOutlined />
+              从第一课开始 <ArrowRightOutlined />
             </Button>
           ) : null}
         </aside>
@@ -107,12 +106,11 @@ export default function CourseDetailPage() {
         <div className="chrono-route-contours" aria-hidden="true" />
         <ol className="chrono-route-nodes">
           {data.lessons.map((lesson, index) => {
-            const flagship = isFlagshipLesson(lesson.id);
             const item = progressByLesson.get(lesson.id);
             const completedStages = item ? Object.values(item.layers).filter(Boolean).length : 0;
             const percent = completedStages * 25;
             return (
-              <li key={lesson.id} className={flagship ? 'flagship' : ''}>
+              <li key={lesson.id}>
                 <div className="chrono-route-marker">
                   {percent === 100 ? <CheckOutlined /> : <span>{String(index + 1).padStart(2, '0')}</span>}
                 </div>
@@ -129,13 +127,11 @@ export default function CourseDetailPage() {
                 >
                   <div className="chrono-route-node-meta">
                     <span>{lesson.num}</span>
-                    <span className="chrono-route-node-kind">{flagship ? '旗舰课堂' : '课程节点'}</span>
+                    <span className="chrono-route-node-kind">教师课文</span>
                     <span><ClockCircleOutlined /> {lesson.duration}</span>
                   </div>
                   <h3>{lesson.title}</h3>
-                  <p>{flagship
-                    ? '踏勘材料、完成六回合抉择、召见人物并生成史官卷宗。'
-                    : '沿用课程目录内容，可继续使用看、练、问、创兼容学习流程。'}</p>
+                  <p>按本课课文、人物与关键词阅读。</p>
                   <div className="chrono-route-node-progress">
                     <Progress percent={percent} showInfo={false} strokeColor="#65AAA0" />
                     <span>{item ? `已完成 ${completedStages} / 4 阶段` : '尚未开始'}</span>

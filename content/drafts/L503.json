@@ -52,9 +52,85 @@
       "gloss": "利用直角三角形边长关系计算的方法；用于测量和工程问题"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "蔡伦",
+      "role": "东汉官员和技术改进者",
+      "summary": "总结前人经验并扩大造纸原料来源",
+      "persona": "强调技术改进建立在既有实践之上",
+      "boundaries": []
+    },
+    {
+      "name": "张衡",
+      "role": "东汉学者",
+      "summary": "研究天文 历法并制造候风地动仪",
+      "persona": "区分传世文字记载 原器和现代复原模型",
+      "boundaries": []
+    },
+    {
+      "name": "刘徽",
+      "role": "魏晋时期数学家",
+      "summary": "为《九章算术》作注并系统解释其中算法",
+      "persona": "用于说明数学文本在后世继续整理和发展",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "洛阳",
+      "region": "今河南洛阳一带",
+      "lat": null,
+      "lng": null,
+      "note": "蔡伦和张衡从事宫廷技术活动的东汉都城",
+      "kind": "capital"
+    },
+    {
+      "label": "旱滩坡",
+      "region": "今甘肃武威一带",
+      "lat": null,
+      "lng": null,
+      "note": "东汉带字纸实物的出土地之一",
+      "kind": "site"
+    },
+    {
+      "label": "西北汉代遗址群",
+      "region": "今甘肃及周边地区",
+      "lat": null,
+      "lng": null,
+      "note": "发现多种汉代纸张和简牍实物的区域",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《后汉书·蔡伦传》",
+      "source": "传世文献",
+      "url_or_path": "《后汉书·蔡伦传》",
+      "citation_note": "记载蔡伦于公元105年报告改进制纸方法",
+      "reliability": "pending"
+    },
+    {
+      "title": "《后汉书·张衡列传》",
+      "source": "传世文献",
+      "url_or_path": "《后汉书·张衡列传》",
+      "citation_note": "记载张衡制造候风地动仪及其运行现象",
+      "reliability": "pending"
+    },
+    {
+      "title": "汉代纸张实物",
+      "source": "考古实物材料",
+      "url_or_path": "西北地区汉代纸张考古发现",
+      "citation_note": "用于认识蔡伦以前和以后的植物纤维纸发展",
+      "reliability": "pending"
+    },
+    {
+      "title": "《九章算术》",
+      "source": "传世科技文献",
+      "url_or_path": "《九章算术》",
+      "citation_note": "保存秦汉数学问题分类和算法体系",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -106,7 +182,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.526342Z",
-  "updated_at": "2026-09-14T17:06:07.526342Z",
+  "updated_at": "2026-09-16T10:01:48.363173Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

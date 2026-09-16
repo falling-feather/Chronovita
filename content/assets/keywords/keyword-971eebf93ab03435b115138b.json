@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-971eebf93ab03435b115138b",
+  "word": "榷场",
+  "pinyin": "què chǎng",
+  "gloss": "政权在边境设置并管理的互市贸易场所",
+  "era": "宋元",
+  "category": "经济",
+  "examples": [
+    "本课结合“榷场”说明政权在边境设置并管理的互市贸易场所。",
+    "讲解“榷场”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L1002"
+  ],
+  "source_refs": [
+    {
+      "title": "L1002《澶渊之盟与岁币体系》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1002.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1002-05.json\", \"member_sha256\": \"9457daa77ea1cdbd48923fd1d92df2e55940cb3e45480a5c8e5904cb4fba3bc8\", \"source_id\": \"keyword-l1002-05\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:54.827002Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

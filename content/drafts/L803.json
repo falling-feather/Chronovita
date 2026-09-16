@@ -46,9 +46,94 @@
       "gloss": "公元780年实行的赋税制度；按土地和财产在夏秋征税"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "安禄山",
+      "role": "叛军首领",
+      "summary": "利用边镇军力从范阳起兵",
+      "persona": "联系节度使制度与中央政治矛盾理解叛乱",
+      "boundaries": []
+    },
+    {
+      "name": "李亨（唐肃宗）",
+      "role": "唐朝皇帝",
+      "summary": "在灵武即位并组织平叛",
+      "persona": "说明战争中的中央权力重组",
+      "boundaries": []
+    },
+    {
+      "name": "郭子仪",
+      "role": "唐朝将领",
+      "summary": "率军参与收复两京和平定叛乱",
+      "persona": "关注中央军队与外援共同作用",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "范阳",
+      "region": "今北京西南一带",
+      "lat": null,
+      "lng": null,
+      "note": "安禄山起兵地区",
+      "kind": "city"
+    },
+    {
+      "label": "洛阳",
+      "region": "今河南洛阳",
+      "lat": null,
+      "lng": null,
+      "note": "叛军首先攻占的重要都城",
+      "kind": "capital"
+    },
+    {
+      "label": "马嵬驿",
+      "region": "今陕西兴平一带",
+      "lat": null,
+      "lng": null,
+      "note": "公元756年随驾军士哗变地点",
+      "kind": "site"
+    },
+    {
+      "label": "灵武",
+      "region": "今宁夏灵武一带",
+      "lat": null,
+      "lng": null,
+      "note": "唐肃宗即位地点",
+      "kind": "city"
+    },
+    {
+      "label": "河北藩镇地区",
+      "region": "唐代河北道部分区域",
+      "lat": null,
+      "lng": null,
+      "note": "战后藩镇势力较强的地区",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《旧唐书·安禄山传》",
+      "source": "传世史书",
+      "url_or_path": "《旧唐书·安禄山传》",
+      "citation_note": "记载安禄山经历和叛乱过程",
+      "reliability": "pending"
+    },
+    {
+      "title": "《资治通鉴》唐纪",
+      "source": "编年史书",
+      "url_or_path": "《资治通鉴》唐纪",
+      "citation_note": "记录战争进程和唐廷应对",
+      "reliability": "pending"
+    },
+    {
+      "title": "唐后期藩镇墓志与文书",
+      "source": "考古文字材料",
+      "url_or_path": "河北及其他地区唐代墓志 文书",
+      "citation_note": "补充地方官员 军队和中央关系信息",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -95,7 +180,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.622220Z",
-  "updated_at": "2026-09-14T17:06:07.622220Z",
+  "updated_at": "2026-09-16T10:01:48.467912Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

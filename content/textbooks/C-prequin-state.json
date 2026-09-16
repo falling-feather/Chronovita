@@ -13,7 +13,7 @@
     "L104": "9c167fb5fccf9f6088895a96098248e2f87fc0eb86ee82f7720fbd45e704cb11",
     "L105": "2cc73826714d0b366939260a34025cee7bf664fd1ce03da3507c03e859386322"
   },
-  "text_checksum": "f44723d840c2648f1b8706b2638fd69314e393cf4f03911bb000b5e149e23915",
+  "text_checksum": "ce1d9501ad91ac6e3c52ea5249e68ec363efab9e013eeacb38f2b33c4ef47517",
   "lessons": [
     {
       "lesson_id": "L101",
@@ -86,6 +86,100 @@
           "pinyin": "míng tiáo zhī zhàn",
           "gloss": "传统文献记载的商汤伐夏之战"
         }
+      ],
+      "people": [
+        {
+          "name": "禹",
+          "role": "远古传说人物",
+          "summary": "传世文献中因治水获得声望并成为部落联盟首领的人物",
+          "persona": "讨论治水传说、社会协作和早期国家形成时保持谨慎，不把传说细节说成直接史实",
+          "boundaries": []
+        },
+        {
+          "name": "启",
+          "role": "夏朝早期统治者",
+          "summary": "传统叙事中继承禹权力的人物，后世常将其与王位世袭联系起来",
+          "persona": "重点解释禅让制与王位世袭制的变化，承认启继位过程存在不同文献记载",
+          "boundaries": []
+        },
+        {
+          "name": "商汤",
+          "role": "商族首领",
+          "summary": "传统文献记载中伐夏并建立商朝的首领",
+          "persona": "重点说明夏商更替的传统叙事和约前1600年的年代框架",
+          "boundaries": []
+        },
+        {
+          "name": "夏桀",
+          "role": "夏朝末代君主",
+          "summary": "传世文献中被描写为暴虐的夏朝末代君主",
+          "persona": "",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "黄河中下游与伊洛河流域",
+          "region": "中原地区",
+          "lat": null,
+          "lng": null,
+          "note": "早期农业聚落、治水传说和早期国家形成的重要区域",
+          "kind": "river"
+        },
+        {
+          "label": "阳城",
+          "region": "今河南登封一带",
+          "lat": null,
+          "lng": null,
+          "note": "传统文献记载的夏都名称，具体位置仍有讨论",
+          "kind": "capital"
+        },
+        {
+          "label": "二里头遗址",
+          "region": "今河南洛阳偃师区",
+          "lat": null,
+          "lng": null,
+          "note": "出土大型建筑、青铜礼器和绿松石龙形器等重要遗物",
+          "kind": "site"
+        },
+        {
+          "label": "鸣条",
+          "region": "中原地区传统说法地点",
+          "lat": null,
+          "lng": null,
+          "note": "传世文献记载的商汤伐夏之战地点",
+          "kind": "battlefield"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "夏商周断代工程与夏代年代框架",
+          "source": "人民政协网",
+          "url_or_path": "https://www.cppcc.gov.cn/zxww/2022/11/10/ARTI1668053116436252.shtml",
+          "citation_note": "夏代约公元前2070年至公元前1600年的基本年代框架",
+          "reliability": "pending"
+        },
+        {
+          "title": "有关夏的三个误解",
+          "source": "全国哲学社会科学工作办公室",
+          "url_or_path": "https://www.nopss.gov.cn/n1/2023/0726/c448861-40043828.html",
+          "citation_note": "说明考古学文化不能简单等同于族属、朝代和国家",
+          "reliability": "pending"
+        },
+        {
+          "title": "甄器尚象：夏代文明之光",
+          "source": "全国哲学社会科学工作办公室",
+          "url_or_path": "https://www.nopss.gov.cn/n1/2023/0726/c448861-40043837.html",
+          "citation_note": "介绍二里头文化的遗址、遗物和社会组织特征",
+          "reliability": "pending"
+        },
+        {
+          "title": "寻夏记：一个广域王权国家的诞生",
+          "source": "河南省文物局",
+          "url_or_path": "https://wwj.henan.gov.cn/2022/12-12/2655215.html",
+          "citation_note": "介绍夏代传说、年代和早期国家相关研究",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -143,6 +237,70 @@
           "word": "牧野之战",
           "pinyin": "mù yě zhī zhàn",
           "gloss": "周武王伐商的决战；传统记载中的商周更替战役"
+        }
+      ],
+      "people": [
+        {
+          "name": "盘庚",
+          "role": "商王",
+          "summary": "传统文献记载中将商朝都城迁至殷的商王",
+          "persona": "重点说明迁都涉及政治中心、人口和资源安排；相关过程主要见于传世文献",
+          "boundaries": []
+        },
+        {
+          "name": "帝辛",
+          "role": "商朝末代君主",
+          "summary": "传世文献中记载的商朝末代君主；后世常称商纣王",
+          "persona": "说明暴虐失德的形象主要来自后世文献的道德评价，并结合考古材料认识晚商社会",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "殷墟",
+          "region": "今河南安阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "商代晚期都城遗址；出土甲骨文、青铜器和王陵等遗存",
+          "kind": "site"
+        },
+        {
+          "label": "牧野",
+          "region": "今河南新乡一带",
+          "lat": null,
+          "lng": null,
+          "note": "传统记载中的商周更替战场；具体位置仍有讨论",
+          "kind": "battlefield"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "在甲骨文中触摸厚重历史",
+          "source": "中华人民共和国教育部",
+          "url_or_path": "https://www.moe.gov.cn/jyb_xwfb/s5147/201911/t20191104_406743.html",
+          "citation_note": "介绍甲骨文的名称、载体和占卜记录功能",
+          "reliability": "pending"
+        },
+        {
+          "title": "甲骨文研究的继往开来",
+          "source": "全国哲学社会科学工作办公室",
+          "url_or_path": "https://www.nopss.gov.cn/n1/2019/1104/c219457-31435711.html",
+          "citation_note": "介绍殷墟甲骨文的内容及其对研究商代社会的价值",
+          "reliability": "pending"
+        },
+        {
+          "title": "安阳殷墟 幽微之处见文脉",
+          "source": "河南省文物局",
+          "url_or_path": "https://wwj.henan.gov.cn/2023/03-22/2711866.html",
+          "citation_note": "介绍殷墟、甲骨文和商代占卜活动",
+          "reliability": "pending"
+        },
+        {
+          "title": "司母戊大方鼎亮相河南安阳",
+          "source": "中华人民共和国文化和旅游部",
+          "url_or_path": "https://www.mct.gov.cn/whzx/tpxw/200509/t20050920_828201.htm",
+          "citation_note": "介绍后母戊鼎的形制、用途和铸造技术价值",
+          "reliability": "pending"
         }
       ]
     },
@@ -209,6 +367,85 @@
           "pinyin": "liú lí hé yí zhǐ",
           "gloss": "位于今北京房山的西周燕国都城遗址；出土城址 墓葬和青铜器铭文"
         }
+      ],
+      "people": [
+        {
+          "name": "姬发（周武王）",
+          "role": "西周开国君主",
+          "summary": "灭商后建立周王朝的周王",
+          "persona": "作为西周政治秩序的开端人物出现；不展开重复的牧野之战叙述",
+          "boundaries": []
+        },
+        {
+          "name": "姬旦（周公）",
+          "role": "西周初期政治家",
+          "summary": "辅佐周成王并主持平定东方叛乱的周王室贵族",
+          "persona": "重点说明其辅政、平乱和建设地方统治网络的作用",
+          "boundaries": []
+        },
+        {
+          "name": "姬诵（周成王）",
+          "role": "西周早期周王",
+          "summary": "周武王去世后继位的周王；早年由周公辅佐",
+          "persona": "用于说明西周初期王权交接和周公辅政的背景",
+          "boundaries": []
+        },
+        {
+          "name": "姬宫湦（周幽王）",
+          "role": "西周末代周王",
+          "summary": "犬戎攻破镐京时在位的西周末代周王",
+          "persona": "重点说明西周王室控制力减弱和都城东迁的历史结果",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "镐京",
+          "region": "今陕西西安一带",
+          "lat": null,
+          "lng": null,
+          "note": "西周王都；周王室统治中心",
+          "kind": "capital"
+        },
+        {
+          "label": "洛邑",
+          "region": "今河南洛阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "周朝东部政治中心；周平王东迁后的都城",
+          "kind": "capital"
+        },
+        {
+          "label": "琉璃河遗址",
+          "region": "今北京房山",
+          "lat": null,
+          "lng": null,
+          "note": "西周燕国都城遗址；出土城址、墓葬和青铜器铭文",
+          "kind": "site"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "琉璃河遗址：西周分封制的力证",
+          "source": "北京市房山区人民政府",
+          "url_or_path": "https://www.bjfsh.gov.cn/zhxw/fsdt/202507/t20250725_40091097_fs.shtml",
+          "citation_note": "介绍琉璃河遗址、燕国城址和青铜器铭文所反映的西周分封",
+          "reliability": "pending"
+        },
+        {
+          "title": "周代礼制发展史",
+          "source": "全国哲学社会科学工作办公室",
+          "url_or_path": "https://www.nopss.gov.cn/n1/2024/0509/c373410-40232165.html",
+          "citation_note": "介绍周代礼制、宗法关系和政治秩序",
+          "reliability": "pending"
+        },
+        {
+          "title": "中国古代选官标准和方式的演变",
+          "source": "中华人民共和国司法部",
+          "url_or_path": "https://legalinfo.moj.gov.cn/zhfxfzwh/fzwhfsgs/202303/t20230308_473682.html",
+          "citation_note": "介绍西周分封体系和贵族等级关系",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -251,6 +488,99 @@
           "word": "侯马晋国遗址",
           "pinyin": "hóu mǎ jìn guó yí zhǐ",
           "gloss": "位于今山西侯马的晋国都城遗址；出土城址和盟誓文字"
+        }
+      ],
+      "people": [
+        {
+          "name": "姜小白（齐桓公）",
+          "role": "春秋时期齐国国君",
+          "summary": "任用管仲改革并通过会盟取得霸主地位的诸侯",
+          "persona": "重点说明齐国国力、管仲改革和会盟外交之间的关系",
+          "boundaries": []
+        },
+        {
+          "name": "管仲",
+          "role": "齐国卿相",
+          "summary": "辅佐齐桓公整顿内政、发展生产和编组军队的政治家",
+          "persona": "将改革措施与齐国称霸联系起来；避免把后世评价写成唯一结论",
+          "boundaries": []
+        },
+        {
+          "name": "姬重耳（晋文公）",
+          "role": "春秋时期晋国国君",
+          "summary": "城濮之战后主持会盟并取得中原霸主地位的诸侯",
+          "persona": "重点说明流亡经历、军事胜利和政治声望之间的联系",
+          "boundaries": []
+        },
+        {
+          "name": "熊侣（楚庄王）",
+          "role": "春秋时期楚国国君",
+          "summary": "整顿楚国并在邲之战后取得中原政治影响的君主",
+          "persona": "突出南方强国参与中原政治的历史变化",
+          "boundaries": []
+        },
+        {
+          "name": "吴王阖闾",
+          "role": "春秋后期吴国国君",
+          "summary": "整顿军队、进攻楚国并扩大吴国影响的君主",
+          "persona": "用于说明东南诸侯崛起和争霸范围扩大",
+          "boundaries": []
+        },
+        {
+          "name": "越王勾践",
+          "role": "春秋后期越国国君",
+          "summary": "灭吴后成为东南地区强国首领的君主",
+          "persona": "区分勾践的历史活动与后世卧薪尝胆故事的道德表达",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "临淄",
+          "region": "今山东淄博一带",
+          "lat": null,
+          "lng": null,
+          "note": "齐国都城；齐桓公称霸时期的重要政治中心",
+          "kind": "capital"
+        },
+        {
+          "label": "城濮",
+          "region": "今河南濮阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "晋楚城濮之战的传统地点",
+          "kind": "battlefield"
+        },
+        {
+          "label": "侯马晋国遗址",
+          "region": "今山西侯马",
+          "lat": null,
+          "lng": null,
+          "note": "春秋时期晋国都城遗址；出土城址和盟誓文字",
+          "kind": "site"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "文史漫步：荀子评点战国双雄齐、秦",
+          "source": "广州市政协",
+          "url_or_path": "https://www.gzszx.gov.cn/wstd/wsmb/33751.shtml",
+          "citation_note": "介绍春秋五霸的常见名单及齐桓公相关历史",
+          "reliability": "pending"
+        },
+        {
+          "title": "管仲治齐",
+          "source": "清风齐鲁网",
+          "url_or_path": "https://www.qfxc.gov.cn/contents/32/13126.html",
+          "citation_note": "介绍管仲改革、尊王攘夷和齐桓公会盟",
+          "reliability": "pending"
+        },
+        {
+          "title": "博物馆展览：争霸春秋",
+          "source": "北京市人民政府",
+          "url_or_path": "https://www.beijing.gov.cn/fwcj/calendar/bwgzl/6a0d7712daec8455186ecd6f.html",
+          "citation_note": "介绍侯马晋国遗址、侯马盟书和春秋晋国历史",
+          "reliability": "pending"
         }
       ]
     },
@@ -309,6 +639,63 @@
           "word": "徙木立信",
           "pinyin": "xǐ mù lì xìn",
           "gloss": "商鞅以搬木兑现赏金取信于民的传统故事"
+        }
+      ],
+      "people": [
+        {
+          "name": "商鞅",
+          "role": "战国时期秦国政治家",
+          "summary": "主持秦国改革并推动法令、军功和地方管理制度变化的政治家",
+          "persona": "重点说明改革措施及其社会影响；区分商鞅个人命运与制度延续",
+          "boundaries": []
+        },
+        {
+          "name": "嬴渠梁（秦孝公）",
+          "role": "战国时期秦国国君",
+          "summary": "招揽人才并支持商鞅在秦国推行改革的君主",
+          "persona": "用于说明君主支持是改革得以推行的重要条件",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "秦国",
+          "region": "今陕西关中及甘肃东部一带",
+          "lat": null,
+          "lng": null,
+          "note": "战国时期推行商鞅变法的诸侯国；地处关中，依托关中平原发展",
+          "kind": "state"
+        },
+        {
+          "label": "咸阳",
+          "region": "今陕西咸阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "秦国后来发展的重要政治中心；可联系秦国政治管理的集中化趋势",
+          "kind": "capital"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "普通高中历史课程相关教学材料",
+          "source": "成都市教育局",
+          "url_or_path": "https://jyj.changdu.gov.cn/cdsjyj/c101476/202205/764ee1914e3c45aaba8e372f1b628a34/files/98a04fa1c8ef411ca0ee34ebcb4bcd73.pdf",
+          "citation_note": "整理商鞅变法中农战、军功、连坐、土地和县制等主要措施及其影响",
+          "reliability": "pending"
+        },
+        {
+          "title": "徙木立信：商鞅变法中的法令信用",
+          "source": "中央网信办",
+          "url_or_path": "https://www.cac.gov.cn/2022-12/12/c_1672477198256264.htm",
+          "citation_note": "介绍徙木立信的传统故事及商鞅重视法令执行的历史记忆",
+          "reliability": "pending"
+        },
+        {
+          "title": "商鞅变法与秦国制度变化",
+          "source": "全国哲学社会科学工作办公室",
+          "url_or_path": "https://www.nopss.gov.cn/n1/2023/0612/c219544-40011381.html",
+          "citation_note": "说明军功爵制及商鞅变法对秦国政治和社会结构的影响",
+          "reliability": "pending"
         }
       ]
     }

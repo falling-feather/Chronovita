@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-e2e7923a2f0b1876f578fe2a",
+  "word": "汉朝",
+  "pinyin": "hàn cháo",
+  "gloss": "刘邦于公元前202年建立的王朝；都城设在长安",
+  "era": "秦汉",
+  "category": "时代",
+  "examples": [
+    "本课结合“汉朝”说明刘邦于公元前202年建立的王朝；都城设在长安。",
+    "讲解“汉朝”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "刘邦",
+    "韩信"
+  ],
+  "related_lessons": [
+    "L401"
+  ],
+  "source_refs": [
+    {
+      "title": "L401《秦亡与楚汉相争》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L401.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l401-05.json\", \"member_sha256\": \"2f888c9f2083fabaf7a46f5fa206176d50e83c5b6cf4ad4892bd85eb711fdcac\", \"source_id\": \"keyword-l401-05\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l401-05.json\", \"member_sha256\": \"2f888c9f2083fabaf7a46f5fa206176d50e83c5b6cf4ad4892bd85eb711fdcac\", \"source_id\": \"keyword-l401-05\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.585164Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

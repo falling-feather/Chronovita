@@ -46,9 +46,94 @@
       "gloss": "南明延续时间较长的政权；主要活动于西南地区"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "朱由检（崇祯帝）",
+      "role": "明朝末代皇帝",
+      "summary": "试图整顿朝政却未能解决多重危机",
+      "persona": "避免把王朝灭亡完全归于个人品格",
+      "boundaries": []
+    },
+    {
+      "name": "李自成",
+      "role": "大顺政权建立者",
+      "summary": "领导起义军攻入北京并推翻明朝中央政权",
+      "persona": "联系灾荒 赋税和军队流动理解崛起",
+      "boundaries": []
+    },
+    {
+      "name": "郑成功",
+      "role": "东南沿海抗清将领",
+      "summary": "以海上力量继续抗清并控制台湾",
+      "persona": "说明明清易代延续到沿海与台湾",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "北京",
+      "region": "今北京",
+      "lat": null,
+      "lng": null,
+      "note": "公元1644年大顺军攻入并随后被清军控制",
+      "kind": "capital"
+    },
+    {
+      "label": "山海关",
+      "region": "今河北秦皇岛",
+      "lat": null,
+      "lng": null,
+      "note": "清军入关和击败大顺军的关键区域",
+      "kind": "battle"
+    },
+    {
+      "label": "南京",
+      "region": "今江苏南京",
+      "lat": null,
+      "lng": null,
+      "note": "南明弘光政权建立地",
+      "kind": "capital"
+    },
+    {
+      "label": "昆明",
+      "region": "今云南昆明",
+      "lat": null,
+      "lng": null,
+      "note": "永历政权在西南活动的重要城市",
+      "kind": "city"
+    },
+    {
+      "label": "台湾",
+      "region": "今台湾地区",
+      "lat": null,
+      "lng": null,
+      "note": "郑成功驱逐荷兰殖民者后建立基地的地区",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《明史·庄烈帝本纪》",
+      "source": "传世史书",
+      "url_or_path": "《明史·庄烈帝本纪》",
+      "citation_note": "记载崇祯时期政治和北京失守",
+      "reliability": "pending"
+    },
+    {
+      "title": "《明季北略》与《明季南略》",
+      "source": "明清易代史料汇编",
+      "url_or_path": "《明季北略》《明季南略》",
+      "citation_note": "保存起义 清军入关和南明事件记载",
+      "reliability": "pending"
+    },
+    {
+      "title": "明末地方志与个人日记",
+      "source": "地方与私人记录",
+      "url_or_path": "明末清初地方志 日记及奏疏",
+      "citation_note": "反映灾荒 战争和地方社会经历",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -95,7 +180,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.816788Z",
-  "updated_at": "2026-09-14T17:06:07.816788Z",
+  "updated_at": "2026-09-16T10:01:48.928293Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

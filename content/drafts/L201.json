@@ -66,9 +66,64 @@
       "gloss": "由孔子学说发展而来的思想学派；重视学习 修养和社会责任"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "孔子",
+      "role": "春秋晚期思想家和教育家",
+      "summary": "通过讲学、问答和政治实践提出仁、礼及教育主张的思想家",
+      "persona": "重点说明孔子如何回应社会秩序变化；结合具体经历解释其思想",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "曲阜",
+      "region": "今山东曲阜一带",
+      "lat": null,
+      "lng": null,
+      "note": "鲁国重要城邑；与孔子的出生、讲学和活动传统相关",
+      "kind": "city"
+    },
+    {
+      "label": "鲁国",
+      "region": "今山东南部一带",
+      "lat": null,
+      "lng": null,
+      "note": "孔子所在的诸侯国；保留较多周礼传统",
+      "kind": "state"
+    },
+    {
+      "label": "周游列国路线",
+      "region": "今河南、安徽、江苏等地的部分区域",
+      "lat": null,
+      "lng": null,
+      "note": "孔子与弟子游历诸侯国并传播学说的传统路线",
+      "kind": "route"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《论语》",
+      "source": "传世文献",
+      "url_or_path": "《论语》",
+      "citation_note": "孔子及弟子问答、学习教育和仁礼思想的主要材料",
+      "reliability": "pending"
+    },
+    {
+      "title": "《史记·孔子世家》",
+      "source": "传世文献",
+      "url_or_path": "《史记·孔子世家》",
+      "citation_note": "记载孔子生平、从政经历、周游列国和弟子传承",
+      "reliability": "pending"
+    },
+    {
+      "title": "《礼记·中庸》",
+      "source": "传世文献",
+      "url_or_path": "《礼记·中庸》",
+      "citation_note": "保存后世对孔子及儒家思想的概括性表述；用于了解儒家传统的发展",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -120,7 +175,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.446053Z",
-  "updated_at": "2026-09-14T17:06:07.446053Z",
+  "updated_at": "2026-09-16T10:01:48.178320Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

@@ -3,15 +3,15 @@
   "lesson_id": "L602",
   "course_id": "C-weijin-fusion",
   "state": "draft",
-  "revision": 1,
-  "draft_fingerprint": "c5868ea1a8fe8f9b96db81bf3bc9a0e85046a7bb6f08389d2c2effb87afd3d36",
+  "revision": 2,
+  "draft_fingerprint": "edecefba84f88a7996d3e355be63e8c19e9bacdad47c25d6bf781201627c5446",
   "validation": null,
   "sealed_version": null,
   "sealed_checksum": null,
   "published_course_id": null,
   "published_version": null,
   "published_release_id": null,
-  "updated_at": "2026-09-14T17:06:07.559096Z",
+  "updated_at": "2026-09-16T10:01:49.291473Z",
   "history": [
     {
       "sequence": 1,
@@ -24,7 +24,19 @@
       "draft_fingerprint": "c5868ea1a8fe8f9b96db81bf3bc9a0e85046a7bb6f08389d2c2effb87afd3d36",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T10:01:49.291473Z",
+      "draft_fingerprint": "edecefba84f88a7996d3e355be63e8c19e9bacdad47c25d6bf781201627c5446",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "8bb61228ac856d1144631e8e91334f78659e8083febef455cea92293b71b0f46"
+  "checksum": "1c9d995d8b62363673410a50cceae8b66087cb5ed0c8fb6f75db79ca7e0dfecc"
 }

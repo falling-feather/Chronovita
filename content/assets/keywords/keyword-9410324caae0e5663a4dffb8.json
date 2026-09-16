@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-9410324caae0e5663a4dffb8",
+  "word": "《大唐西域记》",
+  "pinyin": "dà táng xī yù jì",
+  "gloss": "玄奘口述并由辩机整理的地理见闻；记录中亚和南亚多地情况",
+  "era": "隋唐",
+  "category": "文献",
+  "examples": [
+    "本课结合“《大唐西域记》”说明玄奘口述并由辩机整理的地理见闻；记录中亚和南亚多地情况。",
+    "讲解“《大唐西域记》”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "玄奘",
+    "辩机（唐代僧人）"
+  ],
+  "related_lessons": [
+    "L902"
+  ],
+  "source_refs": [
+    {
+      "title": "L902《玄奘西行》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L902.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l902-06.json\", \"member_sha256\": \"21ab1c3a90a90ada248a837def5a76174358f0892a8dc02ab54fea4e71eb801b\", \"source_id\": \"keyword-l902-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.597062Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

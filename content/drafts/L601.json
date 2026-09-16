@@ -46,9 +46,79 @@
       "gloss": "魏 蜀汉 孙吴三个政权并立的局面；形成于三世纪前期"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "曹操",
+      "role": "汉末政治家和军事家",
+      "summary": "统一北方并为魏国建立奠定基础",
+      "persona": "从政治号召 军事行动和经济措施理解其崛起",
+      "boundaries": []
+    },
+    {
+      "name": "刘备",
+      "role": "蜀汉建立者",
+      "summary": "在荆州和益州逐步建立政权",
+      "persona": "联系联盟与地理条件观察其发展",
+      "boundaries": []
+    },
+    {
+      "name": "孙权",
+      "role": "孙吴建立者",
+      "summary": "巩固江东并参与赤壁之战",
+      "persona": "关注长江水军与区域经营",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "官渡",
+      "region": "今河南中牟东北一带",
+      "lat": null,
+      "lng": null,
+      "note": "曹操与袁绍决战之地",
+      "kind": "battle"
+    },
+    {
+      "label": "赤壁",
+      "region": "今湖北赤壁附近长江沿岸",
+      "lat": null,
+      "lng": null,
+      "note": "孙刘联军与曹军交战区域",
+      "kind": "battle"
+    },
+    {
+      "label": "成都",
+      "region": "今四川成都",
+      "lat": null,
+      "lng": null,
+      "note": "蜀汉都城",
+      "kind": "capital"
+    },
+    {
+      "label": "建业",
+      "region": "今江苏南京",
+      "lat": null,
+      "lng": null,
+      "note": "孙吴主要都城",
+      "kind": "capital"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《三国志》",
+      "source": "传世史书",
+      "url_or_path": "《三国志》",
+      "citation_note": "记载汉末至三国人物和政权兴替",
+      "reliability": "pending"
+    },
+    {
+      "title": "三国时期出土简牍",
+      "source": "考古文字材料",
+      "url_or_path": "长沙走马楼等地三国简牍",
+      "citation_note": "补充地方行政 赋税和社会生活信息",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -100,7 +170,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.542782Z",
-  "updated_at": "2026-09-16T06:11:56.833615Z",
+  "updated_at": "2026-09-16T10:01:49.251074Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-de70b0f4bd23349ffe8d5771",
+  "word": "远交近攻",
+  "pinyin": "yuǎn jiāo jìn gōng",
+  "gloss": "先与远方国家交往并集中进攻邻国的战略方针",
+  "era": "秦汉",
+  "category": "思想",
+  "examples": [
+    "本课结合“远交近攻”说明先与远方国家交往并集中进攻邻国的战略方针。",
+    "讲解“远交近攻”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "范雎"
+  ],
+  "related_lessons": [
+    "L301"
+  ],
+  "source_refs": [
+    {
+      "title": "L301《战国七雄与远交近攻》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L301.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l301-04.json\", \"member_sha256\": \"0b2a281b0ce8353b7df062b858b2aa48088394c3be06fa1225e97a0bb89b1fff\", \"source_id\": \"keyword-l301-04\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l301-04.json\", \"member_sha256\": \"0b2a281b0ce8353b7df062b858b2aa48088394c3be06fa1225e97a0bb89b1fff\", \"source_id\": \"keyword-l301-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.369653Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

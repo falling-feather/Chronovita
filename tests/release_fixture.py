@@ -12,6 +12,15 @@ V4_RELEASE_ID = "rel-28b5624648-0006"
 V5_RELEASE_ID = "rel-28b5624648-0008"
 
 
+def install_teacher_text(lesson_id: str, version: int = 1) -> None:
+    """Explicitly register reviewed test content as a teacher reading snapshot."""
+    from scripts.sync_teacher_course_snapshot import normalized
+    source = content.get_sealed_package(lesson_id, version)
+    payload = normalized({"sources": [source], "pr": 0, "commit": "0" * 40})
+    content._atomic_write_json(
+        content.content_root() / "textbooks" / f"{source.course_id}.json", payload)
+
+
 def activate_v3_release_5(root: Path) -> None:
     """Make a copied content root start at the historical V3 release."""
 

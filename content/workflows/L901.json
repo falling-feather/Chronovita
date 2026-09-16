@@ -3,15 +3,15 @@
   "lesson_id": "L901",
   "course_id": "C-suitang-culture",
   "state": "draft",
-  "revision": 1,
-  "draft_fingerprint": "1f18e23da23b4366084851c852b865e8c67471b4f025c34976c47c022f9536e6",
+  "revision": 2,
+  "draft_fingerprint": "21b7482eb2d3d81acef4acb70fd11a5fc3b00c9666639d0b7d557b85812833fc",
   "validation": null,
   "sealed_version": null,
   "sealed_checksum": null,
   "published_course_id": null,
   "published_version": null,
   "published_release_id": null,
-  "updated_at": "2026-09-14T17:06:07.640822Z",
+  "updated_at": "2026-09-16T10:01:48.517761Z",
   "history": [
     {
       "sequence": 1,
@@ -24,7 +24,19 @@
       "draft_fingerprint": "1f18e23da23b4366084851c852b865e8c67471b4f025c34976c47c022f9536e6",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T10:01:48.517761Z",
+      "draft_fingerprint": "21b7482eb2d3d81acef4acb70fd11a5fc3b00c9666639d0b7d557b85812833fc",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "9defef85540ef8115fc0541d1c81c8d8b3c9b1b27be72a91944fcb03282e277c"
+  "checksum": "36f4699a00dce5ef18556727d4aa912d8726978a5de98c6e7d8a27d0275c37c9"
 }

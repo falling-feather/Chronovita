@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-b5503dc10f9325dce9329ee0",
+  "word": "千户制",
+  "pinyin": "qiān hù zhì",
+  "gloss": "蒙古把人口和军队按十进层级编组的制度；千户是重要单位",
+  "era": "宋元",
+  "category": "制度",
+  "examples": [
+    "本课结合“千户制”说明蒙古把人口和军队按十进层级编组的制度；千户是重要单位。",
+    "讲解“千户制”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "铁木真（成吉思汗）"
+  ],
+  "related_lessons": [
+    "L1101"
+  ],
+  "source_refs": [
+    {
+      "title": "L1101《成吉思汗》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1101.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1101-04.json\", \"member_sha256\": \"344f3eb87ca58433058ef334a916990f68dfb6e0e60d5433a47fe9db7f80e067\", \"source_id\": \"keyword-l1101-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:54.953657Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

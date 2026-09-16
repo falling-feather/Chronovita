@@ -1,0 +1,51 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-036c8994395dbb1fe65526b4",
+  "word": "尊王攘夷",
+  "pinyin": "zūn wáng rǎng yí",
+  "gloss": "尊重周王名义；联合诸侯抵御周边势力的政治号召",
+  "era": "先秦",
+  "category": "思想",
+  "examples": [
+    "本课结合“尊王攘夷”说明尊重周王名义；联合诸侯抵御周边势力的政治号召。",
+    "讲解“尊王攘夷”时，应联系本课叙事理解它在先秦历史中的作用。"
+  ],
+  "related_people": [
+    "姜小白（齐桓公）",
+    "管仲"
+  ],
+  "related_lessons": [
+    "L104"
+  ],
+  "source_refs": [
+    {
+      "title": "文史漫步：荀子评点战国双雄齐、秦",
+      "source": "广州市政协",
+      "url_or_path": "https://www.gzszx.gov.cn/wstd/wsmb/33751.shtml",
+      "citation_note": "介绍春秋五霸的常见名单及齐桓公相关历史",
+      "reliability": "pending"
+    },
+    {
+      "title": "管仲治齐",
+      "source": "清风齐鲁网",
+      "url_or_path": "https://www.qfxc.gov.cn/contents/32/13126.html",
+      "citation_note": "介绍管仲改革、尊王攘夷和齐桓公会盟",
+      "reliability": "pending"
+    },
+    {
+      "title": "博物馆展览：争霸春秋",
+      "source": "北京市人民政府",
+      "url_or_path": "https://www.beijing.gov.cn/fwcj/calendar/bwgzl/6a0d7712daec8455186ecd6f.html",
+      "citation_note": "介绍侯马晋国遗址、侯马盟书和春秋晋国历史",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l104-02.json\", \"member_sha256\": \"e73a1ffbed37571982128d1d4ba466b3835b0b9fc4b9e607425252b693c61858\", \"source_id\": \"keyword-l104-02\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l104-02.json\", \"member_sha256\": \"e73a1ffbed37571982128d1d4ba466b3835b0b9fc4b9e607425252b693c61858\", \"source_id\": \"keyword-l104-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T13:36:29.288028Z",
+  "updated_at": "2026-09-16T09:49:52.971883Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

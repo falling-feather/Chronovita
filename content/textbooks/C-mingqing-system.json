@@ -11,7 +11,7 @@
     "L1202": "e5b6f423c6f425e10453f2d5a4688321e575e1244891d08f3bf64479d40fe5ef",
     "L1203": "99b21ae22aec729b5a2767b2ae0affcb78a60768839fe7312fca6f08ac7f1253"
   },
-  "text_checksum": "ad2e9a7777db593bf84d8a499d063fedb5423d93a0427c4e923a6e7a846f8786",
+  "text_checksum": "d37a9a3e13a451f6c11113d842d4f9bab6aa311363ca57bdd32ca1b69a38176b",
   "lessons": [
     {
       "lesson_id": "L1201",
@@ -59,6 +59,63 @@
           "pinyin": "pī hóng",
           "gloss": "明代皇帝或司礼监依皇帝意旨对奏章作出正式批示的程序"
         }
+      ],
+      "people": [
+        {
+          "name": "朱元璋（明太祖）",
+          "role": "明太祖",
+          "summary": "建立明朝并通过废相集中中央权力",
+          "persona": "联系元末经历和官僚控制理解制度选择",
+          "boundaries": []
+        },
+        {
+          "name": "胡惟庸",
+          "role": "明初丞相",
+          "summary": "因专权和谋反指控被处死并引发大案",
+          "persona": "区分官方罪状与可以确认的制度结果",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "南京",
+          "region": "今江苏南京",
+          "lat": null,
+          "lng": null,
+          "note": "明初都城和胡惟庸案发生的政治中心",
+          "kind": "capital"
+        },
+        {
+          "label": "北京",
+          "region": "今北京",
+          "lat": null,
+          "lng": null,
+          "note": "明成祖迁都后内阁运作的中心",
+          "kind": "capital"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《明太祖实录》",
+          "source": "官方编年史料",
+          "url_or_path": "《明太祖实录》",
+          "citation_note": "记载胡惟庸案和明初中央机构调整",
+          "reliability": "pending"
+        },
+        {
+          "title": "《明史·胡惟庸传》",
+          "source": "传世史书",
+          "url_or_path": "《明史·胡惟庸传》",
+          "citation_note": "汇总胡惟庸经历和案件叙述",
+          "reliability": "pending"
+        },
+        {
+          "title": "明代奏章与会典材料",
+          "source": "制度文献",
+          "url_or_path": "《大明会典》及明代奏章",
+          "citation_note": "反映内阁票拟和中央政务程序",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -101,6 +158,56 @@
           "word": "密折制度",
           "pinyin": "mì zhé zhì dù",
           "gloss": "特定官员通过密封奏折直接向皇帝报告情况的制度"
+        }
+      ],
+      "people": [
+        {
+          "name": "胤禛（雍正帝）",
+          "role": "清朝皇帝",
+          "summary": "因处理西北军务推动军机处形成",
+          "persona": "从信息速度和皇权控制理解制度设置",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "北京紫禁城",
+          "region": "今北京故宫",
+          "lat": null,
+          "lng": null,
+          "note": "军机处和养心殿所在的清代政治中心",
+          "kind": "palace"
+        },
+        {
+          "label": "西北军务地区",
+          "region": "今甘肃 青海 新疆及周边",
+          "lat": null,
+          "lng": null,
+          "note": "雍正时期紧急军事信息的重要来源",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "中国第一历史档案馆军机处档案",
+          "source": "清代档案",
+          "url_or_path": "军机处录副奏折与廷寄档",
+          "citation_note": "反映军机处处理奏折和传递谕旨的流程",
+          "reliability": "pending"
+        },
+        {
+          "title": "《清史稿·军机大臣年表》",
+          "source": "传世史书",
+          "url_or_path": "《清史稿·军机大臣年表》",
+          "citation_note": "记录军机处人员和制度沿革",
+          "reliability": "pending"
+        },
+        {
+          "title": "清宫军机处建筑遗存",
+          "source": "建筑与宫廷遗存",
+          "url_or_path": "北京故宫军机处",
+          "citation_note": "反映军机处靠近内廷的空间位置",
+          "reliability": "pending"
         }
       ]
     },
@@ -159,6 +266,72 @@
           "word": "公行",
           "pinyin": "gōng háng",
           "gloss": "清代广州获准与西方商人交易并承担管理责任的商人组织"
+        }
+      ],
+      "people": [
+        {
+          "name": "弘历（乾隆帝）",
+          "role": "清朝皇帝",
+          "summary": "在位时期形成针对西方海商的广州一口通商",
+          "persona": "区分贸易管理和完全断绝联系",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "月港",
+          "region": "今福建漳州海澄一带",
+          "lat": null,
+          "lng": null,
+          "note": "隆庆开关后民间海外贸易港口",
+          "kind": "port"
+        },
+        {
+          "label": "广州",
+          "region": "今广东广州",
+          "lat": null,
+          "lng": null,
+          "note": "十八世纪西方海商主要贸易口岸",
+          "kind": "port"
+        },
+        {
+          "label": "宁波",
+          "region": "今浙江宁波",
+          "lat": null,
+          "lng": null,
+          "note": "清初开放的海关口岸之一",
+          "kind": "port"
+        },
+        {
+          "label": "台湾",
+          "region": "今台湾地区",
+          "lat": null,
+          "lng": null,
+          "note": "郑氏政权活动和清初海疆政策相关区域",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《明实录》海禁与倭寇记载",
+          "source": "官方编年史料",
+          "url_or_path": "《明实录》",
+          "citation_note": "记录明代海禁 沿海冲突和政策调整",
+          "reliability": "pending"
+        },
+        {
+          "title": "粤海关档案",
+          "source": "清代贸易档案",
+          "url_or_path": "清代粤海关档案",
+          "citation_note": "反映广州贸易 税收和外商管理",
+          "reliability": "pending"
+        },
+        {
+          "title": "广州十三行与外销品遗存",
+          "source": "城市与贸易材料",
+          "url_or_path": "广州十三行遗址及外销瓷等实物",
+          "citation_note": "展示一口通商下的市场和商品流动",
+          "reliability": "pending"
         }
       ]
     }

@@ -11,7 +11,7 @@
     "L1302": "d2b14272ed022749579fd9a49780e470bcba6a3778044c164e235abb41f5fb4c",
     "L1303": "cb0332ab20079a6e6377cb64dc2a1904ad095c2981bbe04f3885bf9f98920de0"
   },
-  "text_checksum": "613737a3bf01af56e17fdd67e6d2c1fad0e7ab03dac2a2eaef4ce3724ae9ab35",
+  "text_checksum": "73208823d0f89ed8b5a7e9aa2f1db9bb493be9350bad8c5dc9f9a4db1b6f9c17",
   "lessons": [
     {
       "lesson_id": "L1301",
@@ -53,6 +53,79 @@
           "word": "郑和航海图",
           "pinyin": "zhèng hé háng hǎi tú",
           "gloss": "保存郑和航路 港口 方位和里程信息的古代航海图"
+        }
+      ],
+      "people": [
+        {
+          "name": "郑和",
+          "role": "明代航海统帅",
+          "summary": "七次统率大型船队远航印度洋",
+          "persona": "从组织 航路和多重任务理解远航",
+          "boundaries": []
+        },
+        {
+          "name": "朱棣（明成祖）",
+          "role": "明朝皇帝",
+          "summary": "推动国家组织大型远洋行动",
+          "persona": "联系皇权合法性和海外秩序理解动机",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "刘家港",
+          "region": "今江苏太仓一带",
+          "lat": null,
+          "lng": null,
+          "note": "郑和船队集结出发地点",
+          "kind": "port"
+        },
+        {
+          "label": "满剌加",
+          "region": "今马来西亚马六甲",
+          "lat": null,
+          "lng": null,
+          "note": "连接南海与印度洋的重要港口",
+          "kind": "port"
+        },
+        {
+          "label": "古里",
+          "region": "今印度科泽科德一带",
+          "lat": null,
+          "lng": null,
+          "note": "郑和船队多次到达的印度洋贸易港口",
+          "kind": "port"
+        },
+        {
+          "label": "东非海岸",
+          "region": "今索马里 肯尼亚沿海部分地区",
+          "lat": null,
+          "lng": null,
+          "note": "郑和后期远航到达区域",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《瀛涯胜览》",
+          "source": "远航见闻文献",
+          "url_or_path": "马欢《瀛涯胜览》",
+          "citation_note": "记录郑和航路沿线港口和社会风俗",
+          "reliability": "pending"
+        },
+        {
+          "title": "郑和航海图",
+          "source": "古代航海图",
+          "url_or_path": "《武备志》所收郑和航海图",
+          "citation_note": "保存航线 方位和港口信息",
+          "reliability": "pending"
+        },
+        {
+          "title": "天妃灵应之记碑",
+          "source": "明代碑刻",
+          "url_or_path": "福建长乐郑和碑刻",
+          "citation_note": "记录郑和船队历次远航和祭祀活动",
+          "reliability": "pending"
         }
       ]
     },
@@ -102,6 +175,79 @@
           "pinyin": "bái yín mào yì",
           "gloss": "日本和美洲白银经跨区域贸易流入中国的经济网络"
         }
+      ],
+      "people": [
+        {
+          "name": "利玛窦",
+          "role": "来华耶稣会士",
+          "summary": "通过语言 礼仪和知识交流进入晚明士人社会",
+          "persona": "同时呈现传教目的与文化适应",
+          "boundaries": []
+        },
+        {
+          "name": "徐光启",
+          "role": "明代学者和官员",
+          "summary": "与利玛窦合作翻译《几何原本》",
+          "persona": "突出中国学者对知识选择和转化的主动作用",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "澳门",
+          "region": "今澳门",
+          "lat": null,
+          "lng": null,
+          "note": "葡萄牙贸易和耶稣会士进入中国的重要节点",
+          "kind": "port"
+        },
+        {
+          "label": "肇庆",
+          "region": "今广东肇庆",
+          "lat": null,
+          "lng": null,
+          "note": "利玛窦在中国内地早期居住地区",
+          "kind": "city"
+        },
+        {
+          "label": "北京",
+          "region": "今北京",
+          "lat": null,
+          "lng": null,
+          "note": "利玛窦公元1601年进入的明朝都城",
+          "kind": "capital"
+        },
+        {
+          "label": "马尼拉",
+          "region": "今菲律宾马尼拉",
+          "lat": null,
+          "lng": null,
+          "note": "美洲白银与中国商品交换的重要港口",
+          "kind": "port"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《利玛窦中国札记》",
+          "source": "来华传教士记录",
+          "url_or_path": "《利玛窦中国札记》",
+          "citation_note": "记录利玛窦来华经历和对明代社会的观察",
+          "reliability": "pending"
+        },
+        {
+          "title": "《几何原本》明代译本",
+          "source": "翻译科技文献",
+          "url_or_path": "利玛窦 徐光启译《几何原本》",
+          "citation_note": "展示晚明数学术语和证明方法交流",
+          "reliability": "pending"
+        },
+        {
+          "title": "明代赋役与海外贸易档案",
+          "source": "财政贸易材料",
+          "url_or_path": "明代一条鞭法文书及马尼拉贸易记录",
+          "citation_note": "反映折银征税和跨太平洋白银流动",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -144,6 +290,94 @@
           "word": "永历政权",
           "pinyin": "yǒng lì zhèng quán",
           "gloss": "南明延续时间较长的政权；主要活动于西南地区"
+        }
+      ],
+      "people": [
+        {
+          "name": "朱由检（崇祯帝）",
+          "role": "明朝末代皇帝",
+          "summary": "试图整顿朝政却未能解决多重危机",
+          "persona": "避免把王朝灭亡完全归于个人品格",
+          "boundaries": []
+        },
+        {
+          "name": "李自成",
+          "role": "大顺政权建立者",
+          "summary": "领导起义军攻入北京并推翻明朝中央政权",
+          "persona": "联系灾荒 赋税和军队流动理解崛起",
+          "boundaries": []
+        },
+        {
+          "name": "郑成功",
+          "role": "东南沿海抗清将领",
+          "summary": "以海上力量继续抗清并控制台湾",
+          "persona": "说明明清易代延续到沿海与台湾",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "北京",
+          "region": "今北京",
+          "lat": null,
+          "lng": null,
+          "note": "公元1644年大顺军攻入并随后被清军控制",
+          "kind": "capital"
+        },
+        {
+          "label": "山海关",
+          "region": "今河北秦皇岛",
+          "lat": null,
+          "lng": null,
+          "note": "清军入关和击败大顺军的关键区域",
+          "kind": "battle"
+        },
+        {
+          "label": "南京",
+          "region": "今江苏南京",
+          "lat": null,
+          "lng": null,
+          "note": "南明弘光政权建立地",
+          "kind": "capital"
+        },
+        {
+          "label": "昆明",
+          "region": "今云南昆明",
+          "lat": null,
+          "lng": null,
+          "note": "永历政权在西南活动的重要城市",
+          "kind": "city"
+        },
+        {
+          "label": "台湾",
+          "region": "今台湾地区",
+          "lat": null,
+          "lng": null,
+          "note": "郑成功驱逐荷兰殖民者后建立基地的地区",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《明史·庄烈帝本纪》",
+          "source": "传世史书",
+          "url_or_path": "《明史·庄烈帝本纪》",
+          "citation_note": "记载崇祯时期政治和北京失守",
+          "reliability": "pending"
+        },
+        {
+          "title": "《明季北略》与《明季南略》",
+          "source": "明清易代史料汇编",
+          "url_or_path": "《明季北略》《明季南略》",
+          "citation_note": "保存起义 清军入关和南明事件记载",
+          "reliability": "pending"
+        },
+        {
+          "title": "明末地方志与个人日记",
+          "source": "地方与私人记录",
+          "url_or_path": "明末清初地方志 日记及奏疏",
+          "citation_note": "反映灾荒 战争和地方社会经历",
+          "reliability": "pending"
         }
       ]
     }

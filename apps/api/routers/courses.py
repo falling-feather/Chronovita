@@ -68,6 +68,8 @@ async def lesson_presentation(course_id: str, lesson_id: str):
         raise HTTPException(status_code=404, detail="课时展示资源不存在") from exc
     except ContentIntegrityError as exc:
         _raise_content_unavailable(exc)
+    if not courses_data.reading_media_matches(course_id, lesson_id, resources.course_package):
+        raise HTTPException(status_code=404, detail="该短片尚未与教师当前课文对齐")
     return {
         "release_id": resources.release_id,
         "release_no": resources.release_no,
@@ -110,6 +112,9 @@ async def lesson_presentation_asset(
                 "message": "课程发布版本已更新，请重新载入课时。",
             },
         )
+
+    if not courses_data.reading_media_matches(course_id, lesson_id, resources.course_package):
+        raise HTTPException(status_code=404, detail="该短片尚未与教师当前课文对齐")
 
     presentation = resources.lesson_presentation
     relative_path, expected_sha256, media_type = {

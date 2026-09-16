@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-dd287188f2e8289a8da982f9",
+  "word": "邯郸",
+  "pinyin": "hán dān",
+  "gloss": "赵国都城；秦军东进过程中攻占的重要城市",
+  "era": "秦汉",
+  "category": "地点",
+  "examples": [
+    "本课结合“邯郸”说明赵国都城；秦军东进过程中攻占的重要城市。",
+    "讲解“邯郸”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L302"
+  ],
+  "source_refs": [
+    {
+      "title": "L302《秦王嬴政统一战争》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L302.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l302-02.json\", \"member_sha256\": \"0d11e8216f245f8ae750e75aaf7eb6afcc49b32df250d1ebdc1125da2a5d34ce\", \"source_id\": \"keyword-l302-02\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l302-02.json\", \"member_sha256\": \"0d11e8216f245f8ae750e75aaf7eb6afcc49b32df250d1ebdc1125da2a5d34ce\", \"source_id\": \"keyword-l302-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.409066Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

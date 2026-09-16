@@ -51,9 +51,78 @@
       "gloss": "关中通向东方的重要关隘；秦国防守和进取的地理通道"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "苏秦",
+      "role": "战国时期纵横家",
+      "summary": "传统记载中游说六国合纵抗秦的外交人物",
+      "persona": "用于说明合纵的外交逻辑；标明其事迹主要依靠传世记载",
+      "boundaries": []
+    },
+    {
+      "name": "张仪",
+      "role": "战国时期纵横家",
+      "summary": "传统记载中推动连横、分别与秦国交往的外交人物",
+      "persona": "用于说明连横如何利用诸侯之间的利益差异",
+      "boundaries": []
+    },
+    {
+      "name": "范雎",
+      "role": "战国时期秦国大臣",
+      "summary": "传统记载中与秦国远交近攻方针相关的政治人物",
+      "persona": "说明外交策略与秦国地理和军事条件之间的联系",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "函谷关",
+      "region": "今河南灵宝一带",
+      "lat": null,
+      "lng": null,
+      "note": "秦国关中通向东方的重要关隘；连接战争和外交格局",
+      "kind": "pass"
+    },
+    {
+      "label": "关中",
+      "region": "今陕西中部一带",
+      "lat": null,
+      "lng": null,
+      "note": "秦国核心区域；地形和农业条件支持其长期竞争",
+      "kind": "region"
+    },
+    {
+      "label": "临淄",
+      "region": "今山东淄博一带",
+      "lat": null,
+      "lng": null,
+      "note": "齐国都城；战国东方强国的政治中心",
+      "kind": "capital"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《战国策》",
+      "source": "传世文献",
+      "url_or_path": "《战国策》",
+      "citation_note": "保存苏秦、张仪等纵横家游说和诸侯外交的传统记载",
+      "reliability": "pending"
+    },
+    {
+      "title": "《史记·范雎蔡泽列传》",
+      "source": "传世文献",
+      "url_or_path": "《史记·范雎蔡泽列传》",
+      "citation_note": "保存范雎经历及远交近攻相关的传统叙述",
+      "reliability": "pending"
+    },
+    {
+      "title": "《史记·六国年表》",
+      "source": "传世文献",
+      "url_or_path": "《史记·六国年表》",
+      "citation_note": "用于梳理战国诸侯国之间的战争和政治变化",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +174,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.909514Z",
-  "updated_at": "2026-09-14T17:06:07.909514Z",
+  "updated_at": "2026-09-16T10:01:49.156787Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

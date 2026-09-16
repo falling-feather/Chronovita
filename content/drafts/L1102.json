@@ -51,9 +51,79 @@
       "gloss": "旭烈兀在波斯地区建立的蒙古汗国"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "拔都",
+      "role": "第二次西征统帅",
+      "summary": "率军进入东欧并建立钦察汗国",
+      "persona": "结合汗位变化理解军队东返",
+      "boundaries": []
+    },
+    {
+      "name": "旭烈兀",
+      "role": "第三次西征统帅",
+      "summary": "率军进入西亚并建立伊利汗国",
+      "persona": "关注巴格达陷落和西进受阻",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "撒马尔罕",
+      "region": "今乌兹别克斯坦撒马尔罕",
+      "lat": null,
+      "lng": null,
+      "note": "第一次西征攻占的中亚重要城市",
+      "kind": "city"
+    },
+    {
+      "label": "基辅",
+      "region": "今乌克兰基辅",
+      "lat": null,
+      "lng": null,
+      "note": "第二次西征中被蒙古军攻占的罗斯城市",
+      "kind": "city"
+    },
+    {
+      "label": "布达佩斯地区",
+      "region": "今匈牙利中部",
+      "lat": null,
+      "lng": null,
+      "note": "第二次西征进入中欧的重要区域",
+      "kind": "region"
+    },
+    {
+      "label": "巴格达",
+      "region": "今伊拉克巴格达",
+      "lat": null,
+      "lng": null,
+      "note": "公元1258年被旭烈兀军队攻占",
+      "kind": "city"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《史集》",
+      "source": "波斯文史书",
+      "url_or_path": "拉施特《史集》",
+      "citation_note": "记载蒙古王族和中亚西亚征服",
+      "reliability": "pending"
+    },
+    {
+      "title": "《世界征服者史》",
+      "source": "波斯文史书",
+      "url_or_path": "志费尼《世界征服者史》",
+      "citation_note": "记录花剌子模战争和蒙古统治",
+      "reliability": "pending"
+    },
+    {
+      "title": "《蒙古秘史》与《元史》",
+      "source": "蒙古与汉文史料",
+      "url_or_path": "《蒙古秘史》《元史》",
+      "citation_note": "补充西征决策和蒙古诸王活动",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +175,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.727474Z",
-  "updated_at": "2026-09-14T17:06:07.727474Z",
+  "updated_at": "2026-09-16T10:01:48.718414Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

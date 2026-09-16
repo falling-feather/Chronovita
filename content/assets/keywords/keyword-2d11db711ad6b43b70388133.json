@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-2d11db711ad6b43b70388133",
+  "word": "植物纤维纸",
+  "pinyin": "zhí wù xiān wéi zhǐ",
+  "gloss": "以麻类或树皮等植物纤维制成的纸张；西汉已有相关实物发现",
+  "era": "秦汉",
+  "category": "技术",
+  "examples": [
+    "本课结合“植物纤维纸”说明以麻类或树皮等植物纤维制成的纸张；西汉已有相关实物发现。",
+    "讲解“植物纤维纸”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "蔡伦"
+  ],
+  "related_lessons": [
+    "L503"
+  ],
+  "source_refs": [
+    {
+      "title": "L503《造纸术、地动仪与《九章算术》》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L503.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l503-02.json\", \"member_sha256\": \"aa2b4b89cbf26d792e6e5c1a72224ac7e3565d16309277bc93fbcc41d07cb37f\", \"source_id\": \"keyword-l503-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.878918Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

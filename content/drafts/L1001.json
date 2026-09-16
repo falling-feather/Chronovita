@@ -51,9 +51,64 @@
       "gloss": "宋朝提高文官地位并限制武将独掌军政的治理倾向"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "赵匡胤（宋太祖）",
+      "role": "宋太祖",
+      "summary": "通过兵变建立北宋并逐步集中军政权力",
+      "persona": "联系五代兵变传统理解其制度选择",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "陈桥驿",
+      "region": "今河南新乡封丘一带",
+      "lat": null,
+      "lng": null,
+      "note": "公元960年陈桥兵变发生地",
+      "kind": "site"
+    },
+    {
+      "label": "东京",
+      "region": "今河南开封",
+      "lat": null,
+      "lng": null,
+      "note": "北宋都城和中央政治中心",
+      "kind": "capital"
+    },
+    {
+      "label": "太原",
+      "region": "今山西太原",
+      "lat": null,
+      "lng": null,
+      "note": "北汉都城；公元979年被北宋攻取",
+      "kind": "city"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《续资治通鉴长编》",
+      "source": "编年史书",
+      "url_or_path": "《续资治通鉴长编》",
+      "citation_note": "记载北宋初年政治和制度变化",
+      "reliability": "pending"
+    },
+    {
+      "title": "《宋史·太祖本纪》",
+      "source": "传世史书",
+      "url_or_path": "《宋史·太祖本纪》",
+      "citation_note": "记载陈桥兵变和宋太祖统治",
+      "reliability": "pending"
+    },
+    {
+      "title": "《宋会要辑稿》",
+      "source": "制度文献汇编",
+      "url_or_path": "《宋会要辑稿》",
+      "citation_note": "保存宋代官制 财政和军事制度资料",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +160,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.676432Z",
-  "updated_at": "2026-09-14T17:06:07.676432Z",
+  "updated_at": "2026-09-16T10:01:48.594031Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

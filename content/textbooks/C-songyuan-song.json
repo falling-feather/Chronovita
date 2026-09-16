@@ -11,7 +11,7 @@
     "L1002": "7f55cfc5ddd428610a0177f936028c1654eea55dfa4216d24bfaaac090f86cea",
     "L1003": "5c58308be34020cfcf477a61f65fce93e9121e5083972a3dd20e055e87aafaf3"
   },
-  "text_checksum": "510d5e1e0d814bf44e8ec966e91b7729b21d89512d09a1f80e672f3e5d1cc708",
+  "text_checksum": "70dea14bba76c9b33d818896bc364789a149bbb32b591e1e9b5edcbed8352914",
   "lessons": [
     {
       "lesson_id": "L1001",
@@ -58,6 +58,64 @@
           "word": "重文抑武",
           "pinyin": "zhòng wén yì wǔ",
           "gloss": "宋朝提高文官地位并限制武将独掌军政的治理倾向"
+        }
+      ],
+      "people": [
+        {
+          "name": "赵匡胤（宋太祖）",
+          "role": "宋太祖",
+          "summary": "通过兵变建立北宋并逐步集中军政权力",
+          "persona": "联系五代兵变传统理解其制度选择",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "陈桥驿",
+          "region": "今河南新乡封丘一带",
+          "lat": null,
+          "lng": null,
+          "note": "公元960年陈桥兵变发生地",
+          "kind": "site"
+        },
+        {
+          "label": "东京",
+          "region": "今河南开封",
+          "lat": null,
+          "lng": null,
+          "note": "北宋都城和中央政治中心",
+          "kind": "capital"
+        },
+        {
+          "label": "太原",
+          "region": "今山西太原",
+          "lat": null,
+          "lng": null,
+          "note": "北汉都城；公元979年被北宋攻取",
+          "kind": "city"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《续资治通鉴长编》",
+          "source": "编年史书",
+          "url_or_path": "《续资治通鉴长编》",
+          "citation_note": "记载北宋初年政治和制度变化",
+          "reliability": "pending"
+        },
+        {
+          "title": "《宋史·太祖本纪》",
+          "source": "传世史书",
+          "url_or_path": "《宋史·太祖本纪》",
+          "citation_note": "记载陈桥兵变和宋太祖统治",
+          "reliability": "pending"
+        },
+        {
+          "title": "《宋会要辑稿》",
+          "source": "制度文献汇编",
+          "url_or_path": "《宋会要辑稿》",
+          "citation_note": "保存宋代官制 财政和军事制度资料",
+          "reliability": "pending"
         }
       ]
     },
@@ -106,6 +164,78 @@
           "word": "宋辽关系",
           "pinyin": "sòng liáo guān xì",
           "gloss": "北宋与辽朝之间并立 对峙 和议和贸易并存的关系"
+        }
+      ],
+      "people": [
+        {
+          "name": "赵恒（宋真宗）",
+          "role": "北宋皇帝",
+          "summary": "亲赴澶州并批准宋辽和议",
+          "persona": "结合前线压力和谈判选择理解决策",
+          "boundaries": []
+        },
+        {
+          "name": "寇准",
+          "role": "北宋宰相",
+          "summary": "主张皇帝前往澶州稳定军心",
+          "persona": "说明朝廷内部存在不同战略意见",
+          "boundaries": []
+        },
+        {
+          "name": "萧绰（承天太后）",
+          "role": "辽朝实际统治者",
+          "summary": "与辽圣宗率军南下并参与和议决策",
+          "persona": "从辽朝需求理解战争与谈判",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "燕云地区",
+          "region": "今北京 天津北部及河北 山西部分地区",
+          "lat": null,
+          "lng": null,
+          "note": "宋辽长期争夺和防御关注区域",
+          "kind": "region"
+        },
+        {
+          "label": "澶州",
+          "region": "今河南濮阳一带",
+          "lat": null,
+          "lng": null,
+          "note": "公元1004年宋辽对峙和议地点",
+          "kind": "city"
+        },
+        {
+          "label": "雄州榷场",
+          "region": "今河北雄县一带",
+          "lat": null,
+          "lng": null,
+          "note": "宋辽边境互市地点之一",
+          "kind": "market"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《续资治通鉴长编》澶渊相关记载",
+          "source": "编年史书",
+          "url_or_path": "《续资治通鉴长编》",
+          "citation_note": "记录辽军南下 宋廷讨论和盟约形成",
+          "reliability": "pending"
+        },
+        {
+          "title": "《宋史·寇准传》",
+          "source": "传世史书",
+          "url_or_path": "《宋史·寇准传》",
+          "citation_note": "记载寇准主张真宗亲征的过程",
+          "reliability": "pending"
+        },
+        {
+          "title": "宋辽使臣诗文与边境材料",
+          "source": "交往与考古材料",
+          "url_or_path": "宋辽使臣文集及边境遗址",
+          "citation_note": "补充使节往来和边境贸易生活",
+          "reliability": "pending"
         }
       ]
     },
@@ -164,6 +294,72 @@
           "word": "宋代海商",
           "pinyin": "sòng dài hǎi shāng",
           "gloss": "宋代从事海外贸易的商人群体；连接沿海港口与海外市场"
+        }
+      ],
+      "people": [
+        {
+          "name": "王安石",
+          "role": "北宋政治家",
+          "summary": "主持变法并推动市易法等经济措施",
+          "persona": "从政策目标和执行结果两方面评价",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "成都府路",
+          "region": "今四川成都及周边地区",
+          "lat": null,
+          "lng": null,
+          "note": "早期交子流通和政府管理中心区域",
+          "kind": "region"
+        },
+        {
+          "label": "开封",
+          "region": "今河南开封",
+          "lat": null,
+          "lng": null,
+          "note": "北宋都城和大型消费市场",
+          "kind": "capital"
+        },
+        {
+          "label": "泉州",
+          "region": "今福建泉州",
+          "lat": null,
+          "lng": null,
+          "note": "宋元时期重要海外贸易港口",
+          "kind": "port"
+        },
+        {
+          "label": "广州",
+          "region": "今广东广州",
+          "lat": null,
+          "lng": null,
+          "note": "宋代重要市舶贸易港口",
+          "kind": "port"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《宋史·食货志》",
+          "source": "传世史书",
+          "url_or_path": "《宋史·食货志》",
+          "citation_note": "记载交子 市易和宋代财政贸易制度",
+          "reliability": "pending"
+        },
+        {
+          "title": "宋代纸币钞版与相关文书",
+          "source": "实物与文字材料",
+          "url_or_path": "宋代纸币印版及金融文书",
+          "citation_note": "用于认识纸币印制 管理和流通",
+          "reliability": "pending"
+        },
+        {
+          "title": "南海一号沉船出水遗物",
+          "source": "水下考古材料",
+          "url_or_path": "南海一号南宋沉船",
+          "citation_note": "反映南宋海船货物组成和海外贸易",
+          "reliability": "pending"
         }
       ]
     }

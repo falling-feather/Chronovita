@@ -61,9 +61,78 @@
       "gloss": "唐代吴兢编纂的政治文献；记录贞观君臣问答和治国经验"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "唐太宗",
+      "role": "唐朝皇帝",
+      "summary": "推动唐初恢复并形成贞观政治",
+      "persona": "结合政变背景 政策选择和晚年问题全面认识",
+      "boundaries": []
+    },
+    {
+      "name": "魏征",
+      "role": "唐初大臣",
+      "summary": "多次向唐太宗提出批评和建议",
+      "persona": "用于理解纳谏的作用与君臣张力",
+      "boundaries": []
+    },
+    {
+      "name": "房玄龄",
+      "role": "唐初宰相",
+      "summary": "参与制定政令并协助处理中央政务",
+      "persona": "说明贞观政治依赖官僚群体",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "长安",
+      "region": "今陕西西安",
+      "lat": null,
+      "lng": null,
+      "note": "唐朝都城和玄武门之变发生地",
+      "kind": "capital"
+    },
+    {
+      "label": "漠南地区",
+      "region": "今内蒙古中部一带",
+      "lat": null,
+      "lng": null,
+      "note": "唐与东突厥交往和战争区域",
+      "kind": "region"
+    },
+    {
+      "label": "吐蕃",
+      "region": "青藏高原地区",
+      "lat": null,
+      "lng": null,
+      "note": "文成公主入藏和唐蕃交往相关地区",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《旧唐书·太宗本纪》",
+      "source": "传世史书",
+      "url_or_path": "《旧唐书·太宗本纪》",
+      "citation_note": "记载唐太宗即位 政策和边疆活动",
+      "reliability": "pending"
+    },
+    {
+      "title": "《贞观政要》",
+      "source": "政治文献",
+      "url_or_path": "《贞观政要》",
+      "citation_note": "记录贞观君臣讨论并总结治国经验",
+      "reliability": "pending"
+    },
+    {
+      "title": "唐初墓志与诏令材料",
+      "source": "文字材料",
+      "url_or_path": "唐初墓志 诏令及相关文书",
+      "citation_note": "补充官员经历和制度运行信息",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -115,7 +184,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.298194Z",
-  "updated_at": "2026-09-14T17:06:07.298194Z",
+  "updated_at": "2026-09-16T10:01:47.965801Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

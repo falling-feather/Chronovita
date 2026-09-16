@@ -46,9 +46,79 @@
       "gloss": "保存郑和航路 港口 方位和里程信息的古代航海图"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "郑和",
+      "role": "明代航海统帅",
+      "summary": "七次统率大型船队远航印度洋",
+      "persona": "从组织 航路和多重任务理解远航",
+      "boundaries": []
+    },
+    {
+      "name": "朱棣（明成祖）",
+      "role": "明朝皇帝",
+      "summary": "推动国家组织大型远洋行动",
+      "persona": "联系皇权合法性和海外秩序理解动机",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "刘家港",
+      "region": "今江苏太仓一带",
+      "lat": null,
+      "lng": null,
+      "note": "郑和船队集结出发地点",
+      "kind": "port"
+    },
+    {
+      "label": "满剌加",
+      "region": "今马来西亚马六甲",
+      "lat": null,
+      "lng": null,
+      "note": "连接南海与印度洋的重要港口",
+      "kind": "port"
+    },
+    {
+      "label": "古里",
+      "region": "今印度科泽科德一带",
+      "lat": null,
+      "lng": null,
+      "note": "郑和船队多次到达的印度洋贸易港口",
+      "kind": "port"
+    },
+    {
+      "label": "东非海岸",
+      "region": "今索马里 肯尼亚沿海部分地区",
+      "lat": null,
+      "lng": null,
+      "note": "郑和后期远航到达区域",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《瀛涯胜览》",
+      "source": "远航见闻文献",
+      "url_or_path": "马欢《瀛涯胜览》",
+      "citation_note": "记录郑和航路沿线港口和社会风俗",
+      "reliability": "pending"
+    },
+    {
+      "title": "郑和航海图",
+      "source": "古代航海图",
+      "url_or_path": "《武备志》所收郑和航海图",
+      "citation_note": "保存航线 方位和港口信息",
+      "reliability": "pending"
+    },
+    {
+      "title": "天妃灵应之记碑",
+      "source": "明代碑刻",
+      "url_or_path": "福建长乐郑和碑刻",
+      "citation_note": "记录郑和船队历次远航和祭祀活动",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -95,7 +165,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.793278Z",
-  "updated_at": "2026-09-14T17:06:07.793278Z",
+  "updated_at": "2026-09-16T10:01:48.868723Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

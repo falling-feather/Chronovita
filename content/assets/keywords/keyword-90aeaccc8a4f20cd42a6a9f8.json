@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-90aeaccc8a4f20cd42a6a9f8",
+  "word": "勾股术",
+  "pinyin": "gōu gǔ shù",
+  "gloss": "利用直角三角形边长关系计算的方法；用于测量和工程问题",
+  "era": "秦汉",
+  "category": "技术",
+  "examples": [
+    "本课结合“勾股术”说明利用直角三角形边长关系计算的方法；用于测量和工程问题。",
+    "讲解“勾股术”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "刘徽"
+  ],
+  "related_lessons": [
+    "L503"
+  ],
+  "source_refs": [
+    {
+      "title": "L503《造纸术、地动仪与《九章算术》》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L503.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l503-06.json\", \"member_sha256\": \"8ea8bc75127133a892275b7ad14e3696ee48b4e8c865dc0ce77e1d93c0d2d64a\", \"source_id\": \"keyword-l503-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.914516Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

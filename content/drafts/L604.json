@@ -51,9 +51,79 @@
       "gloss": "佛教与中国语言 思想和礼俗长期互动形成的新变化"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "鸠摩罗什",
+      "role": "译经僧",
+      "summary": "在长安主持翻译多部重要佛经",
+      "persona": "突出集体译场和语言转换作用",
+      "boundaries": []
+    },
+    {
+      "name": "慧远",
+      "role": "东晋僧人",
+      "summary": "在庐山组织僧团并讨论宗教与礼法",
+      "persona": "说明佛教融入本土社会的过程",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "长安",
+      "region": "今陕西西安",
+      "lat": null,
+      "lng": null,
+      "note": "鸠摩罗什主持译经的重要城市",
+      "kind": "capital"
+    },
+    {
+      "label": "庐山",
+      "region": "今江西九江一带",
+      "lat": null,
+      "lng": null,
+      "note": "慧远长期活动地区",
+      "kind": "site"
+    },
+    {
+      "label": "云冈石窟",
+      "region": "今山西大同",
+      "lat": null,
+      "lng": null,
+      "note": "北魏重要佛教石窟",
+      "kind": "site"
+    },
+    {
+      "label": "龙门石窟",
+      "region": "今河南洛阳",
+      "lat": null,
+      "lng": null,
+      "note": "北魏迁都后持续营造的石窟",
+      "kind": "site"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《高僧传》",
+      "source": "僧人传记",
+      "url_or_path": "《高僧传》",
+      "citation_note": "记载早期译经僧和佛教传播活动",
+      "reliability": "pending"
+    },
+    {
+      "title": "云冈石窟造像与题记",
+      "source": "考古艺术材料",
+      "url_or_path": "云冈石窟",
+      "citation_note": "反映北魏佛教艺术和多地区文化联系",
+      "reliability": "pending"
+    },
+    {
+      "title": "龙门石窟造像与题记",
+      "source": "考古艺术材料",
+      "url_or_path": "龙门石窟",
+      "citation_note": "反映迁都洛阳后的造像风格和信仰活动",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -105,7 +175,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.580345Z",
-  "updated_at": "2026-09-14T17:06:07.580345Z",
+  "updated_at": "2026-09-16T10:01:49.326952Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

@@ -3,15 +3,15 @@
   "lesson_id": "L1002",
   "course_id": "C-songyuan-song",
   "state": "draft",
-  "revision": 1,
-  "draft_fingerprint": "1256cfec5b3b6e1e920bb1215a9bef5e8e7e497d66a32d72224d8577c89cccb6",
+  "revision": 2,
+  "draft_fingerprint": "307a95eb7ec6e9def17b0751be1aeeeac813c62271525008839501ce5a7aa1d5",
   "validation": null,
   "sealed_version": null,
   "sealed_checksum": null,
   "published_course_id": null,
   "published_version": null,
   "published_release_id": null,
-  "updated_at": "2026-09-14T17:06:07.692879Z",
+  "updated_at": "2026-09-16T10:01:48.635720Z",
   "history": [
     {
       "sequence": 1,
@@ -24,7 +24,19 @@
       "draft_fingerprint": "1256cfec5b3b6e1e920bb1215a9bef5e8e7e497d66a32d72224d8577c89cccb6",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 2,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T10:01:48.635720Z",
+      "draft_fingerprint": "307a95eb7ec6e9def17b0751be1aeeeac813c62271525008839501ce5a7aa1d5",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "0ab45f271b77984758be7c0ea38b246ef98ac34cae7834a8de48465ccae4adb7"
+  "checksum": "affdf2e7cea6267db7cb6863e49bca9474342512e2119e8d634bb722d5e520a4"
 }

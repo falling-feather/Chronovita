@@ -1,5 +1,5 @@
 import unittest
-from scripts.sync_named_assets import asset_id, split_people, person_lessons
+from scripts.sync_named_assets import asset_id, split_people, person_lessons, merge_archive_profiles
 
 
 class NamedAssetTests(unittest.TestCase):
@@ -25,3 +25,28 @@ class NamedAssetTests(unittest.TestCase):
 
     def test_ambiguous_alias_does_not_guess_a_lesson(self):
         self.assertEqual(person_lessons('同名', {'同名(甲)': ['L1'], '同名(乙)': ['L2']}), [])
+
+    def test_duplicate_archives_merge_relations_and_keep_both_sources(self):
+        first = {"asset_id": "old", "word": "春秋五霸", "gloss": "释义",
+                 "related_people": ["齐桓公"], "related_lessons": ["L104"]}
+        second = dict(first, asset_id="new", related_people=["齐桓公", "晋文公"])
+        result = merge_archive_profiles([
+            ("keyword", first, {"archive": "a.zip"}),
+            ("keyword", second, {"archive": "b.zip"}),
+        ])
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0][1]["related_people"], ["齐桓公", "晋文公"])
+        self.assertEqual(len(result[0][2]), 2)
+
+    def test_conflicting_prose_is_not_silently_replaced(self):
+        first = {"word": "词条", "gloss": "甲"}
+        second = {"word": "词条", "gloss": "乙"}
+        with self.assertRaisesRegex(ValueError, "Conflicting archive content"):
+            merge_archive_profiles([("keyword", first, {}), ("keyword", second, {})])
+
+    def test_identity_normalization_preserves_single_asset(self):
+        first = {"name": " 姬重耳（晋文公） ", "summary": "正文"}
+        second = {"name": "姬重耳(晋文公)", "summary": "正文"}
+        self.assertEqual(len(merge_archive_profiles([
+            ("person", first, {}), ("person", second, {}),
+        ])), 1)

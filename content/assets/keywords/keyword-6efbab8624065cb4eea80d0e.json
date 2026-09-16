@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-6efbab8624065cb4eea80d0e",
+  "word": "大慈恩寺",
+  "pinyin": "dà cí ēn sì",
+  "gloss": "唐代长安佛寺；玄奘主持译经的重要场所",
+  "era": "隋唐",
+  "category": "地点",
+  "examples": [
+    "本课结合“大慈恩寺”说明唐代长安佛寺；玄奘主持译经的重要场所。",
+    "讲解“大慈恩寺”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "玄奘"
+  ],
+  "related_lessons": [
+    "L902"
+  ],
+  "source_refs": [
+    {
+      "title": "L902《玄奘西行》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L902.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l902-05.json\", \"member_sha256\": \"75a5df48f5a7f5e5e12f25d7710af0030f54011d8527c8106091a61acfb6eab0\", \"source_id\": \"keyword-l902-05\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.587549Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

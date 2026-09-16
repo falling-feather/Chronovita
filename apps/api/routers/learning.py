@@ -95,6 +95,7 @@ class SubmissionListItem(BaseModel):
     version: int
     title: str
     body_excerpt: str
+    lesson_title: str | None = None
     sticky_note_count: int
     stroke_count: int
     event_count: int
@@ -532,6 +533,7 @@ def _submission_list_item(
         (submission.student_id, None),
     )
     excerpt = " ".join(submission.body_markdown.split())[:180]
+    current_lesson = get_lesson(submission.lesson_id)
     return SubmissionListItem(
         submission_id=submission.submission_id,
         student_id=submission.student_id,
@@ -542,6 +544,7 @@ def _submission_list_item(
         version=submission.version,
         title=submission.title,
         body_excerpt=excerpt,
+        lesson_title=current_lesson.title if current_lesson else None,
         sticky_note_count=len(submission.sticky_notes),
         stroke_count=len(submission.drawing_strokes),
         event_count=len(submission.learning_events),

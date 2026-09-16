@@ -72,9 +72,94 @@
       "gloss": "公元1911年爆发并推动清帝退位的革命；结束中国君主制度"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "李鸿章",
+      "role": "晚清洋务派官员",
+      "summary": "兴办近代企业并参与建立北洋水师",
+      "persona": "从自强实践和制度限制两方面理解",
+      "boundaries": []
+    },
+    {
+      "name": "康有为",
+      "role": "维新派代表",
+      "summary": "推动戊戌变法并主张制度改革",
+      "persona": "联系甲午战败理解改革要求",
+      "boundaries": []
+    },
+    {
+      "name": "孙中山",
+      "role": "民主革命领导人",
+      "summary": "组织革命团体并推动建立共和国",
+      "persona": "说明革命需要组织 宣传和多方社会力量",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "上海",
+      "region": "今上海",
+      "lat": null,
+      "lng": null,
+      "note": "江南机器制造总局所在地和近代工业中心",
+      "kind": "city"
+    },
+    {
+      "label": "威海卫",
+      "region": "今山东威海",
+      "lat": null,
+      "lng": null,
+      "note": "甲午战争中北洋水师最后基地",
+      "kind": "battle"
+    },
+    {
+      "label": "马关",
+      "region": "今日本下关",
+      "lat": null,
+      "lng": null,
+      "note": "公元1895年清日议和签约地点",
+      "kind": "city"
+    },
+    {
+      "label": "武昌",
+      "region": "今湖北武汉武昌区",
+      "lat": null,
+      "lng": null,
+      "note": "公元1911年武昌起义爆发地",
+      "kind": "city"
+    },
+    {
+      "label": "南京",
+      "region": "今江苏南京",
+      "lat": null,
+      "lng": null,
+      "note": "中华民国临时政府成立地",
+      "kind": "capital"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "洋务企业档案与遗址",
+      "source": "近代企业材料",
+      "url_or_path": "江南机器制造总局 福州船政局等档案遗址",
+      "citation_note": "反映洋务工业 教育和技术活动",
+      "reliability": "pending"
+    },
+    {
+      "title": "《马关条约》文本",
+      "source": "条约文献",
+      "url_or_path": "中日《马关条约》",
+      "citation_note": "保存割地 赔款和通商等具体条款",
+      "reliability": "pending"
+    },
+    {
+      "title": "辛亥革命档案与革命文献",
+      "source": "近代档案",
+      "url_or_path": "武昌起义档案 同盟会文献及清帝退位诏书",
+      "citation_note": "记录革命组织 各省响应和帝制结束",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -126,7 +211,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.891802Z",
-  "updated_at": "2026-09-14T17:06:07.891802Z",
+  "updated_at": "2026-09-16T10:01:49.123184Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

@@ -52,9 +52,78 @@
       "gloss": "整理白虎观经学讨论成果的著作；反映东汉官方经学解释"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "刘炟（汉章帝）",
+      "role": "东汉皇帝",
+      "summary": "召集官员和学者举行白虎观会议",
+      "persona": "说明国家整合经学解释的政治目的",
+      "boundaries": []
+    },
+    {
+      "name": "班固",
+      "role": "东汉史学家和经学家",
+      "summary": "参与整理白虎观会议相关讨论成果",
+      "persona": "联系会议讨论与《白虎通义》的文本形成",
+      "boundaries": []
+    },
+    {
+      "name": "郑玄",
+      "role": "东汉经学家",
+      "summary": "研习并融会不同经说并为多部经典作注",
+      "persona": "展示学术整合不只来自朝廷会议",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "长安",
+      "region": "今陕西西安一带",
+      "lat": null,
+      "lng": null,
+      "note": "西汉官学和皇家藏书整理的重要中心",
+      "kind": "capital"
+    },
+    {
+      "label": "白虎观",
+      "region": "东汉洛阳宫城区域",
+      "lat": null,
+      "lng": null,
+      "note": "公元79年经学会议举行地点",
+      "kind": "site"
+    },
+    {
+      "label": "洛阳",
+      "region": "今河南洛阳一带",
+      "lat": null,
+      "lng": null,
+      "note": "东汉都城和经学活动中心",
+      "kind": "capital"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《汉书·艺文志》",
+      "source": "传世文献",
+      "url_or_path": "《汉书·艺文志》",
+      "citation_note": "保存西汉典籍整理和学术分类的相关材料",
+      "reliability": "pending"
+    },
+    {
+      "title": "《后汉书·章帝纪》",
+      "source": "传世文献",
+      "url_or_path": "《后汉书·章帝纪》",
+      "citation_note": "记载汉章帝时期白虎观经学会议",
+      "reliability": "pending"
+    },
+    {
+      "title": "《白虎通义》",
+      "source": "汉代经学文献",
+      "url_or_path": "《白虎通义》",
+      "citation_note": "保存东汉朝廷对经义和制度关系的解释",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -106,7 +175,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.514532Z",
-  "updated_at": "2026-09-14T17:06:07.514532Z",
+  "updated_at": "2026-09-16T10:01:48.333245Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

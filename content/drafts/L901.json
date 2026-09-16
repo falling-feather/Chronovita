@@ -46,9 +46,71 @@
       "gloss": "以诗歌反映时代变化和社会生活的特点；常用于评价杜甫作品"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "李白",
+      "role": "唐代诗人",
+      "summary": "以漫游经历和开阔想象写出奔放诗篇",
+      "persona": "联系政治理想和人生挫折理解浪漫风格",
+      "boundaries": []
+    },
+    {
+      "name": "杜甫",
+      "role": "唐代诗人",
+      "summary": "以个人经历记录战争和社会生活",
+      "persona": "区分诗歌感受与官府史料的不同价值",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "长安",
+      "region": "今陕西西安",
+      "lat": null,
+      "lng": null,
+      "note": "李白供奉翰林和杜甫长期生活的重要城市",
+      "kind": "capital"
+    },
+    {
+      "label": "洛阳",
+      "region": "今河南洛阳",
+      "lat": null,
+      "lng": null,
+      "note": "公元744年李白与杜甫相遇地区",
+      "kind": "city"
+    },
+    {
+      "label": "成都",
+      "region": "今四川成都",
+      "lat": null,
+      "lng": null,
+      "note": "杜甫草堂生活和创作地区",
+      "kind": "city"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《李太白集》",
+      "source": "传世诗文集",
+      "url_or_path": "《李太白集》",
+      "citation_note": "保存李白诗文和人生表达",
+      "reliability": "pending"
+    },
+    {
+      "title": "《杜工部集》",
+      "source": "传世诗文集",
+      "url_or_path": "《杜工部集》",
+      "citation_note": "保存杜甫诗作及其时代经验",
+      "reliability": "pending"
+    },
+    {
+      "title": "《旧唐书》相关列传",
+      "source": "传世史书",
+      "url_or_path": "《旧唐书·文苑传》",
+      "citation_note": "记载李白 杜甫生平和后世评价",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -95,7 +157,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.637165Z",
-  "updated_at": "2026-09-14T17:06:07.637165Z",
+  "updated_at": "2026-09-16T10:01:48.507260Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

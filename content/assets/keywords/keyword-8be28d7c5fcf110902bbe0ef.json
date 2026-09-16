@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-8be28d7c5fcf110902bbe0ef",
+  "word": "纸币",
+  "pinyin": "zhǐ bì",
+  "gloss": "以纸张作为载体并依靠发行信用流通的货币",
+  "era": "宋元",
+  "category": "经济",
+  "examples": [
+    "本课结合“纸币”说明以纸张作为载体并依靠发行信用流通的货币。",
+    "讲解“纸币”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L1003"
+  ],
+  "source_refs": [
+    {
+      "title": "L1003《交子、市易和海贸》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1003.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1003-04.json\", \"member_sha256\": \"00206d0d5a4a23905f6eeefa0b7396775f111b0319c2228c46b312733fa00e94\", \"source_id\": \"keyword-l1003-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:54.877058Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

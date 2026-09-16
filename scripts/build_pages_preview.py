@@ -11,6 +11,8 @@ OUTPUT = ROOT / "apps" / "web" / "public" / "preview" / "preview-data-v1.json"
 sys.path.insert(0, str(ROOT))
 
 from services import courses  # noqa: E402
+from services import content  # noqa: E402
+from services.content import workflow  # noqa: E402
 
 
 def _load_json(path: Path) -> dict:
@@ -28,6 +30,12 @@ def _published_presentations() -> tuple[dict[str, dict], list[str]]:
             f'{manifest["course_id"]}#{manifest["release_no"]}:{manifest["checksum"][:12]}'
         )
         for item in manifest.get("items", []):
+            resources = workflow.get_release_lesson_resources(
+                item["course_id"], item["lesson_id"], manifest["release_id"])
+            if not courses.reading_media_matches(
+                item["course_id"], item["lesson_id"], resources.course_package
+            ):
+                continue
             descriptor = item.get("lesson_presentation")
             if not descriptor:
                 continue
@@ -49,6 +57,15 @@ def _published_presentations() -> tuple[dict[str, dict], list[str]]:
 
 
 def build() -> dict:
+    previous_root = content.content_root()
+    content.configure(CONTENT_ROOT)
+    try:
+        return _build_current_root()
+    finally:
+        content.configure(previous_root)
+
+
+def _build_current_root() -> dict:
     era_items: list[dict] = []
     seen_eras: set[str] = set()
     for era in courses.list_eras():

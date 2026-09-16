@@ -61,9 +61,79 @@
       "gloss": "元代驿站交通系统；承担使者往来 文书传递和物资供应"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "忽必烈",
+      "role": "元朝建立者",
+      "summary": "建立元朝 完成统一并调整行政制度",
+      "persona": "联系大汗与中原皇帝双重身份理解政策",
+      "boundaries": []
+    },
+    {
+      "name": "阿里不哥",
+      "role": "蒙古汗位竞争者",
+      "summary": "蒙哥去世后与忽必烈争夺汗位",
+      "persona": "说明元朝建立伴随蒙古帝国内部变化",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "开平",
+      "region": "今内蒙古正蓝旗一带",
+      "lat": null,
+      "lng": null,
+      "note": "公元1260年忽必烈即位地区",
+      "kind": "capital"
+    },
+    {
+      "label": "大都",
+      "region": "今北京",
+      "lat": null,
+      "lng": null,
+      "note": "元朝主要都城",
+      "kind": "capital"
+    },
+    {
+      "label": "临安",
+      "region": "今浙江杭州",
+      "lat": null,
+      "lng": null,
+      "note": "南宋都城；公元1276年元军进入",
+      "kind": "capital"
+    },
+    {
+      "label": "崖山",
+      "region": "今广东江门新会南部",
+      "lat": null,
+      "lng": null,
+      "note": "公元1279年宋元海战地点",
+      "kind": "battle"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《元史·世祖本纪》",
+      "source": "传世史书",
+      "url_or_path": "《元史·世祖本纪》",
+      "citation_note": "记载忽必烈即位 建元和统一战争",
+      "reliability": "pending"
+    },
+    {
+      "title": "《元典章》",
+      "source": "制度文献",
+      "url_or_path": "《元典章》",
+      "citation_note": "保存元朝行政 财政和司法制度材料",
+      "reliability": "pending"
+    },
+    {
+      "title": "元代驿站文书与地图",
+      "source": "文字与地图材料",
+      "url_or_path": "元代站赤文书 行省地图及相关碑刻",
+      "citation_note": "反映地方治理和交通网络",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -115,7 +185,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.740602Z",
-  "updated_at": "2026-09-14T17:06:07.740602Z",
+  "updated_at": "2026-09-16T10:01:48.744424Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

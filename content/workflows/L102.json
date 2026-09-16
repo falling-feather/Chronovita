@@ -3,15 +3,15 @@
   "lesson_id": "L102",
   "course_id": "C-prequin-state",
   "state": "draft",
-  "revision": 2,
-  "draft_fingerprint": "ab7284ea7a7aaa17c391c5628cefb27907a53596f7eecc47343904673c195fa9",
+  "revision": 3,
+  "draft_fingerprint": "88b0e72818c3423724917ea69a3d511ce0d45065d86f8550dd85ee9ac06d6e2a",
   "validation": null,
   "sealed_version": null,
   "sealed_checksum": null,
   "published_course_id": null,
   "published_version": null,
   "published_release_id": null,
-  "updated_at": "2026-09-14T17:06:07.366499Z",
+  "updated_at": "2026-09-16T10:01:48.053076Z",
   "history": [
     {
       "sequence": 1,
@@ -36,7 +36,19 @@
       "draft_fingerprint": "ab7284ea7a7aaa17c391c5628cefb27907a53596f7eecc47343904673c195fa9",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 3,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teacher-text-sync",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-09-16T10:01:48.053076Z",
+      "draft_fingerprint": "88b0e72818c3423724917ea69a3d511ce0d45065d86f8550dd85ee9ac06d6e2a",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "68b3a8381d6bfcdc0c5b1167eb1be1975105154e0451048c364b7d74938eed98"
+  "checksum": "0c1938018441c573b713445039f8b8325a6b10e54a2a04ab06081a950bfbe17a"
 }

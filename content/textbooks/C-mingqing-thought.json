@@ -11,7 +11,7 @@
     "L1402": "1fb05612a70cf0cf2fb4132ba33bcacc59c16024aad828651be371f7a06c8d96",
     "L1403": "48aabd1907e5782ed7f8b41f5de67fb13c634d95e35972705f81602674c61a48"
   },
-  "text_checksum": "8126f569a4009360b8d679771b4dbd71fdbe5879a1e13c18e494a802f417189b",
+  "text_checksum": "a958706e0cf0e20fda19af2e1296417ce39c980e867358e9e9e230ccd9cfa934",
   "lessons": [
     {
       "lesson_id": "L1401",
@@ -58,6 +58,64 @@
           "word": "《传习录》",
           "pinyin": "chuán xí lù",
           "gloss": "王阳明弟子整理的语录 书信和问答集；保存心学主要观点"
+        }
+      ],
+      "people": [
+        {
+          "name": "王阳明",
+          "role": "明代思想家和官员",
+          "summary": "发展心学并强调知行合一和致良知",
+          "persona": "把思想概念放入人生经历和实际行动理解",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "余姚",
+          "region": "今浙江余姚",
+          "lat": null,
+          "lng": null,
+          "note": "王阳明出生地",
+          "kind": "city"
+        },
+        {
+          "label": "龙场",
+          "region": "今贵州修文一带",
+          "lat": null,
+          "lng": null,
+          "note": "王阳明被贬并形成重要思想转变之地",
+          "kind": "site"
+        },
+        {
+          "label": "南赣地区",
+          "region": "今江西南部及周边",
+          "lat": null,
+          "lng": null,
+          "note": "王阳明任官 平乱和推行地方治理地区",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《传习录》",
+          "source": "思想语录与书信集",
+          "url_or_path": "《传习录》",
+          "citation_note": "保存王阳明讲学 书信和弟子问答",
+          "reliability": "pending"
+        },
+        {
+          "title": "《王文成公全书》",
+          "source": "文集",
+          "url_or_path": "《王文成公全书》",
+          "citation_note": "保存王阳明奏疏 诗文和政务材料",
+          "reliability": "pending"
+        },
+        {
+          "title": "明代地方志与相关碑刻",
+          "source": "地方历史材料",
+          "url_or_path": "贵州 江西 浙江相关地方志碑刻",
+          "citation_note": "补充龙场经历 讲学和地方治理活动",
+          "reliability": "pending"
         }
       ]
     },
@@ -107,6 +165,78 @@
           "pinyin": "jīng shì sī xiǎng",
           "gloss": "关注社会现实并希望用学问改善国家治理和百姓生活的思想倾向"
         }
+      ],
+      "people": [
+        {
+          "name": "黄宗羲",
+          "role": "明清之际思想家",
+          "summary": "从明亡经验反思君主制度和公共治理",
+          "persona": "在十七世纪儒家语境中理解其政治批判",
+          "boundaries": []
+        },
+        {
+          "name": "黄尊素",
+          "role": "明末东林党官员",
+          "summary": "因反对魏忠贤受到迫害并影响黄宗羲经历",
+          "persona": "用于说明家庭遭遇与思想形成关系",
+          "boundaries": []
+        },
+        {
+          "name": "魏忠贤",
+          "role": "明末宦官",
+          "summary": "掌权期间打击东林官员并加剧政治冲突",
+          "persona": "避免把明亡全部归结为单一人物",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "余姚",
+          "region": "今浙江余姚",
+          "lat": null,
+          "lng": null,
+          "note": "黄宗羲故乡和学术活动地区",
+          "kind": "city"
+        },
+        {
+          "label": "东林书院",
+          "region": "今江苏无锡",
+          "lat": null,
+          "lng": null,
+          "note": "明末讲学和政治议论的重要场所",
+          "kind": "site"
+        },
+        {
+          "label": "宁波地区",
+          "region": "今浙江宁波一带",
+          "lat": null,
+          "lng": null,
+          "note": "黄宗羲晚年讲学和浙东学术活动中心",
+          "kind": "region"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《明夷待访录》",
+          "source": "政治思想著作",
+          "url_or_path": "黄宗羲《明夷待访录》",
+          "citation_note": "呈现黄宗羲对君主 法律 学校和经济的思考",
+          "reliability": "pending"
+        },
+        {
+          "title": "《黄宗羲全集》相关文集",
+          "source": "个人文集",
+          "url_or_path": "《黄宗羲全集》",
+          "citation_note": "保存黄宗羲生平 讲学和政治活动材料",
+          "reliability": "pending"
+        },
+        {
+          "title": "明末东林党相关档案与史书",
+          "source": "政治历史材料",
+          "url_or_path": "《明史》相关列传及明末档案",
+          "citation_note": "补充黄尊素遭遇和明末政治环境",
+          "reliability": "pending"
+        }
       ]
     },
     {
@@ -154,6 +284,71 @@
           "word": "《读通鉴论》",
           "pinyin": "dú tōng jiàn lùn",
           "gloss": "王夫之评论历代政治和历史变化的著作"
+        }
+      ],
+      "people": [
+        {
+          "name": "顾炎武",
+          "role": "明清之际学者",
+          "summary": "以实地考察和文献辨析研究制度与社会",
+          "persona": "突出经世责任与严谨方法结合",
+          "boundaries": []
+        },
+        {
+          "name": "王夫之",
+          "role": "明清之际思想家",
+          "summary": "从气的变化和历史条件讨论哲学与政治",
+          "persona": "联系南明经历和隐居著述理解思想",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "昆山",
+          "region": "今江苏昆山",
+          "lat": null,
+          "lng": null,
+          "note": "顾炎武故乡和早年活动地区",
+          "kind": "city"
+        },
+        {
+          "label": "华北地区",
+          "region": "今河北 山西 山东等地",
+          "lat": null,
+          "lng": null,
+          "note": "顾炎武长期游历和实地考察区域",
+          "kind": "region"
+        },
+        {
+          "label": "衡阳",
+          "region": "今湖南衡阳",
+          "lat": null,
+          "lng": null,
+          "note": "王夫之隐居著述和船山学术形成地区",
+          "kind": "city"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《日知录》",
+          "source": "学术笔记",
+          "url_or_path": "顾炎武《日知录》",
+          "citation_note": "反映顾炎武经世 考据和社会责任思想",
+          "reliability": "pending"
+        },
+        {
+          "title": "《顾亭林诗文集》",
+          "source": "个人文集",
+          "url_or_path": "《顾亭林诗文集》",
+          "citation_note": "保存顾炎武生平 交往和抗清经历",
+          "reliability": "pending"
+        },
+        {
+          "title": "《船山遗书》",
+          "source": "思想著作汇编",
+          "url_or_path": "《船山遗书》",
+          "citation_note": "保存王夫之经学 哲学和历史著作",
+          "reliability": "pending"
         }
       ]
     }

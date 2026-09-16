@@ -11,7 +11,7 @@
     "L902": "b28e2d89511e40023197dbc955234bac523ccec3cff85ac7a8096fb2351590f4",
     "L903": "058af9188a6d15d2babf9ef22d5f2002a60bf5ebe001255159f481b2fec9ffc4"
   },
-  "text_checksum": "82d161c5d8c6ee4c6f1db0c3d05a70de45273a493c47d62952ec58fb99191c9f",
+  "text_checksum": "319f58588043db4ad91f867570ea232128a76bbcc8de619c4a211341b06dda98",
   "lessons": [
     {
       "lesson_id": "L901",
@@ -53,6 +53,71 @@
           "word": "诗史",
           "pinyin": "shī shǐ",
           "gloss": "以诗歌反映时代变化和社会生活的特点；常用于评价杜甫作品"
+        }
+      ],
+      "people": [
+        {
+          "name": "李白",
+          "role": "唐代诗人",
+          "summary": "以漫游经历和开阔想象写出奔放诗篇",
+          "persona": "联系政治理想和人生挫折理解浪漫风格",
+          "boundaries": []
+        },
+        {
+          "name": "杜甫",
+          "role": "唐代诗人",
+          "summary": "以个人经历记录战争和社会生活",
+          "persona": "区分诗歌感受与官府史料的不同价值",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "长安",
+          "region": "今陕西西安",
+          "lat": null,
+          "lng": null,
+          "note": "李白供奉翰林和杜甫长期生活的重要城市",
+          "kind": "capital"
+        },
+        {
+          "label": "洛阳",
+          "region": "今河南洛阳",
+          "lat": null,
+          "lng": null,
+          "note": "公元744年李白与杜甫相遇地区",
+          "kind": "city"
+        },
+        {
+          "label": "成都",
+          "region": "今四川成都",
+          "lat": null,
+          "lng": null,
+          "note": "杜甫草堂生活和创作地区",
+          "kind": "city"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《李太白集》",
+          "source": "传世诗文集",
+          "url_or_path": "《李太白集》",
+          "citation_note": "保存李白诗文和人生表达",
+          "reliability": "pending"
+        },
+        {
+          "title": "《杜工部集》",
+          "source": "传世诗文集",
+          "url_or_path": "《杜工部集》",
+          "citation_note": "保存杜甫诗作及其时代经验",
+          "reliability": "pending"
+        },
+        {
+          "title": "《旧唐书》相关列传",
+          "source": "传世史书",
+          "url_or_path": "《旧唐书·文苑传》",
+          "citation_note": "记载李白 杜甫生平和后世评价",
+          "reliability": "pending"
         }
       ]
     },
@@ -101,6 +166,78 @@
           "word": "《大唐西域记》",
           "pinyin": "dà táng xī yù jì",
           "gloss": "玄奘口述并由辩机整理的地理见闻；记录中亚和南亚多地情况"
+        }
+      ],
+      "people": [
+        {
+          "name": "玄奘",
+          "role": "唐代僧人和翻译家",
+          "summary": "西行印度求法并在长安主持译经",
+          "persona": "突出求知动机 旅程实践和集体翻译",
+          "boundaries": []
+        },
+        {
+          "name": "戒贤",
+          "role": "那烂陀寺高僧",
+          "summary": "向玄奘讲授瑜伽行派学说",
+          "persona": "说明跨区域师生交流",
+          "boundaries": []
+        },
+        {
+          "name": "辩机",
+          "role": "唐代僧人",
+          "summary": "根据玄奘口述整理《大唐西域记》",
+          "persona": "强调文献形成也依赖协作者",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "长安",
+          "region": "今陕西西安",
+          "lat": null,
+          "lng": null,
+          "note": "玄奘出发和回国后译经的中心",
+          "kind": "capital"
+        },
+        {
+          "label": "高昌",
+          "region": "今新疆吐鲁番一带",
+          "lat": null,
+          "lng": null,
+          "note": "玄奘西行途中受到支持的绿洲政权",
+          "kind": "city"
+        },
+        {
+          "label": "那烂陀寺",
+          "region": "今印度比哈尔邦",
+          "lat": null,
+          "lng": null,
+          "note": "玄奘在印度长期学习之地",
+          "kind": "site"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "《大唐大慈恩寺三藏法师传》",
+          "source": "僧人传记",
+          "url_or_path": "《大唐大慈恩寺三藏法师传》",
+          "citation_note": "记载玄奘求法旅程和译经活动",
+          "reliability": "pending"
+        },
+        {
+          "title": "《大唐西域记》",
+          "source": "地理见闻文献",
+          "url_or_path": "《大唐西域记》",
+          "citation_note": "记录七世纪中亚和南亚地理社会信息",
+          "reliability": "pending"
+        },
+        {
+          "title": "大雁塔与大慈恩寺遗存",
+          "source": "建筑与考古材料",
+          "url_or_path": "西安大慈恩寺大雁塔",
+          "citation_note": "反映玄奘译经和经像保存活动",
+          "reliability": "pending"
         }
       ]
     },
@@ -164,6 +301,72 @@
           "word": "粟特商人",
           "pinyin": "sù tè shāng rén",
           "gloss": "来自中亚粟特地区的商人群体；活跃于唐代长安及丝绸之路贸易"
+        }
+      ],
+      "people": [
+        {
+          "name": "阿倍仲麻吕",
+          "role": "日本遣唐留学生和唐朝官员",
+          "summary": "长期留居唐朝并以晁衡之名任官",
+          "persona": "用于说明跨国学习和个人迁徙",
+          "boundaries": []
+        }
+      ],
+      "map_points": [
+        {
+          "label": "长安",
+          "region": "今陕西西安",
+          "lat": null,
+          "lng": null,
+          "note": "唐代政治中心和丝绸之路东端重要城市",
+          "kind": "capital"
+        },
+        {
+          "label": "撒马尔罕",
+          "region": "今乌兹别克斯坦撒马尔罕",
+          "lat": null,
+          "lng": null,
+          "note": "粟特地区重要城市和陆路交通节点",
+          "kind": "city"
+        },
+        {
+          "label": "广州",
+          "region": "今广东广州",
+          "lat": null,
+          "lng": null,
+          "note": "唐代海上贸易重要港口",
+          "kind": "port"
+        },
+        {
+          "label": "奈良",
+          "region": "今日本奈良",
+          "lat": null,
+          "lng": null,
+          "note": "遣唐使往来和吸收唐文化的重要地区",
+          "kind": "city"
+        }
+      ],
+      "source_refs": [
+        {
+          "title": "大秦景教流行中国碑",
+          "source": "碑刻文字材料",
+          "url_or_path": "西安碑林藏大秦景教流行中国碑",
+          "citation_note": "记录景教群体对入唐和传播过程的自述",
+          "reliability": "pending"
+        },
+        {
+          "title": "唐长安城考古遗址",
+          "source": "城市考古材料",
+          "url_or_path": "隋大兴唐长安城遗址",
+          "citation_note": "反映都城道路 坊市和建筑布局",
+          "reliability": "pending"
+        },
+        {
+          "title": "唐代粟特墓葬与墓志",
+          "source": "考古材料",
+          "url_or_path": "西安 太原等地粟特人墓葬与墓志",
+          "citation_note": "反映外来人口生活 身份和宗教文化",
+          "reliability": "pending"
         }
       ]
     }

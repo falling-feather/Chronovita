@@ -52,9 +52,78 @@
       "gloss": "秦国用于统一战争的军事力量；依靠动员 后勤和持续作战"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "嬴政（秦始皇）",
+      "role": "战国末期秦国国君",
+      "summary": "在战国末期掌握秦国政权并发动统一战争的君主",
+      "persona": "重点说明个人决策与秦国长期国力、制度和战争条件之间的关系",
+      "boundaries": []
+    },
+    {
+      "name": "王翦",
+      "role": "秦国将领",
+      "summary": "在灭楚战争中主持秦军、以持久作战取胜的将领",
+      "persona": "用于说明统一战争对兵力、后勤和稳健战略的要求",
+      "boundaries": []
+    },
+    {
+      "name": "李信",
+      "role": "秦国将领",
+      "summary": "早期进攻楚国并遭遇挫败的秦国将领",
+      "persona": "与王翦的不同策略形成对照；突出战争准备的重要性",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "邯郸",
+      "region": "今河北邯郸一带",
+      "lat": null,
+      "lng": null,
+      "note": "赵国都城；秦军东进过程中攻占的重要城市",
+      "kind": "capital"
+    },
+    {
+      "label": "寿春",
+      "region": "今安徽寿县一带",
+      "lat": null,
+      "lng": null,
+      "note": "战国末期楚国都城；灭楚战争的重要目标",
+      "kind": "capital"
+    },
+    {
+      "label": "临淄",
+      "region": "今山东淄博一带",
+      "lat": null,
+      "lng": null,
+      "note": "齐国都城；秦灭六国的最后重要目标",
+      "kind": "capital"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《史记·秦始皇本纪》",
+      "source": "传世文献",
+      "url_or_path": "《史记·秦始皇本纪》",
+      "citation_note": "记载秦王嬴政亲政、灭六国和完成统一的传统叙述",
+      "reliability": "pending"
+    },
+    {
+      "title": "《史记·白起王翦列传》",
+      "source": "传世文献",
+      "url_or_path": "《史记·白起王翦列传》",
+      "citation_note": "记载王翦灭楚及秦国将领相关事迹",
+      "reliability": "pending"
+    },
+    {
+      "title": "《战国策》",
+      "source": "传世文献",
+      "url_or_path": "《战国策》",
+      "citation_note": "保存战国诸侯外交、战争和游说活动的相关记载",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -106,7 +175,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.920508Z",
-  "updated_at": "2026-09-14T17:06:07.920508Z",
+  "updated_at": "2026-09-16T10:01:49.190497Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null

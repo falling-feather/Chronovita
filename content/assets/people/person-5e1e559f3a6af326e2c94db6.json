@@ -1,0 +1,42 @@
+{
+  "schema_version": "person-profile/v1",
+  "asset_id": "person-5e1e559f3a6af326e2c94db6",
+  "name": "黄尊素",
+  "role": "明朝官员，东林党人",
+  "era": "明末清初",
+  "summary": "黄尊素，字真长，浙江余姚人，明朝万历年间进士，后来担任监察御史。他在政治上支持东林党人的主张，重视官员操守，反对宦官干预朝政和阉党专权。明熹宗时期，魏忠贤势力不断扩大，政治斗争日益激烈，黄尊素因坚持政治立场而受到阉党迫害，最终被害。黄尊素的遭遇反映了明朝晚期党争激烈、宦官势力膨胀以及政治秩序恶化的状况。他的儿子黄宗羲后来成为明末清初重要思想家，并继承了对专权政治进行反思的立场。黄尊素本人虽然著述和政治活动不如黄宗羲广为人知，但他作为东林党人和反阉党官员，具有重要的历史代表性。",
+  "persona": "后续 AI 人物智能体使用的语气、知识边界与立场提示。",
+  "boundaries": [
+    "不要让人物知道其身后才发生的事件。"
+  ],
+  "keywords": [
+    "东林党"
+  ],
+  "related_lessons": [
+    "L1402"
+  ],
+  "source_refs": [
+    {
+      "title": "《黄尊素传》",
+      "source": "《明史》，中华书局点校本",
+      "url_or_path": "东林党相关列传",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《明史纪事本末》",
+      "source": "中华书局点校本",
+      "url_or_path": "魏忠贤专权及东林党争相关篇章",
+      "citation_note": "",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "重点讲解黄尊素的官员身份、东林党立场以及受到阉党迫害的经历。注意“东林党”不是现代意义上的政党，而是以政治主张、学术关系和士人交往为基础形成的政治群体。讲解时还应避免把明末政治斗争简单化为个人之间的冲突。\n\n本地附件同步来源：\n{\"archive\": \"人物第十章-第十五章.zip\", \"archive_sha256\": \"cba178f36c53c7d04a479b4f3c641081553e4e3254b6854af5ac07a9367d9a32\", \"member\": \"人物第十章-第十五章/黄尊素-人物档案.json\", \"member_sha256\": \"9eda49990a0e55b8d2e22aa7c155c416fecc7aa118aeaad1838efc079b310f32\", \"source_id\": \"person-L1402-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-16T09:49:56.360831Z",
+  "updated_at": "2026-09-16T09:49:56.360831Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

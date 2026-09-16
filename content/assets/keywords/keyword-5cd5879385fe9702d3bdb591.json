@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-5cd5879385fe9702d3bdb591",
+  "word": "《坤舆万国全图》",
+  "pinyin": "kūn yú wàn guó quán tú",
+  "gloss": "利玛窦参与制作的中文世界地图；展示更广阔的全球地理认识",
+  "era": "明清",
+  "category": "文献",
+  "examples": [
+    "本课结合“《坤舆万国全图》”说明利玛窦参与制作的中文世界地图；展示更广阔的全球地理认识。",
+    "讲解“《坤舆万国全图》”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "利玛窦"
+  ],
+  "related_lessons": [
+    "L1302"
+  ],
+  "source_refs": [
+    {
+      "title": "L1302《耶稣会士与白银贸易》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1302.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1302-02.json\", \"member_sha256\": \"26e9fb8ef76147c533b12ad220fad7bf6af357ab16b72bab47cdda7da1674283\", \"source_id\": \"keyword-l1302-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.434051Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

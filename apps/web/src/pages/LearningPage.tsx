@@ -26,11 +26,6 @@ const LAYER_LABEL: Record<string, string> = {
   watch: '踏勘', practice: '抉择', ask: '召见', create: '书案',
 };
 
-const LESSON_LABELS: Record<string, string> = {
-  L101: '夏朝的建立与「家天下」',
-  L103: '商鞅变法：富国强兵与制度代价',
-};
-
 function formatTime(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
@@ -155,7 +150,7 @@ export default function LearningPage() {
                   />
                   <div>
                     <p>{item.lesson_id} · 上次进入{LAYER_LABEL[item.last_layer] ?? item.last_layer}</p>
-                    <h2>{item.title ?? LESSON_LABELS[item.lesson_id] ?? item.lesson_id}</h2>
+                    <h2>{item.title ?? item.lesson_id}</h2>
                     <div className="chrono-learning-stage-marks">
                       {(['watch', 'practice', 'ask', 'create'] as const).map((layer) => (
                         <span className={item.layers[layer] ? 'done' : ''} key={layer}>
@@ -193,7 +188,7 @@ export default function LearningPage() {
                   <Tag color={feedback.color}>{feedback.label}</Tag>
                 </header>
                 <h2>{item.title}</h2>
-                <p>{LESSON_LABELS[item.lesson_id] ?? item.lesson_id}</p>
+                <p>{item.lesson_title ?? `已撤下课时 ${item.lesson_id}`}</p>
                 <blockquote>{item.body_excerpt || '本版主要由便签、笔迹或导图构成。'}</blockquote>
                 <dl>
                   <div><dt>{item.sticky_note_count}</dt><dd>便签</dd></div>

@@ -67,6 +67,9 @@ function observeRuntimeHealth(
       if (text === 'Failed to load resource: the server responded with a status of 401 (Unauthorized)') {
         return;
       }
+      if (text.includes('status of 404') && /\/presentation$/.test(message.location().url)) {
+        return; // No media is published for the current teacher text yet.
+      }
       if (expectedFailures.dialogueRequest && /Failed to load resource.*ERR_FAILED/.test(text)) {
         return;
       }
@@ -147,22 +150,9 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
 
   await expect(page).toHaveURL(`${BASE_URL}${lessonPath}`);
   await expect(page.getByRole('heading', { name: lesson.title, level: 1 })).toBeVisible();
-  await expect(page.locator('.chrono-cinema-screen video')).toBeVisible();
-  await expect(page.getByText('正式课堂资料')).toBeVisible();
-  await expect(page.getByText('课文、短片、情境与依据已完成校验')).toBeVisible();
-
-  const videoSource = await page.locator('.chrono-cinema-screen source').getAttribute('src');
-  expect(videoSource).toBeTruthy();
-  const media = await page.request.get(new URL(videoSource!, BASE_URL).href, {
-    headers: { Range: 'bytes=0-1023' },
-  });
-  expect(media.status()).toBe(206);
-  expect(media.headers()['content-type']).toContain('video/mp4');
-  expect(media.headers()['cache-control']).toContain('immutable');
-  expect(media.headers().etag).toBeTruthy();
-
-  await page.getByRole('button', { name: '阅读文字稿' }).click();
-  await expect(page.getByText('无障碍文字稿')).toBeVisible();
+  await expect(page.locator('.chrono-cinema-screen video')).toHaveCount(0);
+  await expect(page.getByText('教师课文', { exact: true })).toBeVisible();
+  await expect(page.getByText('本课暂未配备导读短片')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   await page.reload();

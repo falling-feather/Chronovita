@@ -56,9 +56,86 @@
       "gloss": "曾国藩以湖南团练为基础建立的地方军队；成为镇压太平军主力"
     }
   ],
-  "people": [],
-  "map_points": [],
-  "source_refs": [],
+  "people": [
+    {
+      "name": "洪秀全",
+      "role": "太平天国主要领导人",
+      "summary": "创立拜上帝会并建立太平天国",
+      "persona": "结合宗教动员 政权建设和内部矛盾理解",
+      "boundaries": []
+    },
+    {
+      "name": "洪仁玕",
+      "role": "太平天国后期重要官员",
+      "summary": "提出《资政新篇》并尝试调整政权建设",
+      "persona": "说明改革方案与战争现实之间的距离",
+      "boundaries": []
+    },
+    {
+      "name": "曾国藩",
+      "role": "湘军统帅",
+      "summary": "组织地方军队并攻取天京",
+      "persona": "联系战争需要理解地方军事力量兴起",
+      "boundaries": []
+    }
+  ],
+  "map_points": [
+    {
+      "label": "金田",
+      "region": "今广西桂平金田镇",
+      "lat": null,
+      "lng": null,
+      "note": "公元1851年太平天国起义地点",
+      "kind": "site"
+    },
+    {
+      "label": "天京",
+      "region": "今江苏南京",
+      "lat": null,
+      "lng": null,
+      "note": "太平天国首都和公元1864年决战地点",
+      "kind": "capital"
+    },
+    {
+      "label": "长江中下游",
+      "region": "今湖北 安徽 江苏 浙江等地",
+      "lat": null,
+      "lng": null,
+      "note": "太平军与清军长期争夺的主要区域",
+      "kind": "region"
+    },
+    {
+      "label": "湖南",
+      "region": "今湖南省",
+      "lat": null,
+      "lng": null,
+      "note": "湘军组织和发展的主要地区",
+      "kind": "region"
+    }
+  ],
+  "source_refs": [
+    {
+      "title": "《天朝田亩制度》",
+      "source": "太平天国制度文献",
+      "url_or_path": "《天朝田亩制度》",
+      "citation_note": "呈现土地平均和社会组织设想",
+      "reliability": "pending"
+    },
+    {
+      "title": "《资政新篇》",
+      "source": "太平天国政治文献",
+      "url_or_path": "洪仁玕《资政新篇》",
+      "citation_note": "反映后期发展工商和制度改革设想",
+      "reliability": "pending"
+    },
+    {
+      "title": "湘军奏稿与地方志",
+      "source": "清军和地方记录",
+      "url_or_path": "曾国藩奏稿及战区地方志",
+      "citation_note": "记录地方军队组织 战争和社会影响",
+      "reliability": "pending"
+    }
+  ],
   "facts": [],
   "qa_points": [],
   "level_goals": [],
@@ -110,7 +187,7 @@
   "status": "draft",
   "version": 0,
   "created_at": "2026-09-14T17:06:07.881403Z",
-  "updated_at": "2026-09-14T17:06:07.881403Z",
+  "updated_at": "2026-09-16T10:01:49.094821Z",
   "sealed_at": null,
   "sealed_by": null,
   "checksum": null
