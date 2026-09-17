@@ -22,12 +22,13 @@ from routers import (
     learning,
     practice,
     profile,
+    shiji,
 )
 from settings import secret_value, settings
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from static_web import mount_classroom_web
 
-from services import content, persistence, rag, saga
+from services import content, persistence, rag, saga, shiji_reader
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
@@ -122,6 +123,7 @@ async def lifespan(app: FastAPI):
         shutdown_learning_assets()
         shutdown_game_runtime()
         shutdown_identity()
+        shiji_reader.close()
         persistence.close_engine()
 
 
@@ -177,6 +179,7 @@ app.include_router(home.router, prefix=f"{API_PREFIX}/home", tags=["home"])
 app.include_router(courses.router, prefix=f"{API_PREFIX}/courses", tags=["courses"])
 app.include_router(learning.router, prefix=f"{API_PREFIX}/learning", tags=["learning"])
 app.include_router(practice.router, prefix=f"{API_PREFIX}/practice", tags=["practice"])
+app.include_router(shiji.router, prefix=f"{API_PREFIX}/shiji", tags=["shiji-reader"])
 app.include_router(game.router, prefix=f"{API_PREFIX}/practice/game", tags=["game"])
 app.include_router(profile.router, prefix=f"{API_PREFIX}/profile", tags=["profile"])
 

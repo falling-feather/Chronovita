@@ -54,6 +54,7 @@ const CourseDetailPage = lazy(() => import('./pages/CourseDetailPage'));
 const LessonPage = lazy(() => import('./pages/lesson/LessonPage'));
 const LearningPage = lazy(() => import('./pages/LearningPage'));
 const PracticePage = lazy(() => import('./pages/PracticePage'));
+const ShijiReaderPage = lazy(() => import('./pages/ShijiReaderPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const AdminContentPage = lazy(() => import('./pages/AdminContentPage'));
 const AdminContentPreviewPage = lazy(() => import('./pages/AdminContentPreviewPage'));
@@ -296,6 +297,7 @@ function ShellLayout() {
       items.push(
         { key: '/', label: <Link to="/">首页</Link> },
         { key: '/courses', label: <Link to="/courses">课程中心</Link> },
+        { key: '/shiji', label: <Link to="/shiji">史记阅读</Link> },
         { key: '/learning', label: <Link to="/learning">我的学习</Link> },
         { key: '/practice', label: <Link to="/practice">实践课堂</Link> },
         { key: '/profile', label: <Link to="/profile">个人中心</Link> },
@@ -361,6 +363,7 @@ function AppRoutes() {
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:courseId" element={<CourseDetailPage />} />
             <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
+            <Route path="/shiji" element={<ShijiReaderPage />} />
             <Route path="/learning" element={<LearningPage />} />
             <Route path="/practice" element={<PracticePage />} />
           </Route>
