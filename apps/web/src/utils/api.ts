@@ -114,6 +114,16 @@ export interface AccountProfile {
   email: string; grade: '' | '七年级' | '八年级' | '九年级'; bio: string;
   avatar_data_url: string; reading_size: 'standard' | 'large';
 }
+
+export interface AdminApiConfig {
+  provider: 'mock' | 'deepseek';
+  api_key_configured: boolean;
+  api_key_last4: string;
+  base_url: string;
+  model: string;
+  model_pro: string;
+  thinking: 'disabled' | 'enabled' | 'auto';
+}
 export type ProfileUpdate = Omit<AccountProfile, 'user_id' | 'username' | 'revision'> & { expected_revision: number; expected_user_id: string };
 export interface CourseSummary {
   id: string; era_id: string; title: string; subtitle: string;
@@ -903,6 +913,11 @@ function learningSubmissionQuery(params: {
 }
 
 export const api = {
+  adminApiConfig: () => jsonFetch<AdminApiConfig>('/admin/api-config'),
+  saveAdminApiConfig: (body: {
+    provider: 'mock' | 'deepseek'; api_key?: string; clear_api_key?: boolean;
+    base_url: string; model: string; model_pro: string; thinking: 'disabled' | 'enabled' | 'auto';
+  }) => jsonFetch<AdminApiConfig>('/admin/api-config', { method: 'PUT', body: JSON.stringify(body) }),
   profile: () => jsonFetch<AccountProfile>('/profile/'),
   saveProfile: (body: ProfileUpdate) => jsonFetch<AccountProfile>('/profile/', { method: 'PUT', body: JSON.stringify(body) }),
   changeOwnPassword: (current_password: string, new_password: string, expected_user_id: string) =>

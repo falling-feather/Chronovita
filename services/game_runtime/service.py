@@ -269,6 +269,8 @@ class GameRuntimeService:
         self._classifier = classifier
         self._narrator = narrator
         self._dialogue_generator = dialogue_generator
+        self._classifier_config_key: tuple[str, str, str] | None = None
+        self._dialogue_config_key: tuple[str, str, str] | None = None
         self._lock = threading.RLock()
 
     def list_scenarios(self) -> tuple[ScenarioSummaryV1, ...]:
@@ -1281,9 +1283,18 @@ class GameRuntimeService:
 
     def _get_classifier(self) -> ActionClassifierProtocol:
         with self._lock:
-            if self._classifier is None:
+            from settings import secret_value, settings
+
+            config_key = (
+                settings.llm_provider,
+                settings.deepseek_model_pro,
+                secret_value(settings.deepseek_api_key)[-8:],
+            )
+            if self._classifier is None or (
+                self._classifier_config_key is not None
+                and self._classifier_config_key != config_key
+            ):
                 from services.ai import ActionClassifierV1
-                from settings import settings
 
                 # Free-form L101/L103 proposals need the more reliable
                 # structured model; fixed actions and local aliases remain
@@ -1291,6 +1302,7 @@ class GameRuntimeService:
                 self._classifier = ActionClassifierV1(
                     model=settings.deepseek_model_pro,
                 )
+                self._classifier_config_key = config_key
             return self._classifier
 
     def _get_narrator(self) -> HistoricalNarratorProtocol:
@@ -1303,16 +1315,26 @@ class GameRuntimeService:
 
     def _get_dialogue_generator(self) -> DialogueGenerator:
         with self._lock:
-            if self._dialogue_generator is None:
+            from settings import secret_value, settings
+
+            config_key = (
+                settings.llm_provider,
+                settings.deepseek_model_pro,
+                secret_value(settings.deepseek_api_key)[-8:],
+            )
+            if self._dialogue_generator is None or (
+                self._dialogue_config_key is not None
+                and self._dialogue_config_key != config_key
+            ):
                 from services.ai import ScenarioDialogueLLMAdapterV1
                 from services.llm import StructuredLLMAdapter
-                from settings import settings
 
                 self._dialogue_generator = ScenarioDialogueLLMAdapterV1(
                     completer=StructuredLLMAdapter(
                         default_model=settings.deepseek_model_pro,
                     )
                 )
+                self._dialogue_config_key = config_key
             return self._dialogue_generator
 
     async def _narrate_and_commit(

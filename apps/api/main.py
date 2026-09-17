@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from routers import (
     admin_content,
+    api_config,
     auth,
     common,
     courses,
@@ -41,6 +42,7 @@ from services.operations import (
     probe_database_readiness,
     validate_runtime_configuration,
 )
+from services.operations.api_config import load_api_config
 from services.persistence.student_assets import assert_no_unmapped_student_assets
 from services.persona_conversation import (
     configure_persona_conversations,
@@ -73,6 +75,8 @@ async def lifespan(app: FastAPI):
     )
     app.state.database_engine = engine
     try:
+        load_api_config()
+        validate_runtime_configuration(settings)
         configure_identity(
             engine,
             AuthServiceConfig(
@@ -168,6 +172,7 @@ app.include_router(auth.router, prefix=f"{API_PREFIX}/auth", tags=["auth"])
 app.include_router(
     admin_content.router, prefix=f"{API_PREFIX}/admin/content", tags=["admin-content"]
 )
+app.include_router(api_config.router, prefix=f"{API_PREFIX}/admin", tags=["admin-config"])
 app.include_router(home.router, prefix=f"{API_PREFIX}/home", tags=["home"])
 app.include_router(courses.router, prefix=f"{API_PREFIX}/courses", tags=["courses"])
 app.include_router(learning.router, prefix=f"{API_PREFIX}/learning", tags=["learning"])

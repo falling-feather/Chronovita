@@ -58,6 +58,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const AdminContentPage = lazy(() => import('./pages/AdminContentPage'));
 const AdminContentPreviewPage = lazy(() => import('./pages/AdminContentPreviewPage'));
 const AdminAccountsPage = lazy(() => import('./pages/AdminAccountsPage'));
+const AdminApiConfigPage = lazy(() => import('./pages/AdminApiConfigPage'));
 const TeacherLearningReviewPage = lazy(() => import('./pages/TeacherLearningReviewPage'));
 
 const { Header, Content, Footer } = Layout;
@@ -307,7 +308,10 @@ function ShellLayout() {
       items.push({ key: '/teacher/learning', label: <Link to="/teacher/learning">成果批阅</Link> });
     }
     if (auth.mode === 'accounts' && auth.can('auth.manage_users')) {
-      items.push({ key: '/admin/accounts', label: <Link to="/admin/accounts">账户管理</Link> });
+      items.push(
+        { key: '/admin/accounts', label: <Link to="/admin/accounts">账户管理</Link> },
+        { key: '/admin/api-config', label: <Link to="/admin/api-config">API 配置</Link> },
+      );
     }
     return items;
   }, [auth.can, auth.mode, auth.principal]);
@@ -376,6 +380,7 @@ function AppRoutes() {
 
           <Route element={<RequireRoles roles={ADMIN_ROLES} allowLegacy={false} />}>
             <Route path="/admin/accounts" element={<AdminAccountsPage />} />
+            <Route path="/admin/api-config" element={<AdminApiConfigPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/workspace" replace />} />

@@ -94,12 +94,20 @@ export default function LearningPage() {
     return () => { active = false; };
   }, [auth.mode, owner, retry]);
 
+  const currentItems = useMemo(
+    () => items.filter((item) => item.reading_status !== 'unavailable'),
+    [items],
+  );
+  const archivedItems = useMemo(
+    () => items.filter((item) => item.reading_status === 'unavailable'),
+    [items],
+  );
   const stats = useMemo(() => ({
-    lessons: items.filter((item) => item.reading_status !== 'unavailable').length,
+    lessons: currentItems.length,
     completedLessons: items.filter(readingComplete).length,
     submissions: submissions.length,
     feedback: submissions.filter((item) => item.latest_feedback).length,
-  }), [items, submissions]);
+  }), [currentItems.length, items, submissions]);
 
   const openDetail = async (submissionId: string) => {
     setDetail(null);
@@ -135,7 +143,7 @@ export default function LearningPage() {
 
       <nav className="chrono-learning-tabs" aria-label="学习记录分类">
         <button type="button" className={tab === 'progress' ? 'active' : ''} onClick={() => setTab('progress')}>
-          <BookOutlined /> 学习进程 <span>{items.length}</span>
+          <BookOutlined /> 学习进程 <span>{currentItems.length}</span>
         </button>
         <button type="button" className={tab === 'submissions' ? 'active' : ''} onClick={() => setTab('submissions')}>
           <FileDoneOutlined /> 已提交成果 <span>{submissions.length}</span>
@@ -145,9 +153,10 @@ export default function LearningPage() {
       {loading || (loadedOwner !== null && !hasCurrentData) ? (
         <div className="chrono-learning-loading"><Spin /><span>正在展开学习长卷…</span></div>
       ) : !hasCurrentData && error ? <Empty description="学习记录暂不可用，恢复连接后可重试。" /> : tab === 'progress' ? (
-        items.length > 0 ? (
+        currentItems.length > 0 ? (
+          <>
           <section className="chrono-learning-progress-grid">
-            {items.map((item) => {
+            {currentItems.map((item) => {
               return (
                 <article key={item.lesson_id}>
                   <CourseCoverPicture
@@ -179,8 +188,17 @@ export default function LearningPage() {
               );
             })}
           </section>
+          {archivedItems.length > 0 ? (
+            <Alert
+              type="info"
+              showIcon
+              message={`另有 ${archivedItems.length} 条历史课号记录已撤下`}
+              description="这些记录保留用于审计，不计入当前课程进度，也不会作为继续学习入口。"
+            />
+          ) : null}
+          </>
         ) : (
-          <Empty description="还没有学习记录">
+          <Empty description={archivedItems.length > 0 ? '当前课表暂无活动记录（历史课号已撤下）' : '还没有学习记录'}>
             <Button type="primary" onClick={() => nav('/courses')}>选择第一门课程</Button>
           </Empty>
         )
