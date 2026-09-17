@@ -162,6 +162,17 @@ class GameActionFitTests(unittest.TestCase):
         self.assertEqual(result.reason_code, "low_confidence")
         self.assertIsNone(result.action_id)
 
+    def test_dayu_natural_council_proposal_is_deferred_to_reviewed_classifier(self):
+        result = fit_local_action(
+            lesson_id="L101",
+            raw_input="召集百姓进行商议",
+            available_actions=DAYU_INITIAL_ACTIONS,
+        )
+
+        self.assertEqual(result.kind, "ambiguous")
+        self.assertEqual(result.reason_code, "low_confidence")
+        self.assertIsNone(result.action_id)
+
     def test_exact_and_semantic_unavailable_actions_fail_closed(self):
         exact = fit_local_action(
             lesson_id="L101",

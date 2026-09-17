@@ -258,7 +258,10 @@ class ActionClassifierV1:
                 ClassifierModelOutputV1,
                 model=self.model,
                 temperature=0.0,
-                max_tokens=192,
+                # DeepSeek Flash may spend a short reasoning prefix before
+                # returning the tiny JSON object; 192 tokens truncates valid
+                # classifications in the local classroom runtime.
+                max_tokens=512,
             )
         except StructuredLLMError as exc:
             return self._result(

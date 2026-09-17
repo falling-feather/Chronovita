@@ -62,7 +62,9 @@ class ScenarioDialogueLLMAdapterV1:
             ScenarioDialogueModelOutputV1,
             model=self.model,
             temperature=0.2,
-            max_tokens=320,
+            # The release-bound prompt carries persona, evidence and turn
+            # context; Flash can truncate the JSON at a small token budget.
+            max_tokens=1536,
         )
         info_payload = (
             completion.info.model_dump(mode="python")

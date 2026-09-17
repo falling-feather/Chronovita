@@ -79,6 +79,17 @@ class RagLocalReplyFitTests(unittest.TestCase):
                 self.assertEqual(fit.state_id, expected_state)
                 self.assertTrue(fit.matched_terms)
 
+    def test_dayu_person_strategy_question_is_not_rejected_as_an_unpublished_facet(self):
+        fit = self._fit(
+            "L101",
+            "你当年是采用什么策略进行治水？",
+            person_name="禹",
+        )
+        self.assertIsNotNone(fit)
+        assert fit is not None
+        self.assertTrue(fit.answer_slot_supported)
+        self.assertNotEqual(fit.reason, "question_facet_not_published")
+
     def test_major_l103_topics_have_stable_states(self):
         cases = (
             ("徙木立信怎样建立制度信用？", "L103.law-credit"),

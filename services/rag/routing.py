@@ -166,15 +166,27 @@ def route_rag_query(
             complexity_score=complexity,
         )
 
-    if (
-        confidence == "high"
-        and complexity >= 3
+    grounded_detail = (
+        local_fit is not None
+        and local_fit.api_synthesis_allowed
+        and query_plan.intent in {"detail", "causality", "comparison"}
         and len(batch.passages) >= 2
+    )
+    if (
+        len(batch.passages) >= 2
+        and (
+            (confidence == "high" and complexity >= 3)
+            or (confidence in {"medium", "high"} and grounded_detail)
+        )
         and (local_fit is None or local_fit.api_synthesis_allowed)
     ):
         return RagRouteDecision(
             target="external_api",
-            reason="complex_grounded_synthesis",
+            reason=(
+                "complex_grounded_synthesis"
+                if complexity >= 3
+                else "grounded_detail_synthesis"
+            ),
             evidence_confidence=confidence,
             complexity_score=complexity,
         )

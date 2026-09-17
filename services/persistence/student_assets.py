@@ -138,6 +138,10 @@ class _ProgressRecord(BaseModel):
     last_layer: Literal["watch", "practice", "ask", "create"] = "watch"
     layers: _ProgressLayers = Field(default_factory=_ProgressLayers)
     updated_at: str
+    # V1.1.3 reading confirmation fields are part of the same owner-scoped KV
+    # record. Optional defaults preserve validation of legacy progress rows.
+    teacher_text_checksum: Checksum | None = None
+    reading_confirmed_at: str | None = None
 
 
 class _CanvasGraph(BaseModel):

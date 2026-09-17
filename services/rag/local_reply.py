@@ -387,6 +387,27 @@ _COMPOSITE_STATES = {
     ),
 }
 
+
+def _legacy_slot_ids_for_question(
+    state_id: str,
+    normalized_question: str,
+) -> tuple[str, ...]:
+    """Choose the narrow V2 slot for a reviewed legacy state.
+
+    The old L101 governance state grouped the methods slot with the broader
+    power/cost slot. A strategy question should not be rejected merely because
+    a persona is allowed to discuss methods but not political causation.
+    """
+    slot_ids = _V2_LEGACY_STATE_SLOTS.get(state_id, ())
+    if state_id == "L101.governance":
+        method_markers = ("策略", "方法", "思路", "堵", "疏", "筑堤", "疏导")
+        governance_markers = ("代价", "信任", "权威", "王权", "组织", "公共工程")
+        if any(marker in normalized_question for marker in method_markers) and not any(
+            marker in normalized_question for marker in governance_markers
+        ):
+            return ("dayu-slot-methods",)
+    return slot_ids
+
 # These aliases are deliberately small and map wording present in the
 # student's *original* question to one reviewed state.  They are not copied
 # from the expanded retrieval query: doing that would let a rewrite manufacture
@@ -582,7 +603,14 @@ _STATE_APPROVED_QUESTION_FACETS: dict[str, tuple[str, ...]] = {
     "L101.transmitted-memory": ("大禹名字", "禹的名字"),
     "L101.chronology": ("写着名字", "名字的铭文", "大禹名字"),
     "L101.erlitou-state": ("二里头遗址", "井字形道路", "井字形"),
-    "L101.governance": ("两种治水思路", "治理思路"),
+    "L101.governance": (
+        "两种治水思路",
+        "治理思路",
+        "治水策略",
+        "治理方法",
+        "采用什么策略进行治水",
+        "策略进行",
+    ),
     "L103.law-credit": ("老百姓信法律", "相信法令", "信法律"),
     "L103.farming-merit": ("增加负担", "增加代价"),
     "L103.collective-cost": ("增加压力", "增加代价"),
@@ -1146,7 +1174,7 @@ def _fit_v2_local_reply(
     selected_slots = _deduplicate_slots(
         slot_index[slot_id]
         for state, _ in matches
-        for slot_id in _V2_LEGACY_STATE_SLOTS.get(state.state_id, ())
+        for slot_id in _legacy_slot_ids_for_question(state.state_id, normalized)
         if slot_id in slot_index and slot_index[slot_id].status == "supported"
     )
     if not selected_slots:
@@ -1284,10 +1312,15 @@ def _v2_slot_fit(
     retrieved_ids = {item.passage.passage_id for item in batch.passages}
     eligible_count = len(retrieved_ids.intersection(passage_ids))
     evidence_available = batch.supported and eligible_count > 0
+    enough_grounding = eligible_count >= 2 or (
+        response_mode == "topic"
+        and len(selected) == 1
+        and eligible_count == 1
+    )
     api_allowed = (
         allow_api
         and evidence_available
-        and eligible_count >= 2
+        and enough_grounding
         and all(slot.api_synthesis_allowed for slot in selected)
     )
     return LocalReplyFit(

@@ -1283,8 +1283,14 @@ class GameRuntimeService:
         with self._lock:
             if self._classifier is None:
                 from services.ai import ActionClassifierV1
+                from settings import settings
 
-                self._classifier = ActionClassifierV1()
+                # Free-form L101/L103 proposals need the more reliable
+                # structured model; fixed actions and local aliases remain
+                # model-free, so this only affects unresolved natural language.
+                self._classifier = ActionClassifierV1(
+                    model=settings.deepseek_model_pro,
+                )
             return self._classifier
 
     def _get_narrator(self) -> HistoricalNarratorProtocol:
@@ -1299,8 +1305,14 @@ class GameRuntimeService:
         with self._lock:
             if self._dialogue_generator is None:
                 from services.ai import ScenarioDialogueLLMAdapterV1
+                from services.llm import StructuredLLMAdapter
+                from settings import settings
 
-                self._dialogue_generator = ScenarioDialogueLLMAdapterV1()
+                self._dialogue_generator = ScenarioDialogueLLMAdapterV1(
+                    completer=StructuredLLMAdapter(
+                        default_model=settings.deepseek_model_pro,
+                    )
+                )
             return self._dialogue_generator
 
     async def _narrate_and_commit(

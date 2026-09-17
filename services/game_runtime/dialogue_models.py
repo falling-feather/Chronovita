@@ -64,7 +64,9 @@ class ScenarioDialogueModelOutputV1(_DialogueModel):
     """
 
     text: DialogueText
-    used_passage_ids: tuple[ContractId, ...] = Field(min_length=1, max_length=3)
+    # JSON model responses use arrays; strict tuple validation rejected valid
+    # grounded dialogue completions before provenance checks could run.
+    used_passage_ids: list[ContractId] = Field(min_length=1, max_length=3)
 
     @model_validator(mode="after")
     def validate_passage_ids(self) -> "ScenarioDialogueModelOutputV1":

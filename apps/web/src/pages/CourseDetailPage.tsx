@@ -29,23 +29,20 @@ export default function CourseDetailPage() {
     setLoading(true);
     setError('');
     setProgressUnavailable(false);
-    Promise.all([
-      api.course(courseId),
-      api.progressList().then((response) => response.items).catch(() => {
-        if (active) setProgressUnavailable(true);
-        return [];
-      }),
-    ]).then(([course, items]) => {
+    api.course(courseId).then((course) => {
       if (!active) return;
       setData(course);
-      setProgress(items);
+      setLoading(false);
+      void api.progressList().then((response) => {
+        if (active) setProgress(response.items);
+      }).catch(() => {
+        if (active) setProgressUnavailable(true);
+      });
     }).catch((failure) => {
-      if (active) {
-        setData(null);
-        setError(failure instanceof Error ? failure.message : '课程载入失败，请重试。');
-      }
-    }).finally(() => {
-      if (active) setLoading(false);
+      if (!active) return;
+      setData(null);
+      setError(failure instanceof Error ? failure.message : '课程载入失败，请重试。');
+      setLoading(false);
     });
     return () => { active = false; };
   }, [courseId, retry]);

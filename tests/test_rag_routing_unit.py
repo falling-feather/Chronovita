@@ -1,6 +1,7 @@
 import unittest
 
 from services.contracts.evidence_v1 import EvidencePassageV1, EvidenceSourceV1
+from services.rag.local_reply import LocalReplyFit
 from services.rag.query import RagQueryPlan
 from services.rag.retrieval import RetrievalBatch, RetrievedPassage
 from services.rag.routing import RAG_ROUTER_VERSION, route_rag_query
@@ -156,6 +157,23 @@ class RagRoutingUnitTests(unittest.TestCase):
         self.assertEqual(decision.target, "local_template")
         self.assertEqual(decision.evidence_confidence, "high")
         self.assertEqual(decision.complexity_score, 0)
+
+    def test_grounded_detail_with_reviewed_api_permission_can_reach_api(self):
+        fit = LocalReplyFit(
+            state_id="L101.governance",
+            topic_label="治水、协作与治理代价",
+            response_mode="topic",
+            api_synthesis_allowed=True,
+            matched_terms=("治水",),
+        )
+        decision = route_rag_query(
+            _plan("你当年采用什么策略治水？"),
+            _batch(supported=True, coverage=0.6, matches=(2, 1)),
+            local_fit=fit,
+            require_local_fit=True,
+        )
+        self.assertEqual(decision.target, "external_api")
+        self.assertEqual(decision.reason, "grounded_detail_synthesis")
 
     def test_published_person_identity_uses_local_profile_with_one_citation(self):
         decision = route_rag_query(

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict
 
@@ -37,6 +38,15 @@ class TextbookCourse(BaseModel):
     lessons: list[TextbookLesson]
 
 
+@dataclass(frozen=True)
+class ReadingLessonIndexItem:
+    """The small projection needed by progress and resume views."""
+
+    course_id: str
+    title: str
+    teacher_text_checksum: str
+
+
 def text_checksum(payload: dict) -> str:
     values = {key: payload[key] for key in (
         "course_id", "title", "era", "era_id", "section", "lessons"
@@ -63,3 +73,16 @@ def lesson_reading_checksum(course_id: str, lesson: TextbookLesson) -> str:
         {"course_id": course_id, "lesson": lesson.model_dump(mode="json")},
         ensure_ascii=False, sort_keys=True, separators=(",", ":"),
     ).encode("utf-8")).hexdigest()
+
+
+def reading_lesson_index() -> dict[str, ReadingLessonIndexItem]:
+    """Load teacher-reading metadata without interactive releases or assets."""
+    return {
+        lesson.lesson_id: ReadingLessonIndexItem(
+            course_id=book.course_id,
+            title=lesson.title,
+            teacher_text_checksum=lesson_reading_checksum(book.course_id, lesson),
+        )
+        for book in load_textbooks().values()
+        for lesson in book.lessons
+    }

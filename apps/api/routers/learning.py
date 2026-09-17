@@ -26,6 +26,7 @@ from services.contracts.learning_v1 import (
 )
 from services.contracts.v1 import ContractId
 from services.courses import get_lesson, list_courses
+from services.courses.textbooks import ReadingLessonIndexItem, reading_lesson_index
 from services.learning_assets import (
     LearningAssetStoreError,
     LearningFeedbackIntegrityError,
@@ -152,9 +153,9 @@ def _parse_progress(
     return record
 
 
-def _enrich(record: StoredProgress) -> ProgressItem:
+def _enrich(record: StoredProgress, lessons: dict[str, ReadingLessonIndexItem]) -> ProgressItem:
     item = record.model_dump(exclude={"user_id", "teacher_text_checksum"})
-    lesson = get_lesson(record.lesson_id)
+    lesson = lessons.get(record.lesson_id)
     if lesson:
         item["course_id"] = lesson.course_id
         item["title"] = lesson.title
@@ -189,9 +190,10 @@ async def index(
     context: AuthContext = Depends(require_student_context),
 ):
     records = _list_for_owner(_owner_id(context))
+    lessons = reading_lesson_index()
     return {
         "module": "我的学习",
-        "items": [_enrich(item).model_dump() for item in records[:50]],
+        "items": [_enrich(item, lessons).model_dump() for item in records[:50]],
     }
 
 
@@ -200,7 +202,8 @@ async def list_progress(
     context: AuthContext = Depends(require_student_context),
 ):
     records = _list_for_owner(_owner_id(context))
-    return {"items": [_enrich(item).model_dump() for item in records],
+    lessons = reading_lesson_index()
+    return {"items": [_enrich(item, lessons).model_dump() for item in records],
             "total_lessons": sum(course.lesson_count for course in list_courses())}
 
 
@@ -209,8 +212,9 @@ async def latest_progress(
     context: AuthContext = Depends(require_student_context),
 ):
     records = _list_for_owner(_owner_id(context))
+    lessons = reading_lesson_index()
     available = next((item for record in records
-                      if (item := _enrich(record)).reading_status != "unavailable"), None)
+                      if (item := _enrich(record, lessons)).reading_status != "unavailable"), None)
     return {"item": available.model_dump() if available else None}
 
 
@@ -224,7 +228,7 @@ async def get_progress(
     if raw is None:
         return {"item": None}
     record = _parse_progress(raw, owner_id=owner_id, lesson_id=lesson_id)
-    return {"item": _enrich(record).model_dump()}
+    return {"item": _enrich(record, reading_lesson_index()).model_dump()}
 
 
 @router.post("/progress/touch")
@@ -232,7 +236,8 @@ async def touch_progress(
     req: TouchRequest,
     context: AuthContext = Depends(require_student_context),
 ):
-    lesson = get_lesson(req.lesson_id)
+    lessons = reading_lesson_index()
+    lesson = lessons.get(req.lesson_id)
     if lesson is None:
         raise HTTPException(404, detail={"code": "lesson_not_found", "message": "该课时已撤下或不存在。"})
     if (req.layer == "watch" and req.teacher_text_checksum is not None
@@ -284,7 +289,7 @@ async def touch_progress(
             next_record.model_dump(mode="json"),
             expected_present=found,
         ):
-            return {"ok": True, "item": _enrich(next_record).model_dump()}
+            return {"ok": True, "item": _enrich(next_record, lessons).model_dump()}
     raise HTTPException(
         status_code=409,
         detail={
