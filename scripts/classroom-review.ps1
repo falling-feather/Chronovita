@@ -4,6 +4,7 @@ param(
   [ValidateRange(1024, 65535)]
   [int] $WebPort = 5174,
   [string] $DatabasePath = "data\chronovita.db",
+  [string] $ShijiOcrRoot = "",
   [switch] $LexicalOnly,
   [switch] $SkipBrowser
 )
@@ -131,6 +132,7 @@ $env:CHRONO_GITHUB_PUBLICATION_ENABLED = "false"
 $env:CHRONO_RAG_INDEX_PATH = $RagIndexPath
 $env:CHRONO_RAG_MODEL_ROOT = $ModelRoot
 $env:CHRONO_RAG_VECTOR_ENABLED = if ($LexicalOnly) { "false" } else { "true" }
+$env:CHRONO_SHIJI_OCR_ROOT = if ($ShijiOcrRoot) { Resolve-ReviewPath $ShijiOcrRoot } else { Join-Path $Root "content\shiji\ocr-pages" }
 $env:VITE_API_PROXY_TARGET = $ApiUrl
 if ([string]::IsNullOrWhiteSpace($env:CHRONO_LLM_PROVIDER)) {
   $env:CHRONO_LLM_PROVIDER = "mock"

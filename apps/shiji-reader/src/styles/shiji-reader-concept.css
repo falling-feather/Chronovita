@@ -1,0 +1,3091 @@
+/*
+ * Generated from prototypes/shiji-reader-concept/src/styles.css.
+ * Run `node scripts/sync_shiji_reader_styles.mjs` after updating the accepted concept baseline.
+ * Selectors are scoped so the formal workbench and non-Shiji pages keep their existing styles.
+ */
+.shiji-reader-page {
+  font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", sans-serif;
+  color: #25231f;
+  background: #f3efe6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
+  --font-ui: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", sans-serif;
+  --paper: #f3efe6;
+  --surface: #fcfaf6;
+  --surface-soft: #f8f4ed;
+  --surface-raised: #fffdf9;
+  --ink: #25231f;
+  --ink-soft: #554f47;
+  --muted: #837b70;
+  --line: #d9d1c5;
+  --line-soft: #e9e2d8;
+  --line-strong: #bfb4a5;
+  --cinnabar: #a64032;
+  --cinnabar-soft: #f0ded8;
+  --jade: #267666;
+  --jade-dark: #195f52;
+  --jade-soft: #deece7;
+  --shadow-soft: 0 8px 28px rgb(55 45 34 / 10%);
+  --topbar-height: 64px;
+  --catalog-width: 228px;
+  --function-width: 270px;
+  --rail-width: 52px;
+  --control-radius: 5px;
+}
+
+.shiji-reader-page * {
+  box-sizing: border-box;
+}
+
+.shiji-reader-page html {
+  min-width: 320px;
+  background: var(--paper);
+  scroll-behavior: smooth;
+}
+
+.shiji-reader-page body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.shiji-reader-page button,
+.shiji-reader-page input,
+.shiji-reader-page select {
+  font: inherit;
+}
+
+.shiji-reader-page button {
+  color: inherit;
+}
+
+.shiji-reader-page button:focus-visible,
+.shiji-reader-page input:focus-visible,
+.shiji-reader-page select:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--jade) 72%, white);
+  outline-offset: 2px;
+}
+
+.shiji-reader-page button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.shiji-reader-page .sr-only,
+.shiji-reader-page .sr-only:not(:focus):not(:active) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.shiji-reader-page .reader-app {
+  min-height: 100dvh;
+  background-color: var(--paper);
+  color: var(--ink);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.shiji-reader-page .reader-app:not(.texture-disabled) {
+  background-image:
+    radial-gradient(circle at 18% 24%, rgb(109 87 57 / 3%) 0 0.7px, transparent 0.9px),
+    radial-gradient(circle at 78% 72%, rgb(109 87 57 / 2.5%) 0 0.6px, transparent 0.85px);
+  background-size: 13px 17px, 17px 19px;
+}
+
+.shiji-reader-page .theme-white {
+  --paper: #ffffff;
+  --surface: #ffffff;
+  --surface-soft: #f7f7f5;
+  --surface-raised: #ffffff;
+  --line: #d8d8d4;
+  --line-soft: #ecece8;
+}
+
+.shiji-reader-page .theme-night {
+  --paper: #1d1d1a;
+  --surface: #24241f;
+  --surface-soft: #2b2a24;
+  --surface-raised: #302f29;
+  --ink: #ece6d9;
+  --ink-soft: #c7bfb1;
+  --muted: #9f978b;
+  --line: #454239;
+  --line-soft: #37352f;
+  --line-strong: #5d584c;
+  --cinnabar: #cf7060;
+  --cinnabar-soft: #4b302b;
+  --jade: #68aa99;
+  --jade-dark: #79bcaa;
+  --jade-soft: #263e38;
+  --shadow-soft: 0 10px 34px rgb(0 0 0 / 28%);
+}
+
+/* Top bar */
+
+.shiji-reader-page .top-bar {
+  position: relative;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: var(--topbar-height);
+  padding: 0 22px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+}
+
+.shiji-reader-page .brand-group,
+.shiji-reader-page .top-navigation,
+.shiji-reader-page .top-utilities,
+.shiji-reader-page .current-work {
+  display: flex;
+  align-items: center;
+}
+
+.shiji-reader-page .brand-group {
+  min-width: 0;
+  gap: 32px;
+}
+
+.shiji-reader-page .brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.shiji-reader-page .brand-seal {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, var(--cinnabar) 55%, transparent);
+  color: var(--cinnabar);
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1;
+  transform: rotate(-2deg);
+}
+
+.shiji-reader-page .brand strong {
+  color: var(--cinnabar);
+  font-family: var(--font-serif);
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.shiji-reader-page .top-navigation {
+  align-self: stretch;
+  gap: 8px;
+}
+
+.shiji-reader-page .top-navigation button {
+  position: relative;
+  min-width: 58px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-family: var(--font-serif);
+  font-size: 16px;
+}
+
+.shiji-reader-page .top-navigation button::after {
+  position: absolute;
+  right: 12px;
+  bottom: 0;
+  left: 12px;
+  height: 2px;
+  background: transparent;
+  content: "";
+}
+
+.shiji-reader-page .top-navigation button:hover,
+.shiji-reader-page .top-navigation button.active {
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .top-navigation button.active::after {
+  background: var(--cinnabar);
+}
+
+.shiji-reader-page .current-work {
+  justify-content: center;
+  gap: 24px;
+  font-family: var(--font-serif);
+}
+
+.shiji-reader-page .current-work span {
+  width: 1px;
+  height: 25px;
+  background: var(--line-strong);
+}
+
+.shiji-reader-page .current-work strong {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.shiji-reader-page .top-utilities {
+  justify-content: flex-end;
+  gap: 3px;
+}
+
+.shiji-reader-page .top-utilities button,
+.shiji-reader-page .panel-heading button,
+.shiji-reader-page .collapse-display,
+.shiji-reader-page .document-actions button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
+  background: transparent;
+  cursor: pointer;
+}
+
+.shiji-reader-page .top-utilities button:hover,
+.shiji-reader-page .panel-heading button:hover,
+.shiji-reader-page .collapse-display:hover,
+.shiji-reader-page .document-actions button:hover {
+  border-color: var(--line);
+  background: var(--surface-soft);
+  color: var(--cinnabar);
+}
+
+/* App shell and side rails */
+
+.shiji-reader-page .reader-shell {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--catalog-width) minmax(0, 1fr) var(--function-width);
+  height: calc(100dvh - var(--topbar-height));
+  overflow: hidden;
+  transition: grid-template-columns 220ms ease;
+}
+
+.shiji-reader-page .reader-shell.catalog-is-collapsed {
+  grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--function-width);
+}
+
+.shiji-reader-page .reader-shell.function-is-collapsed {
+  grid-template-columns: var(--catalog-width) minmax(0, 1fr) var(--rail-width);
+}
+
+.shiji-reader-page .reader-shell.catalog-is-collapsed.function-is-collapsed {
+  grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--rail-width);
+}
+
+.shiji-reader-page .catalog-panel,
+.shiji-reader-page .function-panel {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+}
+
+.shiji-reader-page .catalog-panel {
+  border-right: 1px solid var(--line);
+}
+
+.shiji-reader-page .function-panel {
+  border-left: 1px solid var(--line);
+}
+
+.shiji-reader-page .catalog-panel.collapsed,
+.shiji-reader-page .function-panel.collapsed {
+  align-items: center;
+  gap: 8px;
+  padding: 14px 7px;
+}
+
+.shiji-reader-page .panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 65px;
+  padding: 13px 14px 12px 17px;
+  border-bottom: 1px solid var(--line);
+}
+
+.shiji-reader-page .panel-heading > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.shiji-reader-page .panel-heading strong {
+  font-family: var(--font-serif);
+  font-size: 17px;
+}
+
+.shiji-reader-page .panel-heading span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shiji-reader-page .rail-action {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
+  background: transparent;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.shiji-reader-page .rail-action:hover,
+.shiji-reader-page .rail-action.primary {
+  border-color: var(--line);
+  background: var(--surface-soft);
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .rail-caption {
+  margin-top: auto;
+  padding-bottom: 6px;
+  color: var(--muted);
+  font-family: var(--font-serif);
+  font-size: 12px;
+  letter-spacing: 0.36em;
+  writing-mode: vertical-rl;
+}
+
+/* Catalog */
+
+.shiji-reader-page .catalog-search,
+.shiji-reader-page .keyword-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 12px 12px 8px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--control-radius);
+  background: var(--surface-raised);
+  color: var(--muted);
+}
+
+.shiji-reader-page .catalog-search input,
+.shiji-reader-page .keyword-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.shiji-reader-page .catalog-search input::placeholder,
+.shiji-reader-page .keyword-search input::placeholder,
+.shiji-reader-page .assistant-composer input::placeholder {
+  color: var(--muted);
+}
+
+.shiji-reader-page .catalog-tree {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.shiji-reader-page .catalog-section {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.shiji-reader-page .section-toggle {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  width: 100%;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.shiji-reader-page .section-toggle:hover {
+  background: var(--surface-soft);
+}
+
+.shiji-reader-page .section-toggle svg {
+  transition: transform 160ms ease;
+}
+
+.shiji-reader-page .section-toggle svg.closed {
+  transform: rotate(-90deg);
+}
+
+.shiji-reader-page .section-toggle strong {
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-size: 15px;
+}
+
+.shiji-reader-page .section-toggle span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.shiji-reader-page .chapter-list {
+  padding: 0 8px 10px;
+}
+
+.shiji-reader-page .chapter-list button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3px minmax(0, 1fr) auto;
+  align-items: center;
+  width: 100%;
+  min-height: 35px;
+  gap: 8px;
+  padding: 7px 7px 7px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-family: var(--font-serif);
+  text-align: left;
+}
+
+.shiji-reader-page .chapter-list button:hover {
+  background: var(--surface-soft);
+}
+
+.shiji-reader-page .chapter-list button.active {
+  background: var(--cinnabar-soft);
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .chapter-marker {
+  align-self: stretch;
+  background: transparent;
+}
+
+.shiji-reader-page .chapter-list button.active .chapter-marker {
+  background: var(--cinnabar);
+}
+
+.shiji-reader-page .chapter-list button > span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shiji-reader-page .chapter-list small {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 9px;
+}
+
+.shiji-reader-page .catalog-placeholder {
+  padding: 0 14px 12px 38px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.shiji-reader-page .catalog-footer {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* Center workspace */
+
+.shiji-reader-page .reading-workspace {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.shiji-reader-page .reading-pane {
+  container-name: sentence-reader;
+  container-type: inline-size;
+  order: 1;
+  flex: 0 0 var(--leading-share);
+  min-width: 0;
+  padding: 30px clamp(22px, 2.7vw, 44px) 32px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.shiji-reader-page .panes-swapped .reading-pane {
+  order: 3;
+  flex: 1 1 0;
+}
+
+.shiji-reader-page .display-is-hidden .reading-pane {
+  order: 1;
+  flex: 1 1 auto;
+  padding-right: clamp(70px, 11vw, 190px);
+  padding-left: clamp(70px, 11vw, 190px);
+}
+
+.shiji-reader-page .reading-header {
+  max-width: 960px;
+  margin: 0 auto 18px;
+}
+
+.shiji-reader-page .chapter-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.shiji-reader-page .chapter-context i {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+
+.shiji-reader-page .reading-header h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(27px, 2vw, 35px);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.shiji-reader-page .passage-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 17px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.shiji-reader-page .reading-modebar {
+  display: flex;
+  max-width: 960px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 auto 4px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.shiji-reader-page .reading-mode-switch {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.shiji-reader-page .reading-mode-switch button,
+.shiji-reader-page .annotation-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 31px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.shiji-reader-page .reading-mode-switch button:hover,
+.shiji-reader-page .reading-mode-switch button.active,
+.shiji-reader-page .annotation-toggle:hover,
+.shiji-reader-page .annotation-toggle[aria-pressed="true"] {
+  border-color: var(--line);
+  background: var(--surface-soft);
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .sentence-reader {
+  max-width: 960px;
+  margin: 0 auto;
+  /* Keep the final reading unit able to cross the same 38% focus line as every
+     earlier unit, so document pages and map stages can follow the chapter end. */
+  padding: 0 0 clamp(220px, 38vh, 360px);
+  color: var(--ink);
+  list-style: none;
+}
+
+.shiji-reader-page .sentence-unit {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 0;
+  padding: var(--sentence-space) 0;
+  border-bottom: 1px solid var(--line-soft);
+  transition: background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.shiji-reader-page .sentence-unit.active {
+  background: color-mix(in srgb, var(--cinnabar-soft) 24%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--cinnabar) 52%, transparent);
+}
+
+.shiji-reader-page .sentence-number {
+  padding-top: 0.35em;
+  color: var(--cinnabar);
+  font-family: var(--font-serif);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.shiji-reader-page .sentence-original {
+  min-width: 0;
+  padding: 0 18px 0 4px;
+}
+
+.shiji-reader-page .sentence-original > p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--reader-font-size);
+  line-height: var(--reader-line-height);
+  letter-spacing: 0.025em;
+}
+
+.shiji-reader-page .sentence-translation {
+  grid-column: 2 / -1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 8px;
+  margin: 14px 18px 0 4px;
+  padding: 12px 12px 4px;
+  border-top: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--surface-soft) 58%, transparent);
+}
+
+.shiji-reader-page .sentence-translation > span {
+  display: block;
+  padding-top: 3px;
+  color: var(--jade);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.shiji-reader-page .sentence-translation p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-size: max(13px, calc(var(--reader-font-size) * 0.72));
+  line-height: 1.85;
+}
+
+.shiji-reader-page .translation-hidden .sentence-unit {
+  grid-template-columns: 30px minmax(0, 1fr);
+}
+
+.shiji-reader-page .inline-annotation {
+  --annotation-line: color-mix(in srgb, var(--cinnabar) 58%, transparent);
+  --annotation-fill: color-mix(in srgb, var(--cinnabar-soft) 64%, transparent);
+  --annotation-detail: var(--cinnabar);
+  display: inline;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--annotation-line);
+  background: var(--annotation-fill);
+  color: inherit;
+  font: inherit;
+}
+
+.shiji-reader-page .inline-annotation.interactive {
+  cursor: pointer;
+}
+
+.shiji-reader-page .inline-annotation.annotation-place,
+.shiji-reader-page .inline-annotation.annotation-event {
+  --annotation-line: color-mix(in srgb, var(--jade) 68%, transparent);
+  --annotation-fill: color-mix(in srgb, var(--jade-soft) 70%, transparent);
+  --annotation-detail: var(--jade);
+}
+
+.shiji-reader-page .inline-annotation.annotation-time {
+  --annotation-line: #92763f;
+  --annotation-fill: color-mix(in srgb, #e8d8ae 46%, transparent);
+  --annotation-detail: #7b642f;
+}
+
+.shiji-reader-page .inline-annotation.has-under-detail {
+  display: inline-grid;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  margin: 0 1px;
+  padding: 0;
+  border-bottom: 0;
+  background: transparent;
+  line-height: 1;
+  vertical-align: 0.05em;
+}
+
+.shiji-reader-page .has-under-detail .inline-annotation-text {
+  padding: 0 2px;
+  border-bottom: 1px solid var(--annotation-line);
+  background: var(--annotation-fill);
+  line-height: 1.42;
+}
+
+.shiji-reader-page .inline-under-detail {
+  margin-top: -1px;
+  color: var(--annotation-detail);
+  font-family: var(--font-ui);
+  font-size: max(8px, calc(var(--reader-font-size) * 0.36));
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.shiji-reader-page .reading-note {
+  max-width: 960px;
+  margin: 34px auto 12px;
+  padding: 14px 0 14px 16px;
+  border-left: 2px solid var(--jade);
+  color: var(--ink-soft);
+}
+
+.shiji-reader-page .reading-note span {
+  color: var(--jade);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+}
+
+.shiji-reader-page .reading-note p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.shiji-reader-page .passage-navigation {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  max-width: 960px;
+  margin: 36px auto 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.shiji-reader-page .passage-navigation button,
+.shiji-reader-page .document-pagination button {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--control-radius);
+  background: var(--surface-raised);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.shiji-reader-page .passage-navigation button:last-child {
+  justify-self: end;
+}
+
+.shiji-reader-page .passage-navigation > span,
+.shiji-reader-page .document-pagination > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.shiji-reader-page .workspace-divider {
+  position: relative;
+  z-index: 8;
+  order: 2;
+  flex: 0 0 8px;
+  width: 8px;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-left: 1px solid var(--line-soft);
+  background: var(--surface-soft);
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+.shiji-reader-page .workspace-divider span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 46px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface-raised);
+  transform: translate(-50%, -50%);
+}
+
+.shiji-reader-page .workspace-divider span::before,
+.shiji-reader-page .workspace-divider span::after {
+  position: absolute;
+  left: 1px;
+  width: 1px;
+  height: 1px;
+  background: var(--muted);
+  box-shadow: 0 5px 0 var(--muted), 0 10px 0 var(--muted);
+  content: "";
+}
+
+.shiji-reader-page .workspace-divider span::before {
+  top: 14px;
+}
+
+.shiji-reader-page .workspace-divider span::after {
+  right: 1px;
+  left: auto;
+  top: 14px;
+}
+
+.shiji-reader-page .display-restore {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--control-radius);
+  background: var(--surface-raised);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.shiji-reader-page .panes-swapped .display-restore {
+  right: auto;
+  left: 14px;
+}
+
+/* Display shell */
+
+.shiji-reader-page .display-pane {
+  order: 3;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface-soft);
+}
+
+.shiji-reader-page .panes-swapped .display-pane {
+  order: 1;
+  flex: 0 0 var(--leading-share);
+}
+
+@container sentence-reader (max-width: 520px) {
+  .shiji-reader-page .sentence-unit {
+    grid-template-columns: 26px minmax(0, 1fr);
+  }
+
+  .shiji-reader-page .sentence-translation {
+    grid-column: 2;
+    margin-top: 13px;
+    padding: 11px 0 0;
+    border-top: 1px solid var(--line-soft);
+    border-left: 0;
+  }
+}
+
+.shiji-reader-page .display-header {
+  display: flex;
+  flex: 0 0 52px;
+  align-items: center;
+  padding: 0 10px 0 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.shiji-reader-page .display-tabs {
+  display: flex;
+  align-self: stretch;
+  flex: 1;
+  align-items: stretch;
+  justify-content: center;
+  gap: 2px;
+}
+
+.shiji-reader-page .display-tabs button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 94px;
+  gap: 6px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-family: var(--font-serif);
+  font-size: 13px;
+}
+
+.shiji-reader-page .display-tabs button::after {
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  left: 10px;
+  height: 2px;
+  background: transparent;
+  content: "";
+}
+
+.shiji-reader-page .display-tabs button:hover,
+.shiji-reader-page .display-tabs button.active {
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .display-tabs button.active::after {
+  background: var(--cinnabar);
+}
+
+.shiji-reader-page .display-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.shiji-reader-page .display-swap-enter-active,
+.shiji-reader-page .display-swap-leave-active {
+  transition: opacity 130ms ease, transform 130ms ease;
+}
+
+.shiji-reader-page .display-swap-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.shiji-reader-page .display-swap-leave-to {
+  opacity: 0;
+  transform: translateY(-3px);
+}
+
+/* Document viewer */
+
+.shiji-reader-page .document-mode {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 0;
+  padding: 12px;
+}
+
+.shiji-reader-page .document-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px 12px;
+  padding: 0 2px 10px;
+}
+
+.shiji-reader-page .document-follow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--control-radius);
+  background: var(--surface-raised);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.shiji-reader-page .document-follow.active {
+  border-color: color-mix(in srgb, var(--jade) 52%, var(--line));
+  background: var(--jade-soft);
+  color: var(--jade);
+}
+
+.shiji-reader-page .document-follow:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.shiji-reader-page .document-toolbar > div:first-child {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 2px;
+}
+
+.shiji-reader-page .document-toolbar strong {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.shiji-reader-page .document-toolbar span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.shiji-reader-page .document-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 2px;
+}
+
+.shiji-reader-page .document-actions output {
+  min-width: 42px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+}
+
+.shiji-reader-page .document-actions button.active {
+  border-color: var(--line);
+  background: var(--surface-raised);
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .document-stage {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  background: var(--surface-raised);
+  overflow: hidden;
+}
+
+.shiji-reader-page .scan-strip-viewport {
+  container-type: inline-size;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  touch-action: pan-y;
+  background:
+    linear-gradient(90deg, rgb(80 55 30 / 8%) 0, transparent 18px),
+    #e8ddca;
+  scrollbar-color: color-mix(in srgb, var(--cinnabar) 42%, #9d8c72) transparent;
+  scrollbar-width: thin;
+}
+
+.shiji-reader-page .scan-strip-viewport.manual-strip {
+  cursor: grab;
+  scroll-snap-type: x proximity;
+}
+
+.shiji-reader-page .scan-strip-viewport.manual-strip:active {
+  cursor: grabbing;
+}
+
+.shiji-reader-page .scan-strip {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 10px;
+  width: max-content;
+  min-width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.shiji-reader-page .scan-sheet {
+  display: grid;
+  flex: 0 0 max(250px, 82cqw);
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: max(250px, 82cqw);
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  border: 1px solid rgb(70 50 30 / 22%);
+  background: #f6f2ea;
+  box-shadow: 0 4px 16px rgb(54 38 22 / 10%);
+  opacity: 0.84;
+  scroll-snap-align: center;
+  transition: border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+
+.shiji-reader-page .scan-sheet.active {
+  border-color: color-mix(in srgb, var(--cinnabar) 58%, #6d5538);
+  box-shadow: 0 7px 22px rgb(54 38 22 / 18%);
+  opacity: 1;
+}
+
+.shiji-reader-page .scan-sheet-media {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+  background: #eee8dd;
+}
+
+.shiji-reader-page .scan-sheet img {
+  display: block;
+  width: auto;
+  max-width: none;
+  object-fit: contain;
+  object-position: top center;
+  filter: sepia(0.12) contrast(0.93);
+  user-select: none;
+  transition: height 180ms ease;
+}
+
+.shiji-reader-page .scan-sheet img.fit-page {
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+}
+
+.shiji-reader-page .scan-sheet > figcaption {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+  border-top: 1px solid rgb(70 50 30 / 16%);
+  background: rgb(252 248 238 / 96%);
+  color: #554631;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.shiji-reader-page .document-stage > figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-raised);
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.shiji-reader-page .document-pagination {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding-top: 10px;
+}
+
+.shiji-reader-page .document-pagination button:last-child {
+  justify-self: end;
+}
+
+/* Map */
+
+.shiji-reader-page .map-mode {
+  display: grid;
+  grid-template-rows: auto minmax(250px, 1fr) auto auto auto;
+  height: 100%;
+  min-height: 0;
+  padding: 10px 12px 12px;
+}
+
+.shiji-reader-page .map-mode-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 2px 9px;
+}
+
+.shiji-reader-page .map-mode-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.shiji-reader-page .map-mode-heading strong {
+  font-family: var(--font-serif);
+  font-size: 12px;
+}
+
+.shiji-reader-page .map-mode-heading span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.shiji-reader-page .map-mode-heading span i {
+  width: 18px;
+  border-top: 2px dashed var(--cinnabar);
+}
+
+.shiji-reader-page .map-mode-heading > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface-raised);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 9px;
+}
+
+.shiji-reader-page .map-mode-heading > button svg:last-child {
+  transition: transform 150ms ease;
+}
+
+.shiji-reader-page .map-mode-heading > button svg.open {
+  transform: rotate(180deg);
+}
+
+.shiji-reader-page .map-canvas {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #d8d5ce;
+}
+
+.shiji-reader-page .map-canvas > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: sepia(0.22) saturate(0.52) contrast(0.86) brightness(1.14);
+}
+
+.shiji-reader-page .map-basemap-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 5px 7px;
+  border: 1px solid rgb(65 59 50 / 22%);
+  background: rgb(252 249 241 / 88%);
+  color: #595146;
+  font-size: 8px;
+}
+
+.shiji-reader-page .route-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.shiji-reader-page .route-shadow,
+.shiji-reader-page .route-progress {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.shiji-reader-page .route-shadow {
+  stroke: rgb(94 63 45 / 56%);
+  stroke-dasharray: 4 5;
+  stroke-width: 2.2;
+}
+
+.shiji-reader-page .route-progress {
+  stroke: var(--cinnabar);
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - var(--route-progress));
+  stroke-width: 2.2;
+  opacity: 0.84;
+  transition: stroke-dashoffset 520ms ease;
+}
+
+.shiji-reader-page .map-stop {
+  position: absolute;
+  display: grid;
+  grid-template-columns: 14px auto;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 5px;
+  border: 0;
+  border: 1px solid rgb(83 65 48 / 20%);
+  background: rgb(250 246 236 / 88%);
+  color: #463a2d;
+  cursor: pointer;
+  font-family: var(--font-serif);
+  transform: translate(-50%, -50%);
+  animation: map-stop-arrive 320ms ease both;
+}
+
+@keyframes map-stop-arrive {
+  from { opacity: 0; transform: translate(-50%, -38%) scale(0.88); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.shiji-reader-page .map-stop i {
+  grid-row: 1 / span 2;
+  display: block;
+  width: 9px;
+  height: 9px;
+  border: 2px solid #594733;
+  border-radius: 50%;
+  background: #e8d4ae;
+  box-shadow: 0 0 0 2px rgb(244 232 208 / 80%);
+}
+
+.shiji-reader-page .map-stop strong {
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.1;
+}
+
+.shiji-reader-page .map-stop span {
+  color: #76634f;
+  font-family: var(--font-ui);
+  font-size: 8px;
+}
+
+.shiji-reader-page .map-stop.visited i {
+  background: var(--cinnabar);
+  border-color: var(--cinnabar);
+}
+
+.shiji-reader-page .map-stop.active {
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .map-stop.active i {
+  border-color: white;
+  background: var(--cinnabar);
+  box-shadow: 0 0 0 2px var(--cinnabar), 0 3px 8px rgb(66 39 23 / 28%);
+}
+
+.shiji-reader-page .map-scene-activation .map-stop.active i,
+.shiji-reader-page .map-scene-battle .map-stop.active i {
+  animation: map-point-pulse 1.45s ease-in-out infinite;
+}
+
+@keyframes map-point-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--cinnabar), 0 3px 8px rgb(66 39 23 / 28%); }
+  50% { box-shadow: 0 0 0 7px rgb(164 61 46 / 16%), 0 3px 8px rgb(66 39 23 / 20%); }
+}
+
+.shiji-reader-page .map-follow-status {
+  position: absolute;
+  top: 44px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border: 1px solid rgb(65 59 50 / 20%);
+  background: rgb(252 249 241 / 86%);
+  color: var(--jade);
+  font-size: 8px;
+}
+
+.shiji-reader-page .siege-rings {
+  position: absolute;
+  left: 63.07%;
+  top: 56.32%;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.shiji-reader-page .siege-rings i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 68px;
+  height: 68px;
+  border: 2px solid rgb(166 58 43 / 54%);
+  border-radius: 50%;
+  opacity: 0.32;
+  transform: translate(-50%, -50%) scale(1.6);
+  transition: opacity 520ms ease, transform 720ms cubic-bezier(.2,.7,.2,1);
+}
+
+.shiji-reader-page .siege-rings i:nth-child(2) { width: 110px; height: 110px; transition-delay: 70ms; }
+.shiji-reader-page .siege-rings i:nth-child(3) { width: 154px; height: 154px; transition-delay: 140ms; }
+.shiji-reader-page .map-canvas[data-scene-phase="1"] .siege-rings i { opacity: 0.45; transform: translate(-50%, -50%) scale(1.32); }
+.shiji-reader-page .map-canvas[data-scene-phase="2"] .siege-rings i { opacity: 0.58; transform: translate(-50%, -50%) scale(1.12); }
+.shiji-reader-page .map-canvas[data-scene-phase="3"] .siege-rings i { opacity: 0.72; transform: translate(-50%, -50%) scale(0.94); }
+
+.shiji-reader-page .map-stop.certainty-disputed i {
+  border-style: dashed;
+}
+
+.shiji-reader-page .active-location-card {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: min(180px, 42%);
+  gap: 4px;
+  padding: 9px 10px;
+  border: 1px solid rgb(75 60 43 / 28%);
+  background: rgb(252 249 241 / 92%);
+  color: #4e463c;
+  box-shadow: 0 5px 16px rgb(58 45 31 / 10%);
+}
+
+.shiji-reader-page .map-scene-battle .active-location-card {
+  top: auto;
+  bottom: 12px;
+}
+
+.shiji-reader-page .active-location-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.shiji-reader-page .active-location-card strong {
+  font-family: var(--font-serif);
+  font-size: 13px;
+}
+
+.shiji-reader-page .active-location-card span {
+  padding: 2px 4px;
+  border-radius: 2px;
+  background: var(--jade);
+  color: white;
+  font-size: 7px;
+}
+
+.shiji-reader-page .active-location-card span.certainty-medium {
+  background: #b88024;
+}
+
+.shiji-reader-page .active-location-card span.certainty-disputed {
+  background: #8a6650;
+}
+
+.shiji-reader-page .active-location-card p,
+.shiji-reader-page .active-location-card small {
+  margin: 0;
+  font-size: 8px;
+}
+
+.shiji-reader-page .active-location-card small {
+  color: #796e61;
+}
+
+.shiji-reader-page .map-legend {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid rgb(91 70 46 / 32%);
+  background: rgb(247 238 217 / 86%);
+  color: #5e4d39;
+  font-size: 9px;
+}
+
+.shiji-reader-page .map-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shiji-reader-page .map-legend i.capital {
+  width: 8px;
+  height: 8px;
+  border: 2px solid #5e4d39;
+  border-radius: 50%;
+}
+
+.shiji-reader-page .map-legend i.route {
+  width: 16px;
+  border-top: 2px dashed #806247;
+}
+
+.shiji-reader-page .map-legend i.disputed {
+  width: 8px;
+  height: 8px;
+  border: 2px dashed #806247;
+  border-radius: 50%;
+}
+
+.shiji-reader-page .event-caption {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.35fr) 1fr;
+  gap: 14px;
+  padding: 11px 68px 11px 12px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: var(--surface-raised);
+}
+
+.shiji-reader-page .event-caption > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.shiji-reader-page .event-caption span {
+  padding: 4px 6px;
+  background: var(--cinnabar);
+  color: white;
+  font-size: 9px;
+}
+
+.shiji-reader-page .event-caption h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 14px;
+}
+
+.shiji-reader-page .event-caption p {
+  align-self: center;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.shiji-reader-page .event-caption > div:last-child {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+}
+
+.shiji-reader-page .event-caption small {
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.shiji-reader-page .map-source-panel {
+  max-height: 210px;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: var(--surface-raised);
+  scrollbar-width: thin;
+}
+
+.shiji-reader-page .source-row {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) 24px;
+  align-items: start;
+  gap: 8px;
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 8px;
+}
+
+.shiji-reader-page .source-row > span {
+  color: var(--muted);
+}
+
+.shiji-reader-page .source-row > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.shiji-reader-page .source-row a,
+.shiji-reader-page .source-row strong {
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 9px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shiji-reader-page .source-row a:hover {
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .source-row small {
+  color: var(--muted);
+  font-size: 7px;
+  line-height: 1.5;
+}
+
+.shiji-reader-page .source-row b {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: white;
+  font-size: 8px;
+}
+
+.shiji-reader-page .confidence-high {
+  background: var(--jade);
+}
+
+.shiji-reader-page .confidence-medium {
+  background: #b88024;
+}
+
+.shiji-reader-page .source-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 9px;
+  color: var(--cinnabar);
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+.shiji-reader-page .source-warning svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.shiji-reader-page .source-disclosure-enter-active,
+.shiji-reader-page .source-disclosure-leave-active {
+  transition: opacity 140ms ease, max-height 160ms ease;
+}
+
+.shiji-reader-page .source-disclosure-enter-from,
+.shiji-reader-page .source-disclosure-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.shiji-reader-page .map-timeline {
+  display: grid;
+  grid-template-columns: 32px 1fr 38px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px 0;
+}
+
+.shiji-reader-page .map-timeline > button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--cinnabar);
+  color: white;
+  cursor: pointer;
+}
+
+.shiji-reader-page .map-timeline > span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.shiji-reader-page .timeline-track {
+  position: relative;
+  height: 2px;
+  background: var(--line-strong);
+}
+
+.shiji-reader-page .timeline-progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--cinnabar);
+  transition: width 420ms ease;
+}
+
+.shiji-reader-page .timeline-cursor {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--surface-soft);
+  border-radius: 50%;
+  background: var(--cinnabar);
+  transform: translate(-50%, -50%);
+  transition: left 420ms ease;
+}
+
+.shiji-reader-page .timeline-track button {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 2px solid var(--surface-soft);
+  border-radius: 50%;
+  background: var(--line-strong);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.shiji-reader-page .timeline-track button.active,
+.shiji-reader-page .timeline-track button.visited {
+  background: var(--cinnabar);
+}
+
+/* Encyclopedia */
+
+.shiji-reader-page .encyclopedia-mode {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.42fr) minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  padding: 12px;
+}
+
+.shiji-reader-page .encyclopedia-mode.keyword-index-is-collapsed {
+  grid-template-columns: 38px minmax(0, 1fr);
+}
+
+.shiji-reader-page .keyword-index,
+.shiji-reader-page .knowledge-detail {
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--surface-raised);
+}
+
+.shiji-reader-page .keyword-index {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  border-right: 0;
+}
+
+.shiji-reader-page .keyword-index-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  padding: 0 8px 0 10px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.shiji-reader-page .keyword-index-heading strong {
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-size: 11px;
+}
+
+.shiji-reader-page .keyword-index-heading button,
+.shiji-reader-page .keyword-index-restore {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--surface-raised);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.shiji-reader-page .keyword-index-heading button {
+  width: 26px;
+  height: 26px;
+  border-radius: 3px;
+}
+
+.shiji-reader-page .keyword-index-restore {
+  align-content: start;
+  gap: 9px;
+  min-height: 0;
+  padding-top: 12px;
+  border-right: 0;
+}
+
+.shiji-reader-page .keyword-index-restore span {
+  writing-mode: vertical-rl;
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.shiji-reader-page .keyword-search {
+  margin: 10px;
+}
+
+.shiji-reader-page .keyword-filters {
+  display: flex;
+  gap: 2px;
+  padding: 0 10px 10px;
+  overflow-x: auto;
+}
+
+.shiji-reader-page .keyword-filters button {
+  padding: 4px 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.shiji-reader-page .keyword-filters button.active {
+  border-color: var(--line);
+  background: var(--surface-soft);
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .keyword-list {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.shiji-reader-page .keyword-list > button {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  padding: 10px;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.shiji-reader-page .keyword-list > button:hover,
+.shiji-reader-page .keyword-list > button.active {
+  background: var(--cinnabar-soft);
+}
+
+.shiji-reader-page .keyword-list > button > span,
+.shiji-reader-page .knowledge-monogram {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line-strong);
+  color: var(--cinnabar);
+  font-family: var(--font-serif);
+  font-size: 15px;
+}
+
+.shiji-reader-page .keyword-list > button > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.shiji-reader-page .keyword-list strong {
+  font-family: var(--font-serif);
+  font-size: 12px;
+}
+
+.shiji-reader-page .keyword-list small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shiji-reader-page .knowledge-detail {
+  padding: clamp(20px, 3vw, 40px);
+  padding-bottom: 76px;
+  overflow-y: auto;
+}
+
+.shiji-reader-page .knowledge-detail > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.shiji-reader-page .knowledge-monogram {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  font-size: 26px;
+}
+
+.shiji-reader-page .knowledge-detail > header > div:last-child {
+  display: grid;
+  gap: 3px;
+}
+
+.shiji-reader-page .knowledge-detail > header span {
+  color: var(--cinnabar);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+.shiji-reader-page .knowledge-detail h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 27px;
+  font-weight: 600;
+}
+
+.shiji-reader-page .knowledge-detail > header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.shiji-reader-page .knowledge-detail .knowledge-lifespan {
+  width: max-content;
+  margin-top: 4px;
+  padding: 3px 6px;
+  border: 1px solid color-mix(in srgb, var(--cinnabar) 28%, var(--line));
+  background: var(--cinnabar-soft);
+  color: var(--cinnabar);
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+.shiji-reader-page .knowledge-detail blockquote {
+  margin: 22px 0;
+  padding: 12px 14px;
+  border-left: 2px solid var(--cinnabar);
+  background: var(--surface-soft);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.shiji-reader-page .knowledge-detail section {
+  margin-top: 20px;
+}
+
+.shiji-reader-page .knowledge-detail h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-size: 13px;
+}
+
+.shiji-reader-page .knowledge-detail section > p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.shiji-reader-page .external-knowledge {
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--jade) 26%, var(--line));
+  background: color-mix(in srgb, var(--jade-soft) 44%, var(--surface-raised));
+}
+
+.shiji-reader-page .external-knowledge-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.shiji-reader-page .external-knowledge-heading span {
+  color: var(--jade);
+  font-size: 8px;
+}
+
+.shiji-reader-page .knowledge-sources {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.shiji-reader-page .knowledge-sources a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 8px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  background: var(--surface-raised);
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.shiji-reader-page .knowledge-sources a > span {
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.shiji-reader-page .knowledge-sources a > small {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.shiji-reader-page .knowledge-sources a > svg {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--jade);
+}
+
+.shiji-reader-page .future-source-note {
+  display: block;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.shiji-reader-page .related-entries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.shiji-reader-page .related-entries button {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface-raised);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 9px;
+}
+
+.shiji-reader-page .knowledge-detail footer {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 28px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9px;
+}
+
+/* Function inspector */
+
+.shiji-reader-page .function-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.shiji-reader-page .function-group {
+  padding: 15px 14px 17px;
+  border-bottom: 1px solid var(--line);
+}
+
+.shiji-reader-page .function-group h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 14px;
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.shiji-reader-page .setting-row,
+.shiji-reader-page .setting-block,
+.shiji-reader-page .range-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 35px;
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.shiji-reader-page .setting-row select,
+.shiji-reader-page .knowledge-shortcut > select {
+  min-width: 106px;
+  height: 28px;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-size: 10px;
+}
+
+.shiji-reader-page .toggle-row input {
+  position: relative;
+  width: 31px;
+  height: 17px;
+  margin: 0;
+  appearance: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--line);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.shiji-reader-page .toggle-row input::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 18%);
+  content: "";
+  transition: transform 150ms ease;
+}
+
+.shiji-reader-page .toggle-row input:checked {
+  border-color: var(--jade);
+  background: var(--jade);
+}
+
+.shiji-reader-page .toggle-row input:checked::after {
+  transform: translateX(14px);
+}
+
+.shiji-reader-page .mini-segmented,
+.shiji-reader-page .font-stepper {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.shiji-reader-page .mini-segmented button {
+  min-width: 45px;
+  height: 27px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: var(--surface-raised);
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.shiji-reader-page .mini-segmented button:last-child {
+  border-right: 0;
+}
+
+.shiji-reader-page .mini-segmented button.active {
+  background: var(--cinnabar);
+  color: white;
+}
+
+.shiji-reader-page .font-stepper {
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.shiji-reader-page .font-stepper button {
+  width: 48px;
+  height: 31px;
+  padding: 0;
+  border: 0;
+  background: var(--surface-raised);
+  cursor: pointer;
+  font-family: var(--font-serif);
+}
+
+.shiji-reader-page .font-stepper button:first-child {
+  border-right: 1px solid var(--line);
+}
+
+.shiji-reader-page .font-stepper button:last-child {
+  border-left: 1px solid var(--line);
+}
+
+.shiji-reader-page .font-stepper strong {
+  color: var(--cinnabar);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.shiji-reader-page .range-setting {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.shiji-reader-page .range-setting > span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.shiji-reader-page .range-setting output {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.shiji-reader-page .range-setting input {
+  width: 100%;
+  height: 3px;
+  accent-color: var(--cinnabar);
+}
+
+.shiji-reader-page .display-mode-list {
+  display: grid;
+  gap: 4px;
+}
+
+.shiji-reader-page .swap-layout-button {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  gap: 7px;
+  margin: 7px 0 9px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface-raised);
+  color: var(--ink-soft);
+  cursor: pointer;
+  text-align: left;
+}
+
+.shiji-reader-page .swap-layout-button:hover,
+.shiji-reader-page .swap-layout-button[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--cinnabar) 48%, var(--line));
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .swap-layout-button > span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.shiji-reader-page .swap-layout-button strong {
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.shiji-reader-page .swap-layout-button small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shiji-reader-page .display-mode-list button {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 10px;
+  text-align: left;
+}
+
+.shiji-reader-page .display-mode-list button:hover,
+.shiji-reader-page .display-mode-list button.active {
+  border-color: var(--line);
+  background: var(--surface-raised);
+}
+
+.shiji-reader-page .display-mode-list button.active {
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .knowledge-shortcut > select {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.shiji-reader-page .person-preview {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface-raised);
+  cursor: pointer;
+  text-align: left;
+}
+
+.shiji-reader-page .person-preview > span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line-strong);
+  color: var(--cinnabar);
+  font-family: var(--font-serif);
+  font-size: 17px;
+}
+
+.shiji-reader-page .person-preview > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.shiji-reader-page .person-preview strong {
+  font-family: var(--font-serif);
+  font-size: 12px;
+}
+
+.shiji-reader-page .person-preview small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+/* Floating actions and assistant */
+
+.shiji-reader-page .floating-tools {
+  position: fixed;
+  z-index: 80;
+  right: 24px;
+  bottom: 72px;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.shiji-reader-page .reader-app:has(.function-panel:not(.collapsed)) .floating-tools {
+  right: calc(var(--function-width) + 24px);
+}
+
+.shiji-reader-page .reader-app:has(.function-panel.collapsed) .floating-tools {
+  right: calc(var(--rail-width) + 24px);
+}
+
+.shiji-reader-page .floating-launcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 13px 0 6px;
+  border: 1px solid color-mix(in srgb, var(--cinnabar) 64%, var(--line));
+  border-radius: 24px;
+  background: var(--surface-raised);
+  box-shadow: 0 8px 24px rgb(76 47 32 / 18%);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.shiji-reader-page .floating-launcher:not([aria-expanded="true"]) {
+  width: 46px;
+  padding: 5px;
+  justify-content: center;
+}
+
+.shiji-reader-page .floating-launcher:not([aria-expanded="true"]) > span:not(.mentor-sprite),
+.shiji-reader-page .floating-launcher:not([aria-expanded="true"]) > svg {
+  display: none;
+}
+
+.shiji-reader-page .floating-launcher:hover {
+  background: var(--surface-soft);
+  color: var(--cinnabar);
+}
+
+.shiji-reader-page .floating-menu {
+  display: grid;
+  min-width: 150px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-soft);
+}
+
+.shiji-reader-page .floating-menu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line-soft);
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  text-align: left;
+}
+
+.shiji-reader-page .floating-menu button:first-child {
+  min-height: 48px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.shiji-reader-page .floating-menu button:last-child {
+  border-bottom: 0;
+}
+
+.shiji-reader-page .floating-menu button:hover {
+  background: var(--surface-soft);
+  color: var(--jade);
+}
+
+.shiji-reader-page .assistant-panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  width: min(390px, calc(100vw - 32px));
+  height: min(540px, calc(100dvh - 164px));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-raised);
+  box-shadow: 0 16px 46px rgb(45 36 26 / 22%);
+}
+
+.shiji-reader-page .assistant-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 7px 12px 7px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.shiji-reader-page .mentor-identity {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.shiji-reader-page .mentor-identity > div {
+  display: grid;
+  gap: 2px;
+}
+
+.shiji-reader-page .assistant-panel > header strong {
+  font-family: var(--font-serif);
+  font-size: 13px;
+}
+
+.shiji-reader-page .assistant-panel > header small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.shiji-reader-page .assistant-panel > header > button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.shiji-reader-page .mentor-sprite {
+  display: block;
+  flex: 0 0 auto;
+  background-image: url("../assets/sima-qian-mentor-sheet-v3.png");
+  background-repeat: no-repeat;
+  background-size: 200% 200%;
+}
+
+.shiji-reader-page .mentor-sprite.state-listening {
+  background-position: left top;
+}
+
+.shiji-reader-page .mentor-sprite.state-explaining {
+  background-position: right top;
+}
+
+.shiji-reader-page .mentor-sprite.state-thinking {
+  background-position: left bottom;
+}
+
+.shiji-reader-page .mentor-sprite.state-encouraging {
+  background-position: right bottom;
+}
+
+.shiji-reader-page .mentor-sprite-small {
+  width: 46px;
+  height: 46px;
+}
+
+.shiji-reader-page .mentor-sprite-launcher {
+  width: 35px;
+  height: 35px;
+}
+
+.shiji-reader-page .mentor-sprite-menu {
+  width: 34px;
+  height: 34px;
+  margin: -3px 0;
+}
+
+.shiji-reader-page .mentor-sprite-message {
+  width: 34px;
+  height: 34px;
+}
+
+.shiji-reader-page .mentor-introduction {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  min-height: 118px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--cinnabar-soft) 48%, var(--surface-raised));
+}
+
+.shiji-reader-page .mentor-sprite-hero {
+  align-self: end;
+  width: 120px;
+  height: 120px;
+  margin: 0 0 -3px -4px;
+}
+
+.shiji-reader-page .mentor-introduction > div {
+  align-self: center;
+  padding: 13px 14px 13px 3px;
+}
+
+.shiji-reader-page .mentor-introduction p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.shiji-reader-page .mentor-introduction small {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 7px;
+  line-height: 1.45;
+}
+
+.shiji-reader-page .assistant-messages {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 13px;
+  padding: 14px;
+  overflow-y: auto;
+  background: var(--surface-soft);
+  scrollbar-width: thin;
+}
+
+.shiji-reader-page .assistant-messages article {
+  display: flex;
+  max-width: 92%;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.shiji-reader-page .assistant-messages article.user {
+  align-self: flex-end;
+}
+
+.shiji-reader-page .assistant-messages article > div {
+  padding: 9px 10px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-raised);
+}
+
+.shiji-reader-page .assistant-messages article.assistant > div {
+  border-left: 2px solid var(--cinnabar);
+  border-radius: 2px 6px 6px 2px;
+}
+
+.shiji-reader-page .assistant-messages article.user > div {
+  border-color: color-mix(in srgb, var(--jade) 35%, var(--line));
+  background: var(--jade-soft);
+}
+
+.shiji-reader-page .assistant-messages p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.shiji-reader-page .assistant-messages time {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 7px;
+  text-align: right;
+}
+
+.shiji-reader-page .assistant-composer {
+  display: grid;
+  grid-template-columns: 1fr 34px;
+  gap: 7px;
+  padding: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.shiji-reader-page .assistant-composer input {
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 10px;
+}
+
+.shiji-reader-page .assistant-composer button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--jade);
+  color: white;
+  cursor: pointer;
+}
+
+.shiji-reader-page .quick-menu-enter-active,
+.shiji-reader-page .quick-menu-leave-active,
+.shiji-reader-page .assistant-drawer-enter-active,
+.shiji-reader-page .assistant-drawer-leave-active {
+  transform-origin: bottom right;
+  transition: opacity 160ms ease, transform 180ms ease;
+}
+
+.shiji-reader-page .quick-menu-enter-from,
+.shiji-reader-page .quick-menu-leave-to,
+.shiji-reader-page .assistant-drawer-enter-from,
+.shiji-reader-page .assistant-drawer-leave-to {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+}
+
+.shiji-reader-page .app-toast {
+  position: fixed;
+  z-index: 100;
+  bottom: 24px;
+  left: 50%;
+  max-width: min(460px, calc(100vw - 40px));
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-soft);
+  color: var(--ink-soft);
+  font-size: 10px;
+  transform: translateX(-50%);
+}
+
+.shiji-reader-page .toast-enter-active,
+.shiji-reader-page .toast-leave-active {
+  transition: opacity 140ms ease, transform 160ms ease;
+}
+
+.shiji-reader-page .toast-enter-from,
+.shiji-reader-page .toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 6px);
+}
+
+/* Responsive states */
+
+@media (max-width: 1320px) {
+  .shiji-reader-page {
+    --catalog-width: 206px;
+    --function-width: 244px;
+  }
+
+  .shiji-reader-page .reading-pane {
+    padding-right: 34px;
+    padding-left: 34px;
+  }
+
+  .shiji-reader-page .display-tabs button {
+    min-width: 78px;
+    padding: 0 7px;
+    font-size: 12px;
+  }
+
+  .shiji-reader-page .display-tabs button svg {
+    display: none;
+  }
+}
+
+@media (max-width: 1080px) {
+  .shiji-reader-page {
+    --catalog-width: 218px;
+    --function-width: 252px;
+  }
+
+  .shiji-reader-page .reader-shell,
+  .shiji-reader-page .reader-shell.catalog-is-collapsed,
+  .shiji-reader-page .reader-shell.function-is-collapsed,
+  .shiji-reader-page .reader-shell.catalog-is-collapsed.function-is-collapsed {
+    grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--rail-width);
+  }
+
+  .shiji-reader-page .catalog-panel:not(.collapsed),
+  .shiji-reader-page .function-panel:not(.collapsed) {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 32;
+    width: var(--catalog-width);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shiji-reader-page .catalog-panel:not(.collapsed) {
+    left: 0;
+  }
+
+  .shiji-reader-page .function-panel:not(.collapsed) {
+    right: 0;
+    width: var(--function-width);
+  }
+
+  .shiji-reader-page .reading-pane {
+    padding-right: 38px;
+    padding-left: 38px;
+  }
+}
+
+@media (max-width: 780px) {
+  .shiji-reader-page {
+    --topbar-height: 58px;
+    --rail-width: 44px;
+  }
+
+  .shiji-reader-page .top-bar {
+    grid-template-columns: 1fr auto;
+    padding: 0 11px;
+  }
+
+  .shiji-reader-page .brand-group {
+    gap: 12px;
+  }
+
+  .shiji-reader-page .brand strong {
+    display: none;
+  }
+
+  .shiji-reader-page .top-navigation {
+    gap: 0;
+  }
+
+  .shiji-reader-page .top-navigation button {
+    min-width: 45px;
+    padding: 0 7px;
+    font-size: 13px;
+  }
+
+  .shiji-reader-page .current-work {
+    display: none;
+  }
+
+  .shiji-reader-page .top-utilities button:nth-child(3),
+  .shiji-reader-page .top-utilities button:nth-child(4) {
+    display: none;
+  }
+
+  .shiji-reader-page .reading-workspace {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .shiji-reader-page .reading-pane,
+  .shiji-reader-page .display-is-hidden .reading-pane,
+  .shiji-reader-page .panes-swapped .reading-pane {
+    flex: 0 0 auto;
+    min-height: calc(100dvh - var(--topbar-height));
+    padding: 30px 22px 90px;
+    overflow: visible;
+  }
+
+  .shiji-reader-page .workspace-divider {
+    display: none;
+  }
+
+  .shiji-reader-page .display-pane,
+  .shiji-reader-page .panes-swapped .display-pane {
+    flex: 0 0 auto;
+    min-height: 680px;
+    border-top: 1px solid var(--line);
+  }
+
+  .shiji-reader-page .document-stage {
+    min-height: 560px;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .shiji-reader-page .encyclopedia-mode {
+    grid-template-columns: 1fr;
+    grid-template-rows: 250px 1fr;
+  }
+
+  .shiji-reader-page .keyword-index {
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+  }
+
+  .shiji-reader-page .floating-tools,
+  .shiji-reader-page .reader-app:has(.function-panel:not(.collapsed)) .floating-tools,
+  .shiji-reader-page .reader-app:has(.function-panel.collapsed) .floating-tools {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .shiji-reader-page .assistant-panel {
+    height: min(470px, calc(100dvh - 90px));
+  }
+}
+
+@media (max-width: 520px) {
+  .shiji-reader-page .reader-shell,
+  .shiji-reader-page .reader-shell.catalog-is-collapsed,
+  .shiji-reader-page .reader-shell.function-is-collapsed,
+  .shiji-reader-page .reader-shell.catalog-is-collapsed.function-is-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shiji-reader-page .catalog-panel,
+  .shiji-reader-page .function-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 34;
+    width: 44px;
+    border: 0;
+    background: transparent;
+  }
+
+  .shiji-reader-page .catalog-panel {
+    left: 0;
+  }
+
+  .shiji-reader-page .function-panel {
+    right: 0;
+  }
+
+  .shiji-reader-page .catalog-panel.collapsed,
+  .shiji-reader-page .function-panel.collapsed {
+    bottom: auto;
+    gap: 0;
+    height: 58px;
+    padding: 10px 4px 4px;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .shiji-reader-page .catalog-panel.collapsed .rail-action,
+  .shiji-reader-page .function-panel.collapsed .rail-action {
+    display: none;
+  }
+
+  .shiji-reader-page .catalog-panel.collapsed .rail-action.primary,
+  .shiji-reader-page .function-panel.collapsed .rail-action:first-of-type {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-soft);
+    pointer-events: auto;
+  }
+
+  .shiji-reader-page .function-panel.collapsed .rail-action.primary {
+    display: none;
+  }
+
+  .shiji-reader-page .catalog-panel.collapsed .rail-caption,
+  .shiji-reader-page .function-panel.collapsed .rail-caption {
+    display: none;
+  }
+
+  .shiji-reader-page .catalog-panel:not(.collapsed),
+  .shiji-reader-page .function-panel:not(.collapsed) {
+    width: min(86vw, 340px);
+    border-color: var(--line);
+    background: var(--surface-raised);
+    pointer-events: auto;
+  }
+
+  .shiji-reader-page .catalog-panel:not(.collapsed) {
+    border-right: 1px solid var(--line);
+  }
+
+  .shiji-reader-page .function-panel:not(.collapsed) {
+    border-left: 1px solid var(--line);
+  }
+
+  .shiji-reader-page .reading-pane,
+  .shiji-reader-page .display-is-hidden .reading-pane,
+  .shiji-reader-page .panes-swapped .reading-pane {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .shiji-reader-page .chapter-context {
+    min-height: 36px;
+    padding-left: 38px;
+  }
+
+  .shiji-reader-page .display-restore,
+  .shiji-reader-page .panes-swapped .display-restore {
+    right: 54px;
+    left: auto;
+    top: 10px;
+  }
+
+  .shiji-reader-page .top-utilities button:first-child {
+    display: none;
+  }
+
+  .shiji-reader-page .reading-header h1 {
+    font-size: 28px;
+  }
+
+  .shiji-reader-page .passage-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .shiji-reader-page .reading-modebar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .shiji-reader-page .annotation-toggle {
+    align-self: flex-start;
+  }
+
+  .shiji-reader-page .display-tabs {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .shiji-reader-page .display-tabs button {
+    min-width: 84px;
+    flex: 0 0 auto;
+  }
+
+  .shiji-reader-page .event-caption {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .shiji-reader-page .map-stop span,
+  .shiji-reader-page .map-legend {
+    display: none;
+  }
+
+  .shiji-reader-page .floating-launcher > span:not(.mentor-sprite) {
+    display: none;
+  }
+
+  .shiji-reader-page .floating-launcher {
+    width: 56px;
+    min-height: 56px;
+    padding: 0;
+    justify-content: center;
+    border-width: 2px;
+    background: color-mix(in srgb, var(--cinnabar-soft) 72%, var(--surface-raised));
+  }
+
+  .shiji-reader-page .mentor-sprite-launcher {
+    width: 46px;
+    height: 46px;
+  }
+
+  .shiji-reader-page .floating-launcher svg:last-child {
+    display: none;
+  }
+
+  .shiji-reader-page .mentor-introduction {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .shiji-reader-page .mentor-sprite-hero {
+    width: 104px;
+    height: 104px;
+  }
+
+  .shiji-reader-page .active-location-card {
+    top: 42px;
+    width: min(158px, 52%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shiji-reader-page *,
+  .shiji-reader-page *::before,
+  .shiji-reader-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

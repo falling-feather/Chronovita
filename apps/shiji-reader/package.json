@@ -1,0 +1,26 @@
+{
+  "name": "@chronovita/shiji-reader",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:reader": "vite --config vite.reader.config.ts --mode reader",
+    "build": "vue-tsc && vite build",
+    "build:reader": "vue-tsc -p tsconfig.reader.json && vite build --config vite.reader.config.ts --mode reader && node scripts/prepare-static-reader.mjs",
+    "preview": "vite preview",
+    "test": "node --experimental-strip-types --test tests/shiji-reader-contracts.test.ts"
+  },
+  "dependencies": {
+    "@lucide/vue": "^1.28.0",
+    "@vitejs/plugin-vue": "latest",
+    "vite": "latest",
+    "vue": "latest",
+    "vue-router": "latest"
+  },
+  "devDependencies": {
+    "postcss": "^8.5.25",
+    "typescript": "latest",
+    "vue-tsc": "latest"
+  }
+}

@@ -123,6 +123,10 @@ export interface AdminApiConfig {
   model: string;
   model_pro: string;
   thinking: 'disabled' | 'enabled' | 'auto';
+  github_publication_enabled: boolean;
+  github_token_configured: boolean;
+  github_token_last4: string;
+  github_repository: string;
 }
 export type ProfileUpdate = Omit<AccountProfile, 'user_id' | 'username' | 'revision'> & { expected_revision: number; expected_user_id: string };
 export interface CourseSummary {
@@ -917,6 +921,7 @@ export const api = {
   saveAdminApiConfig: (body: {
     provider: 'mock' | 'deepseek'; api_key?: string; clear_api_key?: boolean;
     base_url: string; model: string; model_pro: string; thinking: 'disabled' | 'enabled' | 'auto';
+    github_publication_enabled: boolean; github_token?: string; clear_github_token?: boolean;
   }) => jsonFetch<AdminApiConfig>('/admin/api-config', { method: 'PUT', body: JSON.stringify(body) }),
   profile: () => jsonFetch<AccountProfile>('/profile/'),
   saveProfile: (body: ProfileUpdate) => jsonFetch<AccountProfile>('/profile/', { method: 'PUT', body: JSON.stringify(body) }),

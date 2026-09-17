@@ -22,7 +22,7 @@ from routers import (
     learning,
     practice,
     profile,
-    shiji,
+    shiji_compat,
 )
 from settings import secret_value, settings
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -179,7 +179,8 @@ app.include_router(home.router, prefix=f"{API_PREFIX}/home", tags=["home"])
 app.include_router(courses.router, prefix=f"{API_PREFIX}/courses", tags=["courses"])
 app.include_router(learning.router, prefix=f"{API_PREFIX}/learning", tags=["learning"])
 app.include_router(practice.router, prefix=f"{API_PREFIX}/practice", tags=["practice"])
-app.include_router(shiji.router, prefix=f"{API_PREFIX}/shiji", tags=["shiji-reader"])
+app.include_router(shiji_compat.router, prefix=f"{API_PREFIX}/reader", tags=["shiji-reader-compat"])
+app.include_router(shiji_compat.router, prefix=f"{API_PREFIX}/ocr", tags=["shiji-ocr-compat"])
 app.include_router(game.router, prefix=f"{API_PREFIX}/practice/game", tags=["game"])
 app.include_router(profile.router, prefix=f"{API_PREFIX}/profile", tags=["profile"])
 

@@ -10,6 +10,8 @@ type FormValues = {
   model: string;
   model_pro: string;
   thinking: 'disabled' | 'enabled' | 'auto';
+  github_publication_enabled: boolean;
+  github_token?: string;
 };
 
 export default function AdminApiConfigPage() {
@@ -29,6 +31,7 @@ export default function AdminApiConfigPage() {
         model: value.model,
         model_pro: value.model_pro,
         thinking: value.thinking,
+        github_publication_enabled: value.github_publication_enabled,
       });
     }).catch((failure) => setError(failure instanceof Error ? failure.message : 'API 配置载入失败'))
       .finally(() => setLoading(false));
@@ -42,8 +45,9 @@ export default function AdminApiConfigPage() {
       const next = await api.saveAdminApiConfig({
         ...values,
         ...(values.api_key?.trim() ? { api_key: values.api_key.trim() } : {}),
+        ...(values.github_token?.trim() ? { github_token: values.github_token.trim() } : {}),
       });
-      setConfig(next); form.resetFields(['api_key']);
+      setConfig(next); form.resetFields(['api_key', 'github_token']);
       toast.success('统一 API 配置已保存；新请求会使用当前配置');
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'API 配置保存失败');
@@ -72,9 +76,22 @@ export default function AdminApiConfigPage() {
             <Form.Item name="model" label="快速模型" style={{ width: '50%' }} rules={[{ required: true }]}><Input /></Form.Item>
             <Form.Item name="model_pro" label="高质量模型" style={{ width: '50%' }} rules={[{ required: true }]}><Input /></Form.Item>
           </Space.Compact>
-          <Form.Item name="thinking" label="思考模式" rules={[{ required: true }]}>
+          <Form.Item name="thinking" label="思考模式" rules={[{ required: true }]}> 
             <Select options={[{ label: '关闭（课堂响应更快）', value: 'disabled' }, { label: '自动', value: 'auto' }, { label: '开启', value: 'enabled' }]} />
           </Form.Item>
+          <Card size="small" title="教师内容仓库（GitHub）" style={{ marginBottom: 16 }}>
+            <Typography.Paragraph type="secondary">
+              当前发布目标自动读取课程内容仓库绑定；这里仅维护服务端使用的仓库令牌，不会写入前端、Pages 或 Git。
+              当前目标：{config?.github_repository || '未读取到仓库绑定'}。
+            </Typography.Paragraph>
+            <Form.Item name="github_publication_enabled" label="启用教师仓库发布">
+              <Radio.Group options={[{ label: '关闭', value: false }, { label: '启用', value: true }]} optionType="button" />
+            </Form.Item>
+            <Form.Item name="github_token" label={`GitHub 仓库令牌（留空保持当前 ${config?.github_token_last4 ? `末四位 ${config.github_token_last4}` : '未配置'}）`}>
+              <Input.Password placeholder="仅在需要更换令牌时填写" autoComplete="new-password" />
+            </Form.Item>
+            <Typography.Text type="secondary">启用后教师端发布动作才会使用该令牌；未配置令牌时发布会被安全拒绝。</Typography.Text>
+          </Card>
           <Button type="primary" htmlType="submit" loading={saving}>保存统一配置</Button>
         </Form>
       </Card>

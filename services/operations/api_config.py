@@ -1,6 +1,8 @@
 """Admin-managed local LLM configuration persisted in the classroom database."""
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,6 +25,9 @@ class ApiConfigUpdate(BaseModel):
     model: str = Field(min_length=1, max_length=128)
     model_pro: str = Field(min_length=1, max_length=128)
     thinking: str = Field(pattern=r"^(?:disabled|enabled|auto)$")
+    github_publication_enabled: bool = False
+    github_token: str | None = Field(default=None, max_length=512)
+    clear_github_token: bool = False
 
 
 class ApiConfigView(BaseModel):
@@ -35,6 +40,10 @@ class ApiConfigView(BaseModel):
     model: str
     model_pro: str
     thinking: str
+    github_publication_enabled: bool
+    github_token_configured: bool
+    github_token_last4: str
+    github_repository: str
 
 
 def _validate_base_url(value: str) -> str:
@@ -46,6 +55,16 @@ def _validate_base_url(value: str) -> str:
 
 def _view() -> ApiConfigView:
     key = secret_value(settings.deepseek_api_key).strip()
+    github_token = secret_value(settings.github_publication_token).strip()
+    target_path = Path(settings.content_history_target_path)
+    if not target_path.is_absolute():
+        target_path = Path(__file__).resolve().parents[2] / target_path
+    repository = ""
+    try:
+        target = json.loads(target_path.read_text(encoding="utf-8"))
+        repository = f"{target.get('owner', '')}/{target.get('repository', '')}".strip("/")
+    except (OSError, ValueError, TypeError):
+        repository = ""
     return ApiConfigView(
         provider=settings.llm_provider,
         api_key_configured=bool(key),
@@ -54,6 +73,10 @@ def _view() -> ApiConfigView:
         model=settings.deepseek_model,
         model_pro=settings.deepseek_model_pro,
         thinking=settings.deepseek_thinking,
+        github_publication_enabled=settings.github_publication_enabled,
+        github_token_configured=bool(github_token),
+        github_token_last4=github_token[-4:] if github_token else "",
+        github_repository=repository,
     )
 
 
@@ -66,6 +89,13 @@ def apply_api_config(payload: ApiConfigUpdate) -> ApiConfigView:
         api_key = payload.api_key.strip()
     else:
         api_key = current_key
+    current_github_token = secret_value(settings.github_publication_token).strip()
+    if payload.clear_github_token:
+        github_token = ""
+    elif payload.github_token is not None and payload.github_token.strip():
+        github_token = payload.github_token.strip()
+    else:
+        github_token = current_github_token
     stored = {
         "provider": payload.provider,
         "api_key": api_key,
@@ -73,6 +103,8 @@ def apply_api_config(payload: ApiConfigUpdate) -> ApiConfigView:
         "model": payload.model,
         "model_pro": payload.model_pro,
         "thinking": payload.thinking,
+        "github_publication_enabled": payload.github_publication_enabled,
+        "github_token": github_token,
     }
     persistence.kv_set(_NAMESPACE, _KEY, stored)
     _apply(stored)
@@ -91,6 +123,8 @@ def load_api_config() -> None:
             model=str(stored.get("model", settings.deepseek_model)),
             model_pro=str(stored.get("model_pro", settings.deepseek_model_pro)),
             thinking=str(stored.get("thinking", settings.deepseek_thinking)),
+            github_publication_enabled=bool(stored.get("github_publication_enabled", settings.github_publication_enabled)),
+            github_token=None,
         )
         _validate_base_url(payload.base_url)
     except (ValueError, TypeError, SettingsError):
@@ -102,10 +136,12 @@ def load_api_config() -> None:
         "model": payload.model,
         "model_pro": payload.model_pro,
         "thinking": payload.thinking,
+        "github_publication_enabled": payload.github_publication_enabled,
+        "github_token": str(stored.get("github_token", "")),
     })
 
 
-def _apply(stored: dict[str, str]) -> None:
+def _apply(stored: dict[str, object]) -> None:
     from pydantic import SecretStr
 
     settings.llm_provider = stored["provider"]
@@ -114,3 +150,5 @@ def _apply(stored: dict[str, str]) -> None:
     settings.deepseek_model = stored["model"]
     settings.deepseek_model_pro = stored["model_pro"]
     settings.deepseek_thinking = stored["thinking"]
+    settings.github_publication_enabled = bool(stored.get("github_publication_enabled", False))
+    settings.github_publication_token = SecretStr(str(stored.get("github_token", "")))

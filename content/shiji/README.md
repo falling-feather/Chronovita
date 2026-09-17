@@ -7,5 +7,6 @@
 - SHA-256：`F9A3A4ACD929438877B088EDE99C6CEB0E7C27AB8C70E2C3F56397A2BE19F190`
 - 迁移边界：不包含史海 OCR 工作台数据库、生产脚本、其他二十四史或原始扫描 PDF
 - 使用入口：Chronovita `/shiji`；后端通过 `/api/v1/shiji/*` 按篇只读解包
+- 真实书影：GitHub Release 的 `Chronovita-Shiji-Facsimile-Baina-v1.zip`，安装后解到 `content/shiji/ocr-pages`；也可用 `scripts/install-shiji-facsimile.cmd` 安装
 
-该资料包是文献阅读内容，不会自动进入课程练问创、RAG 课程证据库或学生学习进度。
+该资料包是文献阅读内容，不会自动进入课程练问创、RAG 课程证据库或学生学习进度。书影包单独发行，不写入源码仓库和 Windows 主课堂 ZIP。
