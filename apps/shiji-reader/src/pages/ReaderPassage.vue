@@ -125,7 +125,7 @@
           />
         </main>
 
-        <ShijiFloatingAssistant :passage-title="payload.passage.title" @scroll-top="scrollToTop" />
+        <ShijiFloatingAssistant :passage-title="payload.passage.title" :passage-id="payload.passage.id" @scroll-top="scrollToTop" />
       </template>
 
       <Transition name="toast">

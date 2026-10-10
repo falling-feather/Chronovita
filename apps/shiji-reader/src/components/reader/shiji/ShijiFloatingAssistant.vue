@@ -5,7 +5,7 @@
         <header>
           <div class="mentor-identity">
             <span class="mentor-sprite mentor-sprite-small" :class="`state-${mentorState}`" aria-hidden="true"></span>
-            <div><strong>司马迁 · 史记助教</strong><small>前端预留 · 尚未接入模型</small></div>
+            <div><strong>{{ persona === 'historian' ? '司马迁 · 教学形象' : '史料阅读学者' }}</strong><small>依据当前篇章，复用课堂 AI 配置</small></div>
           </div>
           <button type="button" aria-label="关闭史记助教" @click="chatOpen = false"><X :size="17" /></button>
         </header>
@@ -13,8 +13,9 @@
         <div class="mentor-introduction">
           <span class="mentor-sprite mentor-sprite-hero" :class="`state-${mentorState}`" aria-hidden="true"></span>
           <div>
-            <p>当前阅读《{{ passageTitle }}》。我可以在正式接入后结合原文、真实书影与已审核资料回答。</p>
+            <p>当前阅读《{{ passageTitle }}》。可以问原文含义、人物与判断依据。</p>
             <small>无可见底色的 AI 历史启发形象，并非司马迁真实肖像。</small>
+            <select v-model="persona" aria-label="助教回答视角"><option value="historian">司马迁教学视角</option><option value="scholar">现代学者视角</option></select>
           </div>
         </div>
 
@@ -26,13 +27,17 @@
               :class="`state-${message.state ?? 'explaining'}`"
               aria-hidden="true"
             ></span>
-            <div><p>{{ message.text }}</p><time>{{ message.time }}</time></div>
+            <div><p>{{ message.text }}</p><time>{{ message.origin || message.time }}</time>
+              <details v-if="message.citations?.length"><summary>查看原句依据</summary>
+                <blockquote v-for="citation in message.citations" :key="citation.quote_text">{{ citation.passage_title }}：{{ citation.quote_text }}</blockquote>
+              </details>
+            </div>
           </article>
         </div>
 
         <form class="assistant-composer" @submit.prevent="sendMessage">
-          <input v-model.trim="question" type="text" placeholder="就当前文字、人物或书影提问…" @focus="mentorState = 'listening'" />
-          <button type="submit" :disabled="!question" aria-label="发送问题"><Send :size="16" /></button>
+          <input v-model.trim="question" type="text" maxlength="400" placeholder="就当前文字、人物或书影提问…" @focus="mentorState = 'listening'" />
+          <button type="submit" :disabled="!question || loading" aria-label="发送问题"><Send :size="16" /></button>
         </form>
       </section>
     </Transition>
@@ -64,8 +69,9 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref } from "vue";
+import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { ArrowUp, ChevronUp, Send, X } from "@lucide/vue";
+import { askReader } from "../../../services/api";
 
 type MentorState = "listening" | "explaining" | "thinking" | "encouraging";
 interface ChatMessage {
@@ -74,9 +80,11 @@ interface ChatMessage {
   text: string;
   time: string;
   state?: MentorState;
+  citations?: Array<{ passage_title: string; quote_text: string }>;
+  origin?: string;
 }
 
-defineProps<{ passageTitle: string }>();
+const props = defineProps<{ passageTitle: string; passageId: string }>();
 const emit = defineEmits<{ "scroll-top": [] }>();
 
 const menuOpen = ref(false);
@@ -84,8 +92,9 @@ const chatOpen = ref(false);
 const question = ref("");
 const messageList = ref<HTMLElement | null>(null);
 const mentorState = ref<MentorState>("explaining");
-let responseTimer: ReturnType<typeof setTimeout> | undefined;
-let resetTimer: ReturnType<typeof setTimeout> | undefined;
+const loading = ref(false);
+const persona = ref<'historian' | 'scholar'>('historian');
+let generation = 0;
 
 const messages = ref<ChatMessage[]>([
   {
@@ -117,28 +126,33 @@ function scrollTop() {
 }
 
 async function sendMessage() {
-  if (!question.value) {
+  if (!question.value || loading.value) {
     return;
   }
-  messages.value.push({ id: Date.now(), role: "user", text: question.value, time: "现在" });
+  const prompt = question.value;
+  const id = ++generation;
+  messages.value.push({ id: Date.now(), role: "user", text: prompt, time: "现在" });
+  messages.value = messages.value.slice(-24);
   question.value = "";
+  loading.value = true;
   mentorState.value = "thinking";
   await scrollMessagesToEnd();
-  if (responseTimer) {
-    clearTimeout(responseTimer);
-  }
-  responseTimer = window.setTimeout(async () => {
+  try {
+    const answer = await askReader({ passage_id: props.passageId, question: prompt, persona_mode: persona.value });
+    if (id !== generation) return;
     messages.value.push({
-      id: Date.now() + 1,
-      role: "assistant",
-      text: "助教模型尚未接入。当前页面只演示对话结构；不会把待审正文或关键词候选包装成历史结论。",
-      time: "现在",
-      state: "encouraging",
+      id: Date.now() + 1, role: 'assistant', text: answer.body, time: '现在', state: 'explaining',
+      citations: answer.citations, origin: answer.answer_source === 'model' ? '在线依据材料解释' : answer.model_notice || '本地材料回应',
     });
-    mentorState.value = "encouraging";
+    messages.value.push({ id: Date.now() + 2, role: 'assistant', text: answer.disclaimer, time: '教学说明', state: 'listening' });
     await scrollMessagesToEnd();
-    resetTimer = window.setTimeout(() => { mentorState.value = "listening"; }, 1800);
-  }, 520);
+  } catch {
+    if (id !== generation) return;
+    question.value = prompt;
+    messages.value.push({ id: Date.now() + 1, role: 'assistant', text: '当前没有连上课堂助教，问题已保留。请稍后重试。', time: '现在' });
+  } finally {
+    if (id === generation) { loading.value = false; mentorState.value = 'listening'; }
+  }
 }
 
 async function scrollMessagesToEnd() {
@@ -147,7 +161,7 @@ async function scrollMessagesToEnd() {
 }
 
 onBeforeUnmount(() => {
-  if (responseTimer) clearTimeout(responseTimer);
-  if (resetTimer) clearTimeout(resetTimer);
+  generation += 1;
 });
+watch(() => props.passageId, () => { generation += 1; loading.value = false; messages.value = []; question.value = ''; });
 </script>

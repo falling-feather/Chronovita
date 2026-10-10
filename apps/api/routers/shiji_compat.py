@@ -1,14 +1,54 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 
 from services import shiji_compat, shiji_ocr, shiji_reader
+from auth_dependencies import AuthContext, require_auth_context
+from services.contracts.reader_v1 import ReaderQuoteRequestV1, ReaderQuoteV1
+from services.reader_evidence import make_quote
+from services.reader_assistant import ReaderAnswerV1, ReaderAskRequestV1, answer_reader
 
 
 router = APIRouter()
 ocr_router = APIRouter()
 catalog_router = APIRouter()
+
+
+@router.post("/assist", response_model=ReaderAnswerV1)
+async def reader_assistance(request: ReaderAskRequestV1, context: AuthContext = Depends(require_auth_context)) -> ReaderAnswerV1:
+    from settings import secret_value, settings
+    from services import llm
+    from routers.practice import _acquire_llm_lease, _PRACTICE_LLM_CONCURRENCY_LIMITER
+
+    generator = None
+    if settings.llm_provider == "deepseek" and secret_value(settings.deepseek_api_key):
+        async def generate(messages, response_model):
+            try:
+                key = _acquire_llm_lease(context)
+            except HTTPException as exc:
+                raise llm.StructuredLLMError(llm.LLMFailureCode.PROVIDER_RATE_LIMITED, provider="deepseek", retryable=True) from exc
+            try:
+                result = await llm.StructuredLLMAdapter().complete(messages, response_model,
+                    model=settings.deepseek_model, temperature=0.2, max_tokens=1536)
+                return result.output
+            finally:
+                _PRACTICE_LLM_CONCURRENCY_LIMITER.release(key)
+        generator = generate
+    try:
+        return await answer_reader(request, generator=generator)
+    except KeyError as exc:
+        raise HTTPException(404, detail="当前史记篇章不存在。") from exc
+
+
+@router.post("/quotes", response_model=ReaderQuoteV1)
+async def quote_from_reader(request: ReaderQuoteRequestV1, _: AuthContext = Depends(require_auth_context)) -> ReaderQuoteV1:
+    try:
+        return make_quote(request)
+    except KeyError as exc:
+        raise HTTPException(404, detail="所选原句不属于当前篇章。") from exc
+    except ValueError as exc:
+        raise HTTPException(422, detail="所选内容无法生成有效摘录。") from exc
 
 
 @catalog_router.get("/books")

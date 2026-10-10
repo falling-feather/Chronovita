@@ -371,6 +371,19 @@ export interface ReaderManifestEntry {
   available_versions: ReaderManifestVersionInfo[];
 }
 
+export interface ReaderAnswer {
+  schema_version: 'reader-answer/v1';
+  answer_source: 'model' | 'extractive' | 'insufficient_evidence';
+  body: string;
+  citations: Array<{ passage_title: string; quote_text: string; sentence_ids: string[]; checksum: string }>;
+  model_notice: string;
+  disclaimer: string;
+}
+
+export function askReader(request: { passage_id: string; question: string; persona_mode: 'historian' | 'scholar' }) {
+  return post<ReaderAnswer>('/reader/assist', request);
+}
+
 export interface ReaderManifest {
   schema_version: string;
   manifest_id: string;
@@ -922,6 +935,7 @@ export interface ShijiChapterRuntime {
 }
 
 export interface PassagePayload {
+  chapter_sha256?: string;
   passage: {
     id: string;
     book_id: string;
