@@ -2163,11 +2163,20 @@ select {
 
 .chrono-course-cover-picture,
 .chrono-course-cover-fallback {
-  position: absolute;
-  inset: 0;
+  position: relative;
   display: block;
+  min-width: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+
+.chrono-course-entry-cover > .chrono-course-cover-picture,
+.chrono-course-entry-cover > .chrono-course-cover-fallback,
+.chrono-course-route-art,
+.chrono-lesson-masthead-art {
+  position: absolute;
+  inset: 0;
 }
 
 .chrono-course-cover-picture img {

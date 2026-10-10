@@ -5,7 +5,7 @@
   position: relative;
   display: grid;
   min-height: 220px;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: clamp(20px, 3vw, 42px);
   margin-bottom: 20px;
@@ -33,12 +33,12 @@
 .chrono-learning-hero-mark span { font-family: STKaiti, KaiTi, serif; font-size: 42px; }
 .chrono-learning-hero-copy { position: relative; z-index: 1; }
 .chrono-learning-hero-copy p { margin: 0; color: #d6aa5c; font-size: 10px; font-weight: 700; letter-spacing: .22em; }
-.chrono-learning-hero-copy h1 { margin: 6px 0 7px; font-family: STKaiti, KaiTi, serif; font-size: clamp(30px, 4vw, 46px); font-weight: 500; }
+.chrono-learning-hero-copy h1 { margin: 6px 0 7px; font-size: clamp(26px, 3vw, 38px); font-weight: 600; overflow-wrap: anywhere; }
 .chrono-learning-hero-copy span { color: rgba(243, 234, 215, .65); font-size: 12px; }
-.chrono-learning-hero dl { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, minmax(70px, 1fr)); margin: 0; }
+.chrono-learning-hero dl { position: relative; z-index: 1; display: grid; grid-column: 1 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; margin: 0; }
 .chrono-learning-hero dl div { padding: 10px 16px; border-left: 1px solid rgba(233, 201, 137, .15); text-align: center; }
-.chrono-learning-hero dt { color: #e2b760; font-family: Georgia, serif; font-size: 30px; }
-.chrono-learning-hero dd { margin: 3px 0 0; color: rgba(243, 234, 215, .58); font-size: 10px; white-space: nowrap; }
+.chrono-learning-hero dt { color: #f3d692; font-size: 30px; font-variant-numeric: tabular-nums; }
+.chrono-learning-hero dd { margin: 3px 0 0; color: rgba(243, 234, 215, .8); font-size: 11px; overflow-wrap: anywhere; }
 
 .chrono-learning-tabs { display: flex; gap: 6px; margin-bottom: 18px; padding: 6px; border: 1px solid rgba(86, 71, 48, .13); background: rgba(244, 238, 223, .7); }
 .chrono-learning-tabs button { display: flex; align-items: center; gap: 7px; padding: 10px 16px; border: 0; background: transparent; color: #6f685c; cursor: pointer; }
@@ -48,14 +48,14 @@
 .chrono-learning-loading { display: flex; min-height: 400px; align-items: center; justify-content: center; gap: 10px; color: #7a7165; }
 
 .chrono-learning-progress-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.chrono-learning-progress-grid article { display: grid; min-height: 220px; grid-template-columns: 42% minmax(0, 1fr); overflow: hidden; border: 1px solid rgba(77, 65, 47, .15); background: rgba(255, 253, 247, .9); box-shadow: 0 12px 28px rgba(61, 50, 35, .06); }
+.chrono-learning-progress-grid article { position: relative; display: grid; min-width: 0; min-height: 220px; grid-template-columns: 36% minmax(0, 1fr); overflow: hidden; border: 1px solid rgba(77, 65, 47, .15); background: rgba(255, 253, 247, .9); box-shadow: 0 12px 28px rgba(61, 50, 35, .06); }
 .chrono-learning-progress-grid picture,
 .chrono-learning-progress-grid picture img { width: 100%; height: 100%; object-fit: cover; }
 .chrono-learning-progress-grid article > div { display: flex; min-width: 0; flex-direction: column; padding: 20px; }
 .chrono-learning-progress-grid article p { margin: 0; color: #a06c2f; font-size: 10px; }
-.chrono-learning-progress-grid article h2 { margin: 7px 0 14px; font-family: STKaiti, KaiTi, serif; font-size: 20px; font-weight: 600; line-height: 1.35; }
+.chrono-learning-progress-grid article h2 { margin: 7px 0 14px; font-size: 18px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
 .chrono-learning-stage-marks { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
-.chrono-learning-stage-marks span { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px; background: #efede7; color: #8a8275; font-size: 9px; }
+.chrono-learning-stage-marks span { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px; background: #efede7; color: #6e6558; font-size: 11px; }
 .chrono-learning-stage-marks span.done { background: #e1ebe3; color: #457161; }
 .chrono-learning-progress-grid footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
 .chrono-learning-progress-grid footer time { color: #91887a; font-size: 10px; }

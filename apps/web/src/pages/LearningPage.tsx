@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Drawer, Empty, Spin, Tag } from 'antd';
 import {
   ArrowRightOutlined,
@@ -61,13 +61,16 @@ export default function LearningPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detail, setDetail] = useState<LearningSubmissionDetail | null>(null);
+  const detailRequest = useRef(0);
   const owner = auth.principal?.user_id ?? auth.mode;
   const [loadedOwner, setLoadedOwner] = useState<string | null>(null);
   const hasCurrentData = loadedOwner !== null && loadedOwner === owner;
 
   useEffect(() => {
+    detailRequest.current += 1;
     setItems([]); setSubmissions([]); setDetail(null); setDetailOpen(false);
     setLoadedOwner(null);
+    return () => { detailRequest.current += 1; };
   }, [owner]);
 
   useEffect(() => {
@@ -110,15 +113,19 @@ export default function LearningPage() {
   }), [currentItems.length, items, submissions]);
 
   const openDetail = async (submissionId: string) => {
+    const requestId = ++detailRequest.current;
     setDetail(null);
     setDetailOpen(true);
     setDetailLoading(true);
     try {
-      setDetail(await api.learningSubmission(submissionId));
+      const result = await api.learningSubmission(submissionId);
+      if (detailRequest.current === requestId) setDetail(result);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message.replace(/^\d{3}\s+/, '') : '成果版本载入失败');
+      if (detailRequest.current === requestId) {
+        setError(loadError instanceof Error ? loadError.message.replace(/^\d{3}\s+/, '') : '成果版本载入失败');
+      }
     } finally {
-      setDetailLoading(false);
+      if (detailRequest.current === requestId) setDetailLoading(false);
     }
   };
 
@@ -132,9 +139,9 @@ export default function LearningPage() {
           <span>阅读统计只记录本人确认的当前课文，不代表测验掌握度；互动完成标记仅是历史活动记录。</span>
         </div>
         <dl>
-          <div><dt>{hasCurrentData ? stats.lessons : '—'}</dt><dd>有活动记录的当前课号</dd></div>
+          <div><dt>{hasCurrentData ? stats.lessons : '—'}</dt><dd>有记录的课时</dd></div>
           <div><dt>{hasCurrentData ? `${stats.completedLessons}/${totalLessons}` : '—'}</dt><dd>本人确认已读当前课文</dd></div>
-          <div><dt>{hasCurrentData ? stats.submissions : '—'}</dt><dd>已载入提交版本（最多 100）</dd></div>
+          <div><dt>{hasCurrentData ? stats.submissions : '—'}</dt><dd>已提交版本 · 最近 100 条</dd></div>
           <div><dt>{hasCurrentData ? stats.feedback : '—'}</dt><dd>其中有教师反馈</dd></div>
         </dl>
       </header>
@@ -239,7 +246,7 @@ export default function LearningPage() {
         title="学习成果版本"
         width="min(980px, 96vw)"
         open={detailOpen}
-        onClose={() => setDetailOpen(false)}
+        onClose={() => { detailRequest.current += 1; setDetailOpen(false); }}
       >
         {detailLoading ? (
           <div className="chrono-learning-loading"><Spin /><span>正在展开成果版本…</span></div>

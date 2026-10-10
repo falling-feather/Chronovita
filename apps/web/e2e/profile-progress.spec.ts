@@ -66,6 +66,18 @@ test('个人资料、阅读确认、反馈入口与改密退出形成真实闭�
   await expect(page.getByRole('button', { name: '已确认读完当前课文' })).toBeDisabled();
   await page.goto('/learning');
   await expect(page.locator('.chrono-learning-hero')).toContainText('1/46');
+  const firstRecord = page.locator('.chrono-learning-progress-grid article').first();
+  await expect(firstRecord).toBeVisible();
+  const cardBounds = await firstRecord.boundingBox();
+  const coverBounds = await firstRecord.locator('picture, .chrono-course-cover-fallback').boundingBox();
+  expect(cardBounds).not.toBeNull();
+  expect(coverBounds).not.toBeNull();
+  expect(coverBounds!.x).toBeGreaterThanOrEqual(cardBounds!.x - 1);
+  expect(coverBounds!.y).toBeGreaterThanOrEqual(cardBounds!.y - 1);
+  expect(coverBounds!.width).toBeLessThanOrEqual(cardBounds!.width + 1);
+  expect(coverBounds!.height).toBeLessThanOrEqual(cardBounds!.height + 1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth
+    <= document.documentElement.clientWidth + 1)).toBeTruthy();
   await expect(page.locator('.chrono-user-slot .ant-badge-dot')).toHaveCount(0);
   await page.getByRole('button', { name: '查看教师反馈', exact: true }).click();
   await expect(page).toHaveURL(/tab=submissions/);
