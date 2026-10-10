@@ -13,6 +13,7 @@ import { readingComplete, readingLabel } from '../../features/classroom/readingP
 import {
   CLASSROOM_STAGES,
   classroomStage,
+  lessonInteractionReady,
   presentationStageDuration,
   type ClassroomLayer,
 } from '../../features/classroom/classroomModel';
@@ -182,6 +183,11 @@ export default function LessonPage() {
     if (!lesson || !interactionLesson) return null;
     if (layer === 'watch') return <LessonWatch lesson={lesson} onReadComplete={IS_STATIC_PREVIEW ? undefined : confirmReading}
       readComplete={readingComplete(progress?.lesson_id === lesson.id ? progress : null)} savingRead={savingRead} />;
+    if ((layer === 'practice' || layer === 'ask') && !lessonInteractionReady(lesson)) {
+      return <Alert type="info" showIcon message="本课互动资料尚未对齐教师新稿"
+        description="课文、关键词和阅读笔记可以使用；这里不调用旧主题的推演或人物回答。"
+        action={<Button onClick={() => openLayer('create')}>打开学习书案</Button>} />;
+    }
     if (layer === 'practice') {
       return <LessonPractice lesson={interactionLesson} onOpenDossier={() => openLayer('create')} />;
     }
@@ -256,7 +262,7 @@ export default function LessonPage() {
         {CLASSROOM_STAGES.map((stage) => {
           const active = stage.layer === layer;
           const currentProgress = progress?.lesson_id === lesson.id ? progress : null;
-          const visited = stage.layer === 'watch' ? readingComplete(currentProgress) : Boolean(currentProgress?.layers[stage.layer]);
+          const visited = stage.layer === 'watch' ? readingComplete(currentProgress) : false;
           return (
             <button
               key={stage.layer}

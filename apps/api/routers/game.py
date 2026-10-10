@@ -17,6 +17,7 @@ from services.contracts.v1 import (
     GameSessionV1,
     PlayerInput,
 )
+from services import courses
 from services.game_runtime import (
     AdvanceResultV1,
     ActionUnavailable,
@@ -109,6 +110,13 @@ async def start_game_session(
     request: GameStartRequest,
     context: AuthContext = Depends(require_student_context),
 ) -> GameStartResponse:
+    if request.release_pin is not None:
+        pin = request.release_pin
+        lesson = courses.get_lesson(pin.lesson_id)
+        if courses.get_course(pin.course_id) is not None and (
+            lesson is None or lesson.course_id != pin.course_id or lesson.interaction_status != "ready"
+        ):
+            raise HTTPException(409, detail={"code": "interaction_not_adapted", "message": "本课推演尚未对齐教师新稿。"})
     try:
         runtime = get_game_runtime().for_owner(context.principal.user_id)
         scenario, session = runtime.start_session(

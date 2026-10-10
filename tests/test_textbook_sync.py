@@ -62,16 +62,38 @@ class TextbookSyncTests(unittest.TestCase):
         lesson = courses.get_lesson("L103")
         self.assertIn("姬发（周武王）", [p["name"] for p in lesson.people])
         self.assertNotIn("商鞅", [p["name"] for p in lesson.people])
-        self.assertIn("商鞅", [p["name"] for p in lesson.interaction_people])
+        self.assertEqual(lesson.interaction_people, [])
         interaction = courses.get_interactive_lesson("L103")
-        self.assertEqual(lesson.content_checksum, interaction.content_checksum)
-        self.assertEqual(lesson.content_version, interaction.content_version)
+        self.assertIsNotNone(interaction)  # 原发布保留，只是不绑定教师新课文。
+        self.assertIsNone(lesson.content_checksum)
+        self.assertEqual(lesson.content_version, 0)
         self.assertTrue(lesson.teacher_text_checksum)
-        self.assertTrue(lesson.rag_available)
+        self.assertFalse(lesson.rag_available)
+        self.assertEqual(lesson.interaction_status, "not_adapted")
+        self.assertEqual(lesson.scenario_refs, [])
         self.assertFalse(lesson.reading_media_available)
         self.assertEqual(lesson.map_points, [
             p.model_dump(mode="json") for p in load_textbooks()["C-prequin-state"].lessons[2].map_points
         ])
+
+    def test_unpublished_teacher_lesson_has_no_old_practice_or_canvas(self):
+        lesson = courses.get_lesson("L105")
+        self.assertEqual(lesson.title, "商鞅变法")
+        self.assertEqual(lesson.interaction_status, "unpublished")
+        self.assertEqual(lesson.seed_canvas, [])
+        self.assertEqual(lesson.facts, [])
+        self.assertIsNone(lesson.saga_material)
+
+    def test_teacher_alignment_requires_exact_course_and_text(self):
+        from services.content import workflow
+
+        package = workflow.get_published_lesson_resources("C-prequin-state", "L103").course_package
+        self.assertEqual(courses.teacher_interaction_status("C-prequin-state", "L103", package), "not_adapted")
+        current = load_textbooks()["C-prequin-state"].lessons[2]
+        aligned = package.model_copy(update={"title": current.title, "abstract": current.abstract,
+                                            "body": tuple(current.body), "keywords": tuple(current.keywords)})
+        self.assertEqual(courses.teacher_interaction_status("C-prequin-state", "L103", aligned), "ready")
+        self.assertEqual(courses.teacher_interaction_status("different-course", "L103", aligned), "not_adapted")
 
     def test_empty_teacher_catalog_never_falls_back_to_builtin_text(self):
         original = content.content_root()

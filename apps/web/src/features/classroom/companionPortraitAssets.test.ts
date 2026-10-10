@@ -13,7 +13,8 @@ describe('companion portrait assets', () => {
     expect(new Set(COMPANION_PORTRAIT_ASSETS.map((asset) => `${asset.lessonId}:${asset.name}`)).size)
       .toBe(11);
     expect(companionPortraitFor('L101', { name: '益' })?.slug).toBe('yi');
-    expect(companionPortraitFor('L103', { name: '商鞅' })?.slug).toBe('shang-yang');
+    expect(companionPortraitFor('L105', { name: '商鞅' })?.slug).toBe('shang-yang');
+    expect(companionPortraitFor('L103', { name: '商鞅' })).toBeNull();
     expect(companionPortraitFor('L102', { name: '禹' })).toBeNull();
   });
 
@@ -37,7 +38,7 @@ describe('companion portrait assets', () => {
 
     expect(manifest.schema).toBe('chronovita-companion-portrait-assets/v1');
     for (const asset of COMPANION_PORTRAIT_ASSETS) {
-      const variants = manifest.lessons[asset.lessonId]?.portraits[asset.slug]?.variants;
+      const variants = manifest.lessons[asset.storageLessonId ?? asset.lessonId]?.portraits[asset.slug]?.variants;
       expect(variants).toHaveLength(2);
       for (const variant of variants) {
         const buffer = readFileSync(new URL(variant.file, assetRoot));

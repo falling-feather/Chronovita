@@ -117,9 +117,9 @@ describe('game presentation model', () => {
       }>;
     };
     expect(manifest.schema).toBe('chronovita-game-scene-assets/v1');
-    for (const lessonId of ['L101', 'L103']) {
+    for (const lessonId of ['L101', 'L105']) {
       const scene = gameSceneForLesson(lessonId);
-      const variants = manifest.scenes[lessonId].variants;
+      const variants = manifest.scenes[scene.storageLessonId ?? lessonId].variants;
       expect(variants.map((variant) => [variant.width, variant.height])).toEqual([
         [960, 540],
         [1600, 900],

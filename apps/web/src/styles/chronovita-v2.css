@@ -2161,6 +2161,20 @@ select {
   border-bottom: 1px solid rgba(255, 255, 255, .14);
 }
 
+.chrono-practice-index { max-width: 1392px; margin: 0 auto; }
+.chrono-practice-index > header { padding: 24px 0 32px; }
+.chrono-practice-index > header p { color: #876135; font-size: 11px; letter-spacing: .14em; }
+.chrono-practice-index h1 { font-size: clamp(26px, 4vw, 40px); }
+.chrono-practice-index > header span { color: #5e655f; }
+.chrono-practice-lessons { display: grid; gap: 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.chrono-practice-lessons article { overflow: hidden; border: 1px solid #dedbd0; background: #fffdf7; }
+.chrono-practice-cover { height: 190px; overflow: hidden; }
+.chrono-practice-copy { padding: 24px; }
+.chrono-practice-copy h2 { margin: 12px 0; font-size: 25px; }
+.chrono-practice-copy p { color: #5e655f; line-height: 1.8; }
+.chrono-practice-copy footer { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+@media (max-width: 760px) { .chrono-practice-lessons { grid-template-columns: 1fr; } }
+
 .chrono-course-cover-picture,
 .chrono-course-cover-fallback {
   position: relative;

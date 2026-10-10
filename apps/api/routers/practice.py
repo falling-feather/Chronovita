@@ -118,6 +118,11 @@ async def saga_start(
     req: SagaStartRequest,
     context: AuthContext = Depends(require_student_context),
 ):
+    from services import courses
+
+    lesson = courses.get_lesson(req.lesson_id)
+    if lesson is not None and lesson.interaction_status != "ready":
+        raise HTTPException(409, detail="本课互动尚未对齐教师新稿，不启动旧主题剧本。")
     try:
         state = saga.start(
             req.lesson_id,
@@ -432,6 +437,11 @@ async def create_persona_conversation(
     context: AuthContext = Depends(require_student_context),
 ) -> persona_conversation.PersonaConversationV1:
     try:
+        from services.courses import teacher_interaction_status
+
+        resources = content_workflow.get_published_lesson_resources(request.course_id, request.lesson_id)
+        if teacher_interaction_status(request.course_id, request.lesson_id, resources.course_package) == "not_adapted":
+            raise rag.RagTeacherContentNotAdapted("人物对话尚未对齐教师新稿。")
         return _persona_coordinator().create_conversation(
             owner_user_id=context.principal.user_id,
             course_id=request.course_id,
@@ -488,6 +498,10 @@ async def send_persona_conversation_message(
 
 
 def _raise_persona_conversation_error(exc: Exception) -> NoReturn:
+    if isinstance(exc, rag.RagTeacherContentNotAdapted):
+        raise HTTPException(409, detail={"code": "interaction_not_adapted", "message": str(exc)}) from exc
+    if isinstance(exc, content_workflow.ContentNotFound):
+        raise HTTPException(404, detail="本课人物资料尚未发布。") from exc
     if isinstance(
         exc,
         (
@@ -539,6 +553,8 @@ async def ask_rag(
             req,
             external_generator=_rag_external_generator(context),
         )
+    except rag.RagTeacherContentNotAdapted as exc:
+        raise HTTPException(409, detail={"code": "interaction_not_adapted", "message": str(exc)}) from exc
     except content_workflow.ContentNotFound as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

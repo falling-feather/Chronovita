@@ -921,7 +921,7 @@ export default function LessonCreate({
   };
 
   const aiGenerate = async () => {
-    if (canvasPhase !== 'ready' || generating) return;
+    if (canvasPhase !== 'ready' || generating || (lesson.interaction_status && lesson.interaction_status !== 'ready')) return;
     const generation = canvasLoadGenerationRef.current;
     const lessonId = lesson.id;
     setGenerating(true);
@@ -1567,7 +1567,7 @@ export default function LessonCreate({
                   <Button
                     icon={<ThunderboltOutlined />}
                     loading={generating}
-                    disabled={canvasPhase !== 'ready'}
+                    disabled={canvasPhase !== 'ready' || (lesson.interaction_status !== undefined && lesson.interaction_status !== 'ready')}
                     onClick={() => void aiGenerate()}
                   >AI 扩充</Button>
                   <div className="chrono-canvas-toolbar-spacer" />

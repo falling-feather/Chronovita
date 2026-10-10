@@ -37,10 +37,16 @@ export const CLASSROOM_PRINCIPLES = [
   { title: '可复盘', description: '把关键选择、证据与解释沉淀为个人卷宗。' },
 ] as const;
 
-export const FLAGSHIP_LESSON_IDS = new Set(['L101', 'L103']);
+export const FLAGSHIP_LESSON_IDS = new Set(['L101', 'L105']);
 
 export function isFlagshipLesson(lessonId: string): boolean {
-  return FLAGSHIP_LESSON_IDS.has(lessonId);
+    return FLAGSHIP_LESSON_IDS.has(lessonId);
+}
+
+export function lessonInteractionReady(lesson: Lesson): boolean {
+  return lesson.interaction_status === undefined
+    ? Boolean(lesson.rag_available || lesson.scenario_refs?.length)
+    : lesson.interaction_status === 'ready';
 }
 
 export function classroomStage(layer: string | null | undefined): ClassroomStage {

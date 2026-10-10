@@ -219,7 +219,7 @@ const ERA_GUIDE = [
 
 const LESSON_BLUEPRINTS = [
   { id: 'L101', era_id: 'early-state', era: '早期国家', course_id: 'C-early-state', course_title: '早期国家的形成', lesson_no: 'L101', title: '大禹治水与早期国家', unit: '洪水、部族与国家起源', section: 'P0 主线' },
-  { id: 'L103', era_id: 'spring-autumn', era: '春秋战国', course_id: 'C-spring-autumn', course_title: '春秋战国的制度竞争', lesson_no: 'L103', title: '商鞅变法', unit: '变法阻力与制度选择', section: 'P0 主线' },
+  { id: 'L105', era_id: 'prequin', era: '先秦', course_id: 'C-prequin-state', course_title: '早期国家与社会变革', lesson_no: '1.5', title: '商鞅变法', unit: '变法阻力与制度选择', section: '制度' },
   { id: 'L302', era_id: 'qin-han', era: '秦汉', course_id: 'C-qin-han', course_title: '大一统帝国的建立', lesson_no: 'L302', title: '秦王嬴政与统一战争', unit: '战略、地图与诸侯', section: 'P0 主线' },
   { id: 'L303', era_id: 'qin-han', era: '秦汉', course_id: 'C-qin-han', course_title: '大一统帝国的建立', lesson_no: 'L303', title: '始皇帝与中央集权帝国', unit: '郡县、书同文与车同轨', section: 'P0 主线' },
   { id: 'L401', era_id: 'qin-han', era: '秦汉', course_id: 'C-qin-han-transition', course_title: '秦汉之际的抉择', lesson_no: 'L401', title: '秦的速亡与楚汉相争', unit: '多人立场与结局推演', section: 'P0 主线' },

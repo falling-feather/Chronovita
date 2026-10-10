@@ -9,6 +9,7 @@ import type { ScenarioNpcDialogueRoute } from './ScenarioNpcDialogue';
 
 export interface GameSceneAsset {
   lessonId: string;
+  storageLessonId?: string;
   title: string;
   place: string;
   time: string;
@@ -39,8 +40,9 @@ const GAME_SCENES: Record<string, GameSceneAsset> = {
     source1600: publicAssetUrl(`${GAME_SCENE_ROOT}/L101-flood-council-1600.webp`),
     palette: 'flood',
   },
-  L103: {
-    lessonId: 'L103',
+  L105: {
+    lessonId: 'L105',
+    storageLessonId: 'L103',
     title: '秦廷议法 · 新令将行',
     place: '战国秦国的改革议事空间',
     time: '公元前4世纪的课堂情境',

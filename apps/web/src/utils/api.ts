@@ -530,6 +530,7 @@ export interface Lesson {
   unit?: string; era?: string;
   people?: PersonCard[]; map_points?: MapPoint[]; source_refs?: SourceRef[];
   interaction_people?: PersonCard[]; interaction_figures?: string[];
+  interaction_status?: 'ready' | 'not_adapted' | 'unpublished';
   facts?: string[]; qa_points?: string[]; level_goals?: string[];
   saga_material?: MaterialPlaceholder | null; sandbox_material?: MaterialPlaceholder | null;
   content_status?: string; content_version?: number; sealed_at?: string | null; sealed_by?: string | null;

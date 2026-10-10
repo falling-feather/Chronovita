@@ -16,7 +16,8 @@ describe('classroomModel', () => {
 
   it('only marks the two formal flagship lessons', () => {
     expect(isFlagshipLesson('L101')).toBe(true);
-    expect(isFlagshipLesson('L103')).toBe(true);
+    expect(isFlagshipLesson('L105')).toBe(true);
+    expect(isFlagshipLesson('L103')).toBe(false);
     expect(isFlagshipLesson('dayu-flood-control')).toBe(false);
   });
 

@@ -288,9 +288,9 @@ export default function LessonCompanion({
               {!(lesson.rag_available ?? Boolean(presentation)) ? (
                 <div className="chrono-companion-simple-state">
                   <BookOutlined />
-                  <strong>本课使用基础问答</strong>
-                  <p>进入“召见”阶段继续提问。</p>
-                  <Button onClick={() => onOpenConsult()}>前往召见</Button>
+                  <strong>本课助教资料待对齐</strong>
+                  <p>临时笔记可以继续保存。</p>
+                  <Button onClick={() => setPane('notebook')}>记下我的问题</Button>
                 </div>
               ) : (
                 <>

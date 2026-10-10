@@ -1,11 +1,8 @@
 """Teacher-authored reading catalogue; legacy interaction state is isolated."""
 from __future__ import annotations
 
-import json
 import re
-from pathlib import Path
-from functools import lru_cache
-from typing import Optional, TypeVar
+from typing import Literal, Optional, TypeVar
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -102,6 +99,7 @@ class Lesson(BaseModel):
     teacher_text_checksum: str | None = None
     rag_available: bool = False
     reading_media_available: bool = False
+    interaction_status: Literal["ready", "not_adapted", "unpublished"] = "unpublished"
     release_id: str | None = None
     release_no: int | None = None
     release_checksum: str | None = None
@@ -198,11 +196,6 @@ def get_interactive_lesson(lesson_id: str) -> Optional[Lesson]:
     return None
 
 
-@lru_cache(maxsize=1)
-def _legacy_interactions() -> dict:
-    return json.loads(Path(__file__).with_name("legacy_interactions.json").read_text(encoding="utf-8"))
-
-
 def _reading_people(text) -> list[dict]:
     assets = content_data.list_assets("person")
     result = []
@@ -225,10 +218,11 @@ def get_lesson(lesson_id: str) -> Optional[Lesson]:
         for text in book.lessons:
             if text.lesson_id != lesson_id:
                 continue
-            practice = dict(_legacy_interactions().get(lesson_id, {}))
-            legacy_figures = practice.pop("figures", [])
+            practice = {}
             release = get_interactive_lesson(lesson_id)
-            if release:
+            interaction_status = ("ready" if release and release.course_id == book.course_id and _reading_matches(text, release)
+                                  else "not_adapted" if release else "unpublished")
+            if interaction_status == "ready":
                 practice.update({key: release.model_dump(mode="json")[key] for key in PRACTICE_FIELDS})
             return Lesson(
                 id=lesson_id, course_id=book.course_id, num=text.lesson_no,
@@ -236,12 +230,13 @@ def get_lesson(lesson_id: str) -> Optional[Lesson]:
                 duration=text.duration, era=book.era, unit=book.title,
                 keywords=[Keyword(**word.model_dump()) for word in text.keywords],
                 people=_reading_people(text), figures=[person.name for person in text.people],
-                interaction_people=release.people if release else [],
-                interaction_figures=release.figures if release else legacy_figures,
+                interaction_people=release.people if interaction_status == "ready" else [],
+                interaction_figures=release.figures if interaction_status == "ready" else [],
                 map_points=[point.model_dump(mode="json") for point in text.map_points],
                 source_refs=[ref.model_dump(mode="json") for ref in text.source_refs],
                 teacher_text_checksum=lesson_reading_checksum(book.course_id, text),
-                reading_media_available=bool(release and release.rag_available and _reading_matches(text, release)),
+                reading_media_available=bool(interaction_status == "ready" and release.rag_available),
+                interaction_status=interaction_status,
                 **practice,
             )
     return None
@@ -263,11 +258,18 @@ def _textbook_course(book: TextbookCourse) -> Course:
 
 def reading_media_matches(course_id: str, lesson_id: str, package: CoursePackageV1) -> bool:
     """Old media may not accompany a changed teacher text merely because IDs match."""
+    return teacher_interaction_status(course_id, lesson_id, package) == "ready"
+
+
+def teacher_interaction_status(course_id: str, lesson_id: str, package: CoursePackageV1) -> str | None:
+    """None denotes a legacy course outside the teacher catalogue, not a ready course."""
+    if package.course_id != course_id or package.lesson_id != lesson_id:
+        return "not_adapted"
     book = load_textbooks().get(course_id)
     if book is None:
-        return False
+        return None
     text = next((item for item in book.lessons if item.lesson_id == lesson_id), None)
-    return text is not None and _reading_matches(text, package)
+    return "ready" if text is not None and _reading_matches(text, package) else "not_adapted"
 
 
 def _reading_matches(text, package: CoursePackageV1 | Lesson) -> bool:
