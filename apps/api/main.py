@@ -115,7 +115,6 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         shiji_ocr.clear_cache()
-        shiji_reader.close()
         app.state.runtime_ready = False
         app.state.database_readiness = None
         app.state.database_engine = None

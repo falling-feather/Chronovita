@@ -62,6 +62,9 @@ def _fixture(repository: Path) -> str:
         "scripts/stop-classroom.ps1": b"param()\n",
         "scripts/initialize_classroom.py": b"# initialize\n",
         "scripts/prepare_rag_model.py": b"# verify model\n",
+        "scripts/install-shiji-facsimile.cmd": b"@echo off\n",
+        "scripts/install_shiji_facsimile.py": b"# install facsimile\n",
+        "infra/content-history-target.json": b'{"schema_version":"content-history-target/v1"}\n',
         "distribution/classroom/课堂使用说明.txt": "fixture instructions\n".encode(),
     }
     for relative, raw in files.items():
@@ -141,6 +144,19 @@ class ClassroomReleaseTests(unittest.TestCase):
                     "Chronovita-Classroom-v1.2.3/依赖与模型许可清单.json"
                 ).decode("utf-8")
             self.assertEqual(one.license_path.read_text("utf-8"), packaged_licenses)
+
+    def test_embedded_reader_dependencies_are_included_in_licenses(self):
+        with tempfile.TemporaryDirectory() as source, tempfile.TemporaryDirectory() as output:
+            root = Path(source)
+            _fixture(root)
+            _write(root, "apps/shiji-reader/package-lock.json", json.dumps({"packages": {
+                "node_modules/vue": {"version": "3.5.38", "license": "MIT"},
+                "node_modules/react": {"version": "18.3.1", "license": "MIT"},
+            }}).encode())
+            built = build_classroom_release(source_root=root, output_dir=Path(output), version="1.2.3", commit="working-tree")
+            records = json.loads(built.license_path.read_text("utf-8"))["javascript_bundles"]
+            self.assertEqual(len([record for record in records if record["name"] == "react"]), 1)
+            self.assertTrue(any(record["name"] == "vue" for record in records))
 
     def test_full_commit_uses_committed_application_source(self):
         with tempfile.TemporaryDirectory() as source, tempfile.TemporaryDirectory() as output:

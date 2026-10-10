@@ -1,8 +1,6 @@
 """Admin-managed local LLM configuration persisted in the classroom database."""
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -10,13 +8,15 @@ from pydantic_settings import SettingsError
 
 from settings import secret_value, settings
 from services import persistence
+from services.content_history.publication import PublicationConfigurationError, load_repository_binding
 
 _NAMESPACE = "runtime_config"
 _KEY = "llm"
+_configuration_warning = ""
 
 
 class ApiConfigUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, protected_namespaces=("model_validate", "model_dump"))
 
     provider: str = Field(pattern=r"^(?:mock|deepseek)$")
     api_key: str | None = Field(default=None, max_length=512)
@@ -25,13 +25,13 @@ class ApiConfigUpdate(BaseModel):
     model: str = Field(min_length=1, max_length=128)
     model_pro: str = Field(min_length=1, max_length=128)
     thinking: str = Field(pattern=r"^(?:disabled|enabled|auto)$")
-    github_publication_enabled: bool = False
+    github_publication_enabled: bool | None = None
     github_token: str | None = Field(default=None, max_length=512)
     clear_github_token: bool = False
 
 
 class ApiConfigView(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", protected_namespaces=("model_validate", "model_dump"))
 
     provider: str
     api_key_configured: bool
@@ -44,11 +44,19 @@ class ApiConfigView(BaseModel):
     github_token_configured: bool
     github_token_last4: str
     github_repository: str
+    github_configuration_error: str = ""
+    configuration_warning: str = ""
 
 
 def _validate_base_url(value: str) -> str:
-    parsed = urlparse(value.strip().rstrip("/"))
-    if parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password:
+    try:
+        parsed = urlparse(value.strip().rstrip("/"))
+        port = parsed.port
+    except ValueError as exc:
+        raise ValueError("API 地址无效") from exc
+    if (parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password
+            or parsed.query or parsed.fragment or "\\" in value or port not in {None, 443}
+            or any(character.isspace() for character in value.strip())):
         raise ValueError("API 地址必须是无账号密码的 HTTPS 地址")
     return value.strip().rstrip("/")
 
@@ -56,15 +64,13 @@ def _validate_base_url(value: str) -> str:
 def _view() -> ApiConfigView:
     key = secret_value(settings.deepseek_api_key).strip()
     github_token = secret_value(settings.github_publication_token).strip()
-    target_path = Path(settings.content_history_target_path)
-    if not target_path.is_absolute():
-        target_path = Path(__file__).resolve().parents[2] / target_path
     repository = ""
+    binding_error = ""
     try:
-        target = json.loads(target_path.read_text(encoding="utf-8"))
-        repository = f"{target.get('owner', '')}/{target.get('repository', '')}".strip("/")
-    except (OSError, ValueError, TypeError):
-        repository = ""
+        binding = load_repository_binding(settings.content_history_target_path)
+        repository = f"{binding.owner}/{binding.repository}"
+    except PublicationConfigurationError:
+        binding_error = "课程仓库绑定缺少、损坏或尚未就绪；教师发布不可用。"
     return ApiConfigView(
         provider=settings.llm_provider,
         api_key_configured=bool(key),
@@ -77,10 +83,17 @@ def _view() -> ApiConfigView:
         github_token_configured=bool(github_token),
         github_token_last4=github_token[-4:] if github_token else "",
         github_repository=repository,
+        github_configuration_error=binding_error,
+        configuration_warning=_configuration_warning,
     )
 
 
 def apply_api_config(payload: ApiConfigUpdate) -> ApiConfigView:
+    global _configuration_warning
+    if payload.clear_api_key and payload.api_key:
+        raise ValueError("清除密钥与录入新密钥不能同时选择")
+    if payload.clear_github_token and payload.github_token:
+        raise ValueError("清除仓库令牌与录入新令牌不能同时选择")
     base_url = _validate_base_url(payload.base_url)
     current_key = secret_value(settings.deepseek_api_key).strip()
     if payload.clear_api_key:
@@ -96,48 +109,77 @@ def apply_api_config(payload: ApiConfigUpdate) -> ApiConfigView:
         github_token = payload.github_token.strip()
     else:
         github_token = current_github_token
+    provider = "mock" if payload.clear_api_key else payload.provider
+    if provider == "deepseek":
+        if not api_key:
+            raise ValueError("启用在线生成前请先录入 API 密钥")
+        if urlparse(base_url).hostname not in settings.deepseek_allowed_hosts:
+            raise ValueError("API 地址不在服务器受信任列表中")
+    github_enabled = (settings.github_publication_enabled if payload.github_publication_enabled is None
+                      else payload.github_publication_enabled)
+    if payload.clear_github_token:
+        github_enabled = False
+    if github_enabled:
+        if not github_token:
+            raise ValueError("启用教师仓库发布前请先录入 GitHub 令牌")
+        try:
+            load_repository_binding(settings.content_history_target_path)
+        except PublicationConfigurationError as exc:
+            raise ValueError("课程仓库绑定尚未就绪，不能启用发布") from exc
     stored = {
-        "provider": payload.provider,
+        "provider": provider,
         "api_key": api_key,
         "base_url": base_url,
         "model": payload.model,
         "model_pro": payload.model_pro,
         "thinking": payload.thinking,
-        "github_publication_enabled": payload.github_publication_enabled,
+        "github_publication_enabled": github_enabled,
         "github_token": github_token,
     }
     persistence.kv_set(_NAMESPACE, _KEY, stored)
     _apply(stored)
+    _configuration_warning = ""
     return _view()
 
 
 def load_api_config() -> None:
+    global _configuration_warning
+    _configuration_warning = ""
     stored = persistence.kv_get(_NAMESPACE, _KEY)
-    if not isinstance(stored, dict):
+    if stored is None:
         return
     try:
+        if not isinstance(stored, dict):
+            raise ValueError("配置不是对象")
         payload = ApiConfigUpdate(
             provider=str(stored.get("provider", settings.llm_provider)),
-            api_key=None,
+            api_key=stored.get("api_key", secret_value(settings.deepseek_api_key)),
             base_url=str(stored.get("base_url", settings.deepseek_base_url)),
             model=str(stored.get("model", settings.deepseek_model)),
             model_pro=str(stored.get("model_pro", settings.deepseek_model_pro)),
             thinking=str(stored.get("thinking", settings.deepseek_thinking)),
-            github_publication_enabled=bool(stored.get("github_publication_enabled", settings.github_publication_enabled)),
-            github_token=None,
+            github_publication_enabled=stored.get("github_publication_enabled", settings.github_publication_enabled),
+            github_token=stored.get("github_token", secret_value(settings.github_publication_token)),
         )
         _validate_base_url(payload.base_url)
+        if payload.provider == "deepseek" and (not payload.api_key or urlparse(payload.base_url).hostname not in settings.deepseek_allowed_hosts):
+            raise ValueError("在线配置不完整")
+        if payload.github_publication_enabled and not payload.github_token:
+            raise ValueError("仓库配置不完整")
     except (ValueError, TypeError, SettingsError):
+        settings.llm_provider = "mock"
+        settings.github_publication_enabled = False
+        _configuration_warning = "保存的 API 配置无效，已停用在线生成和教师仓库发布；请管理员重新保存。"
         return
     _apply({
         "provider": payload.provider,
-        "api_key": str(stored.get("api_key", "")),
+        "api_key": payload.api_key or "",
         "base_url": payload.base_url,
         "model": payload.model,
         "model_pro": payload.model_pro,
         "thinking": payload.thinking,
         "github_publication_enabled": payload.github_publication_enabled,
-        "github_token": str(stored.get("github_token", "")),
+        "github_token": payload.github_token or "",
     })
 
 

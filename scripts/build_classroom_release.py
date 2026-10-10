@@ -50,6 +50,9 @@ EXACT_SOURCE_FILES = {
     PurePosixPath("scripts/stop-classroom.ps1"),
     PurePosixPath("scripts/initialize_classroom.py"),
     PurePosixPath("scripts/prepare_rag_model.py"),
+    PurePosixPath("scripts/install-shiji-facsimile.cmd"),
+    PurePosixPath("scripts/install_shiji_facsimile.py"),
+    PurePosixPath("infra/content-history-target.json"),
 }
 INSTRUCTION_SOURCE = PurePosixPath("distribution/classroom/课堂使用说明.txt")
 INSTRUCTION_DESTINATION = PurePosixPath("课堂使用说明.txt")
@@ -85,6 +88,20 @@ REQUIRED_PACKAGE_FILES = {
     MODEL_DESTINATION / "model-resource.json",
     MODEL_DESTINATION / "model_optimized.onnx",
 }
+
+
+def _required_package_files(version: str) -> set[PurePosixPath]:
+    required = set(REQUIRED_PACKAGE_FILES)
+    if tuple(int(part) for part in version.split(".")) >= (1, 3, 4):
+        required.update({
+            PurePosixPath("scripts/install-shiji-facsimile.cmd"),
+            PurePosixPath("scripts/install_shiji_facsimile.py"),
+            PurePosixPath("infra/content-history-target.json"),
+            PurePosixPath("content/shiji/ocr-pages-index.json"),
+            PurePosixPath("content/shiji/shiji-ocr-records.zip"),
+            WEB_DIST_DESTINATION / "shiji-reader/index.html",
+        })
+    return required
 
 CREDENTIAL_POLICY = {
     "bundled_credentials": False,
@@ -396,27 +413,30 @@ def _license_manifest(
             }
         )
 
-    lock = json.loads((source_root / "apps/web/package-lock.json").read_text("utf-8"))
-    packages = lock.get("packages")
-    if not isinstance(packages, dict):
-        raise ClassroomPackageError("frontend package lock does not contain packages")
-    javascript: list[dict[str, object]] = []
-    for package_path, metadata in packages.items():
-        if not package_path.startswith("node_modules/") or not isinstance(metadata, dict):
-            continue
-        if metadata.get("dev") is True:
-            continue
-        name = package_path.removeprefix("node_modules/")
-        package_version = metadata.get("version")
-        if not isinstance(package_version, str):
-            continue
-        javascript.append(
-            {
-                "name": name,
-                "version": package_version,
-                "license": metadata.get("license", "UNKNOWN"),
+    lock_paths = [source_root / "apps/web/package-lock.json"]
+    reader_lock = source_root / "apps/shiji-reader/package-lock.json"
+    if reader_lock.is_file():
+        lock_paths.append(reader_lock)
+    elif (source_root / "apps/web/dist/shiji-reader/index.html").is_file():
+        raise ClassroomPackageError("bundled reader is missing its dependency license source")
+    javascript: dict[tuple[str, str], dict[str, object]] = {}
+    for lock_path in lock_paths:
+        lock = json.loads(lock_path.read_text("utf-8"))
+        packages = lock.get("packages")
+        if not isinstance(packages, dict):
+            raise ClassroomPackageError("frontend package lock does not contain packages")
+        for package_path, metadata in packages.items():
+            if not package_path.startswith("node_modules/") or not isinstance(metadata, dict):
+                continue
+            if metadata.get("dev") is True:
+                continue
+            name = package_path.removeprefix("node_modules/")
+            package_version = metadata.get("version")
+            if not isinstance(package_version, str):
+                continue
+            javascript[(name, package_version)] = {
+                "name": name, "version": package_version, "license": metadata.get("license", "UNKNOWN"),
             }
-        )
 
     return {
         "schema_version": LICENSE_SCHEMA_VERSION,
@@ -429,7 +449,7 @@ def _license_manifest(
         ),
         "python": sorted(python, key=lambda item: str(item["name"])),
         "javascript_bundles": sorted(
-            javascript, key=lambda item: (str(item["name"]), str(item["version"]))
+            javascript.values(), key=lambda item: (str(item["name"]), str(item["version"]))
         ),
         "models": [
             {
@@ -578,7 +598,7 @@ def collect_package_files(
         raise ClassroomPackageError("classroom package has too many files")
     if sum(item.size_bytes for item in ordered) > MAX_PACKAGE_BYTES:
         raise ClassroomPackageError("classroom package payload is too large")
-    missing = REQUIRED_PACKAGE_FILES - {item.path for item in ordered}
+    missing = _required_package_files(version) - {item.path for item in ordered}
     if missing:
         raise ClassroomPackageError(
             "classroom package is missing required files: "
@@ -825,7 +845,7 @@ def verify_classroom_release(archive_path: Path) -> dict[str, object]:
             raise ClassroomPackageError("classroom package contains duplicate payload paths")
         if set(names) != expected_names:
             raise ClassroomPackageError("classroom package contains unregistered files")
-        missing = REQUIRED_PACKAGE_FILES - set(relative_paths)
+        missing = _required_package_files(str(manifest["app_version"])) - set(relative_paths)
         if missing:
             raise ClassroomPackageError(
                 "classroom package is missing required files: "
