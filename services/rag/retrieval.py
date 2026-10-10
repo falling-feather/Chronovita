@@ -446,11 +446,16 @@ class HybridEvidenceRetriever:
             self._ensure_scope(connection, resources)
             vector_available = self._ensure_vectors(connection, resources)
             scope_key = _scope_key(resources)
+            profile = next((item for item in resources.persona_pack.profiles
+                            if item.person_id == person_id and "consult" in item.channels), None) if resources.persona_pack else None
+            # The sealed persona pack also authorizes explicitly labelled historian notes.
+            persona_passages = {item.passage_id for item in profile.evidence_uses} if profile else None
             lexical = self._lexical_ranking(
                 connection,
                 scope_key,
                 query_tokens,
                 person_id=person_id,
+                persona_passages=persona_passages,
             )
             vector = (
                 self._vector_ranking(
@@ -458,6 +463,7 @@ class HybridEvidenceRetriever:
                     scope_key,
                     question,
                     person_id=person_id,
+                    persona_passages=persona_passages,
                 )
                 if vector_available
                 else []
@@ -884,6 +890,7 @@ class HybridEvidenceRetriever:
         query_tokens: Sequence[str],
         *,
         person_id: str | None,
+        persona_passages: set[str] | None = None,
     ) -> list[tuple[str, float]]:
         terms = list(dict.fromkeys(_signal_tokens(query_tokens)))[:96]
         if not terms:
@@ -906,7 +913,7 @@ class HybridEvidenceRetriever:
             ).fetchall()
         except sqlite3.Error as exc:
             raise RagIndexUnavailable("The lexical query failed.") from exc
-        allowed = self._allowed_person_passages(connection, scope_key, person_id)
+        allowed = persona_passages if persona_passages is not None else self._allowed_person_passages(connection, scope_key, person_id)
         return [
             (str(row["passage_id"]), float(row["lexical_score"]))
             for row in rows
@@ -920,6 +927,7 @@ class HybridEvidenceRetriever:
         question: str,
         *,
         person_id: str | None,
+        persona_passages: set[str] | None = None,
     ) -> list[tuple[str, float]]:
         vectorizer = self.vectorizer
         if vectorizer is None:
@@ -929,7 +937,7 @@ class HybridEvidenceRetriever:
         except Exception:
             # Query embedding failures degrade to the lexical ranking.
             return []
-        allowed = self._allowed_person_passages(connection, scope_key, person_id)
+        allowed = persona_passages if persona_passages is not None else self._allowed_person_passages(connection, scope_key, person_id)
         try:
             rows = connection.execute(
                 """

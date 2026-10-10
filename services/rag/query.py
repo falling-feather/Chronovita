@@ -99,7 +99,8 @@ _LESSON_ALIASES: dict[tuple[str, str], tuple[tuple[tuple[str, ...], str], ...]] 
         (("秦变强", "秦国变强", "强大起来", "统一六国"), "富国强兵 多因解释"),
         (("法律太严", "太狠", "连坐", "互相告发"), "什伍 连带责任 制度代价"),
         (("现代法治", "人人平等", "现代法律"), "概念边界 法治 明法"),
-        (("改了什么", "改了啥", "到底改", "做了什么", "改革内容"), "商鞅变法 军功爵 奖励耕战 县制"),
+        (("改了什么", "改了哪些", "改了啥", "到底改", "做了什么", "改革内容"), "商鞅变法 军功爵 奖励耕战 县制"),
+        (("奖励耕战", "农战", "耕织"), "奖励耕战 农耕家庭 军功爵 粮食 兵源 制度代价"),
         (("管到地方", "管地方", "县到底"), "县制 地方治理 县政"),
         (("分阶段", "一次完成", "一次改完"), "改革年代 公元前356年 公元前350年"),
     ),
@@ -190,8 +191,9 @@ def _matching_alias_terms(
     resources: PublishedLessonResources,
     normalized: str,
 ) -> tuple[str, ...]:
+    lesson_key = expression_family_key(resources)
     for triggers, expansion in _LESSON_ALIASES.get(
-        (resources.course_id, resources.lesson_id),
+        lesson_key,
         (),
     ):
         if any(_normalize(trigger) in normalized for trigger in triggers):
@@ -200,6 +202,16 @@ def _matching_alias_terms(
             # when a sentence mentions both an event and a generic group.
             return tuple(dict.fromkeys(expansion.split()))
     return ()
+
+
+def expression_family_key(resources: PublishedLessonResources) -> tuple[str, str]:
+    """Reuse reviewed phrasing by corpus topic, not mutable curriculum numbering."""
+    slots = getattr(resources.evidence_corpus, "answer_slots", ())
+    if any(slot.slot_id == "shangyang-slot-01-overview" for slot in slots):
+        return ("C-prequin-state", "L103")
+    if any(slot.slot_id == "dayu-slot-methods" for slot in slots):
+        return ("C-prequin-state", "L101")
+    return (resources.course_id, resources.lesson_id)
 
 
 def _published_terms_in_question(

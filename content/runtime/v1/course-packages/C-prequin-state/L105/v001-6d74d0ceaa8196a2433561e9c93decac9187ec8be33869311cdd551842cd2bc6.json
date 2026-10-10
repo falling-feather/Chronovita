@@ -1,0 +1,535 @@
+{
+  "schema_version": "course-package/v1",
+  "package_id": "pkg-L105",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L105",
+  "content_version": 1,
+  "status": "sealed",
+  "title": "商鞅变法",
+  "unit": "富国强兵与制度代价",
+  "era": "先秦",
+  "body": [
+    "春秋晚期以后，诸侯之间的竞争更加激烈，战争规模不断扩大。各国不仅要争夺土地，还要获得更多人口、粮食和兵员。西周以来以血缘和等级为基础的贵族秩序，已经难以完全满足新的战争和治理需要。进入【战国】时期后，许多国家先后寻求改革。地处关中、原本并不处于中原强国行列的秦国，也面临着增强国力的压力。嬴渠梁（秦孝公）即位后决心改变现状，向各地招揽能够帮助秦国富强的人才。",
+    "商鞅原本是魏国人，后来进入秦国，得到秦孝公的支持。他提出，要通过重新制定法令、整顿社会组织和调动百姓积极性，使国家能够集中力量发展生产、训练军队。约公元前356年和公元前350年，秦国先后推行改革，后世把这些改革统称为【商鞅变法】。变法开始时，秦国还流传着贵族反对、百姓观望的情形。传统故事中的【徙木立信】，讲述商鞅用兑现赏金的办法让人们相信新法一定会执行，表现了改革者重视法令信用的一面。",
+    "商鞅首先把发展农业和取得军功放在国家治理的重要位置，这种方针被概括为【农战】。秦国奖励耕种和纺织，鼓励人们增加粮食生产；同时实行【军功爵制】，按照战场上的功劳授予爵位和相应待遇。过去贵族的身份和待遇主要依靠血缘继承，新的制度则为普通士兵和下层民众提供了凭军功改变身份的机会。这样一来，国家既能获得更多粮食，也能调动军队作战的积极性，旧贵族的世袭特权则受到冲击。",
+    "为了加强对基层社会的管理，秦国把民户编入什伍组织。十户、五户相互监督，一户违法，相关民户也可能承担责任，这种管理方式被称为【什伍连坐】。它把国家的法令进一步落实到普通家庭，使官府能够掌握人口、征收赋税并动员劳役和兵员。与此同时，秦国在地方设置由国君任免官员管理的【县制】，逐步削弱贵族对地方事务的世袭控制。县制在本课只作为变法加强国家管理的一项措施，后来成为秦统一后地方治理的重要制度。",
+    "变法还调整了土地和赋税关系，传统概括为【废井田开阡陌】。它改变旧有田地界限，承认土地经营和转让关系的变化，使国家能够按照土地和民户征收赋税。农业生产因此与国家收入联系得更加紧密，但土地兼并和贫富差异也可能随之发展。商鞅的改革并不是只改变某一项制度，而是把生产、军事、户籍和地方管理结合起来，形成了由国君直接推动的整套治理办法。",
+    "变法推行以后，秦国的农业生产、军队组织和国家财政逐渐得到加强，秦国在诸侯竞争中的地位不断上升。改革同时加重了对民众的管理和服役要求，也触动了旧贵族的利益。秦孝公去世后，反对者重新掌握权力，商鞅失势。据传统记载，他在逃亡途中被捕并遭到严厉处置，但秦国并没有完全废除已经推行的制度。改革的作用，更多体现在国家结构发生了变化，而不只是商鞅个人的进退。",
+    "商鞅变法是战国时期各国变法的重要事例。它推动秦国从贵族世袭秩序逐步转向由国家法令、户籍和官员共同管理的政治形态，也使军功和国家需要在身份、资源分配中占有更大比重。秦国后来能够不断扩张并完成统一，商鞅变法提供了重要的制度条件，但统一还与秦国的地理、人口、军事和后续政治经营有关。学习这段历史，既要看到改革增强国家动员能力的一面，也要注意改革给社会带来的压力和变化。"
+  ],
+  "abstract": "春秋晚期以后，诸侯之间的竞争更加激烈，战争规模不断扩大。各国不仅要争夺土地，还要获得更多人口、粮食和兵员。西周以来以血缘和等级为基础的贵族秩序，已经难以完全满足新的战争和治理需要。进入【战国】时期后，许多国家先后寻求改革。地处关中、原本...",
+  "course_title": "早期国家与社会变革",
+  "era_id": "prequin",
+  "section": "制度",
+  "lesson_no": "1.5",
+  "duration": "40:00",
+  "teaching_objectives": [
+    "能按形成年代区分《史记》《商君书》、商鞅方升和睡虎地秦简的证据能力。",
+    "能说明军功、耕战、县政、户籍和度量衡之间怎样共同增强国家能力。",
+    "能在六回合改革中同时追踪国家能力、制度信用、旧贵族阻力和社会压力。",
+    "能用选择—变化—代价—来源完成史官卷宗，并写出多因解释和概念边界。"
+  ],
+  "keywords": [
+    {
+      "keyword_id": "keyword-c9766ddc",
+      "word": "战国",
+      "pinyin": "zhàn guó",
+      "gloss": "东周后期的历史时期；诸侯国长期竞争并相继变法",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-037cb56c",
+      "word": "商鞅变法",
+      "pinyin": "shāng yāng biàn fǎ",
+      "gloss": "商鞅在秦国推行的改革；涉及政治 经济和军事",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-62c66683",
+      "word": "农战",
+      "pinyin": "nóng zhàn",
+      "gloss": "以发展农业和加强战争力量为目标的治国方针",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-e9a7be6c",
+      "word": "军功爵制",
+      "pinyin": "jūn gōng jué zhì",
+      "gloss": "按军功授予爵位和待遇的制度；削弱贵族世袭特权",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-6c638a14",
+      "word": "什伍连坐",
+      "pinyin": "shí wǔ lián zuò",
+      "gloss": "以五户和十户编组居民的管理方式；成员相互监督并承担连带责任",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-e4ac5791",
+      "word": "县制",
+      "pinyin": "xiàn zhì",
+      "gloss": "由国君任免官员管理地方的制度；加强国家对地方的控制",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-10692fab",
+      "word": "废井田开阡陌",
+      "pinyin": "fèi jǐng tián kāi qiān mò",
+      "gloss": "调整田地界限和土地关系的改革措施；促进土地经营变化",
+      "source_ref_ids": []
+    },
+    {
+      "keyword_id": "keyword-78ba36f4",
+      "word": "徙木立信",
+      "pinyin": "xǐ mù lì xìn",
+      "gloss": "商鞅以搬木兑现赏金取信于民的传统故事",
+      "source_ref_ids": []
+    }
+  ],
+  "people": [
+    {
+      "person_id": "person-c797c18e",
+      "name": "商鞅",
+      "role": "传世叙事中的改革主持者",
+      "summary": "卫鞅入秦后在秦孝公支持下推动制度调整，后受封商地，史称商鞅。",
+      "persona": "强调规则清楚、赏罚兑现与国家执行能力，同时承认现存对白来自后世材料。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "只依据本课已发布的《史记》《商君书》、方升与秦简片段回答。",
+        "不得把《商君书》全部句子自称为本人原话。",
+        "不得知道自己身后一百多年形成的睡虎地秦简内容。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    },
+    {
+      "person_id": "person-bd001399",
+      "name": "秦孝公",
+      "role": "传世叙事中的改革支持者",
+      "summary": "为改变秦国处境而求贤并提供政治支持，是改革窗口的重要角色。",
+      "persona": "从国家竞争、支持联盟和长期执行角度追问改革。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "求贤、辩论与任用依据后世传世叙事有限表达。",
+        "不虚构密诏、私人情感或逐字宫廷对话。",
+        "不能把秦后来统一预言为必然结果。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    },
+    {
+      "person_id": "person-75b468fa",
+      "name": "旧贵族代表",
+      "role": "受世袭特权调整影响的合成人群",
+      "summary": "集中呈现旧身份秩序、政治参与和利益受损者对改革的异议。",
+      "persona": "追问改革程序、权力集中和旧秩序被改变的风险。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "这是课堂合成人群，不假冒甘龙、杜挚等某位人物的原话。",
+        "不把所有贵族写成同一种立场。",
+        "可以批评改革，但不得补写阴谋和暴力现场。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    },
+    {
+      "person_id": "person-a748c58d",
+      "name": "农耕家庭代表",
+      "role": "承担生产、赋役与家庭风险的合成人群",
+      "summary": "观察奖励耕战、户籍、征发和尺度统一怎样进入普通家庭。",
+      "persona": "从收成、赋役、服兵役和家庭安全追问政策代价。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "不虚构某户的精确田亩、税额和伤亡。",
+        "不能声称代表所有秦国农户。",
+        "关卡数值是教学模型，不是出土账册。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    },
+    {
+      "person_id": "person-44990ad0",
+      "name": "军功士卒",
+      "role": "通过服役争取身份机会的合成人群",
+      "summary": "展示军功爵可能带来的上升通道与战争风险。",
+      "persona": "同时说明获得爵位的希望、军纪约束和战场代价。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "不是某场战役具名士卒的自述。",
+        "不提供未经课程片段支持的斩首数、爵级和赏田。",
+        "不把军功通道等同于现代平等。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    },
+    {
+      "person_id": "person-829de766",
+      "name": "县廷吏员",
+      "role": "执行登记、征收与司法的合成基层官吏",
+      "summary": "连接中央法令与地方日常，展示执行能力和行政负担。",
+      "persona": "要求规则可登记、可核验、可执行，也说明追责压力。角色化教学表达，不是史料原话。",
+      "boundaries": [
+        "依据较晚秦简理解成熟秦制，不自称直接奉行商鞅手令。",
+        "不把秦简每条规定倒推到公元前四世纪中叶。",
+        "遇到超出证据库的具体案件回答‘依据不足’。"
+      ],
+      "fact_refs": [],
+      "source_ref_ids": []
+    }
+  ],
+  "map_points": [
+    {
+      "point_id": "map-9c270a99",
+      "label": "栎阳",
+      "region": "今陕西西安阎良附近",
+      "lat": 34.66,
+      "lng": 109.23,
+      "note": "秦孝公前期都城与早期改革叙事的重要空间；精确宫廷场景来自后世文献，地图不复原路线。",
+      "kind": "reform_context"
+    },
+    {
+      "point_id": "map-f93bf1b2",
+      "label": "咸阳",
+      "region": "今陕西咸阳一带",
+      "lat": 34.35,
+      "lng": 108.71,
+      "note": "传世材料把迁都与后续制度调整联系于此；城市范围与现代坐标不能简单重合。",
+      "kind": "capital_region"
+    },
+    {
+      "point_id": "map-d2b3e341",
+      "label": "商於地区",
+      "region": "今陕西商洛至河南西部相关区域",
+      "lat": 33.87,
+      "lng": 109.94,
+      "note": "后世叙事以受封商地解释‘商君/商鞅’称号；不据此绘制个人活动精确路线。",
+      "kind": "memory_region"
+    },
+    {
+      "point_id": "map-896ef19b",
+      "label": "云梦睡虎地",
+      "region": "湖北省孝感市云梦县",
+      "lat": 31.02,
+      "lng": 113.75,
+      "note": "1975年出土秦简；材料主要晚于商鞅最初变法，用于观察成熟秦制而非原令。",
+      "kind": "excavated_text_site"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "fact-26e05675",
+      "statement": "【历史背景】商鞅变法发生在战国兼并、农业与国家组织持续变化的环境中，秦的转型不能简化为一次孤立事件。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-0b8262fb",
+      "statement": "【传世文献】秦孝公求贤并支持卫鞅改革是后世叙事的关键框架，具体对话不是同时代逐字记录。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-b4c904b0",
+      "statement": "【年代边界】教学通常以约公元前356年、前350年前后概括两阶段改革；措施实际推行、修订与延续并非同日完成。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-33ae0793",
+      "statement": "【传世文献】《史记·商君列传》成书于西汉，晚于商鞅变法二百多年，保存重要传统但不能作为宫廷现场记录。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-f3fe8320",
+      "statement": "【传世叙事】徙木立信用于说明兑现承诺与制度信用，目前没有出土材料可逐项核验木头、赏金和现场对白。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-b7c6c3a2",
+      "statement": "【文本与教学解释】公开规则、明确责任和兑现赏罚有助于制度取得信用；现存论述来自层次不同的传世材料。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-34814f17",
+      "statement": "【制度解释】军功爵削弱世袭贵族特权并提供新的身份通道，同时把社会上升与战争绩效紧密连接。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-56a9aeb0",
+      "statement": "【制度解释】奖励耕战服务粮食、兵源与国家动员，不能直接推出每个农户都因此富裕或自由。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-89ff8386",
+      "statement": "【制度解释】县级治理与地方官吏增强中央命令、征收和司法执行能力，具体形成过程需要传世与出土材料互证。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-1c5d4753",
+      "statement": "【制度代价】户籍、什伍和连带责任提高识别与追责能力，也可能扩大邻里监督、惩罚外溢和家庭压力。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-4e4b5f90",
+      "statement": "【同时代实物】商鞅方升的公元前344年铭文与标准容量直接支持秦国推行统一量器，不能单独证明全部变法故事。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-b3de11a4",
+      "statement": "【解释边界】开阡陌与田制变化见于传世叙述；用现代‘完全土地私有’概括战国复杂土地关系会过度简化。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-e90ebe23",
+      "statement": "【文本边界】《商君书》是具有不同篇章年代与编纂层次的累积文本，不能把现存每句话都直接署名商鞅。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-2742a743",
+      "statement": "【传世文献】《韩非子·定法》是较晚战国思想家对商鞅之法的评价，不是变法当时的行政档案。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-7355435e",
+      "statement": "【出土文献】睡虎地秦简主要写于战国晚期与秦始皇时期，晚于商鞅最初变法一百多年。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-e2fba344",
+      "statement": "【出土文献】秦简可观察成熟秦制的法律、行政与日常执行，不能反推每条简文均由商鞅制定。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-242808fb",
+      "statement": "【历史解释】商鞅改革是秦国富国强兵和统一进程的重要基础之一，秦的长期强盛仍是多代、多因素共同结果。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-dc3e4e17",
+      "statement": "【教学解释】评价改革要同时观察国家能力、制度信用、战争动员、社会压力与不同群体承担的代价。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    },
+    {
+      "fact_id": "fact-e1c7298f",
+      "statement": "【概念边界】战国秦的法令、赏罚与现代宪政法治并非同一概念，不宜直接用今天的‘法律面前人人平等’替换历史语境。",
+      "source_ref_ids": [],
+      "certainty": "interpretation",
+      "teacher_note": "Legacy content did not bind individual facts to sources; review before release."
+    }
+  ],
+  "source_refs": [
+    {
+      "source_id": "source-e176bc0e",
+      "title": "义务教育历史课程标准（2022年版）",
+      "kind": "other",
+      "publisher": "中华人民共和国教育部",
+      "url_or_path": "https://www.moe.gov.cn/srcsite/A26/s8001/202204/t20220420_619921.html",
+      "citation_note": "用于七年级历史核心素养、证据意识与适龄表达；只保存自写摘要。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-b0f78264",
+      "title": "义务教育教科书·中国历史七年级上册目录与课程位置",
+      "kind": "other",
+      "publisher": "人民教育出版社",
+      "url_or_path": "https://www.pep.com.cn/products/jc/czjks/201802/t20180227_1922743.shtml",
+      "citation_note": "用于确认战国社会变革的学段位置，不复制教材正文。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-978c3867",
+      "title": "《史记·商君列传》",
+      "kind": "other",
+      "publisher": "司马迁；中国哲学书电子化计划底本索引",
+      "url_or_path": "https://ctext.org/shiji/shang-jun-lie-zhuan/zhs",
+      "citation_note": "西汉成书的商鞅生平与改革叙事；具体对白和情节按后世记载呈现。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-e73460a4",
+      "title": "《韩非子·定法》",
+      "kind": "other",
+      "publisher": "中国哲学书电子化计划底本索引",
+      "url_or_path": "https://ctext.org/hanfeizi/ding-fa/zh",
+      "citation_note": "较晚战国时期对商鞅之法与申不害之术的思想评价。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-16378093",
+      "title": "《商君书》",
+      "kind": "other",
+      "publisher": "中国哲学书电子化计划底本索引",
+      "url_or_path": "https://ctext.org/shang-jun-shu/zh",
+      "citation_note": "理解商鞅学派与法、农战思想的重要传世文本；篇章年代和作者需分层。",
+      "reliability": "disputed"
+    },
+    {
+      "source_id": "source-543a393d",
+      "title": "Dating a Pre-Imperial Text: The Case Study of the Book of Lord Shang",
+      "kind": "other",
+      "publisher": "Yuri Pines / Early China / Cambridge University Press",
+      "url_or_path": "https://www.cambridge.org/core/journals/early-china/article/dating-a-preimperial-text-the-case-study-of-the-book-of-lord-shang/199B57467F51A62EBD492DE47DA3360A",
+      "citation_note": "用于《商君书》累积成书、篇章分层和作者边界。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-10db7596",
+      "title": "商鞅方升——每月一珍",
+      "kind": "other",
+      "publisher": "上海博物馆",
+      "url_or_path": "https://www.shanghaimuseum.net/mu/show/202411/4335e32d-3cce-4602-955b-17ed7e0b9e59/",
+      "citation_note": "用于公元前344年标准量器的器形、容量、铭文与后刻诏文。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-c57cb559",
+      "title": "云梦睡虎地秦简",
+      "kind": "other",
+      "publisher": "湖北省博物馆",
+      "url_or_path": "https://www.hbww.org.cn/zgzb/p/6912.html",
+      "citation_note": "用于出土地点、法律文献范围与统一前后年代概览。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-06962396",
+      "title": "湖北简牍地理，一窥湖北简牍之风采",
+      "kind": "other",
+      "publisher": "湖北省文物考古研究院",
+      "url_or_path": "https://www.hbww.org.cn/yjy_mtbd/p/8892.html",
+      "citation_note": "用于睡虎地秦简战国晚期至秦始皇时期的书写年代和内容边界。",
+      "reliability": "reviewed"
+    },
+    {
+      "source_id": "source-45754e9e",
+      "title": "秦文化的历史特点与当代价值",
+      "kind": "other",
+      "publisher": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2022/0706/c219544-32467522.html",
+      "citation_note": "用于县制、迁都、耕战与秦长期国家建设的现代综合解释。",
+      "reliability": "reviewed"
+    }
+  ],
+  "qa_points": [
+    "《史记·商君列传》为什么重要，又为什么不能视为变法现场记录？",
+    "徙木立信能够说明制度信用的什么问题，哪些细节仍不可核验？",
+    "军功爵怎样同时带来身份机会和战争动员压力？",
+    "商鞅方升能够直接证明什么，不能替其他改革措施证明什么？",
+    "为什么睡虎地秦简不能直接称为商鞅亲自制定的法令？",
+    "《商君书》的篇章层次怎样影响我们使用其中句子？",
+    "用‘废井田、土地私有’一句话概括改革会遗漏哪些边界？",
+    "秦国后来强盛为什么不能只归因于商鞅一个人或一次变法？"
+  ],
+  "level_goals": [
+    "能按形成年代区分《史记》《商君书》、商鞅方升和睡虎地秦简的证据能力。",
+    "能说明军功、耕战、县政、户籍和度量衡之间怎样共同增强国家能力。",
+    "能在六回合改革中同时追踪国家能力、制度信用、旧贵族阻力和社会压力。",
+    "能用选择—变化—代价—来源完成史官卷宗，并写出多因解释和概念边界。"
+  ],
+  "scenario_refs": [
+    {
+      "scenario_id": "shangyang-l105-institutional-reform",
+      "scenario_version": 1,
+      "checksum": "1de69d57bf4e40c7931831193f009ed009141946cb2591e6a843cd79da9033a5",
+      "primary": true
+    }
+  ],
+  "seed_canvas": [
+    {
+      "node_id": "evidence-chronology",
+      "label": "证据年代",
+      "note": "变法当时—战国晚期—西汉—现代研究分层"
+    },
+    {
+      "node_id": "state-capacity",
+      "label": "国家能力",
+      "note": "计量、户籍、县政、粮食与兵源如何连接"
+    },
+    {
+      "node_id": "institutional-credit",
+      "label": "制度信用",
+      "note": "公开规则与兑现赏罚为何影响执行"
+    },
+    {
+      "node_id": "mobility-and-war",
+      "label": "身份机会与战争",
+      "note": "军功爵的机会和军事化代价并存"
+    },
+    {
+      "node_id": "pressure-and-resistance",
+      "label": "压力与阻力",
+      "note": "旧特权、家庭负担和基层追责不可消失"
+    },
+    {
+      "node_id": "multi-causal-explanation",
+      "label": "多因解释",
+      "note": "改革是重要基础之一，不是统一的唯一原因"
+    }
+  ],
+  "teacher_notes": "教师 PR 正文保持原样；互动资料按新课号重签。程序完成结构与绑定验核，教学规则仍待教师最终验收。",
+  "created_at": "2026-09-06T00:00:00Z",
+  "updated_at": "2026-10-10T22:25:52.716157Z",
+  "sealed_at": "2026-10-10T22:25:52.716157Z",
+  "sealed_by": "teaching-alignment-technical-reviewer",
+  "checksum": "6d74d0ceaa8196a2433561e9c93decac9187ec8be33869311cdd551842cd2bc6",
+  "compatibility": {
+    "kind": "lesson-content-package",
+    "source_id": "L105",
+    "source_version": "1",
+    "source_checksum": "9f89235e2aa2dae523ac0af92f93d1989b52c623e8e19f97b2faf30352f98427",
+    "notes": "Normalized from the A1 LessonContentPackage without changing the source draft.",
+    "unresolved_refs": [
+      "shangyang-classroom-intro",
+      "shangyang-institutional-reform"
+    ],
+    "legacy_materials": [
+      {
+        "kind": "saga",
+        "title": "踏勘：三类材料中的商鞅变法",
+        "objective": "在地图、器物和短片中辨认后世叙事、同时代实物与较晚出土文献。",
+        "notes": "建议9分钟；每组材料先写可证结论，再写不可越过的年代边界。",
+        "assets": [
+          "shangyang-classroom-intro"
+        ]
+      },
+      {
+        "kind": "sandbox",
+        "title": "抉择：六回合制度改革议事",
+        "objective": "在公开规则、耕战激励、标准尺度、县政执行与社会承受之间形成可复盘方案。",
+        "notes": "固定行动断网可用；变量不是秦国真实统计，结局不是对历史人物的道德裁决。",
+        "assets": [
+          "shangyang-institutional-reform"
+        ]
+      }
+    ],
+    "legacy_id_map": {}
+  }
+}

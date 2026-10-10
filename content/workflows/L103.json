@@ -3,15 +3,15 @@
   "lesson_id": "L103",
   "course_id": "C-prequin-state",
   "state": "draft",
-  "revision": 16,
+  "revision": 17,
   "draft_fingerprint": "5fcb355fd9239f02de51a05296542796ba7df514ccd3227335854e49e0e33e50",
   "validation": null,
   "sealed_version": 1,
   "sealed_checksum": "d6e55dfac0486d0f167921d125aa53959cbd104741c0f9e10a414086dd9a2dd5",
-  "published_course_id": "C-prequin-state",
-  "published_version": 1,
-  "published_release_id": "rel-28b5624648-0010",
-  "updated_at": "2026-09-16T10:01:48.086350Z",
+  "published_course_id": null,
+  "published_version": null,
+  "published_release_id": null,
+  "updated_at": "2026-10-10T22:25:53.143582Z",
   "history": [
     {
       "sequence": 1,
@@ -204,7 +204,19 @@
       "draft_fingerprint": "5fcb355fd9239f02de51a05296542796ba7df514ccd3227335854e49e0e33e50",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 17,
+      "action": "publish",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teaching-alignment-admin",
+      "note": "L101 大禹与 L105 商鞅按教师新稿完成技术对齐；原 L103 发布保留供历史追溯。教学规则待最终真人验收。",
+      "occurred_at": "2026-10-10T22:25:53.143582Z",
+      "draft_fingerprint": "5fcb355fd9239f02de51a05296542796ba7df514ccd3227335854e49e0e33e50",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0011"
     }
   ],
-  "checksum": "690caf656ab0ff785f6bba9a4b858099e89bcda64a9510bb54f50c7a18080583"
+  "checksum": "6a7fbe6b7f13bfb971fcb0379ba654698ea0744e6bc69a0f9de6f8742d26cd7a"
 }

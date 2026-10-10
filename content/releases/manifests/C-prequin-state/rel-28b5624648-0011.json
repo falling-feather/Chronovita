@@ -1,0 +1,137 @@
+{
+  "schema_version": "course-release/v5",
+  "release_id": "rel-28b5624648-0011",
+  "release_no": 11,
+  "course_id": "C-prequin-state",
+  "operation": "publish",
+  "parent_release_id": "rel-28b5624648-0010",
+  "restored_from_release_id": null,
+  "created_at": "2026-10-10T22:25:53.065923Z",
+  "created_by": "teaching-alignment-admin",
+  "note": "L101 大禹与 L105 商鞅按教师新稿完成技术对齐；原 L103 发布保留供历史追溯。教学规则待最终真人验收。",
+  "items": [
+    {
+      "lesson_id": "L101",
+      "course_id": "C-prequin-state",
+      "content_version": 6,
+      "source_path": "sealed/L101-v006.json",
+      "source_checksum": "5646ee2b2379ba305877e2a7ef5d039bea1d89a854782121aaee462d9bd3da09",
+      "course_package": {
+        "kind": "course-package",
+        "schema_version": "course-package/v1",
+        "artifact_id": "pkg-L101",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 6,
+        "checksum": "aea89a7699dc94506a74279a12484be44afc86d92857fcf58dad9210be2d0159",
+        "path": "runtime/v1/course-packages/C-prequin-state/L101/v006-aea89a7699dc94506a74279a12484be44afc86d92857fcf58dad9210be2d0159.json"
+      },
+      "scenarios": [
+        {
+          "kind": "scenario-template",
+          "schema_version": "scenario-template/v1",
+          "artifact_id": "dayu-crisis-governance",
+          "course_id": "C-prequin-state",
+          "lesson_id": "L101",
+          "version": 2,
+          "checksum": "9bd23b3fe5a4ccbf5f3ef8c3f35756ed16e8fe7e135a0a6d269a0e6b9a7d5c09",
+          "path": "runtime/v1/scenarios/C-prequin-state/L101/dayu-crisis-governance/v002-9bd23b3fe5a4ccbf5f3ef8c3f35756ed16e8fe7e135a0a6d269a0e6b9a7d5c09.json"
+        }
+      ],
+      "primary_scenario_id": "dayu-crisis-governance",
+      "evidence_corpus": {
+        "kind": "evidence-corpus",
+        "schema_version": "evidence-corpus/v2",
+        "artifact_id": "dayu-evidence",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 3,
+        "checksum": "791201cb0318ab0343c7d46bafb03c078231ddb4ead611011335249fc67c82ce",
+        "path": "runtime/v2/evidence/C-prequin-state/L101/dayu-evidence/v003-791201cb0318ab0343c7d46bafb03c078231ddb4ead611011335249fc67c82ce.json"
+      },
+      "lesson_presentation": {
+        "kind": "lesson-presentation",
+        "schema_version": "lesson-presentation/v1",
+        "artifact_id": "dayu-classroom-intro",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 3,
+        "checksum": "e59847f56792efeab018bdbeee1938c99dacbebcf8d6f799eb3b39914a5a5c65",
+        "path": "runtime/v1/presentations/C-prequin-state/L101/dayu-classroom-intro/v003-e59847f56792efeab018bdbeee1938c99dacbebcf8d6f799eb3b39914a5a5c65.json"
+      },
+      "persona_pack": {
+        "kind": "persona-pack",
+        "schema_version": "persona-pack/v1",
+        "artifact_id": "dayu-persona-pack",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L101",
+        "version": 4,
+        "checksum": "953faf82c0c00ab8c911f58e7f700fc444ffaea64a2a2c0e11de3d7bd6fb42dd",
+        "path": "runtime/v1/personas/C-prequin-state/L101/dayu-persona-pack/v004-953faf82c0c00ab8c911f58e7f700fc444ffaea64a2a2c0e11de3d7bd6fb42dd.json"
+      },
+      "audience": "published"
+    },
+    {
+      "lesson_id": "L105",
+      "course_id": "C-prequin-state",
+      "content_version": 1,
+      "source_path": "sealed/L105-v001.json",
+      "source_checksum": "9f89235e2aa2dae523ac0af92f93d1989b52c623e8e19f97b2faf30352f98427",
+      "course_package": {
+        "kind": "course-package",
+        "schema_version": "course-package/v1",
+        "artifact_id": "pkg-L105",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L105",
+        "version": 1,
+        "checksum": "6d74d0ceaa8196a2433561e9c93decac9187ec8be33869311cdd551842cd2bc6",
+        "path": "runtime/v1/course-packages/C-prequin-state/L105/v001-6d74d0ceaa8196a2433561e9c93decac9187ec8be33869311cdd551842cd2bc6.json"
+      },
+      "scenarios": [
+        {
+          "kind": "scenario-template",
+          "schema_version": "scenario-template/v1",
+          "artifact_id": "shangyang-l105-institutional-reform",
+          "course_id": "C-prequin-state",
+          "lesson_id": "L105",
+          "version": 1,
+          "checksum": "1de69d57bf4e40c7931831193f009ed009141946cb2591e6a843cd79da9033a5",
+          "path": "runtime/v1/scenarios/C-prequin-state/L105/shangyang-l105-institutional-reform/v001-1de69d57bf4e40c7931831193f009ed009141946cb2591e6a843cd79da9033a5.json"
+        }
+      ],
+      "primary_scenario_id": "shangyang-l105-institutional-reform",
+      "evidence_corpus": {
+        "kind": "evidence-corpus",
+        "schema_version": "evidence-corpus/v2",
+        "artifact_id": "evidence-shangyang-l105",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L105",
+        "version": 1,
+        "checksum": "1529c64040769d896b0c7a63d4cda6d5dbfe571c38a2eaa0bf3da8f82925f74f",
+        "path": "runtime/v2/evidence/C-prequin-state/L105/evidence-shangyang-l105/v001-1529c64040769d896b0c7a63d4cda6d5dbfe571c38a2eaa0bf3da8f82925f74f.json"
+      },
+      "lesson_presentation": {
+        "kind": "lesson-presentation",
+        "schema_version": "lesson-presentation/v1",
+        "artifact_id": "presentation-shangyang-l105",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L105",
+        "version": 1,
+        "checksum": "9dec321c83b6326c115515b28167f37515b8fb3da903b2e85636377d3adc5920",
+        "path": "runtime/v1/presentations/C-prequin-state/L105/presentation-shangyang-l105/v001-9dec321c83b6326c115515b28167f37515b8fb3da903b2e85636377d3adc5920.json"
+      },
+      "persona_pack": {
+        "kind": "persona-pack",
+        "schema_version": "persona-pack/v1",
+        "artifact_id": "persona-shangyang-l105",
+        "course_id": "C-prequin-state",
+        "lesson_id": "L105",
+        "version": 1,
+        "checksum": "a59f895fd4f06d6228dc0968abaff664350846f5d61feecd84d0b85e731e535d",
+        "path": "runtime/v1/personas/C-prequin-state/L105/persona-shangyang-l105/v001-a59f895fd4f06d6228dc0968abaff664350846f5d61feecd84d0b85e731e535d.json"
+      },
+      "audience": "published"
+    }
+  ],
+  "checksum": "ae16ea1dbd124167246c11438d8d1ff425a4b2489f5114eae0d6c07d47f7dbfd"
+}

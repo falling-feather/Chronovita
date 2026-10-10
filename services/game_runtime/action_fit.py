@@ -12,6 +12,7 @@ from services.contracts.v1 import ContractId
 from services.game_runtime import AvailableActionV1
 
 ACTION_FIT_POLICY_VERSION = "local-action-fit/v1"
+LOCAL_ACTION_FAMILIES = {"L101": "L101", "L103": "L103", "L105": "L103"}
 
 ActionFitKind = Literal[
     "exact_alias",
@@ -68,7 +69,7 @@ class LocalActionFitResultV1(BaseModel):
 
     schema_version: Literal["local-action-fit/v1"] = "local-action-fit/v1"
     policy_version: Literal["local-action-fit/v1"] = ACTION_FIT_POLICY_VERSION
-    lesson_id: Literal["L101", "L103"]
+    lesson_id: ContractId
     kind: ActionFitKind
     reason_code: ActionFitReason
     action_id: ContractId | None = None
@@ -184,7 +185,7 @@ class LocalActionFitterV1:
     def fit(
         self,
         *,
-        lesson_id: Literal["L101", "L103"],
+        lesson_id: str,
         raw_input: str,
         available_actions: Sequence[AvailableActionV1],
     ) -> LocalActionFitResultV1:
@@ -192,8 +193,9 @@ class LocalActionFitterV1:
         available_ids = tuple(item.action_id for item in actions)
         if len(set(available_ids)) != len(available_ids):
             raise ValueError("available actions must have unique action_ids")
-        if lesson_id not in _REVIEWED_ALIASES:
-            raise ValueError("local fitting is limited to L101 and L103")
+        family_id = LOCAL_ACTION_FAMILIES.get(lesson_id)
+        if family_id is None:
+            raise ValueError("local fitting requires a reviewed lesson family")
 
         if (
             not isinstance(raw_input, str)
@@ -225,7 +227,7 @@ class LocalActionFitterV1:
                 available_action_ids=available_ids,
             )
 
-        phrases = _phrase_index(lesson_id, actions)
+        phrases = _phrase_index(family_id, actions)
         exact = _exact_candidates(normalized, phrases, set(available_ids))
         if exact:
             if len(exact) == 1 and exact[0].available:
@@ -305,7 +307,7 @@ class LocalActionFitterV1:
                 action_id=leading.action_id,
             )
 
-        topic_relevant = _is_topic_relevant(lesson_id, raw_input)
+        topic_relevant = _is_topic_relevant(family_id, raw_input)
         generic_proposal = _looks_like_generic_proposal(raw_input)
         if score >= self.ambiguity_floor or topic_relevant or generic_proposal:
             reason = (
@@ -335,7 +337,7 @@ class LocalActionFitterV1:
     @staticmethod
     def _result(
         *,
-        lesson_id: Literal["L101", "L103"],
+        lesson_id: str,
         kind: ActionFitKind,
         reason_code: ActionFitReason,
         normalized_input: str,
@@ -367,7 +369,7 @@ class LocalActionFitterV1:
 
 def fit_local_action(
     *,
-    lesson_id: Literal["L101", "L103"],
+    lesson_id: str,
     raw_input: str,
     available_actions: Sequence[AvailableActionV1],
 ) -> LocalActionFitResultV1:
@@ -690,6 +692,9 @@ _REVIEWED_ALIASES: dict[str, dict[str, tuple[str, ...]]] = {
             "分享水图",
             "把地形和粮食消耗公开讨论",
             "邀请各聚落一起修改治水方案",
+            "召集百姓进行商议",
+            "邀请大家商量治水方案",
+            "听取聚落代表意见",
         ),
         "release-emergency-grain": (
             "开仓赈济受灾家庭",

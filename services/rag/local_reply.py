@@ -105,31 +105,6 @@ _SUPPORTED_EVIDENCE_CHECKSUMS: dict[tuple[str, str], str] = {
     ): "06ab368e3f54051f21e56e4047ab9efb8f447cb81e2ef68620105995db4ce633",
 }
 
-# V2 is the contract schema, not a one-off artifact version.  These are the
-# exact reviewed lineage parents from which the published reply-state corpora
-# may descend.  The release loader still pins the child artifact byte-for-byte;
-# this additional guard makes Release #7 and its Release #8 successor both
-# eligible without accepting an unrelated corpus lineage.
-_SUPPORTED_V2_EVIDENCE_PARENT_CHECKSUMS: dict[
-    tuple[str, str], frozenset[str]
-] = {
-    (
-        "C-prequin-state",
-        "L101",
-    ): frozenset(
-        {"ae736fd34b31fc99907e0a33b518dd2fd360530af95d2717e3a54832b2c1ff49"}
-    ),
-    (
-        "C-prequin-state",
-        "L103",
-    ): frozenset(
-        {
-            "06ab368e3f54051f21e56e4047ab9efb8f447cb81e2ef68620105995db4ce633",
-            "e198a2a492a926ecef444aa230dacbe5b446a19bbc8e823714c334b2149d765c",
-        }
-    ),
-}
-
 # EvidenceCorpusV2 publishes the reviewed reply state together with the
 # passages.  These aliases preserve the V1 diagnostic state names for existing
 # clients while the new ``slot_ids`` field exposes the actual V2 authority.
@@ -437,7 +412,7 @@ _STATE_ALIASES: dict[tuple[str, str], tuple[tuple[str, tuple[str, ...]], ...]] =
         ("L103.farming-merit", ("打仗升官", "靠打仗")),
         ("L103.collective-cost", ("法律太严", "互相告发")),
         ("L103.local-administration", ("管到地方", "管地方")),
-        ("L103.reform-overview", ("一次改完", "分阶段")),
+        ("L103.reform-overview", ("一次改完", "分阶段", "改了哪些")),
     ),
 }
 
@@ -680,7 +655,7 @@ _SINGLE_STATE_RELATIONS = (
         frozenset({"L103.farming-merit"}),
         frozenset({"detail", "evidence_boundary", "causality", "comparison"}),
         re.compile(
-            r"军功爵|军功|机会|代价|赋役|负担|影响|富国强兵|农业|战争|士卒|农耕家庭"
+            r"军功爵|军功|机会|代价|赋役|负担|影响|作用|富国强兵|农业|战争|士卒|农耕家庭"
         ),
     ),
     _ApprovedQuestionRelation(
@@ -832,21 +807,20 @@ def fit_local_reply(
 
     lesson_key = (resources.course_id, resources.lesson_id)
     if (
-        lesson_key not in _SUPPORTED_LESSONS
-        or request.course_id != resources.course_id
+        request.course_id != resources.course_id
         or request.lesson_id != resources.lesson_id
     ):
         return None
 
     corpus = resources.evidence_corpus
     if isinstance(corpus, EvidenceCorpusV2):
-        if (
-            not verify_evidence_checksum(corpus)
-            or corpus.supersedes_checksum
-            not in _SUPPORTED_V2_EVIDENCE_PARENT_CHECKSUMS.get(
-                lesson_key, frozenset()
-            )
-        ):
+        from services.content import workflow
+        release = workflow.get_release(resources.course_id, resources.release_id)
+        binding = next((item for item in release.items if item.lesson_id == resources.lesson_id), None)
+        if (not verify_evidence_checksum(corpus) or binding is None
+                or binding.evidence_corpus.checksum != corpus.checksum
+                or binding.evidence_corpus.artifact_id != corpus.corpus_id
+                or binding.evidence_corpus.version != corpus.corpus_version):
             return None
         return _fit_v2_local_reply(
             resources,
@@ -856,7 +830,7 @@ def fit_local_reply(
             batch,
             corpus,
         )
-    if corpus.checksum != _SUPPORTED_EVIDENCE_CHECKSUMS.get(lesson_key):
+    if lesson_key not in _SUPPORTED_LESSONS or corpus.checksum != _SUPPORTED_EVIDENCE_CHECKSUMS.get(lesson_key):
         return None
 
     slot_match = _unsupported_slot_match(
@@ -1016,7 +990,8 @@ def _fit_v2_local_reply(
         )
 
     normalized = _normalize(query_plan.original_question)
-    lesson_key = (resources.course_id, resources.lesson_id)
+    from services.rag.query import expression_family_key
+    lesson_key = expression_family_key(resources)
     legacy_matches = _merge_alias_matches(
         lesson_key,
         normalized,
@@ -1375,7 +1350,7 @@ def _matching_states(
     normalized_question: str,
 ) -> list[tuple[_StateRule, tuple[str, ...]]]:
     occurrences: list[tuple[_StateRule, str, int, int]] = []
-    for state in _STATE_RULES[lesson_key]:
+    for state in _STATE_RULES.get(lesson_key, ()):
         for term in state.terms:
             normalized_term = _normalize(term)
             occurrences.extend(
@@ -1423,7 +1398,7 @@ def _merge_alias_matches(
 ) -> list[tuple[_StateRule, tuple[str, ...]]]:
     """Add only reviewed aliases that occur in the original question."""
 
-    states = {state.state_id: state for state in _STATE_RULES[lesson_key]}
+    states = {state.state_id: state for state in _STATE_RULES.get(lesson_key, ())}
     combined: dict[str, tuple[_StateRule, list[str]]] = {
         state.state_id: (state, list(terms)) for state, terms in direct_matches
     }
@@ -1477,7 +1452,7 @@ def _unsupported_question_facets(
         resources.course_package.title,
         *(item.word for item in resources.course_package.keywords),
         *(item.name for item in resources.course_package.people),
-        *(term for state in _STATE_RULES[lesson_key] for term in state.terms),
+        *(term for state in _STATE_RULES.get(lesson_key, ()) for term in state.terms),
         *(
             alias
             for _, aliases in _STATE_ALIASES.get(lesson_key, ())

@@ -1,13 +1,13 @@
 {
   "schema_version": "course-release-pointer/v1",
   "course_id": "C-prequin-state",
-  "release_id": "rel-28b5624648-0010",
-  "release_no": 10,
-  "manifest_path": "releases/manifests/C-prequin-state/rel-28b5624648-0010.json",
-  "manifest_checksum": "aec5ac43d3635ab0c605136d995bdc9b250898ba3bc853f389d79cc86bd03880",
-  "generation": 9,
-  "previous_release_id": "rel-28b5624648-0009",
-  "activated_at": "2026-09-06T23:16:09.840011Z",
-  "activated_by": "content-sync-pr16-publisher",
-  "checksum": "8a99f1773f6b4d235c4cf7761ce705b74a00310f64cebf0a64b3dc2c8352be59"
+  "release_id": "rel-28b5624648-0012",
+  "release_no": 12,
+  "manifest_path": "releases/manifests/C-prequin-state/rel-28b5624648-0012.json",
+  "manifest_checksum": "11aa501a2fd0b622cf085dadda8965d316bc24eaa8f8c29ea1ecb24be898ad53",
+  "generation": 11,
+  "previous_release_id": "rel-28b5624648-0011",
+  "activated_at": "2026-10-10T22:46:29.040021Z",
+  "activated_by": "teaching-alignment-admin",
+  "checksum": "2c5089d6aea60a074996e5c7d0d8d06eb427510f5a0368ca0aa044942c20f4e4"
 }

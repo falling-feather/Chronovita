@@ -833,6 +833,43 @@ def seal_approved_draft(
         return sealed, path, updated
 
 
+def publish_teaching_bundle(
+    course_id: str,
+    items: Sequence[CourseReleaseItemV5],
+    *,
+    actor: str,
+    note: str,
+) -> CourseReleaseManifestV5:
+    """Activate all reviewed course/scenario/evidence/persona bindings atomically.
+
+    Unlike an evidence-only update this may replace reassigned lesson identities;
+    the prior immutable manifest remains readable for historical student assets.
+    """
+    from services.courses import teacher_interaction_status
+
+    ordered = tuple(sorted(items, key=lambda item: item.lesson_id))
+    if not ordered or len({item.lesson_id for item in ordered}) != len(ordered):
+        raise ContentValidationFailed("Teaching bundle requires unique lesson items.")
+    with _release_operation_lock():
+        previous_pointer = _load_pointer(course_id, required=False)
+        parent = get_current_release(course_id)
+        for item in ordered:
+            if item.course_id != course_id:
+                raise ContentValidationFailed("Teaching bundle course identity mismatch.")
+            package = _load_release_item(item)
+            if teacher_interaction_status(course_id, item.lesson_id, package) != "ready":
+                raise ContentValidationFailed("Teaching resources do not match the current teacher text.")
+            record = _load_workflow(item.lesson_id)
+            if record.state not in {"sealed", "published"} or record.sealed_version != item.content_version:
+                raise InvalidTransition("Teaching source must complete review and sealing first.")
+        if isinstance(parent, CourseReleaseManifestV5) and parent.items == ordered:
+            return parent
+        manifest, path = _write_release_manifest(course_id=course_id, operation="publish", items=ordered,
+            actor=actor, note=note, parent=parent)
+        _commit_release(manifest, actor=actor, note=note, action="publish", previous_pointer=previous_pointer, cleanup_paths=(path,))
+        return manifest
+
+
 def publish_version(
     lesson_id: str,
     version: int,

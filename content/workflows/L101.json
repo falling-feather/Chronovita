@@ -3,15 +3,15 @@
   "lesson_id": "L101",
   "course_id": "C-prequin-state",
   "state": "draft",
-  "revision": 40,
+  "revision": 48,
   "draft_fingerprint": "b2801f225e36aa436f403c3e1afc53194b13347109de8c7b79c0e4ca55e99ada",
   "validation": null,
-  "sealed_version": 5,
-  "sealed_checksum": "50899c4a61aa9e75ad3fb8a8cd00197fdc83dc0d80814fdb881c047547845b21",
+  "sealed_version": 6,
+  "sealed_checksum": "5646ee2b2379ba305877e2a7ef5d039bea1d89a854782121aaee462d9bd3da09",
   "published_course_id": "C-prequin-state",
-  "published_version": 5,
-  "published_release_id": "rel-28b5624648-0010",
-  "updated_at": "2026-09-14T17:06:07.344361Z",
+  "published_version": 6,
+  "published_release_id": "rel-28b5624648-0012",
+  "updated_at": "2026-10-10T22:47:04.823612Z",
   "history": [
     {
       "sequence": 1,
@@ -492,7 +492,103 @@
       "draft_fingerprint": "b2801f225e36aa436f403c3e1afc53194b13347109de8c7b79c0e4ca55e99ada",
       "sealed_version": null,
       "release_id": null
+    },
+    {
+      "sequence": 41,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "teaching-alignment-author",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-10-10T22:25:52.482965Z",
+      "draft_fingerprint": "a96460692a195df4556628bde8d639f3315c01dd51f1df139a196245e989f373",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 42,
+      "action": "validation_passed",
+      "from_state": "draft",
+      "to_state": "validated",
+      "actor": "teaching-alignment-author",
+      "note": "Minimum content validation passed.",
+      "occurred_at": "2026-10-10T22:25:52.491484Z",
+      "draft_fingerprint": "a96460692a195df4556628bde8d639f3315c01dd51f1df139a196245e989f373",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 43,
+      "action": "submit_review",
+      "from_state": "validated",
+      "to_state": "in_review",
+      "actor": "teaching-alignment-author",
+      "note": "绑定教师当前正文，不改写教师内容。",
+      "occurred_at": "2026-10-10T22:25:52.500997Z",
+      "draft_fingerprint": "a96460692a195df4556628bde8d639f3315c01dd51f1df139a196245e989f373",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 44,
+      "action": "approve",
+      "from_state": "in_review",
+      "to_state": "approved",
+      "actor": "teaching-alignment-technical-reviewer",
+      "note": "技术审校：身份、校验值与引用关系验核；不代替真人教学审课。",
+      "occurred_at": "2026-10-10T22:25:52.511142Z",
+      "draft_fingerprint": "a96460692a195df4556628bde8d639f3315c01dd51f1df139a196245e989f373",
+      "sealed_version": null,
+      "release_id": null
+    },
+    {
+      "sequence": 45,
+      "action": "seal",
+      "from_state": "approved",
+      "to_state": "sealed",
+      "actor": "teaching-alignment-technical-reviewer",
+      "note": "Sealed immutable source version 6.",
+      "occurred_at": "2026-10-10T22:25:52.527670Z",
+      "draft_fingerprint": "a96460692a195df4556628bde8d639f3315c01dd51f1df139a196245e989f373",
+      "sealed_version": 6,
+      "release_id": null
+    },
+    {
+      "sequence": 46,
+      "action": "publish",
+      "from_state": "sealed",
+      "to_state": "published",
+      "actor": "teaching-alignment-admin",
+      "note": "L101 大禹与 L105 商鞅按教师新稿完成技术对齐；原 L103 发布保留供历史追溯。教学规则待最终真人验收。",
+      "occurred_at": "2026-10-10T22:25:53.142582Z",
+      "draft_fingerprint": "a96460692a195df4556628bde8d639f3315c01dd51f1df139a196245e989f373",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0011"
+    },
+    {
+      "sequence": 47,
+      "action": "publish",
+      "from_state": "published",
+      "to_state": "published",
+      "actor": "teaching-alignment-admin",
+      "note": "补齐商鞅对改革措施的教学说明；新增材料仅作后人解释，不放宽人物原话或亲历边界。",
+      "occurred_at": "2026-10-10T22:46:29.095146Z",
+      "draft_fingerprint": "a96460692a195df4556628bde8d639f3315c01dd51f1df139a196245e989f373",
+      "sealed_version": null,
+      "release_id": "rel-28b5624648-0012"
+    },
+    {
+      "sequence": 48,
+      "action": "save",
+      "from_state": "published",
+      "to_state": "draft",
+      "actor": "teaching-alignment-author",
+      "note": "Draft changed; prior validation and approval are no longer authoritative.",
+      "occurred_at": "2026-10-10T22:47:04.823612Z",
+      "draft_fingerprint": "b2801f225e36aa436f403c3e1afc53194b13347109de8c7b79c0e4ca55e99ada",
+      "sealed_version": null,
+      "release_id": null
     }
   ],
-  "checksum": "223c8e6d8668e2c609e0a5a3f3e9339dfce53d6d8fff9eaa2fe38a8465427da2"
+  "checksum": "e3d7514a11b5216a87ab58938edfea8af443bf1c0f973e70ca23d43542dc4924"
 }

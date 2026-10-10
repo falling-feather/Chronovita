@@ -17,7 +17,7 @@ from services.contracts.v1 import (
     reviewed_classification_fact_sources,
 )
 from services.game_runtime import SituationEngineV1, UnknownAction
-from services.game_runtime.action_fit import fit_local_action
+from services.game_runtime.action_fit import LOCAL_ACTION_FAMILIES, fit_local_action
 from services.llm import (
     LLMFailureCode,
     StructuredCompletion,
@@ -121,7 +121,7 @@ class ActionClassifierV1:
 
         if (
             engine.course.course_id == "C-prequin-state"
-            and engine.course.lesson_id in {"L101", "L103"}
+            and engine.course.lesson_id in LOCAL_ACTION_FAMILIES
         ):
             local = fit_local_action(
                 lesson_id=engine.course.lesson_id,
