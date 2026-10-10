@@ -155,6 +155,10 @@ def _entity_type(candidate_id: str) -> str:
     return "person" if "person" in candidate_id else "concept"
 
 
+def _utf16_length(text: str) -> int:
+    return len(text.encode("utf-16-le")) // 2
+
+
 def passage_payload(passage_id: str) -> dict[str, Any]:
     entry = next((item for item in entries() if item["passage_id"] == passage_id), None)
     if entry is None:
@@ -201,7 +205,7 @@ def passage_payload(passage_id: str) -> dict[str, Any]:
             "raw_ocr": sentence.get("raw_ocr"),
             "raw_ocr_available": bool(sentence.get("raw_ocr_available")),
             "utf16_start": offset,
-            "utf16_end": offset + len(simplified),
+            "utf16_end": offset + _utf16_length(simplified),
             "source_span_ids": sentence.get("source_span_ids", []),
             "entity_mentions": sentence.get("entity_mentions", []),
         })
@@ -223,7 +227,7 @@ def passage_payload(passage_id: str) -> dict[str, Any]:
                 "status": "uncertain",
             })
         text_parts.append(simplified)
-        offset += len(simplified) + 1
+        offset += _utf16_length(simplified) + 1
     index = entry["sequence"] - 1
     previous_entry = entries()[index - 1] if index else None
     next_entry = entries()[index + 1] if index + 1 < len(entries()) else None

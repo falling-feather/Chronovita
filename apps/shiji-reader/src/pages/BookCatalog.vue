@@ -388,9 +388,9 @@ function statusLabel(status: string) {
 
 function availabilityLabel(status?: string) {
   return {
-    ready: "已校验",
-    partial: "校验中",
-    planned: "待下载",
+    ready: "书影已安装",
+    partial: "本机有书影",
+    planned: "需安装书影包",
   }[status ?? ""] ?? "待核验";
 }
 

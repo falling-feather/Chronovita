@@ -69,10 +69,13 @@
         <div class="scan-image-stage" :style="{ width: `${zoom}%` }">
           <div class="ocr-image-frame">
             <img
+              v-if="!imageError"
               :src="getOcrWorkspacePageImageUrl(page.id)"
               :alt="page.reader.display_label"
               @load="handlePreviewLoad"
+              @error="imageError = true"
             />
+            <p v-else class="error-text">本机尚未安装此页书影，请安装《史记》书影包后刷新。右侧 OCR 转写仍可阅读。</p>
             <template v-if="showBoxes">
               <div
                 v-for="block in page.ocr.blocks"
@@ -192,6 +195,7 @@ const zoom = ref(100);
 const showBoxes = ref(false);
 const textMode = ref<"ocr" | "corrected">("corrected");
 const previewSize = ref({ width: 1, height: 1 });
+const imageError = ref(false);
 let loadRequest = 0;
 
 const displayedText = computed(() => {
@@ -208,6 +212,7 @@ watch(
   () => route.params.pageId,
   async (pageId) => {
     const requestId = ++loadRequest;
+    imageError.value = false;
     loading.value = true;
     error.value = "";
     page.value = null;

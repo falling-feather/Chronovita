@@ -58,13 +58,16 @@
           >
             <RouterLink class="scan-sheet-media" :to="`/reader/scan/${pageId}`" title="打开逐页书影">
               <img
+                v-if="!missingImages.includes(pageId)"
                 :src="getOcrWorkspacePageImageUrl(pageId)"
                 :alt="`《史记》OCR 书影第 ${index + 1} 叶`"
                 :class="{ 'fit-page': fitPage }"
                 :style="fitPage ? undefined : { height: `${zoom}%` }"
                 draggable="false"
                 loading="lazy"
+                @error="missingImages.push(pageId)"
               />
+              <span v-else class="scan-sheet-unavailable">书影不可用，请安装《史记》书影包后刷新。</span>
             </RouterLink>
             <figcaption>{{ shortPageId(pageId) }}</figcaption>
           </figure>
@@ -128,6 +131,7 @@ const stripViewport = ref<HTMLElement | null>(null);
 const manualPageIndex = ref(0);
 const zoom = ref(92);
 const fitPage = ref(true);
+const missingImages = ref<string[]>([]);
 const followReading = ref(true);
 let dragPointerId: number | undefined;
 let dragStartX = 0;

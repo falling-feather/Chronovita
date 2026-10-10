@@ -53,7 +53,7 @@ async def volume_chapter(volume_id: str, chapter_id: str) -> dict:
     if not any(item["volume_id"] == volume_id and item["passage_id"] == chapter_id for item in shiji_compat.entries()):
         raise HTTPException(404, detail="史记篇章不存在")
     try:
-        return shiji_compat.passage_payload(chapter_id)
+        return shiji_reader.chapter(chapter_id)["payload"]
     except (KeyError, shiji_reader.ShijiReaderError) as exc:
         raise HTTPException(404, detail="史记篇章资料不可用") from exc
 
@@ -100,18 +100,18 @@ async def ocr_page(page_id: str) -> dict:
 
 @ocr_router.get("/pages/{page_id}/neighbors")
 async def ocr_page_neighbors(page_id: str) -> dict:
-    pages = list(shiji_ocr.page_map().values())
-    ids = [str(item["id"]) for item in pages]
-    if page_id not in ids:
+    neighbors = shiji_ocr.page_neighbors(page_id)
+    if neighbors is None:
         raise HTTPException(404, detail="史记书影页不存在")
-    index = ids.index(page_id)
-    return {"page_id": page_id, "position": index + 1, "total": len(ids), "previous_page_id": ids[index - 1] if index else None, "next_page_id": ids[index + 1] if index + 1 < len(ids) else None}
+    return neighbors
 
 
 @ocr_router.get("/pages/{page_id}/parallels")
 async def ocr_page_parallels(page_id: str) -> list[dict]:
-    payload = shiji_ocr.page_payload(page_id)
-    return [] if payload is None else []
+    parallels = shiji_ocr.page_parallels(page_id)
+    if parallels is None:
+        raise HTTPException(404, detail="史记书影页不存在")
+    return parallels
 
 
 @ocr_router.get("/pages/{page_id}/image")

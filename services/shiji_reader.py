@@ -35,7 +35,6 @@ def _open_archive() -> ZipFile:
             raise ShijiReaderError("《史记》阅读资料包尚未安装")
         try:
             _archive = ZipFile(ARCHIVE_PATH, "r")
-            _archive.testzip()
         except (OSError, BadZipFile) as exc:
             _archive = None
             raise ShijiReaderError("《史记》阅读资料包损坏") from exc
@@ -46,7 +45,7 @@ def _read_json(path: str) -> dict[str, Any]:
     try:
         raw = _open_archive().read(path)
         value = json.loads(raw.decode("utf-8"))
-    except (KeyError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except (KeyError, BadZipFile, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ShijiReaderError(f"《史记》阅读资料缺少或无法解析：{path}") from exc
     if not isinstance(value, dict):
         raise ShijiReaderError(f"《史记》阅读资料格式错误：{path}")
@@ -108,7 +107,7 @@ def volume(volume_no: int) -> dict[str, Any]:
     raise KeyError(volume_no)
 
 
-@lru_cache(maxsize=512)
+@lru_cache(maxsize=24)
 def chapter(chapter_id: str) -> dict[str, Any]:
     for item in _volumes():
         for entry in item.get("chapters", []):

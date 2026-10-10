@@ -28,7 +28,7 @@ from settings import secret_value, settings
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from static_web import mount_classroom_web
 
-from services import content, persistence, rag, saga, shiji_reader
+from services import content, persistence, rag, saga, shiji_ocr, shiji_reader
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
@@ -114,6 +114,8 @@ async def lifespan(app: FastAPI):
         app.state.runtime_ready = True
         yield
     finally:
+        shiji_ocr.clear_cache()
+        shiji_reader.close()
         app.state.runtime_ready = False
         app.state.database_readiness = None
         app.state.database_engine = None
@@ -133,6 +135,11 @@ app = FastAPI(
     description="Chronovita backend for course, practice and content production.",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(shiji_ocr.ShijiOcrError)
+async def shiji_ocr_unavailable(_: Request, exc: shiji_ocr.ShijiOcrError):
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 app.add_middleware(
     LoginRateLimitMiddleware,
