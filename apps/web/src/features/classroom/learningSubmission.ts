@@ -109,7 +109,7 @@ export function readPendingSubmission(
       parsed.schema_version !== PENDING_SUBMISSION_SCHEMA
       || parsed.owner_id !== identity.ownerId
       || !request
-      || request.schema_version !== 'learning-submission-request/v1'
+      || !['learning-submission-request/v1', 'learning-submission-request/v2'].includes(request.schema_version)
       || request.course_id !== identity.courseId
       || request.lesson_id !== identity.lessonId
       || typeof request.client_submission_id !== 'string'

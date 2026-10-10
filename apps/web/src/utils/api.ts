@@ -867,15 +867,19 @@ export interface LearningCanvasSnapshot {
   schema_version: 'learning-canvas-snapshot/v1'; found: boolean; revision: number;
   nodes: unknown[]; edges: unknown[];
 }
-export interface LearningSubmissionRequest {
-  schema_version: 'learning-submission-request/v1';
+interface LearningSubmissionRequestFields {
   client_submission_id: string; course_id: string; lesson_id: string;
   title: string; body_markdown: string;
   sticky_notes: LearningStickyNote[]; drawing_strokes: LearningDrawingStroke[];
   learning_events: LearningEventSnapshot[]; local_draft_updated_at: string;
 }
+export type LearningSubmissionRequest = LearningSubmissionRequestFields & (
+  { schema_version: 'learning-submission-request/v1' } |
+  { schema_version: 'learning-submission-request/v2'; task: ClassroomTask }
+);
 export interface LearningSubmission {
-  schema_version: 'learning-submission/v1';
+  schema_version: 'learning-submission/v1' | 'learning-submission/v2';
+  task?: ClassroomTask;
   submission_id: string; client_submission_id: string; student_id: string;
   course_id: string; lesson_id: string; version: number; title: string;
   body_markdown: string; sticky_notes: LearningStickyNote[];
@@ -884,7 +888,8 @@ export interface LearningSubmission {
   source_payload_checksum: string; checksum: string;
 }
 export interface LearningFeedback {
-  schema_version: 'learning-feedback/v1'; feedback_id: string;
+  schema_version: 'learning-feedback/v1' | 'learning-feedback/v2'; feedback_id: string;
+  rubric?: LearningRubric;
   client_feedback_id: string; submission_id: string; sequence: number;
   teacher_id: string; teacher_display_name: string;
   completion_status: LearningCompletionStatus; comment: string;
@@ -904,8 +909,23 @@ export interface LearningSubmissionDetail {
   student_username?: string | null; feedback: LearningFeedback[];
 }
 export interface LearningFeedbackRequest {
-  schema_version: 'learning-feedback-request/v1'; client_feedback_id: string;
+  schema_version: 'learning-feedback-request/v1' | 'learning-feedback-request/v2'; client_feedback_id: string;
+  rubric?: LearningRubric;
   completion_status: LearningCompletionStatus; comment: string;
+}
+
+export type RubricLevel = 'not_assessed' | 'needs_revision' | 'developing' | 'supported';
+export interface LearningRubric { facts: RubricLevel; evidence: RubricLevel; explanation: RubricLevel }
+export interface ClassroomTask {
+  schema_version: 'classroom-task/v1'; task_id: string; client_task_id: string;
+  course_id: string; lesson_id: string; title: string; prompt: string;
+  status: 'open' | 'closed'; teacher_id: string; teacher_display_name: string;
+  revision: number; teacher_text_checksum: string; created_at: string; updated_at: string; checksum: string;
+}
+export interface ClassroomTaskListItem { task: ClassroomTask; text_current: boolean }
+export interface ClassroomTaskRequest {
+  client_task_id: string; course_id: string; lesson_id: string; title: string; prompt: string;
+  status: 'open' | 'closed'; expected_checksum?: string;
 }
 
 function learningSubmissionQuery(params: {
@@ -921,6 +941,9 @@ function learningSubmissionQuery(params: {
 }
 
 export const api = {
+  classroomTasks: (courseId: string, lessonId: string) => jsonFetch<{ items: ClassroomTaskListItem[] }>(`/learning/tasks?course_id=${encodeURIComponent(courseId)}&lesson_id=${encodeURIComponent(lessonId)}`),
+  classroomReviewTasks: () => jsonFetch<{ items: ClassroomTaskListItem[] }>('/learning/review/tasks'),
+  classroomSaveTask: (request: ClassroomTaskRequest) => jsonFetch<{ task: ClassroomTask }>('/learning/review/tasks', { method: 'POST', body: JSON.stringify(request) }),
   readerQuote: (request: ReaderQuoteRequest) => jsonFetch<ReaderQuote>('/reader/quotes', { method: 'POST', body: JSON.stringify(request) }),
   readerDestinations: () => jsonFetch<Array<{ value: string; label: string; courseId: string; lessonId: string }>>('/reader/lesson-destinations'),
   readerLessonSources: (lessonId: string) => jsonFetch<Array<{ title: string; passage_id: string; volume_no: number; relation_note: string }>>(`/reader/lesson-sources/${encodeURIComponent(lessonId)}`),

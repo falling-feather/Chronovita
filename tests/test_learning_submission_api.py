@@ -145,6 +145,43 @@ class LearningSubmissionApiTests(unittest.TestCase):
         except OSError:
             pass
 
+    def test_teacher_task_bound_submission_and_manual_rubric(self):
+        task_request = {"client_task_id": "task-classroom-a", "course_id": "C-prequin-state", "lesson_id": "L101",
+                        "title": "治水与公共责任", "prompt": "引用一条史料并解释你的治理选择。", "status": "open"}
+        denied = self.client.post('/api/v1/learning/review/tasks', headers=self.student_a_headers, json=task_request)
+        self.assertEqual(denied.status_code, 403)
+        created = self.client.post('/api/v1/learning/review/tasks', headers=self.teacher_headers, json=task_request)
+        self.assertEqual(created.status_code, 200, created.text)
+        task = created.json()['task']
+        listed = self.client.get('/api/v1/learning/tasks?course_id=C-prequin-state&lesson_id=L101', headers=self.student_a_headers)
+        self.assertEqual(listed.status_code, 200, listed.text)
+        self.assertEqual(listed.json()['items'][0]['task']['checksum'], task['checksum'])
+        self.assertTrue(listed.json()['items'][0]['text_current'])
+        payload = self._submission_payload('submit-task-bound')
+        payload.update(schema_version='learning-submission-request/v2', task=task)
+        submitted = self.client.post('/api/v1/learning/submissions', headers=self.student_a_headers, json=payload)
+        self.assertEqual(submitted.status_code, 201, submitted.text)
+        submission = submitted.json()['submission']
+        self.assertEqual(submission['schema_version'], 'learning-submission/v2')
+        feedback = self.client.post(f"/api/v1/learning/review/submissions/{submission['submission_id']}/feedback",
+            headers=self.teacher_headers, json={'schema_version':'learning-feedback-request/v2', 'client_feedback_id':'manual-rubric-a',
+                'completion_status':'changes_requested', 'comment':'已引用材料，请进一步区分传说与同时代证据。',
+                'rubric':{'facts':'developing','evidence':'supported','explanation':'needs_revision'}})
+        self.assertEqual(feedback.status_code, 201, feedback.text)
+        detail = self.client.get(f"/api/v1/learning/submissions/{submission['submission_id']}", headers=self.student_a_headers)
+        self.assertEqual(detail.status_code, 200, detail.text)
+        self.assertEqual(detail.json()['feedback'][0]['rubric']['evidence'], 'supported')
+        self.assertEqual(detail.json()['submission']['task']['checksum'], task['checksum'])
+        close_request = dict(task_request, status='closed', expected_checksum=task['checksum'])
+        closed = self.client.post('/api/v1/learning/review/tasks', headers=self.teacher_headers, json=close_request)
+        self.assertEqual(closed.status_code, 200, closed.text)
+        replay = self.client.post('/api/v1/learning/submissions', headers=self.student_a_headers, json=payload)
+        self.assertEqual(replay.status_code, 201, replay.text)
+        self.assertTrue(replay.json()['reused'])
+        payload['client_submission_id'] = 'submit-new-after-close'
+        rejected = self.client.post('/api/v1/learning/submissions', headers=self.student_a_headers, json=payload)
+        self.assertEqual(rejected.status_code, 409, rejected.text)
+
     def test_explicit_submission_versions_owner_scope_and_canvas_snapshot(self):
         unauthenticated = self.client.post(
             "/api/v1/learning/submissions",

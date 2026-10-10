@@ -1,4 +1,5 @@
 import { Empty, Tag } from 'antd';
+import { RubricSummary } from './LearningRubric';
 import {
   ApartmentOutlined,
   CheckCircleOutlined,
@@ -133,6 +134,11 @@ export default function LearningSubmissionViewer({
         <span><HistoryOutlined /> {submission.learning_events.length} 条轨迹</span>
         <span><ApartmentOutlined /> {canvasNodes.length} 个导图节点</span>
       </div>
+      {submission.task ? <section className="chrono-submission-section">
+        <h3>提交对应课堂任务：{submission.task.title}</h3>
+        <p style={{ whiteSpace: 'pre-wrap' }}>{submission.task.prompt}</p>
+        <small>{submission.task.teacher_display_name} · 第{submission.task.revision}版 · 校验{submission.task.checksum.slice(0, 10)}</small>
+      </section> : null}
 
       <section className="chrono-submission-section">
         <div className="chrono-submission-section-title"><FileTextOutlined /><h3>学习正文</h3></div>
@@ -222,6 +228,7 @@ export default function LearningSubmissionViewer({
                   <time>{formatDateTime(item.created_at)}</time>
                 </div>
                 <p>{item.comment}</p>
+                {item.rubric ? <RubricSummary rubric={item.rubric} /> : null}
               </li>
             ))}
           </ol>

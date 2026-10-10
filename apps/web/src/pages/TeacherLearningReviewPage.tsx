@@ -10,6 +10,9 @@ import {
   TeamOutlined,
 } from '@ant-design/icons';
 import LearningSubmissionViewer from '../features/classroom/LearningSubmissionViewer';
+import { TeacherClassroomTasks } from '../features/classroom/ClassroomTasks';
+import { EMPTY_RUBRIC, RubricEditor } from '../features/classroom/LearningRubric';
+import type { LearningRubric } from '../utils/api';
 import { createClientFeedbackId } from '../features/classroom/learningSubmission';
 import {
   api,
@@ -48,6 +51,7 @@ export default function TeacherLearningReviewPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [completionStatus, setCompletionStatus] = useState<LearningCompletionStatus>('in_review');
   const [comment, setComment] = useState('');
+  const [rubric, setRubric] = useState<LearningRubric>(EMPTY_RUBRIC);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [pendingFeedback, setPendingFeedback] = useState<{
     submissionId: string; request: LearningFeedbackRequest;
@@ -80,6 +84,8 @@ export default function TeacherLearningReviewPage() {
     }
     let active = true;
     setComment('');
+    setRubric(EMPTY_RUBRIC);
+    setDetail(null);
     setDetailLoading(true);
     api.learningReviewSubmission(selectedId)
       .then((response) => {
@@ -128,10 +134,11 @@ export default function TeacherLearningReviewPage() {
       pending = {
         submissionId: selectedId,
         request: {
-          schema_version: 'learning-feedback-request/v1',
+          schema_version: 'learning-feedback-request/v2',
           client_feedback_id: createClientFeedbackId(),
           completion_status: completionStatus,
           comment: trimmed,
+          rubric,
         },
       };
       setPendingFeedback(pending);
@@ -171,12 +178,13 @@ export default function TeacherLearningReviewPage() {
       </header>
 
       {error ? <Alert closable type="warning" showIcon message={error} onClose={() => setError('')} /> : null}
+      <TeacherClassroomTasks />
 
       <div className="chrono-review-layout">
         <aside className="chrono-review-queue">
           <header>
             <div><TeamOutlined /><strong>成果队列</strong></div>
-            <Button type="text" icon={<ReloadOutlined />} loading={loading} aria-label="刷新成果队列" onClick={() => void loadQueue()} />
+            <Button type="text" icon={<ReloadOutlined />} loading={loading} disabled={feedbackLoading} aria-label="刷新成果队列" onClick={() => void loadQueue()} />
           </header>
           <Input
             allowClear
@@ -193,6 +201,7 @@ export default function TeacherLearningReviewPage() {
                 type="button"
                 key={item.submission_id}
                 className={selectedId === item.submission_id ? 'active' : ''}
+                disabled={feedbackLoading}
                 onClick={() => setSelectedId(item.submission_id)}
               >
                 <div>
@@ -238,6 +247,7 @@ export default function TeacherLearningReviewPage() {
                   disabled={Boolean(pendingFeedback?.submissionId === selectedId)}
                 />
                 <Input.TextArea
+                  aria-label="教师具体反馈"
                   value={comment}
                   maxLength={4000}
                   showCount
@@ -246,6 +256,7 @@ export default function TeacherLearningReviewPage() {
                   disabled={Boolean(pendingFeedback?.submissionId === selectedId)}
                   onChange={(event) => setComment(event.target.value)}
                 />
+                <RubricEditor value={rubric} onChange={setRubric} disabled={Boolean(pendingFeedback?.submissionId === selectedId)} />
                 <div>
                   <span>{pendingFeedback?.submissionId === selectedId
                     ? '将原样重试上一次反馈，避免网络中断产生重复记录。'

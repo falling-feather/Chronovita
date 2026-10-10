@@ -33,6 +33,8 @@ from services.contracts.learning_v1 import (
     feedback_source_checksum,
     submission_source_checksum,
 )
+from services.contracts.learning_v2 import (LearningSubmissionRequestV2, LearningSubmissionV2,
+    LearningFeedbackRequestV2, LearningFeedbackV2, SUBMISSION_ADAPTER, FEEDBACK_ADAPTER)
 
 
 MAX_SUBMISSION_RECORD_BYTES = 4 * 1024 * 1024
@@ -136,6 +138,13 @@ class LearningAssetStore:
 
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
+
+    def replay_submission(self, student_id: str, request: LearningSubmissionRequestV1) -> SubmissionCreateResult | None:
+        existing = self._load_submission_by_client_id(student_id, request.client_submission_id)
+        if existing is None:
+            return None
+        _require_same_submission_payload(existing, submission_source_checksum(request))
+        return SubmissionCreateResult(submission=existing, reused=True)
 
     def create_submission(
         self,
@@ -456,7 +465,7 @@ def decode_submission(raw_data: object) -> LearningSubmissionV1:
     if len(raw_data.encode("utf-8")) > MAX_SUBMISSION_RECORD_BYTES:
         raise LearningSubmissionIntegrityError("learning submission is too large")
     try:
-        return LearningSubmissionV1.model_validate_json(raw_data)
+        return SUBMISSION_ADAPTER.validate_json(raw_data)
     except (ValidationError, ValueError) as exc:
         raise LearningSubmissionIntegrityError(
             "learning submission failed integrity validation"
@@ -476,7 +485,7 @@ def decode_feedback(raw_data: object) -> LearningFeedbackV1:
     if len(raw_data.encode("utf-8")) > MAX_FEEDBACK_RECORD_BYTES:
         raise LearningFeedbackIntegrityError("learning feedback is too large")
     try:
-        return LearningFeedbackV1.model_validate_json(raw_data)
+        return FEEDBACK_ADAPTER.validate_json(raw_data)
     except (ValidationError, ValueError) as exc:
         raise LearningFeedbackIntegrityError(
             "learning feedback failed integrity validation"
@@ -515,8 +524,12 @@ def _build_submission(
         "submitted_at": _json_datetime(submitted_at),
         "source_payload_checksum": source_checksum,
     }
+    model = LearningSubmissionV1
+    if isinstance(request, LearningSubmissionRequestV2):
+        payload.update(schema_version="learning-submission/v2", task=request.task.model_dump(mode="json"))
+        model = LearningSubmissionV2
     payload["checksum"] = canonical_checksum(payload)
-    return LearningSubmissionV1.model_validate(payload)
+    return model.model_validate(payload)
 
 
 def _build_feedback(
@@ -543,8 +556,12 @@ def _build_feedback(
         "created_at": _json_datetime(created_at),
         "source_payload_checksum": source_checksum,
     }
+    model = LearningFeedbackV1
+    if isinstance(request, LearningFeedbackRequestV2):
+        payload.update(schema_version="learning-feedback/v2", rubric=request.rubric.model_dump(mode="json"))
+        model = LearningFeedbackV2
     payload["checksum"] = canonical_checksum(payload)
-    return LearningFeedbackV1.model_validate(payload)
+    return model.model_validate(payload)
 
 
 def _require_same_submission_payload(

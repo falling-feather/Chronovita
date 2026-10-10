@@ -13,6 +13,8 @@ import ReactFlow, {
   type NodeChange,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { StudentClassroomTasks } from '../../features/classroom/ClassroomTasks';
+import type { ClassroomTask } from '../../utils/api';
 import { Alert, Button, Drawer, Input, Popconfirm, Spin, Tag, Tooltip, message } from 'antd';
 import {
   ApartmentOutlined,
@@ -401,6 +403,7 @@ export default function LessonCreate({
   const [deskHydrated, setDeskHydrated] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('idle');
   const [submissionError, setSubmissionError] = useState('');
+  const [selectedTask, setSelectedTask] = useState<ClassroomTask | null>(null);
   const [submissionItems, setSubmissionItems] = useState<LearningSubmissionListItem[]>([]);
   const [submissionListLoading, setSubmissionListLoading] = useState(false);
   const [submissionHistoryOpen, setSubmissionHistoryOpen] = useState(false);
@@ -1222,6 +1225,7 @@ export default function LessonCreate({
         const latestEvents = await listLearningEvents(temporaryNoteIdentity);
         setLearningEvents(latestEvents);
         request = buildLearningSubmissionRequest(savedDraft, latestEvents);
+        if (selectedTask) request = { ...request, schema_version: 'learning-submission-request/v2', task: selectedTask };
         setPendingSubmission(request);
         try {
           writePendingSubmission(window.localStorage, temporaryNoteIdentity, request);
@@ -1340,6 +1344,9 @@ export default function LessonCreate({
   return (
     <div className="chrono-create-layout">
       <section className="chrono-learning-desk" aria-labelledby="chrono-learning-desk-title">
+        {auth.mode === 'accounts' ? <StudentClassroomTasks courseId={lesson.course_id} lessonId={lesson.id}
+          selected={pendingSubmission?.schema_version === 'learning-submission-request/v2' ? pendingSubmission.task : selectedTask}
+          onSelect={setSelectedTask} locked={Boolean(pendingSubmission)} /> : null}
         <header className="chrono-learning-desk-masthead">
           <div>
             <span className="chrono-learning-desk-seal" aria-hidden="true">录</span>

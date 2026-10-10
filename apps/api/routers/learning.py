@@ -18,13 +18,14 @@ from services import persistence
 from services.auth import AccountsModeRequired, AuthStoreError, get_identity
 from services.contracts.learning_v1 import (
     LearningCanvasSnapshotV1,
-    LearningFeedbackRequestV1,
-    LearningFeedbackV1,
-    LearningSubmissionRequestV1,
     LearningSubmissionV1,
     SubmissionId,
 )
 from services.contracts.v1 import ContractId
+from services.contracts.learning_v2 import (LearningSubmissionAny, LearningSubmissionRequestAny,
+    LearningSubmissionRequestV2, LearningFeedbackAny, LearningFeedbackRequestAny)
+from services.contracts.classroom_v1 import ClassroomTaskRequestV1
+from services import classroom_tasks
 from services.courses import get_lesson, list_courses
 from services.courses.textbooks import ReadingLessonIndexItem, reading_lesson_index
 from services.learning_assets import (
@@ -38,6 +39,44 @@ from services.learning_assets import (
 
 
 router = APIRouter()
+
+
+def _task_items(course_id: str | None, lesson_id: str | None) -> list[dict]:
+    index = reading_lesson_index()
+    return [{"task": task.model_dump(mode="json"), "text_current": bool(index.get(task.lesson_id)
+             and index[task.lesson_id].teacher_text_checksum == task.teacher_text_checksum)}
+            for task in classroom_tasks.list_tasks(course_id, lesson_id)]
+
+
+@router.get("/tasks")
+async def list_student_tasks(course_id: ContractId | None = None, lesson_id: ContractId | None = None,
+                             context: AuthContext = Depends(require_student_context)) -> dict:
+    _require_persisted_account(context)
+    return {"items": _task_items(course_id, lesson_id)}
+
+
+@router.get("/review/tasks")
+async def list_teacher_tasks(course_id: ContractId | None = None, lesson_id: ContractId | None = None,
+                             context: AuthContext = Depends(require_permission("student.summary"))) -> dict:
+    _require_persisted_account(context)
+    return {"items": _task_items(course_id, lesson_id)}
+
+
+@router.post("/review/tasks")
+async def publish_classroom_task(payload: ClassroomTaskRequestV1, request: Request,
+                                 context: AuthContext = Depends(require_permission("student.feedback"))) -> dict:
+    _require_persisted_account(context)
+    try:
+        task = classroom_tasks.save_task(payload, teacher_id=context.principal.user_id,
+                                         teacher_display_name=context.principal.display_name)
+    except classroom_tasks.ClassroomTaskConflict as exc:
+        raise HTTPException(409, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(422, detail=str(exc)) from exc
+    audit_authorized_action(request, context, permission="student.feedback", action="classroom.task.publish",
+                            resource_type="classroom_task", resource_id=task.task_id,
+                            details={"lesson_id": task.lesson_id, "revision": task.revision, "status": task.status})
+    return {"task": task.model_dump(mode="json")}
 
 _LEGACY_USER = "default"
 _NS = "lesson_progress"
@@ -108,16 +147,16 @@ class SubmissionListItem(BaseModel):
     canvas_node_count: int
     submitted_at: str
     checksum: str
-    latest_feedback: LearningFeedbackV1 | None = None
+    latest_feedback: LearningFeedbackAny | None = None
 
 
 class SubmissionDetail(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    submission: LearningSubmissionV1
+    submission: LearningSubmissionAny
     student_display_name: str
     student_username: str | None = None
-    feedback: list[LearningFeedbackV1] = Field(default_factory=list)
+    feedback: list[LearningFeedbackAny] = Field(default_factory=list)
 
 
 def _owner_id(context: AuthContext) -> str:
@@ -314,7 +353,7 @@ def _progress_integrity_error() -> HTTPException:
 
 @router.post("/submissions", status_code=status.HTTP_201_CREATED)
 async def create_submission(
-    payload: LearningSubmissionRequestV1,
+    payload: LearningSubmissionRequestAny,
     request: Request,
     context: AuthContext = Depends(require_student_context),
 ):
@@ -338,15 +377,21 @@ async def create_submission(
         )
 
     owner_id = _owner_id(context)
-    canvas = _canvas_snapshot(owner_id, payload.lesson_id, context)
     try:
-        result = get_learning_assets().create_submission(
-            student_id=owner_id,
-            request=payload,
-            canvas=canvas,
-        )
+        result = get_learning_assets().replay_submission(owner_id, payload)
     except Exception as exc:
         _raise_learning_asset_error(exc)
+    if result is None and isinstance(payload, LearningSubmissionRequestV2):
+        try:
+            classroom_tasks.validate_task_submission(payload.task, course_id=payload.course_id, lesson_id=payload.lesson_id)
+        except (KeyError, ValueError) as exc:
+            raise HTTPException(409, detail=str(exc)) from exc
+    if result is None:
+        canvas = _canvas_snapshot(owner_id, payload.lesson_id, context)
+        try:
+            result = get_learning_assets().create_submission(student_id=owner_id, request=payload, canvas=canvas)
+        except Exception as exc:
+            _raise_learning_asset_error(exc)
     audit_authorized_action(
         request,
         context,
@@ -484,7 +529,7 @@ async def get_review_submission(
 )
 async def create_review_feedback(
     submission_id: SubmissionId,
-    payload: LearningFeedbackRequestV1,
+    payload: LearningFeedbackRequestAny,
     request: Request,
     context: AuthContext = Depends(require_permission("student.feedback")),
 ):

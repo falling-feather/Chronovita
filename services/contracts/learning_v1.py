@@ -237,26 +237,9 @@ class LearningFeedbackV1(LearningContract):
 
 
 def submission_source_checksum(request: LearningSubmissionRequestV1) -> Checksum:
-    return canonical_checksum(
-        {
-            "schema_version": "learning-submission-request/v1",
-            "client_submission_id": request.client_submission_id,
-            "course_id": request.course_id,
-            "lesson_id": request.lesson_id,
-            "title": request.title,
-            "body_markdown": request.body_markdown,
-            "sticky_notes": [
-                item.model_dump(mode="json") for item in request.sticky_notes
-            ],
-            "drawing_strokes": [
-                item.model_dump(mode="json") for item in request.drawing_strokes
-            ],
-            "learning_events": [
-                item.model_dump(mode="json") for item in request.learning_events
-            ],
-            "local_draft_updated_at": request.local_draft_updated_at.isoformat(),
-        }
-    )
+    payload = request.model_dump(mode="json")
+    payload["local_draft_updated_at"] = request.local_draft_updated_at.isoformat()
+    return canonical_checksum(payload)
 
 
 def feedback_source_checksum(request: LearningFeedbackRequestV1) -> Checksum:
@@ -276,7 +259,7 @@ def canonical_checksum(payload: object) -> Checksum:
 
 
 def _submission_source_payload(submission: LearningSubmissionV1) -> dict[str, Any]:
-    return {
+    payload = {
         "schema_version": "learning-submission-request/v1",
         "client_submission_id": submission.client_submission_id,
         "course_id": submission.course_id,
@@ -292,15 +275,21 @@ def _submission_source_payload(submission: LearningSubmissionV1) -> dict[str, An
         ],
         "local_draft_updated_at": submission.local_draft_updated_at.isoformat(),
     }
+    if submission.schema_version == "learning-submission/v2":
+        payload.update(schema_version="learning-submission-request/v2", task=submission.task.model_dump(mode="json"))
+    return payload
 
 
 def _feedback_source_payload(feedback: LearningFeedbackV1) -> dict[str, Any]:
-    return {
+    payload = {
         "schema_version": "learning-feedback-request/v1",
         "client_feedback_id": feedback.client_feedback_id,
         "completion_status": feedback.completion_status,
         "comment": feedback.comment,
     }
+    if feedback.schema_version == "learning-feedback/v2":
+        payload.update(schema_version="learning-feedback-request/v2", rubric=feedback.rubric.model_dump(mode="json"))
+    return payload
 
 
 __all__ = [
