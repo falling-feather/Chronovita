@@ -39,7 +39,6 @@ from .service import (
     RagAnswerService,
     RagExternalAnswerUnavailable,
     RagPersonNotFound,
-    RagTeacherContentNotAdapted,
     structured_model_generator,
 )
 
@@ -104,7 +103,6 @@ __all__ = [
     "RagExternalAnswerUnavailable",
     "RagIndexUnavailable",
     "RagPersonNotFound",
-    "RagTeacherContentNotAdapted",
     "RagQueryPlan",
     "RagRouteDecision",
     "RagRouteTarget",

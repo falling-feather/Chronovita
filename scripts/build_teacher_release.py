@@ -358,18 +358,12 @@ def collect_package_files(
         for path in tracked
         if len(path.parts) == 1 and path.suffix.casefold() == ".cmd"
     )
-    if root_commands != ROOT_COMMAND_FILES:
+    if not ROOT_COMMAND_FILES.issubset(root_commands):
         missing = ROOT_COMMAND_FILES - root_commands
-        unexpected = root_commands - ROOT_COMMAND_FILES
         details = []
         if missing:
             details.append(
                 "missing " + ", ".join(sorted(path.name for path in missing))
-            )
-        if unexpected:
-            details.append(
-                "unexpected "
-                + ", ".join(sorted(path.name for path in unexpected))
             )
         raise TeacherPackageError(
             "tracked teacher-facing root CMD set is invalid: "

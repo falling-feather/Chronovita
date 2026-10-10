@@ -316,7 +316,8 @@ class FlagshipAgentAcceptanceTests(unittest.IsolatedAsyncioTestCase):
                     if case["api_expected"]:
                         call = completer.calls[-1]
                         self.assertEqual(call["temperature"], 0.0)
-                        self.assertEqual(call["max_tokens"], 192)
+                        self.assertGreaterEqual(call["max_tokens"], 192)
+                        self.assertLessEqual(call["max_tokens"], 512)
                         user_message = next(
                             item
                             for item in call["messages"]

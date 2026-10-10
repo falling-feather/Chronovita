@@ -790,16 +790,9 @@
         "朱棣（明成祖）"
       ],
       "id": "L1301",
-      "interaction_figures": [
-        "王阳明",
-        "朱熹",
-        "刘瑾",
-        "宁王朱宸濠",
-        "王畿",
-        "王艮",
-        "李贽（李卓吾）"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "公元1405年至1433年明朝组织的七次大型远洋航行",
@@ -928,44 +921,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "21 岁格竹失败"
-        },
-        {
-          "id": "n2",
-          "label": "1506 上书贬龙场"
-        },
-        {
-          "id": "n3",
-          "label": "1508 龙场悟道"
-        },
-        {
-          "id": "n4",
-          "label": "心即理"
-        },
-        {
-          "id": "n5",
-          "label": "致良知"
-        },
-        {
-          "id": "n6",
-          "label": "知行合一"
-        },
-        {
-          "id": "n7",
-          "label": "1519 平宁王 35 日"
-        },
-        {
-          "id": "n8",
-          "label": "「此心光明 亦复何言」"
-        },
-        {
-          "id": "n9",
-          "label": "影响 · 日本明治"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记录郑和航路沿线港口和社会风俗",
@@ -1016,16 +972,9 @@
         "徐光启"
       ],
       "id": "L1302",
-      "interaction_figures": [
-        "黄宗羲",
-        "黄尊素",
-        "刘宗周",
-        "魏忠贤",
-        "鲁王朱以海",
-        "梁启超",
-        "孙中山"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "近代早期来华传播天主教并参与知识交流的欧洲传教士",
@@ -1166,44 +1115,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "父黄尊素 · 东林党狱"
-        },
-        {
-          "id": "n2",
-          "label": "锥刺阉党"
-        },
-        {
-          "id": "n3",
-          "label": "明亡 · 浙东抗清"
-        },
-        {
-          "id": "n4",
-          "label": "1663《明夷待访录》"
-        },
-        {
-          "id": "n5",
-          "label": "原君 · 君为大害"
-        },
-        {
-          "id": "n6",
-          "label": "天下之法"
-        },
-        {
-          "id": "n7",
-          "label": "学校议政"
-        },
-        {
-          "id": "n8",
-          "label": "工商皆本"
-        },
-        {
-          "id": "n9",
-          "label": "1900 重印 · 宪政启蒙"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记录利玛窦来华经历和对明代社会的观察",
@@ -1255,18 +1167,9 @@
         "郑成功"
       ],
       "id": "L1303",
-      "interaction_figures": [
-        "顾炎武",
-        "嗣母王氏",
-        "戴震",
-        "段玉裁",
-        "王念孙",
-        "王夫之",
-        "邓显鹤",
-        "曾国藩",
-        "谭嗣同"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "李自成于公元1644年建立的政权；曾控制西安和北京",
@@ -1428,48 +1331,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "顾炎武 · 嗣母殉国"
-        },
-        {
-          "id": "n2",
-          "label": "北游十省 · 实地考察"
-        },
-        {
-          "id": "n3",
-          "label": "天下兴亡 匹夫有责"
-        },
-        {
-          "id": "n4",
-          "label": "日知录 · 朴学开山"
-        },
-        {
-          "id": "n5",
-          "label": "经世致用"
-        },
-        {
-          "id": "n6",
-          "label": "王夫之 · 衡阳石船山"
-        },
-        {
-          "id": "n7",
-          "label": "湘西草堂 40 年"
-        },
-        {
-          "id": "n8",
-          "label": "气一元论 · 道在器中"
-        },
-        {
-          "id": "n9",
-          "label": "读通鉴论 · 宋论"
-        },
-        {
-          "id": "n10",
-          "label": "1840 船山遗书"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载崇祯时期政治和北京失守",
@@ -1519,22 +1381,9 @@
         "林则徐"
       ],
       "id": "L1501",
-      "interaction_figures": [
-        "张角",
-        "董卓",
-        "曹操",
-        "刘备",
-        "孙权",
-        "周瑜",
-        "鲁肃",
-        "诸葛亮",
-        "关羽",
-        "张飞",
-        "司马懿",
-        "司马炎",
-        "刘聪"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "公元1839年林则徐在虎门公开销毁所收鸦片的行动",
@@ -1648,52 +1497,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "184 黄巾起义"
-        },
-        {
-          "id": "n2",
-          "label": "州郡自募 · 军阀割据"
-        },
-        {
-          "id": "n3",
-          "label": "196 挟天子"
-        },
-        {
-          "id": "n4",
-          "label": "200 官渡"
-        },
-        {
-          "id": "n5",
-          "label": "208 赤壁 · 三分形成"
-        },
-        {
-          "id": "n6",
-          "label": "220-229 魏蜀吴鼎立"
-        },
-        {
-          "id": "n7",
-          "label": "诸葛亮六出祁山"
-        },
-        {
-          "id": "n8",
-          "label": "263-280 三家归晋"
-        },
-        {
-          "id": "n9",
-          "label": "291-306 八王之乱"
-        },
-        {
-          "id": "n10",
-          "label": "311 永嘉之乱"
-        },
-        {
-          "id": "n11",
-          "label": "317 东晋偏安建康"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记录禁烟政策和虎门销烟过程",
@@ -1745,22 +1549,9 @@
         "曾国藩"
       ],
       "id": "L1502",
-      "interaction_figures": [
-        "何晏",
-        "王弼",
-        "嵇康",
-        "阮籍",
-        "山涛",
-        "向秀",
-        "刘伶",
-        "王戎",
-        "阮咸",
-        "郭象",
-        "支道林",
-        "王羲之",
-        "谢安"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "洪秀全创立的宗教组织；吸收部分基督教观念并组织起义群众",
@@ -1924,52 +1715,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "汉末经学僵化"
-        },
-        {
-          "id": "n2",
-          "label": "何晏王弼 · 三玄·贵无"
-        },
-        {
-          "id": "n3",
-          "label": "249 高平陵 · 名士屠杀"
-        },
-        {
-          "id": "n4",
-          "label": "竹林七贤 · 山阳"
-        },
-        {
-          "id": "n5",
-          "label": "嵇康 · 越名教任自然"
-        },
-        {
-          "id": "n6",
-          "label": "262 广陵散绝"
-        },
-        {
-          "id": "n7",
-          "label": "阮籍 · 青白眼·咏怀诗"
-        },
-        {
-          "id": "n8",
-          "label": "郭象 · 独化论"
-        },
-        {
-          "id": "n9",
-          "label": "支道林 · 玄佛合流"
-        },
-        {
-          "id": "n10",
-          "label": "兰亭雅集 · 淝水从容"
-        },
-        {
-          "id": "n11",
-          "label": "山水诗·书法·人物品藻"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "呈现土地平均和社会组织设想",
@@ -2022,17 +1768,9 @@
         "孙中山"
       ],
       "id": "L1503",
-      "interaction_figures": [
-        "拓跋珪",
-        "拓跋焘",
-        "冯太后",
-        "孝文帝拓跋宏",
-        "元恂",
-        "宇文泰",
-        "高欢",
-        "陈寅恪"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "十九世纪六十至九十年代清朝官员推动学习西方技术并兴办近代事业的活动",
@@ -2219,52 +1957,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "386 拓跋珪复国"
-        },
-        {
-          "id": "n2",
-          "label": "439 北魏统一北方"
-        },
-        {
-          "id": "n3",
-          "label": "胡汉分治 · 平城旧制"
-        },
-        {
-          "id": "n4",
-          "label": "冯太后 · 班禄/均田/三长"
-        },
-        {
-          "id": "n5",
-          "label": "493 迁都洛阳"
-        },
-        {
-          "id": "n6",
-          "label": "改汉姓 · 拓跋→元"
-        },
-        {
-          "id": "n7",
-          "label": "禁北语·穿汉服"
-        },
-        {
-          "id": "n8",
-          "label": "鲜汉通婚 · 五大门阀"
-        },
-        {
-          "id": "n9",
-          "label": "523 六镇起义"
-        },
-        {
-          "id": "n10",
-          "label": "534 东西魏分裂"
-        },
-        {
-          "id": "n11",
-          "label": "关陇集团 · 隋唐皇室"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "反映洋务工业 教育和技术活动",
@@ -2315,16 +2008,9 @@
         "胡惟庸"
       ],
       "id": "L1201",
-      "interaction_figures": [
-        "朱棣（永乐帝）",
-        "郑和",
-        "王景弘",
-        "费信",
-        "马欢",
-        "巩珍",
-        "刘大夏"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "公元1380年开始的政治案件；胡惟庸被处死；许多官员功臣受牵连",
@@ -2442,40 +2128,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "1405 苏州刘家港"
-        },
-        {
-          "id": "n2",
-          "label": "宝船 · 138 米"
-        },
-        {
-          "id": "n3",
-          "label": "两万七千人船队"
-        },
-        {
-          "id": "n4",
-          "label": "印度洋 · 波斯湾"
-        },
-        {
-          "id": "n5",
-          "label": "东非麻林 · 麒麟"
-        },
-        {
-          "id": "n6",
-          "label": "1424 仁宗罢航"
-        },
-        {
-          "id": "n7",
-          "label": "1433 郑和卒于古里"
-        },
-        {
-          "id": "n8",
-          "label": "成化焚档 · 退出海洋"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载胡惟庸案和明初中央机构调整",
@@ -2525,18 +2178,9 @@
         "胤禛（雍正帝）"
       ],
       "id": "L1202",
-      "interaction_figures": [
-        "利玛窦",
-        "徐光启",
-        "李之藻",
-        "杨廷筠",
-        "汤若望",
-        "南怀仁",
-        "杨光先",
-        "孙元化",
-        "万历帝"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "清代协助皇帝处理机密军政事务的中央机构；雍正年间形成",
@@ -2624,44 +2268,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "1582 利玛窦至澳门"
-        },
-        {
-          "id": "n2",
-          "label": "1601 入京 · 适应主义"
-        },
-        {
-          "id": "n3",
-          "label": "坤舆万国全图"
-        },
-        {
-          "id": "n4",
-          "label": "1607《几何原本》"
-        },
-        {
-          "id": "n5",
-          "label": "三柱石 · 教友士大夫"
-        },
-        {
-          "id": "n6",
-          "label": "1571 马尼拉大帆船"
-        },
-        {
-          "id": "n7",
-          "label": "白银 7000 吨涌入"
-        },
-        {
-          "id": "n8",
-          "label": "崇祯历书 · 红夷大炮"
-        },
-        {
-          "id": "n9",
-          "label": "礼仪之争 · 禁教"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "反映军机处处理奏折和传递谕旨的流程",
@@ -2711,20 +2318,9 @@
         "弘历（乾隆帝）"
       ],
       "id": "L1203",
-      "interaction_figures": [
-        "崇祯帝",
-        "李自成",
-        "张献忠",
-        "袁崇焕",
-        "皇太极",
-        "多尔衮",
-        "吴三桂",
-        "史可法",
-        "李定国",
-        "郑成功",
-        "永历帝"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "明清政府限制民间出海和私人海外贸易的政策",
@@ -2843,48 +2439,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "小冰期 · 北方大旱"
-        },
-        {
-          "id": "n2",
-          "label": "三饷 · 财政破产"
-        },
-        {
-          "id": "n3",
-          "label": "1628 陕北民变"
-        },
-        {
-          "id": "n4",
-          "label": "李自成 · 闯王"
-        },
-        {
-          "id": "n5",
-          "label": "1644.3 北京陷 · 崇祯自缢"
-        },
-        {
-          "id": "n6",
-          "label": "1616 后金 · 1636 大清"
-        },
-        {
-          "id": "n7",
-          "label": "山海关 · 吴三桂降清"
-        },
-        {
-          "id": "n8",
-          "label": "南明四帝 18 年"
-        },
-        {
-          "id": "n9",
-          "label": "史可法 · 李定国 · 郑成功"
-        },
-        {
-          "id": "n10",
-          "label": "1662 永历殉 · 大分流"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记录明代海禁 沿海冲突和政策调整",
@@ -2934,18 +2489,9 @@
         "王阳明"
       ],
       "id": "L1401",
-      "interaction_figures": [
-        "道光帝",
-        "林则徐",
-        "邓廷桢",
-        "关天培",
-        "琦善",
-        "耆英",
-        "伊里布",
-        "韦绍光",
-        "魏源"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "重视人的内心判断和道德实践的儒学思想传统",
@@ -3046,44 +2592,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "鸦片走私 · 银贵钱贱"
-        },
-        {
-          "id": "n2",
-          "label": "1839 林则徐至广州"
-        },
-        {
-          "id": "n3",
-          "label": "虎门销烟 · 22 天"
-        },
-        {
-          "id": "n4",
-          "label": "1840 英舰北犯"
-        },
-        {
-          "id": "n5",
-          "label": "1841 三元里抗英"
-        },
-        {
-          "id": "n6",
-          "label": "1842 镇江 · 南京"
-        },
-        {
-          "id": "n7",
-          "label": "南京条约 · 五口通商"
-        },
-        {
-          "id": "n8",
-          "label": "魏源·师夷长技"
-        },
-        {
-          "id": "n9",
-          "label": "1860 火烧圆明园"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "保存王阳明讲学 书信和弟子问答",
@@ -3135,20 +2644,9 @@
         "魏忠贤"
       ],
       "id": "L1402",
-      "interaction_figures": [
-        "洪秀全",
-        "杨秀清",
-        "萧朝贵",
-        "冯云山",
-        "韦昌辉",
-        "石达开",
-        "洪仁玕",
-        "曾国藩",
-        "曾国荃",
-        "李鸿章",
-        "左宗棠"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "明末以东林书院讲学者和相关官员为核心的政治群体",
@@ -3299,48 +2797,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "1843 拜上帝会"
-        },
-        {
-          "id": "n2",
-          "label": "1851 金田起义"
-        },
-        {
-          "id": "n3",
-          "label": "1853 定都天京"
-        },
-        {
-          "id": "n4",
-          "label": "天朝田亩制度"
-        },
-        {
-          "id": "n5",
-          "label": "1856 天京事变"
-        },
-        {
-          "id": "n6",
-          "label": "石达开出走 · 大渡河覆没"
-        },
-        {
-          "id": "n7",
-          "label": "1859 资政新篇"
-        },
-        {
-          "id": "n8",
-          "label": "曾国藩湘军 · 李鸿章淮军"
-        },
-        {
-          "id": "n9",
-          "label": "1864 天京陷"
-        },
-        {
-          "id": "n10",
-          "label": "内轻外重格局"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "呈现黄宗羲对君主 法律 学校和经济的思考",
@@ -3391,23 +2848,9 @@
         "王夫之"
       ],
       "id": "L1403",
-      "interaction_figures": [
-        "奕䜣",
-        "曾国藩",
-        "李鸿章",
-        "左宗棠",
-        "张之洞",
-        "丁汝昌",
-        "邓世昌",
-        "康有为",
-        "梁启超",
-        "谭嗣同",
-        "孙中山",
-        "黄兴",
-        "袁世凯",
-        "溥仪"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "让学问回应国家治理 百姓生活和现实问题的治学主张",
@@ -3533,52 +2976,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "1861 辛酉政变"
-        },
-        {
-          "id": "n2",
-          "label": "总理衙门 · 同文馆"
-        },
-        {
-          "id": "n3",
-          "label": "中体西用"
-        },
-        {
-          "id": "n4",
-          "label": "江南 · 福州 · 汉阳"
-        },
-        {
-          "id": "n5",
-          "label": "1872 留美幼童"
-        },
-        {
-          "id": "n6",
-          "label": "1888 北洋舰队"
-        },
-        {
-          "id": "n7",
-          "label": "1894-95 甲午战 · 马关条约"
-        },
-        {
-          "id": "n8",
-          "label": "1898 戊戌变法 · 六君子"
-        },
-        {
-          "id": "n9",
-          "label": "1901 辛丑条约 4.5 亿"
-        },
-        {
-          "id": "n10",
-          "label": "1905 同盟会 · 1911 武昌"
-        },
-        {
-          "id": "n11",
-          "label": "1912 帝制终结"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "反映顾炎武经世 考据和社会责任思想",
@@ -3617,30 +3015,13 @@
         "传世文献把夏朝末代君主夏桀描写为暴虐的君主，并将夏朝灭亡解释为君主失德、民心离散的结果。约公元前1600年，商族首领商汤率领商族及其盟友伐夏。据传统文献记载，商汤在【鸣条之战】中击败夏桀，夏朝灭亡，商朝建立。关于夏商更替的具体过程，目前主要依据后世文献来认识；考古资料则通过遗址、器物和年代变化，帮助我们观察这一时期政治中心和社会结构的变化。",
         "学习本课时，应当同时关注禹治水、启继位和夏商更替等传统叙事，并比较传说、文献与考古资料的性质及其局限。传说保留了后人对早期历史的记忆，文献体现了古人或后世对王朝兴亡的解释，考古发现则提供了认识当时社会的物质证据。只有将不同类型的材料相互参照，才能更加审慎、全面地理解夏王朝以及中国早期国家形成的历史过程。"
       ],
-      "content_checksum": "689c24b2efd46d2080f93cd09153b04a5acb4b93c8bf13107a03750962b5388a",
-      "content_status": "published",
-      "content_version": 5,
+      "content_checksum": null,
+      "content_status": "builtin",
+      "content_version": 0,
       "course_id": "C-prequin-state",
       "duration": "08:30",
       "era": "先秦",
-      "facts": [
-        "【传世文献】现存关于禹治水的主要文字形成或编定年代晚于传统叙事所指事件，能证明后世记忆，不能自动视为同时代记录。",
-        "【传世文献】《史记·夏本纪》由西汉司马迁撰成，距离传统所说的禹时代很远，具体叙事需要与其他材料互证。",
-        "【传世文献】《孟子》反映战国时期的论说语境，其中疏河与三过家门叙事首先是后人理解禹的重要证据。",
-        "【传世文献】《尚书·禹贡》的文本层次、九州地名和成篇年代存在研究讨论，不宜直接当作夏代施工地图。",
-        "【传说】“三过家门而不入”是影响深远的责任伦理叙事，目前不能由考古材料核验次数与现场细节。",
-        "【教学概括】“鲧堵禹疏”来自传世叙事的对照，真实治水可能同时使用防护、疏导、分洪、迁居和物资调配。",
-        "【自然科学研究】积石峡约公元前1920年大型溃决洪水是一项有争议的研究判断，局地灾害不能直接证明禹、全国洪水或夏王朝。",
-        "【考古边界】目前二里头材料中没有得到学界公认、可同时代直读为“禹”的铭文，人物与遗址不能直接绑定。",
-        "【考古判断】二里头文化的年代与核心分布同传世文献所述夏后期时空范围高度重合，是探索夏史的关键材料。",
-        "【考古观察】二里头的大型都邑、道路网、宫殿区、祭祀区、官营作坊和等级差异支持早期国家与广域王权研究。",
-        "【解释边界】“二里头文化”是考古学命名；进一步称其为夏文化或夏都需要综合论证，不应写成无条件同义词。",
-        "【教学解释】以洪水治理说明跨聚落协作和首领权威形成，是基于材料的课堂分析模型，不是某件遗物直接陈述的事实。",
-        "【传世叙事】禹后启继位以及禅让转向世袭的框架来自后世王朝叙事，适合讨论权力秩序但不是同时代档案。",
-        "【教学解释】公共工程会占用耕作、粮食与人身安全；成功、代价和信任必须同时进入历史评价。",
-        "【空间边界】遗址、自然事件地点与后世记忆地图属于不同证据层，不能拼成一条确定的禹治水路线。",
-        "【年代边界】约公元前21世纪至约公元前1600年的夏代框架是教学与研究使用的约数，不是精确到年的同时代纪年。"
-      ],
+      "facts": [],
       "figures": [
         "禹",
         "启",
@@ -3648,85 +3029,9 @@
         "夏桀"
       ],
       "id": "L101",
-      "interaction_figures": [
-        "禹",
-        "鲧",
-        "益（伯益）",
-        "聚落代表",
-        "治水劳作者"
-      ],
-      "interaction_people": [
-        {
-          "boundaries": [
-            "只依据本课关于《史记》《孟子》《禹贡》与考古边界的已发布片段回答。",
-            "不得声称亲眼见过二里头遗址、积石峡测年或后世王朝。",
-            "不得把三过家门的次数、具体施工路线或个人原话说成考古事实。"
-          ],
-          "fact_refs": [],
-          "name": "禹",
-          "person_id": "person-7c4825d9",
-          "persona": "以审慎、重视地形和公共责任的口吻讨论选择；每次回答都承认材料年代。角色化教学表达，不是史料原话。",
-          "role": "传世叙事中的治水组织者",
-          "source_ref_ids": [],
-          "summary": "后世文献把禹塑造为长期治水、协调众人并由此取得政治声望的首领。"
-        },
-        {
-          "boundaries": [
-            "承认鲧的具体工程、失败原因与个人动机缺乏同时代记录。",
-            "不能断言所有筑堤或围挡都错误，也不能虚构刑罚现场。",
-            "回答只限课程片段，不知道二里头考古与现代水利术语。"
-          ],
-          "fact_refs": [],
-          "name": "鲧",
-          "person_id": "person-b40a4965",
-          "persona": "从防护聚落、资源紧迫与方案受限的角度提出异议；不把后世评价当作本人供词。角色化教学表达，不是史料原话。",
-          "role": "传世叙事中的前任治水者",
-          "source_ref_ids": [],
-          "summary": "后世叙事常以鲧的失利与禹的治理相对照，但简单的“只堵不疏”不能代替复杂水利分析。"
-        },
-        {
-          "boundaries": [
-            "人物关系依据传世叙事作有限表达，不补写私人对话、精确年龄与行程。",
-            "不能把课堂变量当作真实历史统计。",
-            "遇到超出已发布证据的问题回答“依据不足”。"
-          ],
-          "fact_refs": [],
-          "name": "益（伯益）",
-          "person_id": "person-31118bee",
-          "persona": "强调记录、复核与跨聚落协商，主动区分亲历角色口吻和后世材料。角色化教学表达，不是史料原话。",
-          "role": "传世叙事中的协作者与观察者",
-          "source_ref_ids": [],
-          "summary": "作为帮助组织、观察地形和连接聚落意见的教学角色，用于呈现协作而非单一英雄。"
-        },
-        {
-          "boundaries": [
-            "这是为课堂推演设置的合成人群，不对应一位有姓名的历史人物。",
-            "不得声称代表所有史前居民，也不得给出虚构人口和伤亡数字。",
-            "观点只能解释治理权衡，不能证明禹故事的真伪。"
-          ],
-          "fact_refs": [],
-          "name": "聚落代表",
-          "person_id": "person-cef45322",
-          "persona": "以群体而非单一历史人物发言，追问谁承担风险、谁得到保护。角色化教学表达，不是史料原话。",
-          "role": "受水患影响的多聚落意见群体",
-          "source_ref_ids": [],
-          "summary": "汇集上游、下游与低地聚落对安全、粮食、公平和信息公开的不同诉求。"
-        },
-        {
-          "boundaries": [
-            "这是课堂合成人群，不假冒出土文字中的自述。",
-            "不提供未经来源支持的工具、工期或伤亡细节。",
-            "可以评价关卡中的代价，但必须说明变量是教学模型。"
-          ],
-          "fact_refs": [],
-          "name": "治水劳作者",
-          "person_id": "person-dc224fcf",
-          "persona": "从劳动安全、家庭生计和任务可执行性出发回应。角色化教学表达，不是史料原话。",
-          "role": "承担勘察、开渠、加固和运输的劳动群体",
-          "source_ref_ids": [],
-          "summary": "提醒决策者看到公共工程背后的耕作时间、口粮、伤病与轮换问题。"
-        }
-      ],
+      "interaction_figures": [],
+      "interaction_people": [],
+      "interaction_status": "not_adapted",
       "keywords": [
         {
           "gloss": "传世文献中禹治理洪水的故事；反映早期社会的大规模协作",
@@ -3784,12 +3089,7 @@
           "word": "鸣条之战"
         }
       ],
-      "level_goals": [
-        "能把课程材料标注为传说、传世文献、考古观察、研究判断或教学解释。",
-        "能用至少两种不同类型证据说明二里头为何重要，并写出结论边界。",
-        "能在六回合治理中同时追踪风险、粮食、劳作、信任、知识与协作。",
-        "能用选择—变化—代价—证据链完成史官卷宗并导入知识画板。"
-      ],
+      "level_goals": [],
       "map_points": [
         {
           "kind": "river",
@@ -3920,83 +3220,20 @@
           "supplemental": false
         }
       ],
-      "primary_scenario_id": "dayu-crisis-governance",
-      "qa_points": [
-        "为什么传世文献很重要，却不能直接当作禹时代的现场记录？",
-        "“三过家门而不入”能够支持哪类历史认识，不能证明什么？",
-        "“鲧堵禹疏”为什么只是教学概括，关卡为何保留多种工程组合？",
-        "二里头有哪些可直接观察的考古材料，它们如何支持早期国家研究？",
-        "为什么“二里头文化”与“夏文化”不能不加说明地写成同义词？",
-        "积石峡洪水研究证明了什么，又没有证明什么？",
-        "公共工程怎样可能扩大首领权威，又会给普通劳作者带来哪些代价？",
-        "如果新发现一条可确认年代的文字材料，你会怎样修改现有结论？"
-      ],
-      "rag_available": true,
+      "primary_scenario_id": null,
+      "qa_points": [],
+      "rag_available": false,
       "reading_media_available": false,
-      "release_checksum": "aec5ac43d3635ab0c605136d995bdc9b250898ba3bc853f389d79cc86bd03880",
-      "release_id": "rel-28b5624648-0010",
-      "release_no": 10,
-      "saga_material": {
-        "assets": [
-          "dayu-classroom-intro"
-        ],
-        "kind": "saga",
-        "notes": "建议9分钟；先观察材料标签，再提出一条可证与一条不可证结论。",
-        "objective": "在地图与短片中辨认遗址、自然事件、传世文本和后世记忆的不同身份。",
-        "title": "踏勘：四层证据中的大禹治水"
-      },
-      "sandbox_id": "抉择：六回合洪水危机治理",
-      "sandbox_material": {
-        "assets": [
-          "dayu-crisis-governance"
-        ],
-        "kind": "sandbox",
-        "notes": "固定行动在断网时仍可完成；规则变量是教学模型，不是历史统计。",
-        "objective": "协调地形勘察、工程、粮食、劳作与公共信任，比较成功、代价、折中和失败。",
-        "title": "抉择：六回合洪水危机治理"
-      },
-      "scenario_refs": [
-        {
-          "checksum": "8bd70a0e3f6dded9b6f6a24196ef79cd5009b0da9efc59c97fcd1a7926650d63",
-          "primary": true,
-          "scenario_id": "dayu-crisis-governance",
-          "scenario_version": 1
-        }
-      ],
+      "release_checksum": null,
+      "release_id": null,
+      "release_no": null,
+      "saga_material": null,
+      "sandbox_id": null,
+      "sandbox_material": null,
+      "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "evidence-layers",
-          "label": "四层证据",
-          "note": "传说—文献—考古—解释不可混写"
-        },
-        {
-          "id": "flood-and-governance",
-          "label": "洪水与治理",
-          "note": "自然风险需要技术和组织共同回应"
-        },
-        {
-          "id": "cooperation-and-power",
-          "label": "协作与权威",
-          "note": "公共动员可能扩大权力，也产生责任"
-        },
-        {
-          "id": "erlitou-state",
-          "label": "二里头与早期国家",
-          "note": "从可观察遗存走向有边界的历史判断"
-        },
-        {
-          "id": "cost-and-trust",
-          "label": "代价与信任",
-          "note": "工程结果不能遮蔽粮食、劳作和公平"
-        },
-        {
-          "id": "claim-evidence-boundary",
-          "label": "结论—证据—边界",
-          "note": "卷宗复盘的核心论证结构"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "夏代约公元前2070年至公元前1600年的基本年代框架",
@@ -4054,14 +3291,9 @@
         "帝辛"
       ],
       "id": "L102",
-      "interaction_figures": [
-        "盘庚",
-        "武丁",
-        "妇好",
-        "纣王",
-        "周武王"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "商王盘庚将都城迁至殷；商朝晚期政治中心由此形成",
@@ -4189,28 +3421,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "盘庚迁殷"
-        },
-        {
-          "id": "n2",
-          "label": "青铜礼器"
-        },
-        {
-          "id": "n3",
-          "label": "甲骨文"
-        },
-        {
-          "id": "n4",
-          "label": "纣王暴政"
-        },
-        {
-          "id": "n5",
-          "label": "牧野之战"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "介绍甲骨文的名称、载体和占卜记录功能",
@@ -4258,33 +3469,13 @@
         "西周后期，周王室与诸侯之间的关系逐渐发生变化。诸侯国的力量不断增长，周王室的控制能力相对减弱。公元前771年，犬戎攻破镐京，姬宫湦（周幽王）在战乱中死亡。公元前770年，周平王将都城迁到【洛邑】，历史上把这之后的一时期称为东周，西周由此结束。",
         "西周的分封、宗法和礼制，把土地分配、政治权力、家族关系和社会等级联系在一起，形成了周王朝治理天下的重要方式。它既加强了早期周王室对地方的组织，也为后来诸侯势力的发展和春秋时期的政治变化埋下了伏笔。"
       ],
-      "content_checksum": "149560ce57cd86b4f12ee75293f62dca27b9f0e15242b568b1a19c9338f6536f",
-      "content_status": "published",
-      "content_version": 1,
+      "content_checksum": null,
+      "content_status": "builtin",
+      "content_version": 0,
       "course_id": "C-prequin-state",
       "duration": "09:10",
       "era": "先秦",
-      "facts": [
-        "【历史背景】商鞅变法发生在战国兼并、农业与国家组织持续变化的环境中，秦的转型不能简化为一次孤立事件。",
-        "【传世文献】秦孝公求贤并支持卫鞅改革是后世叙事的关键框架，具体对话不是同时代逐字记录。",
-        "【年代边界】教学通常以约公元前356年、前350年前后概括两阶段改革；措施实际推行、修订与延续并非同日完成。",
-        "【传世文献】《史记·商君列传》成书于西汉，晚于商鞅变法二百多年，保存重要传统但不能作为宫廷现场记录。",
-        "【传世叙事】徙木立信用于说明兑现承诺与制度信用，目前没有出土材料可逐项核验木头、赏金和现场对白。",
-        "【文本与教学解释】公开规则、明确责任和兑现赏罚有助于制度取得信用；现存论述来自层次不同的传世材料。",
-        "【制度解释】军功爵削弱世袭贵族特权并提供新的身份通道，同时把社会上升与战争绩效紧密连接。",
-        "【制度解释】奖励耕战服务粮食、兵源与国家动员，不能直接推出每个农户都因此富裕或自由。",
-        "【制度解释】县级治理与地方官吏增强中央命令、征收和司法执行能力，具体形成过程需要传世与出土材料互证。",
-        "【制度代价】户籍、什伍和连带责任提高识别与追责能力，也可能扩大邻里监督、惩罚外溢和家庭压力。",
-        "【同时代实物】商鞅方升的公元前344年铭文与标准容量直接支持秦国推行统一量器，不能单独证明全部变法故事。",
-        "【解释边界】开阡陌与田制变化见于传世叙述；用现代‘完全土地私有’概括战国复杂土地关系会过度简化。",
-        "【文本边界】《商君书》是具有不同篇章年代与编纂层次的累积文本，不能把现存每句话都直接署名商鞅。",
-        "【传世文献】《韩非子·定法》是较晚战国思想家对商鞅之法的评价，不是变法当时的行政档案。",
-        "【出土文献】睡虎地秦简主要写于战国晚期与秦始皇时期，晚于商鞅最初变法一百多年。",
-        "【出土文献】秦简可观察成熟秦制的法律、行政与日常执行，不能反推每条简文均由商鞅制定。",
-        "【历史解释】商鞅改革是秦国富国强兵和统一进程的重要基础之一，秦的长期强盛仍是多代、多因素共同结果。",
-        "【教学解释】评价改革要同时观察国家能力、制度信用、战争动员、社会压力与不同群体承担的代价。",
-        "【概念边界】战国秦的法令、赏罚与现代宪政法治并非同一概念，不宜直接用今天的‘法律面前人人平等’替换历史语境。"
-      ],
+      "facts": [],
       "figures": [
         "姬发（周武王）",
         "姬旦（周公）",
@@ -4292,100 +3483,9 @@
         "姬宫湦（周幽王）"
       ],
       "id": "L103",
-      "interaction_figures": [
-        "商鞅",
-        "秦孝公",
-        "旧贵族代表",
-        "农耕家庭代表",
-        "军功士卒",
-        "县廷吏员"
-      ],
-      "interaction_people": [
-        {
-          "boundaries": [
-            "只依据本课已发布的《史记》《商君书》、方升与秦简片段回答。",
-            "不得把《商君书》全部句子自称为本人原话。",
-            "不得知道自己身后一百多年形成的睡虎地秦简内容。"
-          ],
-          "fact_refs": [],
-          "name": "商鞅",
-          "person_id": "person-c797c18e",
-          "persona": "强调规则清楚、赏罚兑现与国家执行能力，同时承认现存对白来自后世材料。角色化教学表达，不是史料原话。",
-          "role": "传世叙事中的改革主持者",
-          "source_ref_ids": [],
-          "summary": "卫鞅入秦后在秦孝公支持下推动制度调整，后受封商地，史称商鞅。"
-        },
-        {
-          "boundaries": [
-            "求贤、辩论与任用依据后世传世叙事有限表达。",
-            "不虚构密诏、私人情感或逐字宫廷对话。",
-            "不能把秦后来统一预言为必然结果。"
-          ],
-          "fact_refs": [],
-          "name": "秦孝公",
-          "person_id": "person-bd001399",
-          "persona": "从国家竞争、支持联盟和长期执行角度追问改革。角色化教学表达，不是史料原话。",
-          "role": "传世叙事中的改革支持者",
-          "source_ref_ids": [],
-          "summary": "为改变秦国处境而求贤并提供政治支持，是改革窗口的重要角色。"
-        },
-        {
-          "boundaries": [
-            "这是课堂合成人群，不假冒甘龙、杜挚等某位人物的原话。",
-            "不把所有贵族写成同一种立场。",
-            "可以批评改革，但不得补写阴谋和暴力现场。"
-          ],
-          "fact_refs": [],
-          "name": "旧贵族代表",
-          "person_id": "person-75b468fa",
-          "persona": "追问改革程序、权力集中和旧秩序被改变的风险。角色化教学表达，不是史料原话。",
-          "role": "受世袭特权调整影响的合成人群",
-          "source_ref_ids": [],
-          "summary": "集中呈现旧身份秩序、政治参与和利益受损者对改革的异议。"
-        },
-        {
-          "boundaries": [
-            "不虚构某户的精确田亩、税额和伤亡。",
-            "不能声称代表所有秦国农户。",
-            "关卡数值是教学模型，不是出土账册。"
-          ],
-          "fact_refs": [],
-          "name": "农耕家庭代表",
-          "person_id": "person-a748c58d",
-          "persona": "从收成、赋役、服兵役和家庭安全追问政策代价。角色化教学表达，不是史料原话。",
-          "role": "承担生产、赋役与家庭风险的合成人群",
-          "source_ref_ids": [],
-          "summary": "观察奖励耕战、户籍、征发和尺度统一怎样进入普通家庭。"
-        },
-        {
-          "boundaries": [
-            "不是某场战役具名士卒的自述。",
-            "不提供未经课程片段支持的斩首数、爵级和赏田。",
-            "不把军功通道等同于现代平等。"
-          ],
-          "fact_refs": [],
-          "name": "军功士卒",
-          "person_id": "person-44990ad0",
-          "persona": "同时说明获得爵位的希望、军纪约束和战场代价。角色化教学表达，不是史料原话。",
-          "role": "通过服役争取身份机会的合成人群",
-          "source_ref_ids": [],
-          "summary": "展示军功爵可能带来的上升通道与战争风险。"
-        },
-        {
-          "boundaries": [
-            "依据较晚秦简理解成熟秦制，不自称直接奉行商鞅手令。",
-            "不把秦简每条规定倒推到公元前四世纪中叶。",
-            "遇到超出证据库的具体案件回答‘依据不足’。"
-          ],
-          "fact_refs": [],
-          "name": "县廷吏员",
-          "person_id": "person-829de766",
-          "persona": "要求规则可登记、可核验、可执行，也说明追责压力。角色化教学表达，不是史料原话。",
-          "role": "执行登记、征收与司法的合成基层官吏",
-          "source_ref_ids": [],
-          "summary": "连接中央法令与地方日常，展示执行能力和行政负担。"
-        }
-      ],
+      "interaction_figures": [],
+      "interaction_people": [],
+      "interaction_status": "not_adapted",
       "keywords": [
         {
           "gloss": "周朝前期的王朝；都城在镐京",
@@ -4433,12 +3533,7 @@
           "word": "琉璃河遗址"
         }
       ],
-      "level_goals": [
-        "能按形成年代区分《史记》《商君书》、商鞅方升和睡虎地秦简的证据能力。",
-        "能说明军功、耕战、县政、户籍和度量衡之间怎样共同增强国家能力。",
-        "能在六回合改革中同时追踪国家能力、制度信用、旧贵族阻力和社会压力。",
-        "能用选择—变化—代价—来源完成史官卷宗，并写出多因解释和概念边界。"
-      ],
+      "level_goals": [],
       "map_points": [
         {
           "kind": "capital",
@@ -4575,83 +3670,20 @@
           "supplemental": true
         }
       ],
-      "primary_scenario_id": "shangyang-institutional-reform",
-      "qa_points": [
-        "《史记·商君列传》为什么重要，又为什么不能视为变法现场记录？",
-        "徙木立信能够说明制度信用的什么问题，哪些细节仍不可核验？",
-        "军功爵怎样同时带来身份机会和战争动员压力？",
-        "商鞅方升能够直接证明什么，不能替其他改革措施证明什么？",
-        "为什么睡虎地秦简不能直接称为商鞅亲自制定的法令？",
-        "《商君书》的篇章层次怎样影响我们使用其中句子？",
-        "用‘废井田、土地私有’一句话概括改革会遗漏哪些边界？",
-        "秦国后来强盛为什么不能只归因于商鞅一个人或一次变法？"
-      ],
-      "rag_available": true,
+      "primary_scenario_id": null,
+      "qa_points": [],
+      "rag_available": false,
       "reading_media_available": false,
-      "release_checksum": "aec5ac43d3635ab0c605136d995bdc9b250898ba3bc853f389d79cc86bd03880",
-      "release_id": "rel-28b5624648-0010",
-      "release_no": 10,
-      "saga_material": {
-        "assets": [
-          "shangyang-classroom-intro"
-        ],
-        "kind": "saga",
-        "notes": "建议9分钟；每组材料先写可证结论，再写不可越过的年代边界。",
-        "objective": "在地图、器物和短片中辨认后世叙事、同时代实物与较晚出土文献。",
-        "title": "踏勘：三类材料中的商鞅变法"
-      },
-      "sandbox_id": "抉择：六回合制度改革议事",
-      "sandbox_material": {
-        "assets": [
-          "shangyang-institutional-reform"
-        ],
-        "kind": "sandbox",
-        "notes": "固定行动断网可用；变量不是秦国真实统计，结局不是对历史人物的道德裁决。",
-        "objective": "在公开规则、耕战激励、标准尺度、县政执行与社会承受之间形成可复盘方案。",
-        "title": "抉择：六回合制度改革议事"
-      },
-      "scenario_refs": [
-        {
-          "checksum": "eddb9370bc7ad0cd8080784c68f15db25ecba11ffed4f2d272e8588d10f87cbd",
-          "primary": true,
-          "scenario_id": "shangyang-institutional-reform",
-          "scenario_version": 1
-        }
-      ],
+      "release_checksum": null,
+      "release_id": null,
+      "release_no": null,
+      "saga_material": null,
+      "sandbox_id": null,
+      "sandbox_material": null,
+      "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "evidence-chronology",
-          "label": "证据年代",
-          "note": "变法当时—战国晚期—西汉—现代研究分层"
-        },
-        {
-          "id": "state-capacity",
-          "label": "国家能力",
-          "note": "计量、户籍、县政、粮食与兵源如何连接"
-        },
-        {
-          "id": "institutional-credit",
-          "label": "制度信用",
-          "note": "公开规则与兑现赏罚为何影响执行"
-        },
-        {
-          "id": "mobility-and-war",
-          "label": "身份机会与战争",
-          "note": "军功爵的机会和军事化代价并存"
-        },
-        {
-          "id": "pressure-and-resistance",
-          "label": "压力与阻力",
-          "note": "旧特权、家庭负担和基层追责不可消失"
-        },
-        {
-          "id": "multi-causal-explanation",
-          "label": "多因解释",
-          "note": "改革是重要基础之一，不是统一的唯一原因"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "介绍琉璃河遗址、燕国城址和青铜器铭文所反映的西周分封",
@@ -4706,13 +3738,9 @@
         "越王勾践"
       ],
       "id": "L104",
-      "interaction_figures": [
-        "周武王",
-        "周公旦",
-        "周幽王",
-        "周平王"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "春秋时期取得较大政治影响的诸侯；具体名单有不同说法",
@@ -4961,32 +3989,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "牧野之战"
-        },
-        {
-          "id": "n2",
-          "label": "分封诸侯"
-        },
-        {
-          "id": "n3",
-          "label": "宗法 · 嫡长子"
-        },
-        {
-          "id": "n4",
-          "label": "制礼作乐"
-        },
-        {
-          "id": "n5",
-          "label": "礼崩乐坏"
-        },
-        {
-          "id": "n6",
-          "label": "平王东迁"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "介绍春秋五霸的常见名单及齐桓公相关历史",
@@ -5037,14 +4040,9 @@
         "嬴渠梁（秦孝公）"
       ],
       "id": "L105",
-      "interaction_figures": [
-        "齐桓公",
-        "管仲",
-        "晋文公",
-        "楚庄王",
-        "孔子"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "东周后期的历史时期；诸侯国长期竞争并相继变法",
@@ -5179,32 +4177,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "平王东迁"
-        },
-        {
-          "id": "n2",
-          "label": "周室衰微"
-        },
-        {
-          "id": "n3",
-          "label": "齐桓 · 管仲改革"
-        },
-        {
-          "id": "n4",
-          "label": "尊王攘夷"
-        },
-        {
-          "id": "n5",
-          "label": "晋文 · 城濮之战"
-        },
-        {
-          "id": "n6",
-          "label": "礼乐征伐自诸侯出"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "整理商鞅变法中农战、军功、连坐、土地和县制等主要措施及其影响",
@@ -5254,13 +4227,9 @@
         "孔子"
       ],
       "id": "L201",
-      "interaction_figures": [
-        "孔子",
-        "颜回",
-        "子路",
-        "子贡"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "春秋战国时期思想活跃的局面；不同学派围绕社会问题提出主张",
@@ -5383,32 +4352,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "礼崩乐坏"
-        },
-        {
-          "id": "n2",
-          "label": "孔子 · 鲁国"
-        },
-        {
-          "id": "n3",
-          "label": "仁 = 爱人"
-        },
-        {
-          "id": "n4",
-          "label": "克己复礼"
-        },
-        {
-          "id": "n5",
-          "label": "有教无类"
-        },
-        {
-          "id": "n6",
-          "label": "《论语》"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "孔子及弟子问答、学习教育和仁礼思想的主要材料",
@@ -5458,12 +4402,9 @@
         "老子"
       ],
       "id": "L202",
-      "interaction_figures": [
-        "老子",
-        "庄子",
-        "关尹"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "先秦重要思想学派；重视认识变化规律并减少过度干预",
@@ -5561,32 +4502,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "周室藏书"
-        },
-        {
-          "id": "n2",
-          "label": "出关"
-        },
-        {
-          "id": "n3",
-          "label": "道生万物"
-        },
-        {
-          "id": "n4",
-          "label": "无为而治"
-        },
-        {
-          "id": "n5",
-          "label": "以柔克刚"
-        },
-        {
-          "id": "n6",
-          "label": "庄子 · 逍遥"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "保存道、无为、自然及政治处世思想的主要材料",
@@ -5629,13 +4545,9 @@
         "韩非"
       ],
       "id": "L203",
-      "interaction_figures": [
-        "韩非",
-        "李斯",
-        "荀子",
-        "秦王嬴政"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "先秦重要思想学派；重视规则 权力和行政治理",
@@ -5741,32 +4653,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "商鞅 · 法"
-        },
-        {
-          "id": "n2",
-          "label": "申不害 · 术"
-        },
-        {
-          "id": "n3",
-          "label": "慎到 · 势"
-        },
-        {
-          "id": "n4",
-          "label": "韩非 · 三者合一"
-        },
-        {
-          "id": "n5",
-          "label": "中央集权"
-        },
-        {
-          "id": "n6",
-          "label": "秦统一"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "法、术、势及以法治国思想的主要材料；含有政论和寓言",
@@ -5812,17 +4699,9 @@
         "韩信"
       ],
       "id": "L401",
-      "interaction_figures": [
-        "秦二世",
-        "赵高",
-        "陈胜",
-        "项羽",
-        "刘邦",
-        "萧何",
-        "张良",
-        "韩信"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "秦末起义领导者；在大泽乡率戍卒反抗秦朝",
@@ -6044,32 +4923,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "始皇驾崩"
-        },
-        {
-          "id": "n2",
-          "label": "陈胜吴广 209"
-        },
-        {
-          "id": "n3",
-          "label": "巨鹿之战"
-        },
-        {
-          "id": "n4",
-          "label": "刘邦入关"
-        },
-        {
-          "id": "n5",
-          "label": "楚汉相争"
-        },
-        {
-          "id": "n6",
-          "label": "汉朝建立 202"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载陈胜吴广起义及秦末社会反抗",
@@ -6121,14 +4975,9 @@
         "范雎"
       ],
       "id": "L301",
-      "interaction_figures": [
-        "秦昭襄王",
-        "范雎",
-        "白起",
-        "廉颇",
-        "赵括"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "战国后期的七个主要强国；秦楚齐燕韩赵魏",
@@ -6286,32 +5135,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "战国七雄"
-        },
-        {
-          "id": "n2",
-          "label": "商鞅遗产"
-        },
-        {
-          "id": "n3",
-          "label": "范雎入秦"
-        },
-        {
-          "id": "n4",
-          "label": "远交近攻"
-        },
-        {
-          "id": "n5",
-          "label": "长平之战"
-        },
-        {
-          "id": "n6",
-          "label": "六国孤立"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "保存苏秦、张仪等纵横家游说和诸侯外交的传统记载",
@@ -6364,15 +5188,9 @@
         "李信"
       ],
       "id": "L302",
-      "interaction_figures": [
-        "嬴政",
-        "李斯",
-        "王翦",
-        "蒙恬",
-        "荆轲",
-        "燕太子丹"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "秦国先后消灭六国的连续战争；公元前230年至前221年间推进",
@@ -6544,32 +5362,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "嬴政亲政"
-        },
-        {
-          "id": "n2",
-          "label": "灭韩 230"
-        },
-        {
-          "id": "n3",
-          "label": "灭赵 228"
-        },
-        {
-          "id": "n4",
-          "label": "荆轲刺秦"
-        },
-        {
-          "id": "n5",
-          "label": "灭楚 王翦六十万"
-        },
-        {
-          "id": "n6",
-          "label": "灭齐 221 · 一统"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载秦王嬴政亲政、灭六国和完成统一的传统叙述",
@@ -6619,14 +5412,9 @@
         "嬴政（秦始皇）"
       ],
       "id": "L303",
-      "interaction_figures": [
-        "秦始皇",
-        "李斯",
-        "王绾",
-        "蒙恬",
-        "扶苏"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "以郡和县管理地方的制度；地方官员由中央任用",
@@ -6739,32 +5527,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "称皇帝 221"
-        },
-        {
-          "id": "n2",
-          "label": "三公九卿"
-        },
-        {
-          "id": "n3",
-          "label": "李斯 vs 王绾"
-        },
-        {
-          "id": "n4",
-          "label": "郡县制"
-        },
-        {
-          "id": "n5",
-          "label": "书同文 / 车同轨"
-        },
-        {
-          "id": "n6",
-          "label": "百代皆行秦政法"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载秦统一后帝号、郡县和统一措施的传统叙述",
@@ -6817,17 +5580,9 @@
         "张角"
       ],
       "id": "L403",
-      "interaction_figures": [
-        "王莽",
-        "刘秀",
-        "班超",
-        "蔡伦",
-        "张衡",
-        "张角",
-        "董卓",
-        "曹操"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "王莽建立的政权；公元9年至23年存在",
@@ -7012,40 +5767,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "王莽代汉"
-        },
-        {
-          "id": "n2",
-          "label": "绿林赤眉"
-        },
-        {
-          "id": "n3",
-          "label": "刘秀重建汉朝"
-        },
-        {
-          "id": "n4",
-          "label": "光武中兴"
-        },
-        {
-          "id": "n5",
-          "label": "戚宦之争"
-        },
-        {
-          "id": "n6",
-          "label": "党锢之祸"
-        },
-        {
-          "id": "n7",
-          "label": "黄巾起义 184"
-        },
-        {
-          "id": "n8",
-          "label": "三国鼎立前夜"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载王莽建立新朝和改制过程",
@@ -7097,14 +5819,9 @@
         "李陵"
       ],
       "id": "L501",
-      "interaction_figures": [
-        "司马谈",
-        "司马迁",
-        "李陵",
-        "汉武帝",
-        "班固"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "贯通传说时代至汉武帝时期的史书；中国纪传体通史的重要开端",
@@ -7288,32 +6005,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "父志"
-        },
-        {
-          "id": "n2",
-          "label": "李陵之祸"
-        },
-        {
-          "id": "n3",
-          "label": "宫刑"
-        },
-        {
-          "id": "n4",
-          "label": "发愤著书"
-        },
-        {
-          "id": "n5",
-          "label": "纪传体 · 130 篇"
-        },
-        {
-          "id": "n6",
-          "label": "通古今之变"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记录司马氏史官传统和《史记》的写作宗旨",
@@ -7366,14 +6058,9 @@
         "郑玄"
       ],
       "id": "L502",
-      "interaction_figures": [
-        "董仲舒",
-        "刘歆",
-        "汉章帝",
-        "班固",
-        "郑玄"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "研究和解释儒家经典的学问；与汉代教育和政治制度密切相关",
@@ -7545,32 +6232,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "独尊儒术"
-        },
-        {
-          "id": "n2",
-          "label": "五经博士"
-        },
-        {
-          "id": "n3",
-          "label": "今文 · 微言大义"
-        },
-        {
-          "id": "n4",
-          "label": "古文 · 训诂典制"
-        },
-        {
-          "id": "n5",
-          "label": "白虎观会议 79"
-        },
-        {
-          "id": "n6",
-          "label": "郑玄遍注群经"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "保存西汉典籍整理和学术分类的相关材料",
@@ -7623,13 +6285,9 @@
         "刘徽"
       ],
       "id": "L503",
-      "interaction_figures": [
-        "蔡伦",
-        "张衡",
-        "张仲景",
-        "华佗"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "利用植物纤维制作书写材料的技术；在两汉时期逐步发展成熟",
@@ -7801,32 +6459,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "蔡伦 · 造纸术"
-        },
-        {
-          "id": "n2",
-          "label": "张衡 · 浑天仪"
-        },
-        {
-          "id": "n3",
-          "label": "地动仪 132"
-        },
-        {
-          "id": "n4",
-          "label": "《九章算术》"
-        },
-        {
-          "id": "n5",
-          "label": "张仲景 · 伤寒论"
-        },
-        {
-          "id": "n6",
-          "label": "华佗 · 麻沸散"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载蔡伦于公元105年报告改进制纸方法",
@@ -7885,16 +6518,9 @@
         "郭子仪"
       ],
       "id": "L803",
-      "interaction_figures": [
-        "阿倍仲麻吕（晁衡）",
-        "吉备真备",
-        "空海",
-        "最澄",
-        "鉴真",
-        "阿罗本",
-        "苏莱曼"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "唐代负责一方军事的边镇长官；部分人员后来兼掌财政和地方事务",
@@ -8056,40 +6682,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "长安 · 百万人口"
-        },
-        {
-          "id": "n2",
-          "label": "西市 · 胡商"
-        },
-        {
-          "id": "n3",
-          "label": "陆丝 · 葱岭"
-        },
-        {
-          "id": "n4",
-          "label": "海丝 · 广州"
-        },
-        {
-          "id": "n5",
-          "label": "景教 · 摩尼 · 祆"
-        },
-        {
-          "id": "n6",
-          "label": "遣唐使 · 19 次"
-        },
-        {
-          "id": "n7",
-          "label": "鉴真东渡"
-        },
-        {
-          "id": "n8",
-          "label": "东亚文明圈"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载安禄山经历和叛乱过程",
@@ -8140,18 +6733,9 @@
         "札木合"
       ],
       "id": "L1101",
-      "interaction_figures": [
-        "朱元璋（明太祖）",
-        "胡惟庸",
-        "李善长",
-        "蓝玉",
-        "宋濂",
-        "解缙",
-        "王振",
-        "刘瑾",
-        "魏忠贤"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "亚洲内陆高原地区；蒙古各部活动和统一的主要空间",
@@ -8272,36 +6856,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "1368 称帝 · 大明"
-        },
-        {
-          "id": "n2",
-          "label": "1380 胡惟庸案"
-        },
-        {
-          "id": "n3",
-          "label": "罢中书 · 废丞相"
-        },
-        {
-          "id": "n4",
-          "label": "蓝玉案 · 功臣清洗"
-        },
-        {
-          "id": "n5",
-          "label": "内阁 · 票拟"
-        },
-        {
-          "id": "n6",
-          "label": "司礼监 · 批红"
-        },
-        {
-          "id": "n7",
-          "label": "锦衣卫 · 东西厂"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "保存铁木真早年和蒙古统一的历史记忆",
@@ -8352,16 +6907,9 @@
         "旭烈兀"
       ],
       "id": "L1102",
-      "interaction_figures": [
-        "雍正帝",
-        "乾隆帝",
-        "鄂尔泰",
-        "张廷玉",
-        "和珅",
-        "嘉庆帝",
-        "道光帝"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "十二至十三世纪中亚政权；与蒙古冲突后在第一次西征中瓦解",
@@ -8495,40 +7043,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "议政王大臣会议"
-        },
-        {
-          "id": "n2",
-          "label": "1729 西北用兵"
-        },
-        {
-          "id": "n3",
-          "label": "军机处 · 隆宗门内"
-        },
-        {
-          "id": "n4",
-          "label": "跪受笔录"
-        },
-        {
-          "id": "n5",
-          "label": "廷寄"
-        },
-        {
-          "id": "n6",
-          "label": "密折制度"
-        },
-        {
-          "id": "n7",
-          "label": "乾纲独断 · 顶峰"
-        },
-        {
-          "id": "n8",
-          "label": "依赖皇帝意志"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载蒙古王族和中亚西亚征服",
@@ -8579,18 +7094,9 @@
         "阿里不哥"
       ],
       "id": "L1103",
-      "interaction_figures": [
-        "朱元璋",
-        "郑和",
-        "刘大夏",
-        "戚继光",
-        "郑成功",
-        "施琅",
-        "康熙帝",
-        "乾隆帝",
-        "马戛尔尼"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "忽必烈于公元1271年定名的王朝；公元1368年退出中原",
@@ -8748,44 +7254,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "明初海禁 · 片板不许下海"
-        },
-        {
-          "id": "n2",
-          "label": "郑和下西洋 1405—1433"
-        },
-        {
-          "id": "n3",
-          "label": "1567 月港开禁"
-        },
-        {
-          "id": "n4",
-          "label": "顺治迁海令 1655"
-        },
-        {
-          "id": "n5",
-          "label": "康熙四海关 1684"
-        },
-        {
-          "id": "n6",
-          "label": "1757 广州一口通商"
-        },
-        {
-          "id": "n7",
-          "label": "十三行 · 公行"
-        },
-        {
-          "id": "n8",
-          "label": "1793 马戛尔尼"
-        },
-        {
-          "id": "n9",
-          "label": "1840 鸦片战争"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载忽必烈即位 建元和统一战争",
@@ -8835,18 +7304,9 @@
         "赵匡胤（宋太祖）"
       ],
       "id": "L1001",
-      "interaction_figures": [
-        "铁木真（成吉思汗）",
-        "诃额仑",
-        "也速该",
-        "札木合",
-        "王罕",
-        "博尔术",
-        "木华黎",
-        "哲别",
-        "速不台"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "唐亡后多个政权并立的历史时期；中原王朝更替频繁",
@@ -8947,40 +7407,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "斡难河 · 童年苦难"
-        },
-        {
-          "id": "n2",
-          "label": "结安答 · 投王罕"
-        },
-        {
-          "id": "n3",
-          "label": "那可儿体系"
-        },
-        {
-          "id": "n4",
-          "label": "统一蒙古 1206"
-        },
-        {
-          "id": "n5",
-          "label": "千户 · 怯薛"
-        },
-        {
-          "id": "n6",
-          "label": "灭西夏 · 攻金"
-        },
-        {
-          "id": "n7",
-          "label": "第一次西征 · 灭花剌子模"
-        },
-        {
-          "id": "n8",
-          "label": "1227 病逝"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载北宋初年政治和制度变化",
@@ -9032,18 +7459,9 @@
         "萧绰（承天太后）"
       ],
       "id": "L1002",
-      "interaction_figures": [
-        "成吉思汗",
-        "摩诃末",
-        "札兰丁",
-        "拔都",
-        "速不台",
-        "贝拉四世",
-        "蒙哥",
-        "旭烈兀",
-        "末代哈里发"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "契丹族建立的王朝；长期控制燕云地区；与北宋并立",
@@ -9208,44 +7626,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "一西征 1219 · 灭花剌子模"
-        },
-        {
-          "id": "n2",
-          "label": "迦勒迦河 1223"
-        },
-        {
-          "id": "n3",
-          "label": "长子西征 1235"
-        },
-        {
-          "id": "n4",
-          "label": "罗斯沦陷 · 金帐"
-        },
-        {
-          "id": "n5",
-          "label": "莱格尼察 · 赛约河 1241"
-        },
-        {
-          "id": "n6",
-          "label": "窝阔台死 · 撤军"
-        },
-        {
-          "id": "n7",
-          "label": "三西征 · 1258 巴格达"
-        },
-        {
-          "id": "n8",
-          "label": "艾因·贾鲁 1260"
-        },
-        {
-          "id": "n9",
-          "label": "四大汗国 · 蒙古和平"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记录辽军南下 宋廷讨论和盟约形成",
@@ -9295,20 +7676,9 @@
         "王安石"
       ],
       "id": "L1003",
-      "interaction_figures": [
-        "忽必烈",
-        "阿里不哥",
-        "刘秉忠",
-        "姚枢",
-        "伯颜",
-        "吕文焕",
-        "文天祥",
-        "陆秀夫",
-        "张世杰",
-        "马可·波罗",
-        "朱元璋"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "以生产和交换商品为重要内容的经济活动；依赖市场 货币和交通",
@@ -9427,44 +7797,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "蒙哥死于钓鱼城"
-        },
-        {
-          "id": "n2",
-          "label": "汗位之争 1260"
-        },
-        {
-          "id": "n3",
-          "label": "迁都大都 1264"
-        },
-        {
-          "id": "n4",
-          "label": "建国号大元 1271"
-        },
-        {
-          "id": "n5",
-          "label": "襄阳 6 年攻防"
-        },
-        {
-          "id": "n6",
-          "label": "崖山海战 1279"
-        },
-        {
-          "id": "n7",
-          "label": "行省制 · 10 省"
-        },
-        {
-          "id": "n8",
-          "label": "宣政院 · 西藏入版图"
-        },
-        {
-          "id": "n9",
-          "label": "1368 元顺帝北走"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载交子 市易和宋代财政贸易制度",
@@ -9515,15 +7848,9 @@
         "杜甫"
       ],
       "id": "L901",
-      "interaction_figures": [
-        "赵匡胤（宋太祖）",
-        "赵普",
-        "石守信",
-        "王审琦",
-        "柴荣",
-        "韩琦"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "唐代诗歌的总称；题材丰富；风格多样；名家众多",
@@ -9644,36 +7971,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "五代十国 · 武将乱"
-        },
-        {
-          "id": "n2",
-          "label": "陈桥兵变 960"
-        },
-        {
-          "id": "n3",
-          "label": "杯酒释兵权"
-        },
-        {
-          "id": "n4",
-          "label": "三衙 + 枢密院"
-        },
-        {
-          "id": "n5",
-          "label": "崇儒右文"
-        },
-        {
-          "id": "n6",
-          "label": "扩科举 · 殿试"
-        },
-        {
-          "id": "n7",
-          "label": "与士大夫治天下"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "保存李白诗文和人生表达",
@@ -9725,15 +8023,9 @@
         "辩机"
       ],
       "id": "L902",
-      "interaction_figures": [
-        "宋真宗",
-        "寇准",
-        "辽圣宗",
-        "萧太后",
-        "萧挞凛",
-        "王钦若"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "玄奘从长安经中亚前往印度学习佛法并搜集经典的旅程",
@@ -9898,36 +8190,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "幽云十六州"
-        },
-        {
-          "id": "n2",
-          "label": "辽军南下 · 澶州 1004"
-        },
-        {
-          "id": "n3",
-          "label": "寇准劝亲征"
-        },
-        {
-          "id": "n4",
-          "label": "床子弩射萧挞凛"
-        },
-        {
-          "id": "n5",
-          "label": "澶渊之盟 1005"
-        },
-        {
-          "id": "n6",
-          "label": "岁币 · 兄弟之国"
-        },
-        {
-          "id": "n7",
-          "label": "榷场 · 百年和平"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载玄奘求法旅程和译经活动",
@@ -9977,19 +8240,9 @@
         "阿倍仲麻吕"
       ],
       "id": "L903",
-      "interaction_figures": [
-        "毕昇",
-        "沈括",
-        "张择端",
-        "孟元老",
-        "苏轼",
-        "李清照",
-        "辛弃疾",
-        "朱熹",
-        "司马光",
-        "马可·波罗"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "连接东亚 中亚 南亚和西亚的陆海交通网络；运输商品并传播文化",
@@ -10113,40 +8366,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "工商税 > 70%"
-        },
-        {
-          "id": "n2",
-          "label": "汴京 · 临安 百万"
-        },
-        {
-          "id": "n3",
-          "label": "夜市 · 瓦舍"
-        },
-        {
-          "id": "n4",
-          "label": "交子 1023"
-        },
-        {
-          "id": "n5",
-          "label": "市舶司 · 泉州"
-        },
-        {
-          "id": "n6",
-          "label": "活字 · 火药 · 指南针"
-        },
-        {
-          "id": "n7",
-          "label": "清明上河图"
-        },
-        {
-          "id": "n8",
-          "label": "宋代转向"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记录景教群体对入唐和传播过程的自述",
@@ -10198,17 +8418,9 @@
         "房玄龄"
       ],
       "id": "L801",
-      "interaction_figures": [
-        "李白",
-        "杜甫",
-        "王维",
-        "孟浩然",
-        "高适",
-        "岑参",
-        "白居易",
-        "李商隐"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "唐高祖次子；在唐朝统一战争中建立军功；后成为唐太宗",
@@ -10369,36 +8581,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "唐诗 · 全唐诗 48000 首"
-        },
-        {
-          "id": "n2",
-          "label": "李白 · 诗仙"
-        },
-        {
-          "id": "n3",
-          "label": "杜甫 · 诗圣"
-        },
-        {
-          "id": "n4",
-          "label": "744 洛阳相遇"
-        },
-        {
-          "id": "n5",
-          "label": "国破山河在"
-        },
-        {
-          "id": "n6",
-          "label": "三吏三别"
-        },
-        {
-          "id": "n7",
-          "label": "诗史"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载唐太宗即位 政策和边疆活动",
@@ -10450,16 +8633,9 @@
         "姚崇"
       ],
       "id": "L802",
-      "interaction_figures": [
-        "玄奘",
-        "戒贤",
-        "麹文泰",
-        "唐太宗",
-        "辩机",
-        "义净",
-        "鉴真"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "唐高宗皇后；后建立武周；中国古代唯一正式称帝的女性",
@@ -10620,40 +8796,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "佛教传入 · 宗派林立"
-        },
-        {
-          "id": "n2",
-          "label": "贞观三年 西行"
-        },
-        {
-          "id": "n3",
-          "label": "莫贺延碛"
-        },
-        {
-          "id": "n4",
-          "label": "那烂陀 · 戒贤"
-        },
-        {
-          "id": "n5",
-          "label": "大乘天"
-        },
-        {
-          "id": "n6",
-          "label": "645 携经返长安"
-        },
-        {
-          "id": "n7",
-          "label": "译场 · 1335 卷"
-        },
-        {
-          "id": "n8",
-          "label": "大唐西域记"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载武则天参政 称帝和政策活动",
@@ -10705,16 +8848,9 @@
         "李渊（唐高祖）"
       ],
       "id": "L701",
-      "interaction_figures": [
-        "唐太宗李世民",
-        "魏徵",
-        "房玄龄",
-        "杜如晦",
-        "李靖",
-        "颉利可汗",
-        "文成公主"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "公元581年建立的统一王朝；公元618年灭亡",
@@ -10873,36 +9009,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "玄武门之变 626"
-        },
-        {
-          "id": "n2",
-          "label": "魏徵敢谏"
-        },
-        {
-          "id": "n3",
-          "label": "房谋杜断"
-        },
-        {
-          "id": "n4",
-          "label": "以人为镜"
-        },
-        {
-          "id": "n5",
-          "label": "破东突厥 · 天可汗"
-        },
-        {
-          "id": "n6",
-          "label": "文成公主和亲"
-        },
-        {
-          "id": "n7",
-          "label": "贞观二十三年"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载隋朝制度 工程 战争和政权兴亡",
@@ -10952,19 +9059,9 @@
         "宇文泰"
       ],
       "id": "L703",
-      "interaction_figures": [
-        "安禄山",
-        "史思明",
-        "唐玄宗",
-        "杨贵妃",
-        "唐肃宗",
-        "郭子仪",
-        "李光弼",
-        "唐宪宗",
-        "黄巢",
-        "朱温"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "国家按身份 年龄和劳动力情况授田的制度；以稳定生产和户籍为目标",
@@ -11060,40 +9157,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "天宝十四载 · 范阳起兵"
-        },
-        {
-          "id": "n2",
-          "label": "潼关失守 · 长安西奔"
-        },
-        {
-          "id": "n3",
-          "label": "马嵬驿"
-        },
-        {
-          "id": "n4",
-          "label": "肃宗 · 借兵回纥"
-        },
-        {
-          "id": "n5",
-          "label": "763 战乱终结"
-        },
-        {
-          "id": "n6",
-          "label": "藩镇割据"
-        },
-        {
-          "id": "n7",
-          "label": "宦官 · 党争"
-        },
-        {
-          "id": "n8",
-          "label": "黄巢 · 唐亡 907"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载唐代土地 赋役和府兵管理制度",
@@ -11145,13 +9209,9 @@
         "孙权"
       ],
       "id": "L601",
-      "interaction_figures": [
-        "隋文帝杨坚",
-        "隋炀帝杨广",
-        "宇文化及",
-        "李渊"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "公元200年曹操击败袁绍的战役；推动北方力量走向统一",
@@ -11305,36 +9365,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "南北分裂"
-        },
-        {
-          "id": "n2",
-          "label": "杨坚代周 581"
-        },
-        {
-          "id": "n3",
-          "label": "灭陈统一 589"
-        },
-        {
-          "id": "n4",
-          "label": "开皇之治"
-        },
-        {
-          "id": "n5",
-          "label": "炀帝 · 大运河"
-        },
-        {
-          "id": "n6",
-          "label": "三征高丽"
-        },
-        {
-          "id": "n7",
-          "label": "隋亡 唐兴 618"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载汉末至三国人物和政权兴替",
@@ -11379,14 +9410,9 @@
         "阮籍"
       ],
       "id": "L602",
-      "interaction_figures": [
-        "隋文帝",
-        "唐太宗",
-        "房玄龄",
-        "杜如晦",
-        "魏徵"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "魏晋时期讨论世界根本和人生问题的思想潮流；重视儒道经典的新解释",
@@ -11524,36 +9550,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "废九品中正"
-        },
-        {
-          "id": "n2",
-          "label": "三省 · 中书"
-        },
-        {
-          "id": "n3",
-          "label": "三省 · 门下封驳"
-        },
-        {
-          "id": "n4",
-          "label": "三省 · 尚书"
-        },
-        {
-          "id": "n5",
-          "label": "六部"
-        },
-        {
-          "id": "n6",
-          "label": "科举 · 进士"
-        },
-        {
-          "id": "n7",
-          "label": "天下英雄入吾彀中"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "保存魏晋人物经历和多种早期记载",
@@ -11597,13 +9594,9 @@
         "拓跋宏（北魏孝文帝）"
       ],
       "id": "L603",
-      "interaction_figures": [
-        "唐太宗",
-        "唐玄宗",
-        "杨炎",
-        "安禄山"
-      ],
+      "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "鲜卑拓跋部建立的北方政权；公元439年统一北方",
@@ -11724,36 +9717,7 @@
       "scenario_refs": [],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [
-        {
-          "id": "n1",
-          "label": "均田 · 授田"
-        },
-        {
-          "id": "n2",
-          "label": "租庸调"
-        },
-        {
-          "id": "n3",
-          "label": "府兵 · 折冲府"
-        },
-        {
-          "id": "n4",
-          "label": "三制环环相扣"
-        },
-        {
-          "id": "n5",
-          "label": "贞观 · 开元"
-        },
-        {
-          "id": "n6",
-          "label": "土地兼并 · 制度瓦解"
-        },
-        {
-          "id": "n7",
-          "label": "780 两税法"
-        }
-      ],
+      "seed_canvas": [],
       "source_refs": [
         {
           "citation_note": "记载北魏政权和孝文帝改革",
@@ -11806,6 +9770,7 @@
       "id": "L604",
       "interaction_figures": [],
       "interaction_people": [],
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "佛教从古代印度经陆海路线传入中国的长期过程",

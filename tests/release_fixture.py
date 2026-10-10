@@ -12,6 +12,13 @@ V4_RELEASE_ID = "rel-28b5624648-0006"
 V5_RELEASE_ID = "rel-28b5624648-0008"
 
 
+def copy_legacy_content(root: Path) -> Path:
+    """Isolate published-artifact regression tests from the current teacher catalogue."""
+    source = Path(__file__).resolve().parents[1] / "content"
+    shutil.copytree(source, root, ignore=shutil.ignore_patterns("textbooks", "shiji"))
+    return root
+
+
 def install_teacher_text(lesson_id: str, version: int = 1) -> None:
     """Explicitly register reviewed test content as a teacher reading snapshot."""
     from scripts.sync_teacher_course_snapshot import normalized

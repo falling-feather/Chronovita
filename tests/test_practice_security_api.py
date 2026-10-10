@@ -25,7 +25,7 @@ if str(API_ROOT) not in sys.path:
 from routers import auth as auth_router
 from routers import practice as practice_router
 from settings import settings
-from services import saga
+from services import content, saga
 from services.auth import (
     AuthServiceConfig,
     configure_identity,
@@ -38,6 +38,10 @@ from services.persistence.schema import ensure_current_schema
 class PracticeSecurityApiTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
+        from tests.release_fixture import copy_legacy_content
+        self.original_content = content.content_root()
+        self.legacy_content = copy_legacy_content(Path(self.temp_dir.name) / "content")
+        content.configure(self.legacy_content)
         self.addCleanup(self.temp_dir.cleanup)
         self.previous_settings = {
             "auth_mode": settings.auth_mode,
@@ -172,6 +176,7 @@ class PracticeSecurityApiTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.client.__exit__(None, None, None)
+        content.configure(self.original_content)
         saga.clear_states()
         practice_router._PRACTICE_LLM_RATE_LIMITER = self.previous_rate_limiter
         practice_router._PRACTICE_LLM_CONCURRENCY_LIMITER = (

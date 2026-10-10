@@ -133,6 +133,7 @@ class PersonaConversationPersistenceTests(unittest.TestCase):
             with (
                 patch.object(api_main, "configure_runtime_logging"),
                 patch.object(api_main, "validate_runtime_configuration"),
+                patch.object(api_main, "load_api_config"),
                 patch.object(api_main.persistence, "init_engine", return_value=engine),
                 patch.object(api_main, "configure_identity"),
                 patch.object(api_main, "assert_no_unmapped_student_assets"),

@@ -47,6 +47,7 @@
         @pointermove="moveStripDrag"
         @pointerup="stopStripDrag"
         @pointercancel="stopStripDrag"
+        @click.capture="guardStripClick"
       >
         <div class="scan-strip">
           <figure
@@ -136,6 +137,7 @@ const followReading = ref(true);
 let dragPointerId: number | undefined;
 let dragStartX = 0;
 let dragStartScroll = 0;
+let stripDragged = false;
 const handleWindowResize = () => syncToReading();
 
 const followedPageIndex = computed(() =>
@@ -208,11 +210,10 @@ function startStripDrag(event: PointerEvent) {
   if (!viewport) {
     return;
   }
-  pauseFollowing();
+  stripDragged = false;
   dragPointerId = event.pointerId;
   dragStartX = event.clientX;
   dragStartScroll = viewport.scrollLeft;
-  viewport.setPointerCapture(event.pointerId);
 }
 
 function moveStripDrag(event: PointerEvent) {
@@ -220,7 +221,20 @@ function moveStripDrag(event: PointerEvent) {
   if (!viewport || dragPointerId !== event.pointerId) {
     return;
   }
+  if (!stripDragged && Math.abs(event.clientX - dragStartX) < 8) return;
+  if (!stripDragged) {
+    stripDragged = true;
+    pauseFollowing();
+    viewport.setPointerCapture(event.pointerId);
+  }
   viewport.scrollLeft = dragStartScroll - (event.clientX - dragStartX);
+}
+
+function guardStripClick(event: MouseEvent) {
+  if (!stripDragged) return;
+  event.preventDefault();
+  event.stopPropagation();
+  stripDragged = false;
 }
 
 function stopStripDrag(event: PointerEvent) {

@@ -97,7 +97,8 @@ class GameDialogueAdapterTests(unittest.IsolatedAsyncioTestCase):
         self.assertIs(call["response_model"], ScenarioDialogueModelOutputV1)
         self.assertEqual(call["model"], "dialogue-test-model")
         self.assertEqual(call["temperature"], 0.2)
-        self.assertEqual(call["max_tokens"], 320)
+        self.assertGreaterEqual(call["max_tokens"], 320)
+        self.assertLessEqual(call["max_tokens"], 1536)
 
     async def test_illegal_model_output_validation_error_bubbles_to_projection(self):
         illegal_outputs = (

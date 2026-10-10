@@ -355,7 +355,8 @@ class RagAnswerServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("QUESTION_INTENT=evidence_boundary", prompt)
         self.assertIn("SYNTHESIS_MODE_REQUIRED=boundary", prompt)
         self.assertIn("EVIDENCE_JSON", prompt)
-        self.assertIn("不负责撰写答案正文", prompt)
+        self.assertIn("answer 只能改写所选片段", prompt)
+        self.assertIn("不得加入模型常识", prompt)
 
 
 if __name__ == "__main__":

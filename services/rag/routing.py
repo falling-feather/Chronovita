@@ -172,11 +172,14 @@ def route_rag_query(
         and query_plan.intent in {"detail", "causality", "comparison"}
         and len(batch.passages) >= 2
     )
+    # A short confirmation of a false premise should use the reviewed local
+    # evidence correction, not spend an API call inventing a more elaborate claim.
+    premise_confirmation = bool(re.search(r"(?:对吗|是不是|是吗|是否属实)[？?]?\s*$", question))
     if (
         len(batch.passages) >= 2
         and (
             (confidence == "high" and complexity >= 3)
-            or (confidence in {"medium", "high"} and grounded_detail)
+            or (confidence in {"medium", "high"} and grounded_detail and not premise_confirmation)
         )
         and (local_fit is None or local_fit.api_synthesis_allowed)
     ):

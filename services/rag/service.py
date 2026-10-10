@@ -29,10 +29,6 @@ class RagPersonNotFound(LookupError):
     pass
 
 
-class RagTeacherContentNotAdapted(RuntimeError):
-    pass
-
-
 class RagExternalAnswerUnavailable(RuntimeError):
     """Expected failure while acquiring or calling the optional online model.
 
@@ -94,10 +90,6 @@ class RagAnswerService:
             request.course_id,
             request.lesson_id,
         )
-        from services.courses import teacher_interaction_status
-
-        if teacher_interaction_status(request.course_id, request.lesson_id, resources.course_package) == "not_adapted":
-            raise RagTeacherContentNotAdapted("当前互动资料与教师新稿不一致，暂不调用旧主题回答。")
         person = self._resolve_person(resources.course_package.people, request)
         profile = self._resolve_persona_profile(resources, request)
         query_plan = plan_rag_query(

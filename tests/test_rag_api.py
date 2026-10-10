@@ -27,11 +27,13 @@ from services.content import workflow
 from services.operations import ConcurrentCallLimiter, TokenBucketLimiter
 from services.persistence.schema import ensure_current_schema
 from services.rag.service import _GroundedAnswerDraft
+from tests.release_fixture import copy_legacy_content
 
 
 class RagApiTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
+        self.legacy_content = copy_legacy_content(Path(self.temp_dir.name) / "content")
         self.addCleanup(self.temp_dir.cleanup)
         self.previous_content_root = content.content_root()
         self.previous_settings = {
@@ -76,7 +78,7 @@ class RagApiTests(unittest.TestCase):
                         bootstrap_display_name="Root Admin",
                     ),
                 )
-                content.configure(REPO_ROOT / "content")
+                content.configure(self.legacy_content)
                 rag.configure_rag(
                     index_path=rag_index_path,
                     model_root=Path(self.temp_dir.name) / "missing-model",

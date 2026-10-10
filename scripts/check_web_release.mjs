@@ -155,8 +155,15 @@ const distRows = await Promise.all(distFiles.map(async (file) => ({
   bytes: (await stat(file)).size,
 })));
 const distBytes = distRows.reduce((sum, row) => sum + row.bytes, 0);
-if (distBytes > ledger.budgets.dist_total_bytes) {
-  fail(`web dist exceeds budget: ${distBytes} > ${ledger.budgets.dist_total_bytes}`);
+const readerDistRoot = path.join(distRoot, 'shiji-reader');
+const readerDistBytes = distRows.filter((row) => inside(readerDistRoot, row.file))
+  .reduce((sum, row) => sum + row.bytes, 0);
+const mainDistBytes = distBytes - readerDistBytes;
+if (mainDistBytes > ledger.budgets.dist_total_bytes) {
+  fail(`main web dist exceeds budget: ${mainDistBytes} > ${ledger.budgets.dist_total_bytes}`);
+}
+if (readerDistBytes > ledger.budgets.reader_dist_bytes) {
+  fail(`reader web dist exceeds budget: ${readerDistBytes} > ${ledger.budgets.reader_dist_bytes}`);
 }
 
 const indexHtml = await readFile(path.join(distRoot, 'index.html'), 'utf8');
@@ -210,6 +217,8 @@ const summary = {
   checked_family_output_bytes: familyOutputBytes,
   public_visual_assets_bytes: publicAssetBytes,
   dist_bytes: distBytes,
+  main_dist_bytes: mainDistBytes,
+  reader_dist_bytes: readerDistBytes,
   initial_entry_raw_bytes: initialEntryBytes,
   initial_entry_files: entryPaths.length,
   largest_non_three_js_chunk_bytes: Math.max(...jsRows.filter((row) => !threeRows.includes(row)).map((row) => row.bytes)),

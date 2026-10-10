@@ -49,6 +49,8 @@ from services.persistence.schema import ensure_current_schema
 class GameApiTests(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
+        from tests.release_fixture import copy_legacy_content
+        self.legacy_content = copy_legacy_content(Path(self.temp_dir.name) / "content")
         self.previous = {
             "content_root": settings.content_root,
             "game_catalog_path": settings.game_catalog_path,
@@ -56,7 +58,7 @@ class GameApiTests(unittest.TestCase):
             "sqlite_path": settings.sqlite_path,
             "auth_mode": settings.auth_mode,
         }
-        settings.content_root = str(REPO_ROOT / "content")
+        settings.content_root = str(self.legacy_content)
         settings.game_catalog_path = "scenarios/catalog.v1.json"
         settings.game_user_id = "api-student"
         settings.sqlite_path = str(Path(self.temp_dir.name) / "chronovita.db")
