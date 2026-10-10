@@ -1,7 +1,5 @@
 const readerOnlyBuild = import.meta.env?.VITE_READER_ONLY === "true";
-const apiBase = readerOnlyBuild
-  ? ""
-  : import.meta.env?.VITE_API_BASE ?? "http://127.0.0.1:8000/api/v1";
+const apiBase = "/api/v1";
 const staticRuntimeBase = String(import.meta.env?.VITE_STATIC_RUNTIME_BASE ?? "").replace(/\/+$/, "");
 
 function decodePathSegment(value: string): string {

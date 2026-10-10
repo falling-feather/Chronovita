@@ -7,6 +7,23 @@ from services import shiji_compat, shiji_ocr, shiji_reader
 
 
 router = APIRouter()
+ocr_router = APIRouter()
+catalog_router = APIRouter()
+
+
+@catalog_router.get("/books")
+async def catalog_books() -> list[dict]:
+    return shiji_compat.books()
+
+
+@catalog_router.get("/books/shiji/toc")
+async def book_toc() -> dict:
+    return shiji_compat.book_toc()
+
+
+@catalog_router.get("/books/shiji/versions")
+async def book_versions() -> list[dict]:
+    return shiji_compat.book_versions()
 
 
 @router.get("/books/shiji/application-manifest")
@@ -58,12 +75,22 @@ async def passage_sequence(passage_id: str, version_id: str | None = None) -> di
         raise HTTPException(404, detail="史记篇章不存在") from exc
 
 
-@router.get("/pages/count")
+@ocr_router.get("/pages")
+async def ocr_pages(
+    book_id: str | None = None,
+    version_id: str | None = None,
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+) -> list[dict]:
+    return shiji_ocr.filtered_pages(book_id=book_id, version_id=version_id)[offset:offset + limit]
+
+
+@ocr_router.get("/pages/count")
 async def ocr_page_count(book_id: str | None = None, version_id: str | None = None) -> dict[str, int]:
-    return {"count": int(shiji_ocr.index().get("page_count", 0))}
+    return {"count": len(shiji_ocr.filtered_pages(book_id=book_id, version_id=version_id))}
 
 
-@router.get("/pages/{page_id}")
+@ocr_router.get("/pages/{page_id}")
 async def ocr_page(page_id: str) -> dict:
     payload = shiji_ocr.page_payload(page_id)
     if payload is None:
@@ -71,7 +98,7 @@ async def ocr_page(page_id: str) -> dict:
     return payload
 
 
-@router.get("/pages/{page_id}/neighbors")
+@ocr_router.get("/pages/{page_id}/neighbors")
 async def ocr_page_neighbors(page_id: str) -> dict:
     pages = list(shiji_ocr.page_map().values())
     ids = [str(item["id"]) for item in pages]
@@ -81,13 +108,13 @@ async def ocr_page_neighbors(page_id: str) -> dict:
     return {"page_id": page_id, "position": index + 1, "total": len(ids), "previous_page_id": ids[index - 1] if index else None, "next_page_id": ids[index + 1] if index + 1 < len(ids) else None}
 
 
-@router.get("/pages/{page_id}/parallels")
+@ocr_router.get("/pages/{page_id}/parallels")
 async def ocr_page_parallels(page_id: str) -> list[dict]:
     payload = shiji_ocr.page_payload(page_id)
     return [] if payload is None else []
 
 
-@router.get("/pages/{page_id}/image")
+@ocr_router.get("/pages/{page_id}/image")
 async def ocr_page_image(page_id: str) -> FileResponse:
     path = shiji_ocr.get_image_path(page_id)
     if path is None:

@@ -31,6 +31,12 @@ def get_page(page_id: str) -> dict[str, Any] | None:
     return page_map().get(page_id)
 
 
+def filtered_pages(*, book_id: str | None = None, version_id: str | None = None) -> list[dict[str, Any]]:
+    if book_id not in {None, "shiji"}:
+        return []
+    return [item for item in page_map().values() if version_id is None or item.get("version_id") == version_id]
+
+
 def get_image_path(page_id: str) -> Path | None:
     record = get_page(page_id)
     if not record:

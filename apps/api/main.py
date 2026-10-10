@@ -180,7 +180,8 @@ app.include_router(courses.router, prefix=f"{API_PREFIX}/courses", tags=["course
 app.include_router(learning.router, prefix=f"{API_PREFIX}/learning", tags=["learning"])
 app.include_router(practice.router, prefix=f"{API_PREFIX}/practice", tags=["practice"])
 app.include_router(shiji_compat.router, prefix=f"{API_PREFIX}/reader", tags=["shiji-reader-compat"])
-app.include_router(shiji_compat.router, prefix=f"{API_PREFIX}/ocr", tags=["shiji-ocr-compat"])
+app.include_router(shiji_compat.ocr_router, prefix=f"{API_PREFIX}/ocr", tags=["shiji-ocr-compat"])
+app.include_router(shiji_compat.catalog_router, prefix=f"{API_PREFIX}/catalog", tags=["shiji-catalog"])
 app.include_router(game.router, prefix=f"{API_PREFIX}/practice/game", tags=["game"])
 app.include_router(profile.router, prefix=f"{API_PREFIX}/profile", tags=["profile"])
 

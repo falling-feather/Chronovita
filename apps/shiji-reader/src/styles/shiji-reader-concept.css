@@ -27,7 +27,7 @@
   --jade-dark: #195f52;
   --jade-soft: #deece7;
   --shadow-soft: 0 8px 28px rgb(55 45 34 / 10%);
-  --topbar-height: 64px;
+  --topbar-height: 0px;
   --catalog-width: 228px;
   --function-width: 270px;
   --rail-width: 52px;
@@ -2812,7 +2812,7 @@
 
 @media (max-width: 780px) {
   .shiji-reader-page {
-    --topbar-height: 58px;
+    --topbar-height: 0px;
     --rail-width: 44px;
   }
 

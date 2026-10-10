@@ -1,11 +1,12 @@
 {
   "name": "@chronovita/web",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/clean-pages-preview.mjs && tsc -b && vite build",
+    "build": "npm run build:reader && node scripts/clean-pages-preview.mjs && tsc -b && vite build",
+    "build:reader": "node ../../scripts/build_shiji_reader.mjs",
     "build:pages": "node scripts/prepare-pages-preview.mjs && tsc -b && vite build --mode pages",
     "check:release-ui": "node ../../scripts/check_web_release.mjs",
     "test": "vitest run",

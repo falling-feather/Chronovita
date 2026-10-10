@@ -285,6 +285,7 @@ function ShellLayout() {
   const auth = useAuth();
   const location = useLocation();
   const isHome = location.pathname === '/';
+  const isReader = location.pathname === '/shiji';
   const navItems = useMemo<ShellNavItem[]>(() => {
     if (IS_STATIC_PREVIEW) {
       return [
@@ -305,6 +306,9 @@ function ShellLayout() {
     }
     if (auth.mode === 'legacy-local' || auth.can('content.read')) {
       items.push({ key: '/admin/content', label: <Link to="/admin/content">内容工作台</Link> });
+      if (!items.some((item) => item.key === '/shiji')) {
+        items.push({ key: '/shiji', label: <Link to="/shiji">史记阅读</Link> });
+      }
     }
     if (auth.mode === 'accounts' && auth.can('student.summary')) {
       items.push({ key: '/teacher/learning', label: <Link to="/teacher/learning">成果批阅</Link> });
@@ -320,7 +324,7 @@ function ShellLayout() {
 
   return (
     <Layout
-      className={isHome ? 'chrono-shell-layout is-home' : 'chrono-shell-layout'}
+      className={`chrono-shell-layout${isHome ? ' is-home' : ''}${isReader ? ' is-reader' : ''}`}
       style={{ minHeight: '100vh', background: 'var(--bg-page)' }}
     >
       <Header className="chrono-shell-header">
@@ -335,12 +339,12 @@ function ShellLayout() {
         <div className="chrono-header-spacer" />
         <UserSlot />
       </Header>
-      <Content className={`chrono-shell-content${isHome ? ' is-home' : ''}`}>
+      <Content className={`chrono-shell-content${isHome ? ' is-home' : ''}${isReader ? ' is-reader' : ''}`}>
         <Suspense fallback={<AuthLoadingScreen />}>
           <Outlet />
         </Suspense>
       </Content>
-      {!isHome && (
+      {!isHome && !isReader && (
         <Footer className="chrono-shell-footer">
           Chronovita · {APP_VERSION_LABEL} · {IS_STATIC_PREVIEW ? 'GitHub Pages 只读内容预览' : '本地课堂'}
         </Footer>
@@ -363,12 +367,12 @@ function AppRoutes() {
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:courseId" element={<CourseDetailPage />} />
             <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
-            <Route path="/shiji" element={<ShijiReaderPage />} />
             <Route path="/learning" element={<LearningPage />} />
             <Route path="/practice" element={<PracticePage />} />
           </Route>
 
           <Route element={<RequireRoles roles={[...STUDENT_ROLES, ...CONTENT_ROLES]} />}>
+            <Route path="/shiji" element={<ShijiReaderPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 

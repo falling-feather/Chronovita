@@ -295,10 +295,10 @@ onMounted(async () => {
       pageCountPayload,
     ] = await Promise.all([
       getBooks(),
-      getBookVersions(bookId).catch(() => []),
-      getBookToc(bookId).catch(() => null),
-      getOcrWorkspacePages({ bookId, limit: ocrPageSize, offset: 0 }).catch(() => []),
-      getOcrWorkspacePageCount({ bookId }).catch(() => ({ count: 0 })),
+      getBookVersions(bookId),
+      getBookToc(bookId),
+      getOcrWorkspacePages({ bookId, limit: ocrPageSize, offset: 0 }),
+      getOcrWorkspacePageCount({ bookId }),
     ]);
     book.value = books.find((item) => item.id === bookId) ?? null;
     if (!book.value) {
@@ -331,12 +331,16 @@ async function changeOcrPage(nextPage: number) {
     return;
   }
   ocrPageNumber.value = Math.min(Math.max(nextPage, 1), ocrTotalPages.value);
-  ocrPages.value = await getOcrWorkspacePages({
-    bookId: book.value.id,
-    versionId: ocrVersionFilter.value || undefined,
-    limit: ocrPageSize,
-    offset: (ocrPageNumber.value - 1) * ocrPageSize,
-  });
+  try {
+    ocrPages.value = await getOcrWorkspacePages({
+      bookId: book.value.id,
+      versionId: ocrVersionFilter.value || undefined,
+      limit: ocrPageSize,
+      offset: (ocrPageNumber.value - 1) * ocrPageSize,
+    });
+  } catch (caught) {
+    error.value = caught instanceof Error ? caught.message : "书影目录加载失败";
+  }
 }
 
 async function handleOcrVersionChange() {
@@ -348,12 +352,16 @@ async function handleOcrVersionChange() {
     bookId: book.value.id,
     versionId: ocrVersionFilter.value || undefined,
   };
-  const [pagePayload, countPayload] = await Promise.all([
-    getOcrWorkspacePages({ ...filters, limit: ocrPageSize, offset: 0 }),
-    getOcrWorkspacePageCount(filters),
-  ]);
-  ocrPages.value = pagePayload;
-  ocrPageCount.value = countPayload.count;
+  try {
+    const [pagePayload, countPayload] = await Promise.all([
+      getOcrWorkspacePages({ ...filters, limit: ocrPageSize, offset: 0 }),
+      getOcrWorkspacePageCount(filters),
+    ]);
+    ocrPages.value = pagePayload;
+    ocrPageCount.value = countPayload.count;
+  } catch (caught) {
+    error.value = caught instanceof Error ? caught.message : "版本目录加载失败";
+  }
 }
 
 function visiblePassages(volume: BookToc["volumes"][number]) {

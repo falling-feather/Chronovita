@@ -5,7 +5,7 @@ import type {
   TextHighlight,
 } from "../../../services/api";
 
-export type ShijiDisplayMode = "document" | "map" | "encyclopedia";
+export type ShijiDisplayMode = "document" | "encyclopedia";
 export type ShijiReaderTheme = "paper" | "white" | "night";
 export type ShijiTextVariant = "traditional" | "simplified";
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any
 
-from services import shiji_reader
+from services import shiji_ocr, shiji_reader
 
 
 VERSION_ID = "baina-ia-mirror"
@@ -116,6 +116,39 @@ def reader_manifest() -> dict[str, Any]:
 
 def volume_entries(volume_id: str) -> list[dict[str, Any]]:
     return [item for item in entries() if item["volume_id"] == volume_id]
+
+
+def book_versions() -> list[dict[str, Any]]:
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for page in shiji_ocr.page_map().values():
+        groups.setdefault(str(page.get("version_id", "")), []).append(page)
+    return [{
+        "id": version_id, "book_id": "shiji", "name": pages[0].get("version_label", version_id),
+        "provider": "史海迁移 OCR 资料", "ocr_page_count": len(pages),
+        "file_count": len({page.get("source_pdf") for page in pages}), "file_unit": "册",
+        "availability": "partial" if shiji_ocr.image_root().is_dir() else "planned",
+    } for version_id, pages in groups.items()]
+
+
+def books() -> list[dict[str, Any]]:
+    versions = book_versions()
+    return [{
+        "id": "shiji", "title": "史记", "author": "司马迁", "period": "西汉",
+        "status": "ocr_in_progress", "priority": "core", "available": True,
+        "summary": "130 卷正文与来源页阅读；OCR 和译读保留人工待审状态。",
+        "version_count": len(versions), "scan_file_count": sum(item["file_count"] for item in versions),
+        "ocr_page_count": len(shiji_ocr.page_map()),
+    }]
+
+
+def book_toc() -> dict[str, Any]:
+    volumes = reader_manifest()["volumes"]
+    return {"book_id": "shiji", "title": "史记", "volumes": [{
+        "id": item["volume_id"], "volume_no": item["volume_no"], "title": item["title"],
+        "chapter_type": item["chapter_type"], "status": item["status"],
+        "passages": [{"id": entry["passage_id"], "title": entry["title"], "sort_order": entry["sequence"]}
+                     for entry in volume_entries(item["volume_id"])],
+    } for item in volumes]}
 
 
 def _entity_type(candidate_id: str) -> str:

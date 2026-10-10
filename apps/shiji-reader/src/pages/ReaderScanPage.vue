@@ -22,12 +22,6 @@
             下一页
           </RouterLink>
           <RouterLink class="text-link" :to="`/books/${page.book.id}`">返回目录</RouterLink>
-          <RouterLink
-            class="text-link"
-            :to="{ path: '/workbench/ocr', query: { page: page.id } }"
-          >
-            进入校对
-          </RouterLink>
         </div>
       </div>
 
@@ -198,6 +192,7 @@ const zoom = ref(100);
 const showBoxes = ref(false);
 const textMode = ref<"ocr" | "corrected">("corrected");
 const previewSize = ref({ width: 1, height: 1 });
+let loadRequest = 0;
 
 const displayedText = computed(() => {
   if (!page.value) {
@@ -212,6 +207,7 @@ const displayedText = computed(() => {
 watch(
   () => route.params.pageId,
   async (pageId) => {
+    const requestId = ++loadRequest;
     loading.value = true;
     error.value = "";
     page.value = null;
@@ -223,13 +219,14 @@ watch(
         getOcrWorkspacePageNeighbors(String(pageId)),
         getOcrWorkspacePageParallels(String(pageId)),
       ]);
+      if (requestId !== loadRequest) return;
       page.value = pagePayload;
       neighbors.value = neighborPayload;
       parallelPages.value = parallelPayload;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : "加载失败";
+      if (requestId === loadRequest) error.value = err instanceof Error ? err.message : "加载失败";
     } finally {
-      loading.value = false;
+      if (requestId === loadRequest) loading.value = false;
     }
   },
   { immediate: true },

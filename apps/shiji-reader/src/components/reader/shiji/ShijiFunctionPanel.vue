@@ -199,7 +199,6 @@ import {
   BookOpenText,
   Check,
   ChevronRight,
-  Map,
   MonitorUp,
   PanelRightClose,
   PanelRightOpen,
@@ -236,10 +235,8 @@ const emit = defineEmits<{
 }>();
 
 const readerOnlyBuild = import.meta.env.VITE_READER_ONLY === "true";
-const disableMap = import.meta.env.VITE_DISABLE_MAP === "true";
 const displayModes: Array<{ id: ShijiDisplayMode; label: string; icon: typeof BookCopy }> = [
   ...(!readerOnlyBuild ? [{ id: "document" as const, label: "文献", icon: ScanSearch }] : []),
-  ...(!disableMap ? [{ id: "map" as const, label: "历史地图", icon: Map }] : []),
   { id: "encyclopedia", label: "关键词百科", icon: BookCopy },
 ];
 

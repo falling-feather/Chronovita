@@ -91,15 +91,9 @@
               :entities="payload.entities ?? []"
               :sources="payload.sources ?? []"
               :selected-knowledge-id="selectedKnowledgeId"
-              :historical-map="payload.chapter_runtime?.historical_map ?? null"
-              :map-scene="mapScene"
-              :map-scene-id="mapSceneId"
-              :map-scene-loading="mapSceneLoading"
-              :map-scene-error="mapSceneError"
               @change-mode="handleModeChange"
               @collapse="displayVisible = false"
               @select-knowledge="selectedKnowledgeId = $event"
-              @select-map-scene="loadMapScene"
               @focus-unit="focusReadingUnit"
             />
 
@@ -167,20 +161,14 @@ import {
   type PassagePayload,
   type ReaderManifestEntry,
   type ReaderSequenceTarget,
-  type ShijiMapScene,
   getOcrWorkspacePageCount,
 } from "../services/api";
 import {
-  getShijiMapScene,
   getShijiReaderNavigation,
   getShijiReaderPassage,
   getShijiVolumeEntries,
 } from "../services/shiji-reader-client";
-import {
-  activeShijiFacsimilePageId,
-  mergeShijiFacsimilePageIds,
-  shijiSceneFacsimileStages,
-} from "../services/shiji-map-sync";
+import { DEFAULT_READER_PREFERENCES, normalizeReaderPreferences } from "../services/reader-preferences";
 import type {
   ShijiApplicationStatus,
   ShijiReaderNavigation,
@@ -212,26 +200,11 @@ const toast = ref("");
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 let activeResizeCleanup: (() => void) | undefined;
 let loadRequestId = 0;
-let mapSceneRequestId = 0;
 let navigationRequest: Promise<void> | undefined;
 const loadingVolumeNos = ref<number[]>([]);
 const volumeErrors = ref<Record<number, string>>({});
-const mapScene = ref<ShijiMapScene | null>(null);
-const mapSceneId = ref("");
-const mapSceneLoading = ref(false);
-const mapSceneError = ref("");
 
-const preferences = ref<ShijiReaderPreferences>({
-  theme: "paper",
-  textVariant: "traditional",
-  fontSize: 22,
-  lineHeight: 2.05,
-  paragraphSpacing: 1.15,
-  showTexture: true,
-  showPunctuation: true,
-  showTranslation: false,
-  showAnnotations: true,
-});
+const preferences = ref<ShijiReaderPreferences>({ ...DEFAULT_READER_PREFERENCES });
 
 const units = computed(() => payload.value ? buildShijiReadingUnits(payload.value) : []);
 const activeUnit = computed(() => units.value[activeUnitIndex.value]);
@@ -278,25 +251,8 @@ const basePageIds = computed(() => {
   const fallback = payload.value.reading.page.page_id;
   return fallback ? [fallback] : [];
 });
-const sceneFacsimileStages = computed(() => (
-  shijiSceneFacsimileStages(
-    mapScene.value?.narrative_sequence?.stages ?? [],
-    selectedVersion.value,
-  )
-));
-const pageIds = computed(() => mergeShijiFacsimilePageIds(
-  basePageIds.value,
-  mapScene.value?.narrative_sequence?.stages ?? [],
-  selectedVersion.value,
-));
-const activeFacsimilePageId = computed(() => activeShijiFacsimilePageId(
-  mapScene.value?.narrative_sequence?.stages ?? [],
-  selectedVersion.value,
-  activeUnit.value?.id ?? "",
-));
+const pageIds = basePageIds;
 const activePageIndex = computed(() => {
-  const scenePageIndex = pageIds.value.indexOf(activeFacsimilePageId.value);
-  if (scenePageIndex >= 0) return scenePageIndex;
   const basePageId = basePageIds.value[activeUnit.value?.pageIndex ?? 0];
   const basePageIndex = pageIds.value.indexOf(basePageId);
   return basePageIndex >= 0 ? basePageIndex : 0;
@@ -306,7 +262,6 @@ async function loadPassage() {
   const requestId = ++loadRequestId;
   loading.value = true;
   error.value = "";
-  resetMapScene();
   try {
     const passageId = String(route.params.passageId);
     const versionId = typeof route.query.version === "string" ? route.query.version : undefined;
@@ -322,9 +277,6 @@ async function loadPassage() {
     selectedKnowledgeId.value = nextPayload.entities?.[0]?.id ?? "";
     activeUnitIndex.value = 0;
     readingPosition.value = 0;
-    if (firstMapScene(nextPayload)) {
-      void loadFirstMapScene(nextPayload);
-    }
     loading.value = false;
     await nextTick();
     readingPaneRef.value?.scrollToTop();
@@ -424,62 +376,17 @@ function changeVersion(versionId: string) {
 }
 
 function updatePreferences(next: Partial<ShijiReaderPreferences>) {
-  preferences.value = { ...preferences.value, ...next };
-  window.localStorage.setItem("shiji-reader-preferences", JSON.stringify(preferences.value));
+  preferences.value = normalizeReaderPreferences({ ...preferences.value, ...next });
+  try {
+    window.localStorage.setItem("shiji-reader-preferences", JSON.stringify(preferences.value));
+  } catch {
+    announce("浏览器不允许保存阅读设置，本次阅读仍可使用。");
+  }
 }
 
 function handleModeChange(mode: ShijiDisplayMode) {
   displayMode.value = mode;
   displayVisible.value = true;
-  if (mode === "map") {
-    void loadFirstMapScene();
-  }
-}
-
-function resetMapScene() {
-  mapSceneRequestId += 1;
-  mapScene.value = null;
-  mapSceneId.value = "";
-  mapSceneLoading.value = false;
-  mapSceneError.value = "";
-}
-
-function firstMapScene(nextPayload = payload.value) {
-  return nextPayload?.chapter_runtime?.historical_map?.curated_scenes[0];
-}
-
-async function loadFirstMapScene(nextPayload = payload.value) {
-  const scene = firstMapScene(nextPayload);
-  if (scene?.api_path) {
-    await loadMapScene(scene.api_path);
-  }
-}
-
-async function loadMapScene(apiPath: string) {
-  if (!apiPath) {
-    return;
-  }
-  const requestId = ++mapSceneRequestId;
-  mapSceneId.value = apiPath;
-  mapSceneLoading.value = true;
-  mapSceneError.value = "";
-  try {
-    const nextScene = await getShijiMapScene(apiPath);
-    if (requestId !== mapSceneRequestId) {
-      return;
-    }
-    mapScene.value = nextScene;
-  } catch (caught) {
-    if (requestId !== mapSceneRequestId) {
-      return;
-    }
-    mapScene.value = null;
-    mapSceneError.value = caught instanceof Error ? caught.message : "场景详情加载失败";
-  } finally {
-    if (requestId === mapSceneRequestId) {
-      mapSceneLoading.value = false;
-    }
-  }
 }
 
 function swapPanes() {
@@ -559,10 +466,11 @@ function restorePreferences() {
   try {
     const saved = window.localStorage.getItem("shiji-reader-preferences");
     if (saved) {
-      preferences.value = { ...preferences.value, ...JSON.parse(saved) };
+      preferences.value = normalizeReaderPreferences(JSON.parse(saved));
     }
   } catch {
-    window.localStorage.removeItem("shiji-reader-preferences");
+    preferences.value = { ...DEFAULT_READER_PREFERENCES };
+    announce("阅读设置暂不可用，已使用默认设置。");
   }
 }
 
@@ -581,6 +489,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  loadRequestId += 1;
   if (toastTimer) clearTimeout(toastTimer);
   activeResizeCleanup?.();
 });
