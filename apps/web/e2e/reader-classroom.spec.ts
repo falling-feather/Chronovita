@@ -22,6 +22,9 @@ test('课文到史料摘录到私人书案能够保存并返回原文', async ({
   await page.reload();
   await expect(page.getByRole('region', { name: '学习书案' })).toBeVisible();
   await expect(page.getByRole('link', { name: /返回原文/ }).first()).toHaveAttribute('href', /\/shiji\?passage=/);
+  await page.goto('/learning?tab=private');
+  await expect(page.getByRole('region', { name: '本机私人学习资料' })).toContainText('本机私人资料');
+  await expect(page.getByRole('region', { name: '本机私人学习资料' })).toContainText('1 次史料摘录留痕');
 });
 
 test('完整阅读器可读正文、保存设置、查看真实书影并刷新恢复', async ({ page }, info) => {

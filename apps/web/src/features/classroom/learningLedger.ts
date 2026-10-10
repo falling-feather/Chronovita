@@ -4,7 +4,7 @@ export const LEARNING_EVENT_REQUEST = 'chronovita:learning-event-request';
 export const LEARNING_LEDGER_UPDATED = 'chronovita:learning-ledger-updated';
 
 const DATABASE_NAME = 'chronovita-learning-desk-v1';
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 const EVENT_STORE = 'events';
 const DRAFT_STORE = 'drafts';
 const FALLBACK_EVENT_LIMIT = 240;
@@ -270,6 +270,12 @@ function openDatabase(): Promise<IDBDatabase> {
       if (!database.objectStoreNames.contains(DRAFT_STORE)) {
         database.createObjectStore(DRAFT_STORE, { keyPath: 'scope_key' });
       }
+      for (const [storeName, dateField] of [[EVENT_STORE, 'occurred_at'], [DRAFT_STORE, 'updated_at']] as const) {
+        const store = request.transaction!.objectStore(storeName);
+        if (!store.indexNames.contains('by_owner_time')) {
+          store.createIndex('by_owner_time', ['owner_id', dateField], { unique: false });
+        }
+      }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error || new Error('IndexedDB failed to open.'));
@@ -429,4 +435,95 @@ export async function writeLearningDeskDraft(
     writeDraftFallback(storage, identity, draft);
   }
   return draft;
+}
+
+export interface PrivateLearningSummary {
+  course_id: string; lesson_id: string; title: string; body_excerpt: string; updated_at: string;
+  note_count: number; stroke_count: number; quote_count: number; decision_count: number; question_count: number;
+  recent_events: LearningEventRecord[];
+}
+
+export function summarizePrivateLearning(ownerId: string, drafts: unknown[], events: unknown[]): PrivateLearningSummary[] {
+  const summaries = new Map<string, PrivateLearningSummary>();
+  const identityFor = (value: unknown): LearningScopeIdentity | null => {
+    if (!value || typeof value !== 'object') return null;
+    const record = value as Record<string, unknown>;
+    return record.owner_id === ownerId && typeof record.course_id === 'string' && typeof record.lesson_id === 'string'
+      ? { ownerId, courseId: record.course_id, lessonId: record.lesson_id } : null;
+  };
+  const entry = (identity: LearningScopeIdentity, at: string) => {
+    const key = learningScopeKey(identity);
+    if (!summaries.has(key)) summaries.set(key, { course_id: identity.courseId, lesson_id: identity.lessonId,
+      title: identity.lessonId + ' · 私人学习留痕', body_excerpt: '', updated_at: at, note_count: 0, stroke_count: 0,
+      quote_count: 0, decision_count: 0, question_count: 0, recent_events: [] });
+    const summary = summaries.get(key)!;
+    if (at > summary.updated_at) summary.updated_at = at;
+    return summary;
+  };
+  const seenDrafts = new Set<string>();
+  for (const value of [...drafts].sort((a, b) => String((b as LearningDeskDraftRecord)?.updated_at || '').localeCompare(String((a as LearningDeskDraftRecord)?.updated_at || '')))) {
+    const identity = identityFor(value);
+    if (!identity || !draftMatchesScope(value, identity) || seenDrafts.has(learningScopeKey(identity))) continue;
+    seenDrafts.add(learningScopeKey(identity));
+    const summary = entry(identity, value.updated_at);
+    Object.assign(summary, { title: value.title, body_excerpt: value.body_markdown.replace(/\s+/g, ' ').slice(0, 160),
+      note_count: value.sticky_notes.length, stroke_count: value.drawing_strokes.length });
+  }
+  const seenEvents = new Set<string>();
+  for (const value of events) {
+    const identity = identityFor(value);
+    if (!identity || !recordMatchesScope(value, identity) || seenEvents.has(value.event_id)) continue;
+    seenEvents.add(value.event_id);
+    const summary = entry(identity, value.occurred_at);
+    summary.recent_events.push(value);
+    if (value.kind === 'temporary_note_saved' && value.metadata?.book_id === 'shiji') summary.quote_count += 1;
+    if (value.kind === 'decision_completed') summary.decision_count += 1;
+    if (value.kind === 'question_answered') summary.question_count += 1;
+  }
+  return [...summaries.values()].map((summary) => ({ ...summary,
+    recent_events: summary.recent_events.sort((a, b) => b.occurred_at.localeCompare(a.occurred_at)).slice(0, 3),
+  })).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+export async function listPrivateLearning(ownerId: string): Promise<{ items: PrivateLearningSummary[]; partial: boolean }> {
+  const drafts: unknown[] = [];
+  const events: unknown[] = [];
+  let partial = true;
+  try {
+    const database = await openDatabase();
+    try {
+      const readRecent = (storeName: string, limit: number) => new Promise<unknown[]>((resolve, reject) => {
+        const values: unknown[] = [];
+        const transaction = database.transaction(storeName, 'readonly');
+        const request = transaction.objectStore(storeName).index('by_owner_time')
+          .openCursor(IDBKeyRange.bound([ownerId, ''], [ownerId, '\uffff']), 'prev');
+        request.onsuccess = () => {
+          const cursor = request.result;
+          if (!cursor || values.length >= limit) { resolve(values); return; }
+          values.push(cursor.value); cursor.continue();
+        };
+        request.onerror = () => reject(request.error || new Error('Private learning records unavailable'));
+      });
+      const [savedDrafts, savedEvents] = await Promise.all([readRecent(DRAFT_STORE, 100), readRecent(EVENT_STORE, 2000)]);
+      drafts.push(...savedDrafts); events.push(...savedEvents);
+      partial = false;
+    } finally { database.close(); }
+  } catch {
+    // The recoverable per-owner fallback is read below; no server upload occurs.
+  }
+  let storage: Storage | null = null;
+  try { storage = typeof window !== 'undefined' ? window.localStorage : null; } catch { /* Browser security may disable this optional mirror. */ }
+  if (storage) {
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index) || '';
+      if (!key.startsWith('chronovita.learning.desk.v1.' + safePart(ownerId) + '::')
+          && !key.startsWith('chronovita.learning.ledger.v1.' + safePart(ownerId) + '::')) continue;
+      try {
+        const value: unknown = JSON.parse(storage.getItem(key) || 'null');
+        if (Array.isArray(value)) events.push(...value); else drafts.push(value);
+      } catch { /* A corrupt fallback entry is not counted as saved work. */ }
+    }
+  }
+  if (partial && !drafts.length && !events.length) throw new Error('本机学习存储暂不可读取，请回到原书案或恢复浏览器存储权限。');
+  return { items: summarizePrivateLearning(ownerId, drafts, events), partial };
 }

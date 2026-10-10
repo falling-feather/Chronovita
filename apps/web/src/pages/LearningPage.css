@@ -96,3 +96,21 @@
   .chrono-learning-tabs { overflow-x: auto; }
   .chrono-learning-tabs button { flex: 1 0 auto; justify-content: center; }
 }
+.chrono-learning-private-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 20px;
+}
+.chrono-learning-private-grid article {
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #deded8;
+  border-radius: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.chrono-learning-private-grid h2 { font-family: var(--chrono-font-sans, sans-serif); font-size: 20px; }
+.chrono-learning-private-grid li p { font-size: 13px; color: #637077; }
+.chrono-learning-private-counts { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: #58676d; }
+.chrono-learning-private-grid footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.chrono-learning-private-grid footer time { color: #708086; font-size: 12px; }

@@ -3,7 +3,6 @@ import { Alert, Button, Drawer, Empty, Spin, Tag } from 'antd';
 import {
   ArrowRightOutlined,
   BookOutlined,
-  CheckCircleOutlined,
   ClockCircleOutlined,
   FileDoneOutlined,
 } from '@ant-design/icons';
@@ -11,6 +10,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { readingComplete, readingLabel, resumeLayer } from '../features/classroom/readingProgress';
 import { useAuth } from '../auth/AuthContext';
 import CourseCoverPicture from '../features/courses/CourseCoverPicture';
+import { listPrivateLearning, type PrivateLearningSummary } from '../features/classroom/learningLedger';
 import {
   api,
   type LearningSubmissionDetail,
@@ -46,12 +46,20 @@ function feedbackLabel(item: LearningSubmissionListItem): { label: string; color
   return { label: '等待教师查看', color: 'default' };
 }
 
+function SpaceCounts({ record }: { record: PrivateLearningSummary }) {
+  return <p className="chrono-learning-private-counts">
+    <span>{record.note_count} 张便签</span><span>{record.stroke_count} 条笔迹</span>
+    <span>{record.quote_count} 次史料摘录留痕</span><span>{record.decision_count} 次抉择记录</span>
+    <span>{record.question_count} 次提问记录</span>
+  </p>;
+}
+
 export default function LearningPage() {
   const auth = useAuth();
   const nav = useNavigate();
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'submissions' ? 'submissions' : 'progress';
-  const setTab = (value: string) => setParams(value === 'submissions' ? { tab: value } : {}, { replace: true });
+  const tab = ['submissions', 'private'].includes(params.get('tab') || '') ? params.get('tab')! : 'progress';
+  const setTab = (value: string) => setParams(value === 'progress' ? {} : { tab: value }, { replace: true });
   const [totalLessons, setTotalLessons] = useState(0);
   const [retry, setRetry] = useState(0);
   const [items, setItems] = useState<ProgressItem[]>([]);
@@ -64,7 +72,23 @@ export default function LearningPage() {
   const detailRequest = useRef(0);
   const owner = auth.principal?.user_id ?? auth.mode;
   const [loadedOwner, setLoadedOwner] = useState<string | null>(null);
+  const [privateWork, setPrivateWork] = useState<PrivateLearningSummary[]>([]);
+  const [privateError, setPrivateError] = useState('');
+  const [privateLoading, setPrivateLoading] = useState(true);
+  const [privatePartial, setPrivatePartial] = useState(false);
+  const [privateOwner, setPrivateOwner] = useState<string | null>(null);
   const hasCurrentData = loadedOwner !== null && loadedOwner === owner;
+
+  useEffect(() => {
+    let current = true;
+    setPrivateWork([]); setPrivateOwner(null); setPrivateError(''); setPrivateLoading(true); setPrivatePartial(false);
+    if (!auth.principal?.user_id) { setPrivateLoading(false); return; }
+    void listPrivateLearning(auth.principal.user_id).then((result) => {
+      if (current) { setPrivateWork(result.items); setPrivateOwner(owner); setPrivatePartial(result.partial); }
+    }).catch((failure) => { if (current) setPrivateError(failure instanceof Error ? failure.message : '本机学习资料暂不可读取'); })
+      .finally(() => { if (current) setPrivateLoading(false); });
+    return () => { current = false; };
+  }, [owner, retry]);
 
   useEffect(() => {
     detailRequest.current += 1;
@@ -139,7 +163,7 @@ export default function LearningPage() {
           <span>阅读统计只记录本人确认的当前课文，不代表测验掌握度；互动完成标记仅是历史活动记录。</span>
         </div>
         <dl>
-          <div><dt>{hasCurrentData ? stats.lessons : '—'}</dt><dd>有记录的课时</dd></div>
+          <div><dt>{hasCurrentData ? stats.lessons : '—'}</dt><dd>有活动记录的课时 · 含旧记录</dd></div>
           <div><dt>{hasCurrentData ? `${stats.completedLessons}/${totalLessons}` : '—'}</dt><dd>本人确认已读当前课文</dd></div>
           <div><dt>{hasCurrentData ? stats.submissions : '—'}</dt><dd>已提交版本 · 最近 100 条</dd></div>
           <div><dt>{hasCurrentData ? stats.feedback : '—'}</dt><dd>其中有教师反馈</dd></div>
@@ -155,9 +179,24 @@ export default function LearningPage() {
         <button type="button" className={tab === 'submissions' ? 'active' : ''} onClick={() => setTab('submissions')}>
           <FileDoneOutlined /> 已提交成果 <span>{submissions.length}</span>
         </button>
+        {auth.mode === 'accounts' ? <button type="button" className={tab === 'private' ? 'active' : ''} onClick={() => setTab('private')}>
+          <BookOutlined /> 本机私人书案 <span>{privateOwner === owner ? privateWork.length : '—'}</span>
+        </button> : null}
       </nav>
 
-      {loading || (loadedOwner !== null && !hasCurrentData) ? (
+      {tab === 'private' ? <section aria-label="本机私人学习资料">
+        <p>这里只读取当前账号在本浏览器保存的书案与最近 2000 条留痕，不会上传教师；换电脑后不会自动出现。旧笔记不一定与当前课文一致。</p>
+        {privatePartial ? <Alert type="warning" message="主存储暂不可用，以下仅为可恢复副本，不是全部记录。" /> : null}
+        {privateError ? <Alert type="warning" message={privateError} action={<Button onClick={() => setRetry((value) => value + 1)}>重读本机记录</Button>} /> : null}
+        {privateLoading ? <Spin /> : privateOwner !== owner ? null : privateWork.length ? <div className="chrono-learning-private-grid">
+          {privateWork.map((record) => <article key={record.course_id + '/' + record.lesson_id}>
+            <Tag>本机私人资料</Tag><h2>{record.title}</h2><p>{record.body_excerpt || '本课留下了学习活动记录。'}</p>
+            <SpaceCounts record={record} />
+            <ol>{record.recent_events.map((event) => <li key={event.event_id}><strong>{event.title}</strong><p>{event.summary}</p></li>)}</ol>
+            <footer><time>{formatTime(record.updated_at)}</time><Button onClick={() => nav('/courses/' + encodeURIComponent(record.course_id) + '/lessons/' + encodeURIComponent(record.lesson_id) + '?layer=create')}>回到书案</Button></footer>
+          </article>)}
+        </div> : <Empty description="本浏览器还没有当前账号的私人书案与学习留痕" />}
+      </section> : loading || (loadedOwner !== null && !hasCurrentData) ? (
         <div className="chrono-learning-loading"><Spin /><span>正在展开学习长卷…</span></div>
       ) : !hasCurrentData && error ? <Empty description="学习记录暂不可用，恢复连接后可重试。" /> : tab === 'progress' ? (
         currentItems.length > 0 ? (
@@ -177,9 +216,9 @@ export default function LearningPage() {
                     <div className="chrono-learning-stage-marks">
                       <span>{readingLabel(item)}</span>
                       {(['practice', 'ask', 'create'] as const).map((layer) => (
-                        <span className={item.layers[layer] ? 'done' : ''} key={layer}>
-                          {item.layers[layer] ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-                          {LAYER_LABEL[layer]}{item.layers[layer] ? '有完成记录' : '无完成记录'}
+                        <span key={layer}>
+                          <ClockCircleOutlined />
+                          {LAYER_LABEL[layer]}{item.layers[layer] ? '有历史完成标记' : '未记录完成'}
                         </span>
                       ))}
                     </div>

@@ -6,6 +6,7 @@ import {
   learningScopeKey,
   readLearningEventsFallback,
   type LearningFallbackStorage,
+  summarizePrivateLearning,
 } from './learningLedger';
 
 class MemoryStorage implements LearningFallbackStorage {
@@ -21,6 +22,14 @@ const identity = {
 };
 
 describe('learning ledger', () => {
+  it('summarizes private evidence without mixing owners or duplicate fallback events', () => {
+    const event = createLearningEventRecord(identity, { course_id: identity.courseId, lesson_id: identity.lessonId,
+      kind: 'temporary_note_saved', title: '史料摘录', summary: '夏本纪', metadata: { book_id: 'shiji' } });
+    const records = summarizePrivateLearning(identity.ownerId, [], [event, event, { ...event, owner_id: 'someone-else' }]);
+    expect(records).toHaveLength(1);
+    expect(records[0].quote_count).toBe(1);
+    expect(records[0].recent_events).toHaveLength(1);
+  });
   it('isolates every record by account, course and lesson', () => {
     expect(learningScopeKey(identity)).toContain('student%2Fchronovita');
     expect(learningScopeKey({ ...identity, ownerId: 'student-b' }))
