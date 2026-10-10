@@ -15,6 +15,21 @@ ocr_router = APIRouter()
 catalog_router = APIRouter()
 
 
+@router.get("/lesson-destinations")
+async def reader_destinations(_: AuthContext = Depends(require_auth_context)) -> list[dict]:
+    from services.reading_links import lesson_destinations
+    return lesson_destinations()
+
+
+@router.get("/lesson-sources/{lesson_id}")
+async def reader_lesson_sources(lesson_id: str, _: AuthContext = Depends(require_auth_context)) -> list[dict]:
+    from services.reading_links import related_reading
+    try:
+        return related_reading(lesson_id)
+    except KeyError as exc:
+        raise HTTPException(404, detail="课时不存在。") from exc
+
+
 @router.post("/assist", response_model=ReaderAnswerV1)
 async def reader_assistance(request: ReaderAskRequestV1, context: AuthContext = Depends(require_auth_context)) -> ReaderAnswerV1:
     from settings import secret_value, settings

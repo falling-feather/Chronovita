@@ -67,6 +67,7 @@
               @focus-unit="activeUnitIndex = $event"
               @reading-position="readingPosition = $event"
               @update-preferences="updatePreferences"
+              @quote-unit="quoteUnit"
             />
 
             <button
@@ -174,6 +175,7 @@ import type {
   ShijiReaderNavigation,
 } from "../services/shiji-reader-contracts";
 import { attachNavigationToPassage } from "../services/shiji-reader-contracts";
+import { READER_QUOTE_MESSAGE } from "../../../readerContracts";
 
 const route = useRoute();
 const router = useRouter();
@@ -280,6 +282,11 @@ async function loadPassage() {
     loading.value = false;
     await nextTick();
     readingPaneRef.value?.scrollToTop();
+    const sentenceId = typeof route.query.sentence === 'string' ? route.query.sentence : '';
+    if (sentenceId) focusReadingUnit(sentenceId);
+    if (typeof route.query.checksum === 'string' && route.query.checksum !== nextPayload.chapter_sha256) {
+      announce('引用版本与当前资料不同，请对照已有摘录核查；当前显示最新资料。');
+    }
     void loadSupplementaryData(nextPayload.reader_sequence?.volume.number);
   } catch (caught) {
     if (requestId !== loadRequestId) {
@@ -389,6 +396,18 @@ function handleModeChange(mode: ShijiDisplayMode) {
   displayVisible.value = true;
 }
 
+function quoteUnit(sentenceId: string | undefined) {
+  if (!sentenceId || !payload.value) return;
+  if (window.parent === window) {
+    announce("请从历史未来课堂的‘史记阅读’入口摘录到学习书案。");
+    return;
+  }
+  window.parent.postMessage({ type: READER_QUOTE_MESSAGE, request: {
+    passage_id: payload.value.passage.id, sentence_ids: [sentenceId], text_variant: preferences.value.textVariant,
+  } }, window.location.origin);
+  announce("已选择原句，请在课堂窗口选择保存位置。");
+}
+
 function swapPanes() {
   panesSwapped.value = !panesSwapped.value;
   announce(panesSwapped.value ? "展示区已移到左侧，阅读区已移到右侧。" : "阅读区已恢复到左侧。");
@@ -474,7 +493,7 @@ function restorePreferences() {
   }
 }
 
-watch(() => [route.params.passageId, route.query.version], loadPassage);
+watch(() => [route.params.passageId, route.query.version, route.query.sentence, route.query.checksum], loadPassage);
 
 onMounted(() => {
   restorePreferences();

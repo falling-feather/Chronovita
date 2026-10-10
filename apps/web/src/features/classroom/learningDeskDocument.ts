@@ -2,7 +2,7 @@ import type { GameDossier } from '../../utils/api';
 import type { LearningDeskStickyNote } from './learningLedger';
 
 const ALLOWED_TAGS = new Set([
-  'P', 'BR', 'STRONG', 'EM', 'U', 'MARK', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE',
+  'P', 'BR', 'STRONG', 'EM', 'U', 'MARK', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A',
 ]);
 
 function escapeHtml(value: string): string {
@@ -14,8 +14,29 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+export function safeReaderHref(value: string): string | null {
+  if (!value.startsWith('/shiji?')) return null;
+  try {
+    const url = new URL(value, 'https://chronovita.local');
+    if (url.origin !== 'https://chronovita.local' || url.pathname !== '/shiji' || url.hash) return null;
+    if (![...url.searchParams.keys()].every((key) => ['passage', 'sentence', 'checksum'].includes(key))) return null;
+    const passage = url.searchParams.get('passage');
+    if (!passage || passage.length > 200) return null;
+    if ((url.searchParams.get('sentence') || '').length > 200) return null;
+    const checksum = url.searchParams.get('checksum');
+    if (checksum && !/^[a-f0-9]{64}$/.test(checksum)) return null;
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return null;
+  }
+}
+
 function renderInlineMarkdown(value: string): string {
   return escapeHtml(value)
+    .replace(/\[([^\]\n]+)\]\((\/shiji\?[^)\s]+)\)/g, (full, label: string, href: string) => {
+      const safe = safeReaderHref(decodeEntities(href));
+      return safe ? `<a href="${escapeHtml(safe)}" title="返回史料原文">${label}</a>` : full;
+    })
     .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
     .replace(/==([^=\n]+)==/g, '<mark>$1</mark>')
     .replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
@@ -75,7 +96,12 @@ function decodeEntities(value: string): string {
 }
 
 export function richHtmlToMarkdown(html: string): string {
-  return decodeEntities(html)
+  const withLinks = html.replace(/<a\s+[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (_full, href: string, label: string) => {
+    const safe = safeReaderHref(decodeEntities(href));
+    const text = label.replace(/<[^>]*>/g, '');
+    return safe ? `[${text}](${safe})` : text;
+  });
+  return decodeEntities(withLinks)
     .replace(/<\s*br\s*\/?\s*>/gi, '\n')
     .replace(/<\s*(strong|b)\s*>/gi, '**')
     .replace(/<\s*\/\s*(strong|b)\s*>/gi, '**')
@@ -113,6 +139,10 @@ export function sanitizeDeskHtml(html: string): string {
     if (!(node instanceof Element)) return '';
     const children = [...node.childNodes].map(cleanNode).join('');
     if (!ALLOWED_TAGS.has(node.tagName)) return children;
+    if (node.tagName === 'A') {
+      const href = safeReaderHref(node.getAttribute('href') || '');
+      return href ? `<a href="${escapeHtml(href)}" title="返回史料原文">${children}</a>` : children;
+    }
     const tag = node.tagName.toLowerCase();
     return tag === 'br' ? '<br>' : `<${tag}>${children}</${tag}>`;
   };

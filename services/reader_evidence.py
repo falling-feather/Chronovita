@@ -1,6 +1,8 @@
 """Deterministic, source-bound quotes from the existing historical reader."""
 from __future__ import annotations
 
+import re
+
 from services import shiji_reader
 from services.contracts.learning_v1 import canonical_checksum
 from services.contracts.reader_v1 import ReaderQuoteRequestV1, ReaderQuoteV1
@@ -18,8 +20,22 @@ def make_quote(request: ReaderQuoteRequestV1) -> ReaderQuoteV1:
     if not text:
         raise ValueError("The selected sentences have no transcribed text")
     spans = {span for sentence in selected for span in sentence.get("source_span_ids", [])}
-    pages = tuple(dict.fromkeys(anchor["page_id"] for anchor in chapter.get("source_anchors", [])
-                                if anchor.get("source_span_id") in spans and anchor.get("page_id")))
+    anchors = chapter.get("source_anchors", [])
+    source_pages = [anchor["page_id"] for anchor in anchors
+                    if anchor.get("source_span_id") in spans and anchor.get("page_id")]
+    # The migrated sentence layer uses :span:<edition>:pNNNN, while its
+    # verified anchor layer uses <volume>-primary-pNNNN. Match only a unique
+    # page of the same edition and current chapter, never a guessed global ID.
+    for span in spans:
+        match = re.search(r":span:([^:]+):p(\d+)$", span)
+        if not match:
+            continue
+        edition, ordinal = match.groups()
+        matches = [anchor for anchor in anchors if anchor.get("version_id") == edition
+                   and re.search(r"(?:^|[-:])p0*" + str(int(ordinal)) + r"$", anchor.get("source_span_id", ""))]
+        if len(matches) == 1 and matches[0].get("page_id"):
+            source_pages.append(matches[0]["page_id"])
+    pages = tuple(dict.fromkeys(source_pages))
     data = {
         "schema_version": "reader-quote/v1", "book_id": "shiji", "book_title": "史记",
         "volume_no": record["volume"]["volume_no"], "volume_title": record["volume"]["title"],

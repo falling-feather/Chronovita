@@ -1,6 +1,7 @@
 // 统一的 API 客户端 · v0.2.0
 import { IS_STATIC_PREVIEW } from '../runtime';
 import { staticPreviewJsonFetch } from '../preview/staticPreview';
+import type { ReaderQuote, ReaderQuoteRequest } from '../../../readerContracts';
 
 const BASE = '/api/v1';
 
@@ -920,6 +921,9 @@ function learningSubmissionQuery(params: {
 }
 
 export const api = {
+  readerQuote: (request: ReaderQuoteRequest) => jsonFetch<ReaderQuote>('/reader/quotes', { method: 'POST', body: JSON.stringify(request) }),
+  readerDestinations: () => jsonFetch<Array<{ value: string; label: string; courseId: string; lessonId: string }>>('/reader/lesson-destinations'),
+  readerLessonSources: (lessonId: string) => jsonFetch<Array<{ title: string; passage_id: string; volume_no: number; relation_note: string }>>(`/reader/lesson-sources/${encodeURIComponent(lessonId)}`),
   adminApiConfig: () => jsonFetch<AdminApiConfig>('/admin/api-config'),
   saveAdminApiConfig: (body: {
     provider: 'mock' | 'deepseek'; api_key?: string; clear_api_key?: boolean;

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Alert, Button } from 'antd';
+import { Link } from 'react-router-dom';
 import {
   BulbOutlined,
   EnvironmentOutlined,
@@ -13,6 +14,8 @@ import type { Keyword, Lesson, LessonPresentationResponse } from '../../utils/ap
 import { parseContentBlock, parseContentMarkup, type InlineMark } from '../../utils/contentMarkup';
 import { emitLearningEvent } from '../../features/classroom/learningLedger';
 import { normalizeReadingKeywords, splitReadingText } from './lessonReadingModel';
+import { api } from '../../utils/api';
+import { IS_STATIC_PREVIEW } from '../../runtime';
 
 const MARK_CLASS: Record<InlineMark, string> = {
   bold: 'is-bold',
@@ -179,6 +182,8 @@ export default function LessonWatch({ lesson, onReadComplete, readComplete = fal
   lesson: Lesson; onReadComplete?: () => void; readComplete?: boolean; savingRead?: boolean;
 }) {
   const sidebarRef = useRef<HTMLElement>(null);
+  const [sources, setSources] = useState<Array<{ title: string; passage_id: string; relation_note: string }>>([]);
+  const [sourcesUnavailable, setSourcesUnavailable] = useState(false);
   const keywords = useMemo(() => normalizeReadingKeywords(lesson.keywords ?? []), [lesson.keywords]);
   const [selectedWord, setSelectedWord] = useState('');
   const selectedKeyword = keywords.find((keyword) => keyword.word === selectedWord) ?? null;
@@ -192,6 +197,13 @@ export default function LessonWatch({ lesson, onReadComplete, readComplete = fal
 
   useEffect(() => {
     setSelectedWord('');
+    setSources([]);
+    setSourcesUnavailable(false);
+    if (IS_STATIC_PREVIEW) return;
+    let current = true;
+    void api.readerLessonSources(lesson.id).then((items) => { if (current) setSources(items); })
+      .catch(() => { if (current) setSourcesUnavailable(true); });
+    return () => { current = false; };
   }, [lesson.id]);
 
   const selectKeyword = (keyword: Keyword) => {
@@ -237,6 +249,15 @@ export default function LessonWatch({ lesson, onReadComplete, readComplete = fal
       </article>
 
       <aside ref={sidebarRef} className="chrono-reading-sidebar" aria-label="关键词与知识点">
+        {!IS_STATIC_PREVIEW ? <section className="chrono-reading-index-card">
+          <header><ReadOutlined /><strong>对照史料</strong></header>
+          {sources.map((source) => <p key={source.passage_id}>
+            <Link to={`/shiji?passage=${encodeURIComponent(source.passage_id)}&course=${encodeURIComponent(lesson.course_id)}&lesson=${encodeURIComponent(lesson.id)}`}>{source.title}</Link>
+          </p>)}
+          <p><Link to={`/shiji?course=${encodeURIComponent(lesson.course_id)}&lesson=${encodeURIComponent(lesson.id)}`}>打开《史记》目录</Link></p>
+          {sourcesUnavailable ? <small>关联书目暂不可用，仍可打开目录。</small> : null}
+          <small>关联书目供延伸阅读，不等于同时代现场记录。</small>
+        </section> : null}
         <section className="chrono-knowledge-desk">
           <header>
             <span><BulbOutlined /></span>

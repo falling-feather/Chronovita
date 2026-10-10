@@ -40,4 +40,14 @@ describe('learning desk document', () => {
     expect(seed.bodyMarkdown).toContain('随手记');
     expect(seed.stickyNotes[0].body).toBe('疏导不是唯一按钮。');
   });
+
+  it('keeps source return links through visual editing but rejects executable URLs', () => {
+    const source = '[返回原文](/shiji?passage=chapter1&sentence=sentence2)';
+    const html = markdownToSafeHtml(source);
+    expect(html).toContain('<a href="/shiji?passage=chapter1&amp;sentence=sentence2"');
+    expect(richHtmlToMarkdown(html)).toBe(source);
+    expect(sanitizeDeskHtml('<a href="javascript:alert(1)">不可执行</a>')).not.toContain('<a');
+    expect(sanitizeDeskHtml('<a href="//evil.invalid/shiji?passage=a">外链</a>')).not.toContain('<a');
+    expect(sanitizeDeskHtml(html)).toContain('<a');
+  });
 });

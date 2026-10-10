@@ -11,6 +11,7 @@ import {
   markdownToSafeHtml,
   richHtmlToMarkdown,
   sanitizeDeskHtml,
+  safeReaderHref,
 } from './learningDeskDocument';
 
 type EditorMode = 'visual' | 'markdown';
@@ -101,6 +102,14 @@ export default function LearningDeskEditor({
             suppressContentEditableWarning
             onInput={syncVisual}
             onBlur={syncVisual}
+            onClick={(event) => {
+              const link = (event.target as HTMLElement).closest('a');
+              const href = link ? safeReaderHref(link.getAttribute('href') || '') : null;
+              if (href && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault();
+                window.open(href, '_blank', 'noopener');
+              }
+            }}
             onPaste={(event) => {
               event.preventDefault();
               document.execCommand('insertText', false, event.clipboardData.getData('text/plain'));

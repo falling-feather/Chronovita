@@ -2,6 +2,28 @@ import { expect, test } from '@playwright/test';
 
 const password = process.env.CHRONO_E2E_USER_PASSWORD || '';
 
+test('课文到史料摘录到私人书案能够保存并返回原文', async ({ page }, info) => {
+  test.skip(info.project.name !== 'classroom-1366x768', '史料联动在桌面验收；移动书案另有覆盖。');
+  await page.goto('/courses/C-prequin-state/lessons/L101?layer=watch');
+  await page.getByLabel('课堂账号', { exact: true }).fill('student.quote.laptop');
+  await page.getByLabel('密码', { exact: true }).fill(password);
+  await page.getByRole('button', { name: '进入课堂' }).click();
+  await page.getByRole('link', { name: /《史记》卷2/ }).click();
+  const reader = page.frameLocator('iframe[title="《史记》完整文献阅读器"]');
+  await expect(reader.locator('.sentence-original').first()).toBeVisible();
+  await reader.getByRole('button', { name: '摘录当前句', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: '保存史料摘录' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '保存并打开书案', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: '保存并打开书案', exact: true }).click();
+  await expect(page.getByRole('region', { name: '学习书案' })).toBeVisible();
+  await page.getByText('Markdown', { exact: true }).click();
+  const body = page.getByLabel('Markdown 正文');
+  await expect(body).toHaveValue(/返回原文/);
+  await page.reload();
+  await expect(page.getByRole('region', { name: '学习书案' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /返回原文/ }).first()).toHaveAttribute('href', /\/shiji\?passage=/);
+});
+
 test('完整阅读器可读正文、保存设置、查看真实书影并刷新恢复', async ({ page }, info) => {
   test.skip(info.project.name === 'ask-mobile-390x844', '分栏与书影在两种桌面尺寸集中检查。');
   const errors: string[] = [];

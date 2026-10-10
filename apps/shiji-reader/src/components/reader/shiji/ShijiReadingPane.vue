@@ -55,6 +55,9 @@
         <Tags :size="14" />
         {{ preferences.showAnnotations ? "隐藏标注" : "显示标注" }}
       </button>
+      <button class="annotation-toggle" type="button" @click="$emit('quote-unit', units[activeUnitIndex]?.id)">
+        <BookOpenCheck :size="14" /> 摘录当前句
+      </button>
     </div>
 
     <ol
@@ -171,6 +174,7 @@ const emit = defineEmits<{
   "focus-unit": [index: number];
   "reading-position": [position: number];
   "update-preferences": [next: Partial<ShijiReaderPreferences>];
+  "quote-unit": [sentenceId: string | undefined];
 }>();
 
 const scrollContainer = ref<HTMLElement | null>(null);

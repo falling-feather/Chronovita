@@ -11,6 +11,7 @@ function accounts(): Array<{ username: string; displayName: string; role: Role }
       { username: `student.l101.${suffix}`, displayName: `L101 ${suffix} 学生`, role: 'student' },
       { username: `student.l103.${suffix}`, displayName: `L103 ${suffix} 学生`, role: 'student' },
       { username: `student.guard.${suffix}`, displayName: `${suffix} 权限学生`, role: 'student' },
+      { username: `student.quote.${suffix}`, displayName: `${suffix} 史料摘录学生`, role: 'student' },
       { username: `teacher.e2e.${suffix}`, displayName: `${suffix} 教师`, role: 'teacher' },
       { username: `reviewer.e2e.${suffix}`, displayName: `${suffix} 审校者`, role: 'reviewer' },
     );
