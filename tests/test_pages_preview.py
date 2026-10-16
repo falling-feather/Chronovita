@@ -26,7 +26,7 @@ class PagesPreviewTests(unittest.TestCase):
             f'{manifest["course_id"]}#{manifest["release_no"]}:{manifest["checksum"][:12]}',
             payload["release_identity"],
         )
-        for lesson_id in ("L101", "L103"):
+        for lesson_id in ("L101", "L103", "L105"):
             lesson = payload["lessons"][f"C-prequin-state/{lesson_id}"]
             if lesson["interaction_status"] == "ready":
                 self.assertEqual(len(lesson["scenario_refs"]), 1)
@@ -34,7 +34,7 @@ class PagesPreviewTests(unittest.TestCase):
             else:
                 self.assertEqual(lesson["scenario_refs"], [])
                 self.assertFalse(lesson["rag_available"])
-            self.assertNotIn(f"C-prequin-state/{lesson_id}", payload["presentations"])
+            self.assertEqual(f"C-prequin-state/{lesson_id}" in payload["presentations"], lesson["interaction_status"] == "ready")
         self.assertEqual(len(payload["lessons"]), 46)
         self.assertNotIn("C-qinhan-founding/L402", payload["lessons"])
 

@@ -12,7 +12,7 @@ from services.contracts.release_v2 import (
     CourseReleaseManifestV5,
 )
 from scripts.publish_flagship_evidence_v2 import publish_flagship_evidence_v2
-from tests.release_fixture import activate_v3_release_5
+from tests.release_fixture import activate_v3_release_5, activate_historical_release
 
 
 REPOSITORY_CONTENT = Path(__file__).resolve().parents[1] / "content"
@@ -54,6 +54,7 @@ class PublishFlagshipEvidenceV2Tests(unittest.TestCase):
             root = Path(temp_dir)
             for name in ("media", "releases", "runtime", "sealed", "workflows"):
                 shutil.copytree(REPOSITORY_CONTENT / name, root / name)
+            activate_historical_release(root, "rel-28b5624648-0010")
             try:
                 before = tuple((root / "releases" / "manifests").rglob("*.json"))
                 result = publish_flagship_evidence_v2(root)

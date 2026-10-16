@@ -84,7 +84,7 @@ interface ChatMessage {
   origin?: string;
 }
 
-const props = defineProps<{ passageTitle: string; passageId: string }>();
+const props = defineProps<{ passageTitle: string; passageId: string; sentenceId?: string }>();
 const emit = defineEmits<{ "scroll-top": [] }>();
 
 const menuOpen = ref(false);
@@ -138,7 +138,7 @@ async function sendMessage() {
   mentorState.value = "thinking";
   await scrollMessagesToEnd();
   try {
-    const answer = await askReader({ passage_id: props.passageId, question: prompt, persona_mode: persona.value });
+    const answer = await askReader({ passage_id: props.passageId, sentence_id: props.sentenceId, question: prompt, persona_mode: persona.value });
     if (id !== generation) return;
     messages.value.push({
       id: Date.now() + 1, role: 'assistant', text: answer.body, time: '现在', state: 'explaining',

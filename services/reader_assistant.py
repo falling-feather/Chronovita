@@ -45,7 +45,13 @@ def _tokens(text: str) -> set[str]:
 
 def select_sentences(request: ReaderAskRequestV1) -> list[dict]:
     payload = shiji_reader.chapter(request.passage_id)["payload"]
-    sentences = [item for item in payload["chapter"].get("sentences", []) if item.get("content_layer") == "body"]
+    all_sentences = payload["chapter"].get("sentences", [])
+    focus = next((item for item in all_sentences if item.get("sentence_id") == request.sentence_id), None)
+    if request.sentence_id and focus is None:
+        raise ValueError("所选原句不属于当前篇章。")
+    if focus and re.search(r"这(?:一)?(?:句|段)|当前|原文|译文", request.question):
+        return [focus]
+    sentences = [item for item in all_sentences if item.get("content_layer") == "body"]
     if not sentences:
         sentences = list(payload["chapter"].get("sentences", []))
     question = request.question
@@ -56,7 +62,7 @@ def select_sentences(request: ReaderAskRequestV1) -> list[dict]:
     for position, sentence in enumerate(sentences):
         text = " ".join(str(sentence.get(key) or "") for key in ("simplified", "traditional", "translation"))
         score = len(terms & _tokens(text))
-        if sentence.get("sentence_id") == request.sentence_id:
+        if score > 0 and sentence.get("sentence_id") == request.sentence_id:
             score += 3
         scored.append((score, -position, sentence))
     scored.sort(key=lambda item: item[:2], reverse=True)

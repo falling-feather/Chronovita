@@ -64,6 +64,7 @@ jobs:
           python -m pip install --disable-pip-version-check `
             --require-hashes `
             -r apps/api/requirements.lock
+          python -m pip install --disable-pip-version-check pytest==8.3.3
           npm --prefix apps/web ci
 
       - name: Install pinned Playwright failure-video helper
@@ -74,7 +75,7 @@ jobs:
       - name: Recheck flagship contracts, RAG benchmark and package boundaries
         shell: powershell
         run: |
-          python -m unittest `
+          python -m pytest --pyargs `
             tests.test_dayu_flagship_content `
             tests.test_shangyang_flagship_content `
             tests.test_flagship_media_release `

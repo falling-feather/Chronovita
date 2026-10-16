@@ -34,7 +34,7 @@ test('问史卷在 390 × 844 下保持完整提问与据何而答链路', async
     await route.continue();
   });
 
-  const lessonPath = '/courses/C-prequin-state/lessons/L103?layer=ask';
+  const lessonPath = '/courses/C-prequin-state/lessons/L105?layer=ask';
   await page.goto(lessonPath);
   await expect(page).toHaveURL(/\/login$/);
   await login(page);

@@ -8,7 +8,7 @@ import {
 } from '@playwright/test';
 
 interface FlagshipLesson {
-  lessonId: 'L101' | 'L103';
+  lessonId: 'L101' | 'L105';
   title: string;
   freeInput: string;
   question: string;
@@ -30,8 +30,8 @@ const FLAGSHIPS: FlagshipLesson[] = [
     personMode: false,
   },
   {
-    lessonId: 'L103',
-    title: '西周分封与宗法',
+    lessonId: 'L105',
+    title: '商鞅变法',
     freeInput: '听取意见',
     question: '为何不能把睡虎地秦简都说成我的亲笔法令？',
     personMode: true,
@@ -150,9 +150,9 @@ async function exerciseFlagship(page: Page, lesson: FlagshipLesson, testInfo: Te
 
   await expect(page).toHaveURL(`${BASE_URL}${lessonPath}`);
   await expect(page.getByRole('heading', { name: lesson.title, level: 1 })).toBeVisible();
-  await expect(page.locator('.chrono-cinema-screen video')).toHaveCount(0);
-  await expect(page.getByText('教师课文', { exact: true })).toBeVisible();
-  await expect(page.getByText('本课暂未配备导读短片')).toBeVisible();
+  await expect(page.locator('.chrono-cinema-screen video')).toHaveCount(1);
+  await expect(page.locator('.chrono-cinema-screen video')).toHaveAttribute('poster', /poster/);
+  await expect(page.getByText('本课暂未配备导读短片')).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
 
   await page.reload();

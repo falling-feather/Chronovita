@@ -380,7 +380,7 @@ export interface ReaderAnswer {
   disclaimer: string;
 }
 
-export function askReader(request: { passage_id: string; question: string; persona_mode: 'historian' | 'scholar' }) {
+export function askReader(request: { passage_id: string; sentence_id?: string; question: string; persona_mode: 'historian' | 'scholar' }) {
   return post<ReaderAnswer>('/reader/assist', request);
 }
 

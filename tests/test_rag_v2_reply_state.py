@@ -5,12 +5,6 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from services.content import workflow
-from services.content.flagships.dayu_l101_evidence_v2 import (
-    build_dayu_evidence_v2,
-)
-from services.content.flagships.shangyang_l103_evidence_v2 import (
-    build_shangyang_evidence_v2,
-)
 from services.contracts.evidence_v1 import RagAskRequestV1
 from services.rag.local_reply import fit_local_reply
 from services.rag.query import plan_rag_query
@@ -21,18 +15,12 @@ from services.rag.routing import route_rag_query
 class RagV2ReplyStateTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        corpora = {
-            "L101": build_dayu_evidence_v2(sealed_by="content-publisher-admin"),
-            "L103": build_shangyang_evidence_v2(
-                sealed_by="content-publisher-admin"
-            ),
-        }
         cls.resources = {
             lesson_id: workflow.get_published_lesson_resources(
                 "C-prequin-state",
                 lesson_id,
-            ).model_copy(update={"evidence_corpus": corpus})
-            for lesson_id, corpus in corpora.items()
+            )
+            for lesson_id in ("L101", "L103")
         }
 
     def setUp(self) -> None:

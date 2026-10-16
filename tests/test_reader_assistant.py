@@ -33,3 +33,14 @@ class ReaderAssistantTests(unittest.IsolatedAsyncioTestCase):
             answer = await answer_reader(ReaderAskRequestV1(passage_id="passage1", question="解释这句话"), generator=bad_generator)
             self.assertEqual(answer.answer_source, "extractive")
             self.assertIn("未通过校验", answer.model_notice)
+
+    async def test_current_sentence_is_not_replaced_by_the_start_of_chapter(self):
+        record = test_reader_evidence.ReaderEvidenceTests().record()
+        second = {**record['payload']['chapter']['sentences'][0], 'sentence_id': 'second',
+                  'simplified': '禹与众人议事。', 'translation': '禹同大家商议。'}
+        record['payload']['chapter']['sentences'].append(second)
+        with patch('services.shiji_reader.chapter', return_value=record):
+            answer = await answer_reader(ReaderAskRequestV1(passage_id='passage1', sentence_id='second', question='解释这句话'))
+            self.assertEqual(answer.citations[0].sentence_ids, ('second',))
+            with self.assertRaises(ValueError):
+                await answer_reader(ReaderAskRequestV1(passage_id='passage1', sentence_id='unknown', question='解释这句话'))

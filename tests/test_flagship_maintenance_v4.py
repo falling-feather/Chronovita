@@ -110,7 +110,7 @@ class FlagshipMaintenanceV4Tests(unittest.TestCase):
             target = self.root / (
                 f"media/lessons/{lesson_id}/v{target_version:03d}"
             )
-            shutil.copytree(source, target)
+            shutil.copytree(source, target, dirs_exist_ok=True)
 
     def test_media_and_legacy_publishers_preserve_v4_with_v1_evidence(self) -> None:
         activate_v3_release_5(self.root)

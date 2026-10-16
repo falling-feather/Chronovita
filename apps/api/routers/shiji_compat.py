@@ -54,6 +54,8 @@ async def reader_assistance(request: ReaderAskRequestV1, context: AuthContext = 
         return await answer_reader(request, generator=generator)
     except KeyError as exc:
         raise HTTPException(404, detail="当前史记篇章不存在。") from exc
+    except ValueError as exc:
+        raise HTTPException(422, detail="所选原句不属于当前史记篇章。") from exc
 
 
 @router.post("/quotes", response_model=ReaderQuoteV1)

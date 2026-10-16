@@ -12,6 +12,7 @@ from scripts.sync_teacher_lesson import (
 )
 from services import content
 from services.content import workflow
+from tests.release_fixture import activate_historical_release
 
 
 REPOSITORY_CONTENT = Path(__file__).resolve().parents[1] / "content"
@@ -27,6 +28,7 @@ class TeacherLessonSyncTests(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir) / "content"
             shutil.copytree(REPOSITORY_CONTENT, root)
+            activate_historical_release(root, "rel-28b5624648-0010")
             content.configure(root)
             try:
                 compatibility = content.get_sealed_package(LESSON_ID, 5)

@@ -12,6 +12,7 @@ from services.content.flagships.dayu_l101 import build_dayu_presentation
 from services.content.flagships.shangyang_l103 import build_shangyang_presentation
 from services.contracts.release_v2 import CourseReleaseManifestV5
 from scripts.publish_flagship_media import publish_flagship_media
+from tests.release_fixture import activate_historical_release
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -21,13 +22,13 @@ REPOSITORY_CONTENT = PROJECT_ROOT / "content"
 class FlagshipMediaReleaseTests(unittest.TestCase):
     def setUp(self) -> None:
         self.original_root = content.content_root()
-        content.configure(REPOSITORY_CONTENT)
+        content.configure(self.original_root)
 
     def tearDown(self) -> None:
         content.configure(self.original_root)
 
     def test_current_release_pins_both_v002_presentations_and_assets(self) -> None:
-        release = workflow.get_current_release("C-prequin-state")
+        release = workflow.get_release("C-prequin-state", "rel-28b5624648-0010")
         self.assertIsNotNone(release)
         self.assertIsInstance(release, CourseReleaseManifestV5)
         self.assertEqual(release.schema_version, "course-release/v5")
@@ -42,8 +43,8 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
             "L103": build_shangyang_presentation,
         }
         for lesson_id, builder in expected_builders.items():
-            resources = workflow.get_published_lesson_resources(
-                "C-prequin-state", lesson_id
+            resources = workflow.get_release_lesson_resources(
+                "C-prequin-state", lesson_id, release.release_id
             )
             self.assertIsNotNone(resources.persona_pack)
             presentation = resources.lesson_presentation
@@ -71,6 +72,7 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
         temp_parent = PROJECT_ROOT / ".tmp-flagship-media" / uuid.uuid4().hex
         temp_content = temp_parent / "content"
         shutil.copytree(REPOSITORY_CONTENT, temp_content)
+        activate_historical_release(temp_content, "rel-28b5624648-0010")
         try:
             pointer = temp_content / "releases/active/C-prequin-state.json"
             before_hash = hashlib.sha256(pointer.read_bytes()).hexdigest()
@@ -91,6 +93,7 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
         temp_parent = PROJECT_ROOT / ".tmp-flagship-media" / uuid.uuid4().hex
         temp_content = temp_parent / "content"
         shutil.copytree(REPOSITORY_CONTENT, temp_content)
+        activate_historical_release(temp_content, "rel-28b5624648-0010")
         try:
             content.configure(temp_content)
             before = workflow.get_current_release("C-prequin-state")
@@ -102,6 +105,7 @@ class FlagshipMediaReleaseTests(unittest.TestCase):
                 shutil.copytree(
                     temp_content / f"media/lessons/{lesson_id}/v002",
                     temp_content / f"media/lessons/{lesson_id}/v003",
+                    dirs_exist_ok=True,
                 )
 
             result = publish_flagship_media(temp_content, presentation_version=3)

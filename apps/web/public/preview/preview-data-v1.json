@@ -3015,13 +3015,30 @@
         "传世文献把夏朝末代君主夏桀描写为暴虐的君主，并将夏朝灭亡解释为君主失德、民心离散的结果。约公元前1600年，商族首领商汤率领商族及其盟友伐夏。据传统文献记载，商汤在【鸣条之战】中击败夏桀，夏朝灭亡，商朝建立。关于夏商更替的具体过程，目前主要依据后世文献来认识；考古资料则通过遗址、器物和年代变化，帮助我们观察这一时期政治中心和社会结构的变化。",
         "学习本课时，应当同时关注禹治水、启继位和夏商更替等传统叙事，并比较传说、文献与考古资料的性质及其局限。传说保留了后人对早期历史的记忆，文献体现了古人或后世对王朝兴亡的解释，考古发现则提供了认识当时社会的物质证据。只有将不同类型的材料相互参照，才能更加审慎、全面地理解夏王朝以及中国早期国家形成的历史过程。"
       ],
-      "content_checksum": null,
-      "content_status": "builtin",
-      "content_version": 0,
+      "content_checksum": "aea89a7699dc94506a74279a12484be44afc86d92857fcf58dad9210be2d0159",
+      "content_status": "published",
+      "content_version": 6,
       "course_id": "C-prequin-state",
       "duration": "08:30",
       "era": "先秦",
-      "facts": [],
+      "facts": [
+        "【传世文献】现存关于禹治水的主要文字形成或编定年代晚于传统叙事所指事件，能证明后世记忆，不能自动视为同时代记录。",
+        "【传世文献】《史记·夏本纪》由西汉司马迁撰成，距离传统所说的禹时代很远，具体叙事需要与其他材料互证。",
+        "【传世文献】《孟子》反映战国时期的论说语境，其中疏河与三过家门叙事首先是后人理解禹的重要证据。",
+        "【传世文献】《尚书·禹贡》的文本层次、九州地名和成篇年代存在研究讨论，不宜直接当作夏代施工地图。",
+        "【传说】“三过家门而不入”是影响深远的责任伦理叙事，目前不能由考古材料核验次数与现场细节。",
+        "【教学概括】“鲧堵禹疏”来自传世叙事的对照，真实治水可能同时使用防护、疏导、分洪、迁居和物资调配。",
+        "【自然科学研究】积石峡约公元前1920年大型溃决洪水是一项有争议的研究判断，局地灾害不能直接证明禹、全国洪水或夏王朝。",
+        "【考古边界】目前二里头材料中没有得到学界公认、可同时代直读为“禹”的铭文，人物与遗址不能直接绑定。",
+        "【考古判断】二里头文化的年代与核心分布同传世文献所述夏后期时空范围高度重合，是探索夏史的关键材料。",
+        "【考古观察】二里头的大型都邑、道路网、宫殿区、祭祀区、官营作坊和等级差异支持早期国家与广域王权研究。",
+        "【解释边界】“二里头文化”是考古学命名；进一步称其为夏文化或夏都需要综合论证，不应写成无条件同义词。",
+        "【教学解释】以洪水治理说明跨聚落协作和首领权威形成，是基于材料的课堂分析模型，不是某件遗物直接陈述的事实。",
+        "【传世叙事】禹后启继位以及禅让转向世袭的框架来自后世王朝叙事，适合讨论权力秩序但不是同时代档案。",
+        "【教学解释】公共工程会占用耕作、粮食与人身安全；成功、代价和信任必须同时进入历史评价。",
+        "【空间边界】遗址、自然事件地点与后世记忆地图属于不同证据层，不能拼成一条确定的禹治水路线。",
+        "【年代边界】约公元前21世纪至约公元前1600年的夏代框架是教学与研究使用的约数，不是精确到年的同时代纪年。"
+      ],
       "figures": [
         "禹",
         "启",
@@ -3029,9 +3046,86 @@
         "夏桀"
       ],
       "id": "L101",
-      "interaction_figures": [],
-      "interaction_people": [],
-      "interaction_status": "not_adapted",
+      "interaction_figures": [
+        "禹",
+        "鲧",
+        "益（伯益）",
+        "聚落代表",
+        "治水劳作者"
+      ],
+      "interaction_people": [
+        {
+          "boundaries": [
+            "只依据本课关于《史记》《孟子》《禹贡》与考古边界的已发布片段回答。",
+            "不得声称亲眼见过二里头遗址、积石峡测年或后世王朝。",
+            "不得把三过家门的次数、具体施工路线或个人原话说成考古事实。"
+          ],
+          "fact_refs": [],
+          "name": "禹",
+          "person_id": "person-7c4825d9",
+          "persona": "以审慎、重视地形和公共责任的口吻讨论选择；每次回答都承认材料年代。角色化教学表达，不是史料原话。",
+          "role": "传世叙事中的治水组织者",
+          "source_ref_ids": [],
+          "summary": "后世文献把禹塑造为长期治水、协调众人并由此取得政治声望的首领。"
+        },
+        {
+          "boundaries": [
+            "承认鲧的具体工程、失败原因与个人动机缺乏同时代记录。",
+            "不能断言所有筑堤或围挡都错误，也不能虚构刑罚现场。",
+            "回答只限课程片段，不知道二里头考古与现代水利术语。"
+          ],
+          "fact_refs": [],
+          "name": "鲧",
+          "person_id": "person-b40a4965",
+          "persona": "从防护聚落、资源紧迫与方案受限的角度提出异议；不把后世评价当作本人供词。角色化教学表达，不是史料原话。",
+          "role": "传世叙事中的前任治水者",
+          "source_ref_ids": [],
+          "summary": "后世叙事常以鲧的失利与禹的治理相对照，但简单的“只堵不疏”不能代替复杂水利分析。"
+        },
+        {
+          "boundaries": [
+            "人物关系依据传世叙事作有限表达，不补写私人对话、精确年龄与行程。",
+            "不能把课堂变量当作真实历史统计。",
+            "遇到超出已发布证据的问题回答“依据不足”。"
+          ],
+          "fact_refs": [],
+          "name": "益（伯益）",
+          "person_id": "person-31118bee",
+          "persona": "强调记录、复核与跨聚落协商，主动区分亲历角色口吻和后世材料。角色化教学表达，不是史料原话。",
+          "role": "传世叙事中的协作者与观察者",
+          "source_ref_ids": [],
+          "summary": "作为帮助组织、观察地形和连接聚落意见的教学角色，用于呈现协作而非单一英雄。"
+        },
+        {
+          "boundaries": [
+            "这是为课堂推演设置的合成人群，不对应一位有姓名的历史人物。",
+            "不得声称代表所有史前居民，也不得给出虚构人口和伤亡数字。",
+            "观点只能解释治理权衡，不能证明禹故事的真伪。"
+          ],
+          "fact_refs": [],
+          "name": "聚落代表",
+          "person_id": "person-cef45322",
+          "persona": "以群体而非单一历史人物发言，追问谁承担风险、谁得到保护。角色化教学表达，不是史料原话。",
+          "role": "受水患影响的多聚落意见群体",
+          "source_ref_ids": [],
+          "summary": "汇集上游、下游与低地聚落对安全、粮食、公平和信息公开的不同诉求。"
+        },
+        {
+          "boundaries": [
+            "这是课堂合成人群，不假冒出土文字中的自述。",
+            "不提供未经来源支持的工具、工期或伤亡细节。",
+            "可以评价关卡中的代价，但必须说明变量是教学模型。"
+          ],
+          "fact_refs": [],
+          "name": "治水劳作者",
+          "person_id": "person-dc224fcf",
+          "persona": "从劳动安全、家庭生计和任务可执行性出发回应。角色化教学表达，不是史料原话。",
+          "role": "承担勘察、开渠、加固和运输的劳动群体",
+          "source_ref_ids": [],
+          "summary": "提醒决策者看到公共工程背后的耕作时间、口粮、伤病与轮换问题。"
+        }
+      ],
+      "interaction_status": "ready",
       "keywords": [
         {
           "gloss": "传世文献中禹治理洪水的故事；反映早期社会的大规模协作",
@@ -3089,7 +3183,12 @@
           "word": "鸣条之战"
         }
       ],
-      "level_goals": [],
+      "level_goals": [
+        "能把课程材料标注为传说、传世文献、考古观察、研究判断或教学解释。",
+        "能用至少两种不同类型证据说明二里头为何重要，并写出结论边界。",
+        "能在六回合治理中同时追踪风险、粮食、劳作、信任、知识与协作。",
+        "能用选择—变化—代价—证据链完成史官卷宗并导入知识画板。"
+      ],
       "map_points": [
         {
           "kind": "river",
@@ -3220,20 +3319,83 @@
           "supplemental": false
         }
       ],
-      "primary_scenario_id": null,
-      "qa_points": [],
-      "rag_available": false,
-      "reading_media_available": false,
-      "release_checksum": null,
-      "release_id": null,
-      "release_no": null,
-      "saga_material": null,
-      "sandbox_id": null,
-      "sandbox_material": null,
-      "scenario_refs": [],
+      "primary_scenario_id": "dayu-crisis-governance",
+      "qa_points": [
+        "为什么传世文献很重要，却不能直接当作禹时代的现场记录？",
+        "“三过家门而不入”能够支持哪类历史认识，不能证明什么？",
+        "“鲧堵禹疏”为什么只是教学概括，关卡为何保留多种工程组合？",
+        "二里头有哪些可直接观察的考古材料，它们如何支持早期国家研究？",
+        "为什么“二里头文化”与“夏文化”不能不加说明地写成同义词？",
+        "积石峡洪水研究证明了什么，又没有证明什么？",
+        "公共工程怎样可能扩大首领权威，又会给普通劳作者带来哪些代价？",
+        "如果新发现一条可确认年代的文字材料，你会怎样修改现有结论？"
+      ],
+      "rag_available": true,
+      "reading_media_available": true,
+      "release_checksum": "11aa501a2fd0b622cf085dadda8965d316bc24eaa8f8c29ea1ecb24be898ad53",
+      "release_id": "rel-28b5624648-0012",
+      "release_no": 12,
+      "saga_material": {
+        "assets": [
+          "dayu-classroom-intro"
+        ],
+        "kind": "saga",
+        "notes": "建议9分钟；先观察材料标签，再提出一条可证与一条不可证结论。",
+        "objective": "在地图与短片中辨认遗址、自然事件、传世文本和后世记忆的不同身份。",
+        "title": "踏勘：四层证据中的大禹治水"
+      },
+      "sandbox_id": "抉择：六回合洪水危机治理",
+      "sandbox_material": {
+        "assets": [
+          "dayu-crisis-governance"
+        ],
+        "kind": "sandbox",
+        "notes": "固定行动在断网时仍可完成；规则变量是教学模型，不是历史统计。",
+        "objective": "协调地形勘察、工程、粮食、劳作与公共信任，比较成功、代价、折中和失败。",
+        "title": "抉择：六回合洪水危机治理"
+      },
+      "scenario_refs": [
+        {
+          "checksum": "9bd23b3fe5a4ccbf5f3ef8c3f35756ed16e8fe7e135a0a6d269a0e6b9a7d5c09",
+          "primary": true,
+          "scenario_id": "dayu-crisis-governance",
+          "scenario_version": 2
+        }
+      ],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [],
+      "seed_canvas": [
+        {
+          "id": "evidence-layers",
+          "label": "四层证据",
+          "note": "传说—文献—考古—解释不可混写"
+        },
+        {
+          "id": "flood-and-governance",
+          "label": "洪水与治理",
+          "note": "自然风险需要技术和组织共同回应"
+        },
+        {
+          "id": "cooperation-and-power",
+          "label": "协作与权威",
+          "note": "公共动员可能扩大权力，也产生责任"
+        },
+        {
+          "id": "erlitou-state",
+          "label": "二里头与早期国家",
+          "note": "从可观察遗存走向有边界的历史判断"
+        },
+        {
+          "id": "cost-and-trust",
+          "label": "代价与信任",
+          "note": "工程结果不能遮蔽粮食、劳作和公平"
+        },
+        {
+          "id": "claim-evidence-boundary",
+          "label": "结论—证据—边界",
+          "note": "卷宗复盘的核心论证结构"
+        }
+      ],
       "source_refs": [
         {
           "citation_note": "夏代约公元前2070年至公元前1600年的基本年代框架",
@@ -3485,7 +3647,7 @@
       "id": "L103",
       "interaction_figures": [],
       "interaction_people": [],
-      "interaction_status": "not_adapted",
+      "interaction_status": "unpublished",
       "keywords": [
         {
           "gloss": "周朝前期的王朝；都城在镐京",
@@ -4028,21 +4190,133 @@
         "变法推行以后，秦国的农业生产、军队组织和国家财政逐渐得到加强，秦国在诸侯竞争中的地位不断上升。改革同时加重了对民众的管理和服役要求，也触动了旧贵族的利益。秦孝公去世后，反对者重新掌握权力，商鞅失势。据传统记载，他在逃亡途中被捕并遭到严厉处置，但秦国并没有完全废除已经推行的制度。改革的作用，更多体现在国家结构发生了变化，而不只是商鞅个人的进退。",
         "商鞅变法是战国时期各国变法的重要事例。它推动秦国从贵族世袭秩序逐步转向由国家法令、户籍和官员共同管理的政治形态，也使军功和国家需要在身份、资源分配中占有更大比重。秦国后来能够不断扩张并完成统一，商鞅变法提供了重要的制度条件，但统一还与秦国的地理、人口、军事和后续政治经营有关。学习这段历史，既要看到改革增强国家动员能力的一面，也要注意改革给社会带来的压力和变化。"
       ],
-      "content_checksum": null,
-      "content_status": "builtin",
-      "content_version": 0,
+      "content_checksum": "6d74d0ceaa8196a2433561e9c93decac9187ec8be33869311cdd551842cd2bc6",
+      "content_status": "published",
+      "content_version": 1,
       "course_id": "C-prequin-state",
       "duration": "09:10",
       "era": "先秦",
-      "facts": [],
+      "facts": [
+        "【历史背景】商鞅变法发生在战国兼并、农业与国家组织持续变化的环境中，秦的转型不能简化为一次孤立事件。",
+        "【传世文献】秦孝公求贤并支持卫鞅改革是后世叙事的关键框架，具体对话不是同时代逐字记录。",
+        "【年代边界】教学通常以约公元前356年、前350年前后概括两阶段改革；措施实际推行、修订与延续并非同日完成。",
+        "【传世文献】《史记·商君列传》成书于西汉，晚于商鞅变法二百多年，保存重要传统但不能作为宫廷现场记录。",
+        "【传世叙事】徙木立信用于说明兑现承诺与制度信用，目前没有出土材料可逐项核验木头、赏金和现场对白。",
+        "【文本与教学解释】公开规则、明确责任和兑现赏罚有助于制度取得信用；现存论述来自层次不同的传世材料。",
+        "【制度解释】军功爵削弱世袭贵族特权并提供新的身份通道，同时把社会上升与战争绩效紧密连接。",
+        "【制度解释】奖励耕战服务粮食、兵源与国家动员，不能直接推出每个农户都因此富裕或自由。",
+        "【制度解释】县级治理与地方官吏增强中央命令、征收和司法执行能力，具体形成过程需要传世与出土材料互证。",
+        "【制度代价】户籍、什伍和连带责任提高识别与追责能力，也可能扩大邻里监督、惩罚外溢和家庭压力。",
+        "【同时代实物】商鞅方升的公元前344年铭文与标准容量直接支持秦国推行统一量器，不能单独证明全部变法故事。",
+        "【解释边界】开阡陌与田制变化见于传世叙述；用现代‘完全土地私有’概括战国复杂土地关系会过度简化。",
+        "【文本边界】《商君书》是具有不同篇章年代与编纂层次的累积文本，不能把现存每句话都直接署名商鞅。",
+        "【传世文献】《韩非子·定法》是较晚战国思想家对商鞅之法的评价，不是变法当时的行政档案。",
+        "【出土文献】睡虎地秦简主要写于战国晚期与秦始皇时期，晚于商鞅最初变法一百多年。",
+        "【出土文献】秦简可观察成熟秦制的法律、行政与日常执行，不能反推每条简文均由商鞅制定。",
+        "【历史解释】商鞅改革是秦国富国强兵和统一进程的重要基础之一，秦的长期强盛仍是多代、多因素共同结果。",
+        "【教学解释】评价改革要同时观察国家能力、制度信用、战争动员、社会压力与不同群体承担的代价。",
+        "【概念边界】战国秦的法令、赏罚与现代宪政法治并非同一概念，不宜直接用今天的‘法律面前人人平等’替换历史语境。"
+      ],
       "figures": [
         "商鞅",
         "嬴渠梁（秦孝公）"
       ],
       "id": "L105",
-      "interaction_figures": [],
-      "interaction_people": [],
-      "interaction_status": "unpublished",
+      "interaction_figures": [
+        "商鞅",
+        "秦孝公",
+        "旧贵族代表",
+        "农耕家庭代表",
+        "军功士卒",
+        "县廷吏员"
+      ],
+      "interaction_people": [
+        {
+          "boundaries": [
+            "只依据本课已发布的《史记》《商君书》、方升与秦简片段回答。",
+            "不得把《商君书》全部句子自称为本人原话。",
+            "不得知道自己身后一百多年形成的睡虎地秦简内容。"
+          ],
+          "fact_refs": [],
+          "name": "商鞅",
+          "person_id": "person-c797c18e",
+          "persona": "强调规则清楚、赏罚兑现与国家执行能力，同时承认现存对白来自后世材料。角色化教学表达，不是史料原话。",
+          "role": "传世叙事中的改革主持者",
+          "source_ref_ids": [],
+          "summary": "卫鞅入秦后在秦孝公支持下推动制度调整，后受封商地，史称商鞅。"
+        },
+        {
+          "boundaries": [
+            "求贤、辩论与任用依据后世传世叙事有限表达。",
+            "不虚构密诏、私人情感或逐字宫廷对话。",
+            "不能把秦后来统一预言为必然结果。"
+          ],
+          "fact_refs": [],
+          "name": "秦孝公",
+          "person_id": "person-bd001399",
+          "persona": "从国家竞争、支持联盟和长期执行角度追问改革。角色化教学表达，不是史料原话。",
+          "role": "传世叙事中的改革支持者",
+          "source_ref_ids": [],
+          "summary": "为改变秦国处境而求贤并提供政治支持，是改革窗口的重要角色。"
+        },
+        {
+          "boundaries": [
+            "这是课堂合成人群，不假冒甘龙、杜挚等某位人物的原话。",
+            "不把所有贵族写成同一种立场。",
+            "可以批评改革，但不得补写阴谋和暴力现场。"
+          ],
+          "fact_refs": [],
+          "name": "旧贵族代表",
+          "person_id": "person-75b468fa",
+          "persona": "追问改革程序、权力集中和旧秩序被改变的风险。角色化教学表达，不是史料原话。",
+          "role": "受世袭特权调整影响的合成人群",
+          "source_ref_ids": [],
+          "summary": "集中呈现旧身份秩序、政治参与和利益受损者对改革的异议。"
+        },
+        {
+          "boundaries": [
+            "不虚构某户的精确田亩、税额和伤亡。",
+            "不能声称代表所有秦国农户。",
+            "关卡数值是教学模型，不是出土账册。"
+          ],
+          "fact_refs": [],
+          "name": "农耕家庭代表",
+          "person_id": "person-a748c58d",
+          "persona": "从收成、赋役、服兵役和家庭安全追问政策代价。角色化教学表达，不是史料原话。",
+          "role": "承担生产、赋役与家庭风险的合成人群",
+          "source_ref_ids": [],
+          "summary": "观察奖励耕战、户籍、征发和尺度统一怎样进入普通家庭。"
+        },
+        {
+          "boundaries": [
+            "不是某场战役具名士卒的自述。",
+            "不提供未经课程片段支持的斩首数、爵级和赏田。",
+            "不把军功通道等同于现代平等。"
+          ],
+          "fact_refs": [],
+          "name": "军功士卒",
+          "person_id": "person-44990ad0",
+          "persona": "同时说明获得爵位的希望、军纪约束和战场代价。角色化教学表达，不是史料原话。",
+          "role": "通过服役争取身份机会的合成人群",
+          "source_ref_ids": [],
+          "summary": "展示军功爵可能带来的上升通道与战争风险。"
+        },
+        {
+          "boundaries": [
+            "依据较晚秦简理解成熟秦制，不自称直接奉行商鞅手令。",
+            "不把秦简每条规定倒推到公元前四世纪中叶。",
+            "遇到超出证据库的具体案件回答‘依据不足’。"
+          ],
+          "fact_refs": [],
+          "name": "县廷吏员",
+          "person_id": "person-829de766",
+          "persona": "要求规则可登记、可核验、可执行，也说明追责压力。角色化教学表达，不是史料原话。",
+          "role": "执行登记、征收与司法的合成基层官吏",
+          "source_ref_ids": [],
+          "summary": "连接中央法令与地方日常，展示执行能力和行政负担。"
+        }
+      ],
+      "interaction_status": "ready",
       "keywords": [
         {
           "gloss": "东周后期的历史时期；诸侯国长期竞争并相继变法",
@@ -4085,7 +4359,12 @@
           "word": "徙木立信"
         }
       ],
-      "level_goals": [],
+      "level_goals": [
+        "能按形成年代区分《史记》《商君书》、商鞅方升和睡虎地秦简的证据能力。",
+        "能说明军功、耕战、县政、户籍和度量衡之间怎样共同增强国家能力。",
+        "能在六回合改革中同时追踪国家能力、制度信用、旧贵族阻力和社会压力。",
+        "能用选择—变化—代价—来源完成史官卷宗，并写出多因解释和概念边界。"
+      ],
       "map_points": [
         {
           "kind": "state",
@@ -4164,20 +4443,83 @@
           "supplemental": false
         }
       ],
-      "primary_scenario_id": null,
-      "qa_points": [],
-      "rag_available": false,
-      "reading_media_available": false,
-      "release_checksum": null,
-      "release_id": null,
-      "release_no": null,
-      "saga_material": null,
-      "sandbox_id": null,
-      "sandbox_material": null,
-      "scenario_refs": [],
+      "primary_scenario_id": "shangyang-l105-institutional-reform",
+      "qa_points": [
+        "《史记·商君列传》为什么重要，又为什么不能视为变法现场记录？",
+        "徙木立信能够说明制度信用的什么问题，哪些细节仍不可核验？",
+        "军功爵怎样同时带来身份机会和战争动员压力？",
+        "商鞅方升能够直接证明什么，不能替其他改革措施证明什么？",
+        "为什么睡虎地秦简不能直接称为商鞅亲自制定的法令？",
+        "《商君书》的篇章层次怎样影响我们使用其中句子？",
+        "用‘废井田、土地私有’一句话概括改革会遗漏哪些边界？",
+        "秦国后来强盛为什么不能只归因于商鞅一个人或一次变法？"
+      ],
+      "rag_available": true,
+      "reading_media_available": true,
+      "release_checksum": "11aa501a2fd0b622cf085dadda8965d316bc24eaa8f8c29ea1ecb24be898ad53",
+      "release_id": "rel-28b5624648-0012",
+      "release_no": 12,
+      "saga_material": {
+        "assets": [
+          "shangyang-classroom-intro"
+        ],
+        "kind": "saga",
+        "notes": "建议9分钟；每组材料先写可证结论，再写不可越过的年代边界。",
+        "objective": "在地图、器物和短片中辨认后世叙事、同时代实物与较晚出土文献。",
+        "title": "踏勘：三类材料中的商鞅变法"
+      },
+      "sandbox_id": "抉择：六回合制度改革议事",
+      "sandbox_material": {
+        "assets": [
+          "shangyang-institutional-reform"
+        ],
+        "kind": "sandbox",
+        "notes": "固定行动断网可用；变量不是秦国真实统计，结局不是对历史人物的道德裁决。",
+        "objective": "在公开规则、耕战激励、标准尺度、县政执行与社会承受之间形成可复盘方案。",
+        "title": "抉择：六回合制度改革议事"
+      },
+      "scenario_refs": [
+        {
+          "checksum": "1de69d57bf4e40c7931831193f009ed009141946cb2591e6a843cd79da9033a5",
+          "primary": true,
+          "scenario_id": "shangyang-l105-institutional-reform",
+          "scenario_version": 1
+        }
+      ],
       "sealed_at": null,
       "sealed_by": null,
-      "seed_canvas": [],
+      "seed_canvas": [
+        {
+          "id": "evidence-chronology",
+          "label": "证据年代",
+          "note": "变法当时—战国晚期—西汉—现代研究分层"
+        },
+        {
+          "id": "state-capacity",
+          "label": "国家能力",
+          "note": "计量、户籍、县政、粮食与兵源如何连接"
+        },
+        {
+          "id": "institutional-credit",
+          "label": "制度信用",
+          "note": "公开规则与兑现赏罚为何影响执行"
+        },
+        {
+          "id": "mobility-and-war",
+          "label": "身份机会与战争",
+          "note": "军功爵的机会和军事化代价并存"
+        },
+        {
+          "id": "pressure-and-resistance",
+          "label": "压力与阻力",
+          "note": "旧特权、家庭负担和基层追责不可消失"
+        },
+        {
+          "id": "multi-causal-explanation",
+          "label": "多因解释",
+          "note": "改革是重要基础之一，不是统一的唯一原因"
+        }
+      ],
       "source_refs": [
         {
           "citation_note": "整理商鞅变法中农战、军功、连坐、土地和县制等主要措施及其影响",
@@ -9933,7 +10275,90 @@
       "unit": "分裂中的文化整合"
     }
   },
-  "presentations": {},
-  "release_identity": "C-prequin-state#10:aec5ac43d363",
+  "presentations": {
+    "C-prequin-state/L101": {
+      "asset_urls": {
+        "poster": "/preview/media/L101/dayu-poster.webp",
+        "transcript": "/preview/media/L101/dayu-transcript.md",
+        "video": "/preview/media/L101/dayu-intro.mp4"
+      },
+      "presentation": {
+        "accessibility_note": "无声 HyperFrames 中文动画；关键信息全部写入画面并提供本地 Markdown 文字稿，学生可随时跳过。",
+        "checksum": "e59847f56792efeab018bdbeee1938c99dacbebcf8d6f799eb3b39914a5a5c65",
+        "course_id": "C-prequin-state",
+        "estimated_minutes": 40,
+        "lesson_id": "L101",
+        "phase_minutes": {
+          "consult": 7,
+          "decide": 14,
+          "dossier": 10,
+          "observe": 9
+        },
+        "poster_path": "media/lessons/L101/v003/dayu-poster.webp",
+        "poster_sha256": "a0e8e68221f39409661a8e969d6e17c4209230af9e005dc46edacbef76dce410",
+        "presentation_id": "dayu-classroom-intro",
+        "presentation_version": 3,
+        "schema_version": "lesson-presentation/v1",
+        "sealed_at": "2026-10-10T22:25:52.468129Z",
+        "sealed_by": "teaching-alignment-technical-reviewer",
+        "skip_allowed": true,
+        "status": "sealed",
+        "title": "大禹治水：四层证据课堂导读",
+        "transcript_path": "media/lessons/L101/v003/dayu-transcript.md",
+        "transcript_sha256": "a3ce6c726344be64cac4843a7b2739ede8876f7e5567d808c4bdd72c5896aac8",
+        "video_duration_seconds": 45.0,
+        "video_fps": 30,
+        "video_height": 1080,
+        "video_path": "media/lessons/L101/v003/dayu-intro.mp4",
+        "video_sha256": "1bb20fd03c34fa13195709989b4dfaf92c343b304a49b5b4998beda20883886c",
+        "video_width": 1920
+      },
+      "release_checksum": "11aa501a2fd0b622cf085dadda8965d316bc24eaa8f8c29ea1ecb24be898ad53",
+      "release_id": "rel-28b5624648-0012",
+      "release_no": 12
+    },
+    "C-prequin-state/L105": {
+      "asset_urls": {
+        "poster": "/preview/media/L105/shangyang-poster.webp",
+        "transcript": "/preview/media/L105/shangyang-transcript.md",
+        "video": "/preview/media/L105/shangyang-intro.mp4"
+      },
+      "presentation": {
+        "accessibility_note": "无声 HyperFrames 中文动画；全部关键信息写入画面并提供本地 Markdown 文字稿，学生可随时跳过。",
+        "checksum": "9dec321c83b6326c115515b28167f37515b8fb3da903b2e85636377d3adc5920",
+        "course_id": "C-prequin-state",
+        "estimated_minutes": 40,
+        "lesson_id": "L105",
+        "phase_minutes": {
+          "consult": 7,
+          "decide": 14,
+          "dossier": 10,
+          "observe": 9
+        },
+        "poster_path": "media/lessons/L105/v001/shangyang-poster.webp",
+        "poster_sha256": "133b330d981380af11d322453fb3a6c5ebadefac9acb2df53fb6635f05820a57",
+        "presentation_id": "presentation-shangyang-l105",
+        "presentation_version": 1,
+        "schema_version": "lesson-presentation/v1",
+        "sealed_at": "2026-10-10T22:25:52.468129Z",
+        "sealed_by": "teaching-alignment-technical-reviewer",
+        "skip_allowed": true,
+        "status": "sealed",
+        "title": "商鞅变法：材料年代与制度代价导读",
+        "transcript_path": "media/lessons/L105/v001/shangyang-transcript.md",
+        "transcript_sha256": "1a684f351fea9e6adb3da1ce3833626ea5cef620ba8f16813c006b86931f63e6",
+        "video_duration_seconds": 45.0,
+        "video_fps": 30,
+        "video_height": 1080,
+        "video_path": "media/lessons/L105/v001/shangyang-intro.mp4",
+        "video_sha256": "f03debeaced13dc80b272800c5f239f670f5c76846f3d86acbfc6f093fa35c71",
+        "video_width": 1920
+      },
+      "release_checksum": "11aa501a2fd0b622cf085dadda8965d316bc24eaa8f8c29ea1ecb24be898ad53",
+      "release_id": "rel-28b5624648-0012",
+      "release_no": 12
+    }
+  },
+  "release_identity": "C-prequin-state#12:11aa501a2fd0",
   "schema_version": "chronovita-pages-preview/v1"
 }
