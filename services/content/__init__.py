@@ -36,7 +36,9 @@ def configure(content_root: str | os.PathLike[str] | None = None) -> None:
     global _CONTENT_ROOT
     root = content_root or os.getenv("CHRONO_CONTENT_ROOT") or "content"
     path = Path(root)
-    _CONTENT_ROOT = path if path.is_absolute() else _REPO_ROOT / path
+    # Resolve once: Windows short names, symlinks and ".." must compare against
+    # the same canonical root as release artifact paths.
+    _CONTENT_ROOT = (path if path.is_absolute() else _REPO_ROOT / path).resolve()
     ensure_content_dirs()
 
 

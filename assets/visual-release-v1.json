@@ -1,6 +1,6 @@
 {
   "schema": "chronovita-visual-release/v1",
-  "release_version": "1.4.6",
+  "release_version": "1.4.7",
   "policy": {
     "student_visuals": "Product visuals are original generated illustrations, project-authored procedural graphics, or explicitly attributed public-domain reference data.",
     "historical_boundary": "Decorative images are teaching illustrations, never primary evidence, historical photographs, or claims of exact reconstruction.",
@@ -97,8 +97,8 @@
     {
       "id": "modern-reference-outline",
       "path": "apps/web/src/pages/courses/chinaReferencePath.ts",
-      "bytes": 9680,
-      "sha256": "d62c9f7cb0674cbcb6674dfe81b19d828034976386515cac6c8c76d5ea7bc039",
+      "bytes": 9676,
+      "sha256": "95b4b86fcd858e5d719391b1889892828a0e475ea0f2a816a1f13030ccc1b18f",
       "source_type": "public-domain-derived-data",
       "rights_note": "Derived by the repository script from Natural Earth 1:50m Admin 0 public-domain data; used only as a low-contrast modern location reference."
     }

@@ -99,6 +99,7 @@ def generate(source: Path | None, output: Path) -> None:
         f"export const NATURAL_EARTH_SOURCE = '{SOURCE_URL}';\n"
         f"export const CHINA_REFERENCE_PATH = {json.dumps(' '.join(paths))};\n",
         encoding="utf-8",
+        newline="\n",
     )
 
 

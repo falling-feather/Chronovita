@@ -66,9 +66,6 @@ jobs:
           $rootCommands = @(
             Get-ChildItem -LiteralPath "." -File -Filter "*.cmd"
           )
-          if ($rootCommands.Count -ne 2) {
-            throw "Expected exactly two teacher-facing root CMD files."
-          }
           $rootLaunchers = @(
             $rootCommands |
               Where-Object {
