@@ -1,9 +1,10 @@
 {
   "name": "@chronovita/web",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "npm run build:reader",
     "dev": "vite",
     "build": "npm run build:reader && node scripts/clean-pages-preview.mjs && tsc -b && vite build",
     "build:reader": "node ../../scripts/build_shiji_reader.mjs",

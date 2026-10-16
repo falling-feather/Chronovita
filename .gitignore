@@ -80,6 +80,8 @@ distribution/wheelhouse/**
 .minio/
 
 apps/web/.vite/
+# Generated from apps/shiji-reader; rebuilt before dev/build, never a source.
+/apps/web/public/shiji-reader/
 apps/web/playwright-report/
 apps/web/test-results/
 apps/web/blob-report/
