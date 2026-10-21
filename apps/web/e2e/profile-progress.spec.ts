@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, request, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -6,26 +6,32 @@ import { join } from 'node:path';
 const BASE = process.env.CHRONO_E2E_BASE_URL || 'http://127.0.0.1:8765';
 const PASSWORD = process.env.CHRONO_E2E_USER_PASSWORD || '';
 
-test('个人资料、阅读确认、反馈入口与改密退出形成真实闭环', async ({ page, playwright }, testInfo) => {
+async function createStudent(username: string) {
+  const admin = await request.newContext({ baseURL: BASE, extraHTTPHeaders: { Origin: BASE } });
+  try {
+    const login = await admin.post('/api/v1/auth/login', { data: {
+      username: process.env.CHRONO_E2E_ADMIN_USERNAME || 'classroom.admin',
+      password: process.env.CHRONO_E2E_ADMIN_PASSWORD || '',
+    } });
+    expect(login.ok()).toBeTruthy();
+    const created = await admin.post('/api/v1/auth/users', { data: {
+      username, password: PASSWORD, display_name: '资料验收', roles: ['student'],
+    } });
+    expect(created.status()).toBe(201);
+  } finally { await admin.dispose(); }
+}
+
+test('个人资料、阅读确认、反馈入口与改密退出形成真实闭环', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === 'classroom-1920x1080', 'Profile is checked on desktop and mobile.');
-  const admin = await playwright.request.newContext({ baseURL: BASE, extraHTTPHeaders: { Origin: BASE } });
-  const login = await admin.post('/api/v1/auth/login', { data: {
-    username: process.env.CHRONO_E2E_ADMIN_USERNAME || 'classroom.admin',
-    password: process.env.CHRONO_E2E_ADMIN_PASSWORD || '',
-  } });
-  expect(login.ok()).toBeTruthy();
   const username = `profile.qa.${Date.now()}`;
-  const created = await admin.post('/api/v1/auth/users', { data: {
-    username, password: PASSWORD, display_name: '资料验收', roles: ['student'],
-  } });
-  expect(created.status()).toBe(201);
-  await admin.dispose();
+  await createStudent(username);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/login');
   await page.getByLabel('课堂账号', { exact: true }).fill(username);
   await page.getByLabel('密码', { exact: true }).fill(PASSWORD);
   await page.getByRole('button', { name: '进入课堂' }).click();
+  await expect(page).toHaveURL(`${BASE}/`);
   await page.goto('/profile');
   await page.getByLabel('昵称', { exact: true }).fill('已保存的新昵称');
   await page.getByLabel('联系邮箱（可选）').fill('student@example.com');
@@ -96,7 +102,7 @@ test('个人资料、阅读确认、反馈入口与改密退出形成真实闭�
   await page.getByLabel('课堂账号', { exact: true }).fill(username);
   await page.getByLabel('密码', { exact: true }).fill(PASSWORD + '-new');
   await page.getByRole('button', { name: '进入课堂' }).click();
-  await page.goto('/profile');
+  await expect(page).toHaveURL(`${BASE}/profile`);
   await page.route('**/api/v1/auth/logout', (route) => route.abort('failed'));
   await page.getByRole('button', { name: '退出登录', exact: true }).click();
   await expect(page.getByText('退出请求未完成，账号仍可能在线。请恢复网络后重试。')).toBeVisible();
@@ -107,4 +113,67 @@ test('个人资料、阅读确认、反馈入口与改密退出形成真实闭�
   await page.reload();
   await expect(page.getByLabel('课堂账号', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test('迟到的访问留痕不能撤回稍后确认的已读状态', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'classroom-1366x768', '响应乱序在桌面定向检查。');
+  const username = `progress.race.${Date.now()}`;
+  await createStudent(username);
+  await page.goto('/login');
+  await page.getByLabel('课堂账号', { exact: true }).fill(username);
+  await page.getByLabel('密码', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: '进入课堂' }).click();
+  await expect(page).toHaveURL(`${BASE}/`);
+  let releaseVisit!: () => void;
+  const visitGate = new Promise<void>((resolve) => { releaseVisit = resolve; });
+  let visitHeld = false;
+  let visitFetched = false;
+  await page.route('**/api/v1/learning/progress/touch', async (route) => {
+    if (!route.request().postDataJSON()?.completed && !visitHeld) {
+      visitHeld = true;
+      const response = await route.fetch();
+      visitFetched = true;
+      await visitGate;
+      await route.fulfill({ response });
+    } else await route.continue();
+  });
+  try {
+    await page.goto('/courses/C-prequin-state/lessons/L101?layer=watch');
+    await expect.poll(() => visitFetched).toBe(true);
+    await page.getByRole('button', { name: '我已读完这篇课文', exact: true }).click();
+    const confirmed = page.getByRole('button', { name: '已确认读完当前课文', exact: true });
+    await expect(confirmed).toBeDisabled();
+    const lateResponse = page.waitForResponse((response) =>
+      response.url().endsWith('/api/v1/learning/progress/touch')
+      && response.request().postDataJSON()?.completed !== true);
+    releaseVisit();
+    await (await lateResponse).finished();
+    // Flush the response-driven React render, not an arbitrary network timeout.
+    await page.evaluate(() => new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect(confirmed).toBeDisabled();
+    await page.reload();
+    await expect(confirmed).toBeDisabled();
+  } finally { releaseVisit(); await page.unrouteAll({ behavior: 'wait' }); }
+});
+
+test('展示资料延迟不应阻塞正文和阅读确认', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'classroom-1366x768', '可选展示资料延迟定向检查。');
+  const username = `reading.delay.${Date.now()}`;
+  await createStudent(username);
+  let releasePresentation!: () => void;
+  const presentationGate = new Promise<void>((resolve) => { releasePresentation = resolve; });
+  await page.route('**/api/v1/courses/C-prequin-state/lessons/L101/presentation', async (route) => {
+    await presentationGate;
+    await route.continue();
+  });
+  try {
+    await page.goto('/courses/C-prequin-state/lessons/L101?layer=watch');
+    await page.getByLabel('课堂账号', { exact: true }).fill(username);
+    await page.getByLabel('密码', { exact: true }).fill(PASSWORD);
+    await page.getByRole('button', { name: '进入课堂' }).click();
+    await expect(page.locator('.chrono-reading-body p').first()).toBeVisible();
+    await page.getByRole('button', { name: '我已读完这篇课文', exact: true }).click();
+    await expect(page.getByRole('button', { name: '已确认读完当前课文', exact: true })).toBeDisabled();
+  } finally { releasePresentation(); await page.unrouteAll({ behavior: 'wait' }); }
 });

@@ -36,6 +36,11 @@ import { IS_STATIC_PREVIEW } from '../../runtime';
 const LessonCreate = lazy(() => import('./LessonCreate'));
 const VALID_LAYERS = new Set(CLASSROOM_STAGES.map((stage) => stage.layer));
 
+type ReadingResource =
+  | { scope: string; status: 'loading' }
+  | { scope: string; status: 'ready'; lesson: Lesson }
+  | { scope: string; status: 'error'; message: string };
+
 export default function LessonPage() {
   const { courseId = '', lessonId = '' } = useParams();
   const [params, setParams] = useSearchParams();
@@ -45,10 +50,13 @@ export default function LessonPage() {
     : VALID_LAYERS.has(requestedLayer as ClassroomLayer) ? requestedLayer : 'watch') as ClassroomLayer;
   const nav = useNavigate();
   const auth = useAuth();
-  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const lessonScope = `${courseId}/${lessonId}`;
+  const [readingResource, setReadingResource] = useState<ReadingResource>({
+    scope: lessonScope, status: 'loading',
+  });
+  const lesson = readingResource.scope === lessonScope && readingResource.status === 'ready'
+    ? readingResource.lesson : null;
   const [presentation, setPresentation] = useState<LessonPresentationResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [progress, setProgress] = useState<ProgressItem | null>(null);
   const [progressError, setProgressError] = useState<{
     message: string; retry: 'touch' | 'confirm';
@@ -56,6 +64,7 @@ export default function LessonPage() {
   const [progressRetry, setProgressRetry] = useState(0);
   const [savingRead, setSavingRead] = useState(false);
   const enteredStagesRef = useRef(new Set<string>());
+  const progressRequestRef = useRef(0);
 
   const learningIdentity = useMemo<LearningScopeIdentity | null>(() => {
     const ownerId = auth.principal?.user_id
@@ -111,55 +120,57 @@ export default function LessonPage() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError('');
-    const lessonRequest = api.lesson(courseId, lessonId);
-    Promise.all([
-      lessonRequest,
-      lessonRequest.then((current) => current.reading_media_available === false
-        ? null : api.lessonPresentation(courseId, lessonId).catch(() => null)),
-    ]).then(([nextLesson, nextPresentation]) => {
+    setReadingResource({ scope: lessonScope, status: 'loading' });
+    setPresentation(null);
+    api.lesson(courseId, lessonId).then((nextLesson) => {
       if (!active) return;
-      setLesson(nextLesson);
-      setPresentation(nextPresentation);
+      setReadingResource({ scope: lessonScope, status: 'ready', lesson: nextLesson });
+      // Optional display metadata must not hold the teacher text or reading progress.
+      if (nextLesson.reading_media_available !== false) {
+        void api.lessonPresentation(courseId, lessonId).then((nextPresentation) => {
+          if (active) setPresentation(nextPresentation);
+        }).catch(() => { if (active) setPresentation(null); });
+      }
     }).catch((loadError) => {
       if (!active) return;
-      setLesson(null);
-      setPresentation(null);
-      setError(loadError instanceof Error ? loadError.message.replace(/^\d{3}\s+/, '') : '课时载入失败');
-    }).finally(() => {
-      if (active) setLoading(false);
+      setReadingResource({ scope: lessonScope, status: 'error',
+        message: loadError instanceof Error ? loadError.message.replace(/^\d{3}\s+/, '') : '课时载入失败',
+      });
     });
     return () => { active = false; };
-  }, [courseId, lessonId]);
+  }, [courseId, lessonId, lessonScope]);
 
   useEffect(() => {
     if (!lesson || lesson.id !== lessonId || IS_STATIC_PREVIEW) return;
     let active = true;
+    const requestId = ++progressRequestRef.current;
+    setSavingRead(false);
     setProgressError(null);
     api.progressTouch({ lesson_id: lessonId, layer,
       ...(layer === 'watch' && lesson.teacher_text_checksum ? { teacher_text_checksum: lesson.teacher_text_checksum } : {}),
-    }).then((response) => { if (active) setProgress(response.item); })
-      .catch(() => { if (active) setProgressError({
+    }).then((response) => {
+      if (active && requestId === progressRequestRef.current) setProgress(response.item);
+    }).catch(() => { if (active && requestId === progressRequestRef.current) setProgressError({
         message: '学习记录暂未同步，不影响阅读。请恢复网络后重试。', retry: 'touch',
       }); });
-    return () => { active = false; };
-  }, [lessonId, lesson, layer, progressRetry]);
+    return () => { active = false; ++progressRequestRef.current; };
+  }, [lessonId, lesson, layer, progressRetry, auth.principal?.user_id]);
 
   const confirmReading = useCallback(async () => {
     if (!lesson?.teacher_text_checksum || savingRead) return;
+    const requestId = ++progressRequestRef.current;
     setSavingRead(true); setProgressError(null);
     try {
       const response = await api.progressTouch({ lesson_id: lesson.id, layer: 'watch',
         completed: true, teacher_text_checksum: lesson.teacher_text_checksum });
-      setProgress(response.item);
+      if (requestId === progressRequestRef.current) setProgress(response.item);
     } catch (failure) {
-      setProgressError({
+      if (requestId === progressRequestRef.current) setProgressError({
         message: failure instanceof TypeError ? '网络连接失败，已读确认未保存，请重试。'
           : failure instanceof Error ? failure.message.replace(/^\d{3}\s+/, '') : '已读确认未保存，请重试。',
         retry: 'confirm',
       });
-    } finally { setSavingRead(false); }
+    } finally { if (requestId === progressRequestRef.current) setSavingRead(false); }
   }, [lesson, savingRead]);
 
   const openLayer = useCallback((nextLayer: ClassroomLayer, options?: { question?: string; personId?: string }) => {
@@ -220,9 +231,12 @@ export default function LessonPage() {
     );
   }, [layer, lesson, interactionLesson, openLayer, params, presentation, confirmReading, progress, savingRead]);
 
-  if (loading) return <div className="chrono-page-loading"><Spin /><span>正在核对课时发布…</span></div>;
+  if (readingResource.scope !== lessonScope || readingResource.status === 'loading') {
+    return <div className="chrono-page-loading"><Spin /><span>正在核对课时发布…</span></div>;
+  }
   if (!lesson) {
-    return <Alert type="error" showIcon message="课时暂不可用" description={error || '没有找到当前课时。'} />;
+    return <Alert type="error" showIcon message="课时暂不可用"
+      description={readingResource.status === 'error' ? readingResource.message : '没有找到当前课时。'} />;
   }
 
   return (
