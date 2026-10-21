@@ -7,15 +7,19 @@ exercise and its draft evidence corpus; it does not seal or publish artifacts.
 
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 from services import content
 from services.content import evidence_workflow, scenario_authoring
 from services.contracts.evidence_v1 import EvidencePassageV1, EvidenceSourceV1
-from services.contracts.v1 import course_package_from_legacy
+from services.content.flagships.authoring_specs import (
+    EvidencePassageSpec as _PassageSpec,
+    LessonSourceSpec as _SourceSpec,
+    evidence_fact_refs,
+    load_teacher_lesson,
+    merge_lesson_source_refs,
+    package_indexes,
+)
 
 
 COURSE_ID = "C-prequin-state"
@@ -23,39 +27,6 @@ LESSON_ID = "L102"
 SCENARIO_ID = "shang-l102-evidence-curation"
 CORPUS_ID = "shang-l102-evidence"
 TEACHER_SOURCE_ID = "teacher-l102"
-
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-_TEXTBOOK_PATH = _PROJECT_ROOT / "content" / "textbooks" / f"{COURSE_ID}.json"
-
-
-@dataclass(frozen=True)
-class _SourceSpec:
-    key: str
-    title: str
-    kind: str
-    author_or_institution: str
-    publisher: str
-    url_or_path: str
-    locator: str
-    citation_note: str
-    reliability: str = "reviewed"
-    published_year: int | None = None
-
-
-@dataclass(frozen=True)
-class _PassageSpec:
-    source_key: str
-    title: str
-    text: str
-    summary: str
-    fact_keys: tuple[str, ...]
-    keywords: tuple[str, ...]
-    evidence_kind: str
-    certainty: str
-    chronology_note: str
-    people: tuple[str, ...] = ()
-    teaching_note: str = ""
-
 
 SOURCE_SPECS = (
     _SourceSpec(
@@ -515,41 +486,15 @@ _PASSAGES = (
 
 
 def _read_teacher_lesson() -> tuple[dict[str, Any], dict[str, Any]]:
-    snapshot = json.loads(_TEXTBOOK_PATH.read_text(encoding="utf-8"))
-    if snapshot.get("course_id") != COURSE_ID:
-        raise ValueError(f"Unexpected teacher course identity in {_TEXTBOOK_PATH}.")
-    lesson = next(
-        (
-            item
-            for item in snapshot.get("lessons", [])
-            if item.get("lesson_id") == LESSON_ID
-        ),
-        None,
+    return load_teacher_lesson(
+        COURSE_ID,
+        LESSON_ID,
+        "商朝兴衰与甲骨文",
     )
-    if lesson is None or lesson.get("title") != "商朝兴衰与甲骨文":
-        raise ValueError(f"Current teacher lesson {LESSON_ID} is missing or renamed.")
-    return snapshot, lesson
 
 
 def _source_refs(teacher_lesson: dict[str, Any]) -> list[content.SourceRef]:
-    by_url: dict[str, content.SourceRef] = {}
-    for item in teacher_lesson.get("source_refs", []):
-        by_url[item["url_or_path"]] = content.SourceRef(
-            title=item["title"],
-            source=item.get("source", ""),
-            url_or_path=item["url_or_path"],
-            citation_note=item.get("citation_note", ""),
-            reliability=item.get("reliability", "pending"),
-        )
-    for spec in SOURCE_SPECS:
-        by_url[spec.url_or_path] = content.SourceRef(
-            title=spec.title,
-            source=spec.publisher,
-            url_or_path=spec.url_or_path,
-            citation_note=f"定位：{spec.locator}。{spec.citation_note}",
-            reliability=spec.reliability,
-        )
-    return sorted(by_url.values(), key=lambda item: (item.title, item.url_or_path))
+    return merge_lesson_source_refs(teacher_lesson, SOURCE_SPECS)
 
 
 def build_l102_course_draft() -> content.LessonContentPackage:
@@ -832,15 +777,11 @@ _ACTION_GROUPS = (
 
 
 def _package_indexes(course_draft: content.LessonContentPackage):
-    package = course_package_from_legacy(course_draft)
-    fact_ids = {item.statement: item.fact_id for item in package.facts}
-    person_ids = {item.name: item.person_id for item in package.people}
-    source_ids = {item.title: item.source_id for item in package.source_refs}
-    return package, fact_ids, person_ids, source_ids
+    return package_indexes(course_draft)
 
 
 def _fact_refs(keys: tuple[str, ...], fact_ids: dict[str, str]) -> list[str]:
-    return sorted({fact_ids[FACTS[key]] for key in keys})
+    return evidence_fact_refs(keys, FACTS, fact_ids)
 
 
 def build_l102_scenario_draft(
