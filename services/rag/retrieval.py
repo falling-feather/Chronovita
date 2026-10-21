@@ -4,6 +4,7 @@ from array import array
 from dataclasses import dataclass
 import hashlib
 import json
+import logging
 import math
 import os
 from pathlib import Path
@@ -22,7 +23,7 @@ from services.contracts.evidence_v1 import (
 )
 
 
-INDEX_SCHEMA_VERSION = "chronovita-rag-index/v1"
+INDEX_SCHEMA_VERSION = "chronovita-rag-index/v2"
 TOKENIZER_VERSION = "zh-word-bigram/v1"
 DEFAULT_VECTOR_MODEL = "BAAI/bge-small-zh-v1.5"
 RRF_K = 60
@@ -126,8 +127,8 @@ class _LexicalDocument:
         )
 
 
-class FastEmbedVectorizer:
-    """Offline-only FastEmbed adapter backed by a checksummed model bundle."""
+class OnnxBgeVectorizer:
+    """Run the pinned BGE text model locally without image-embedding dependencies."""
 
     model_id = DEFAULT_VECTOR_MODEL
     dimension = 512
@@ -136,6 +137,8 @@ class FastEmbedVectorizer:
         self.model_root = Path(model_root)
         self.enabled = enabled
         self._model = None
+        self._tokenizer = None
+        self._input_names: frozenset[str] = frozenset()
         self._load_attempted = False
         self._lock = RLock()
 
@@ -144,19 +147,35 @@ class FastEmbedVectorizer:
         return self._load_model() is not None
 
     def embed_passages(self, texts: Sequence[str]) -> list[tuple[float, ...]]:
-        model = self._required_model()
-        vectors = model.embed(list(texts), batch_size=16, parallel=None)
-        return [self._normalize_vector(item) for item in vectors]
+        if not texts:
+            return []
+        import numpy as np
+
+        result: list[tuple[float, ...]] = []
+        with self._lock:
+            model = self._required_model()
+            for start in range(0, len(texts), 16):
+                batch = list(texts[start:start + 16])
+                encoded = self._tokenizer.encode_batch(batch)
+                input_ids = np.asarray([item.ids for item in encoded], dtype=np.int64)
+                inputs = {"input_ids": input_ids}
+                if "attention_mask" in self._input_names:
+                    inputs["attention_mask"] = np.asarray(
+                        [item.attention_mask for item in encoded], dtype=np.int64,
+                    )
+                if "token_type_ids" in self._input_names:
+                    inputs["token_type_ids"] = np.zeros_like(input_ids)
+                output = np.asarray(model.run(None, inputs)[0])
+                if output.ndim == 3 and output.shape[1] > 0:
+                    output = output[:, 0]
+                if output.shape != (len(batch), self.dimension):
+                    raise RagIndexUnavailable("The vector model returned an invalid batch shape.")
+                result.extend(self._normalize_vector(vector) for vector in output)
+        return result
 
     def embed_query(self, text: str) -> tuple[float, ...]:
-        model = self._required_model()
-        query_embed = getattr(model, "query_embed", None)
-        vectors = (
-            query_embed([text])
-            if query_embed is not None
-            else model.embed([f"为这个句子生成表示以用于检索相关文章：{text}"])
-        )
-        return self._normalize_vector(next(iter(vectors)))
+        # The previous BGE adapter used the same encoder for queries and passages.
+        return self.embed_passages([text])[0]
 
     def _required_model(self):
         model = self._load_model()
@@ -172,15 +191,44 @@ class FastEmbedVectorizer:
             if not self.enabled or not _verify_model_bundle(self.model_root):
                 return None
             try:
-                from fastembed import TextEmbedding
+                import onnxruntime as ort
+                from tokenizers import Tokenizer
 
-                self._model = TextEmbedding(
-                    model_name=self.model_id,
-                    specific_model_path=str(self.model_root),
-                    local_files_only=True,
+                config = json.loads((self.model_root / "config.json").read_text(encoding="utf-8"))
+                tokenizer_config = json.loads(
+                    (self.model_root / "tokenizer_config.json").read_text(encoding="utf-8"),
                 )
-            except Exception:
-                # Optional provider failures never disable the lexical classroom path.
+                special_tokens = json.loads(
+                    (self.model_root / "special_tokens_map.json").read_text(encoding="utf-8"),
+                )
+                tokenizer = Tokenizer.from_file(str(self.model_root / "tokenizer.json"))
+                tokenizer.enable_truncation(max_length=tokenizer_config["model_max_length"])
+                tokenizer.enable_padding(
+                    pad_id=config["pad_token_id"], pad_token=tokenizer_config["pad_token"],
+                )
+                tokenizer.add_special_tokens(list(special_tokens.values()))
+                options = ort.SessionOptions()
+                options.intra_op_num_threads = 2
+                options.inter_op_num_threads = 1
+                options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+                model = ort.InferenceSession(
+                    str(self.model_root / "model_optimized.onnx"),
+                    sess_options=options, providers=["CPUExecutionProvider"],
+                )
+                input_names = frozenset(item.name for item in model.get_inputs())
+                if "input_ids" not in input_names or input_names - {
+                    "input_ids", "attention_mask", "token_type_ids",
+                }:
+                    raise RagIndexUnavailable("The pinned BGE input contract is invalid.")
+                self._tokenizer = tokenizer
+                self._input_names = input_names
+                self._model = model
+            except Exception as error:
+                # The optional vector path may fail; lexical retrieval stays available.
+                logging.getLogger(__name__).warning(
+                    "BGE CPU runtime unavailable (%s); using lexical retrieval.",
+                    type(error).__name__,
+                )
                 self._model = None
             return self._model
 
@@ -1223,7 +1271,7 @@ def _file_sha256(path: Path) -> str:
 __all__ = [
     "DEFAULT_VECTOR_MODEL",
     "EvidenceIntegrityError",
-    "FastEmbedVectorizer",
+    "OnnxBgeVectorizer",
     "HybridEvidenceRetriever",
     "RagIndexUnavailable",
     "RagRetrievalError",

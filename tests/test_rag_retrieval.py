@@ -1,4 +1,5 @@
 import json
+from contextlib import closing
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -207,6 +208,26 @@ class RagRetrievalTests(unittest.TestCase):
         finally:
             connection.close()
         self.assertNotEqual(stored_body, "b_伪造 b_缓存")
+
+    def test_old_vector_adapter_cache_schema_is_rebuilt(self):
+        from services.rag.retrieval import INDEX_SCHEMA_VERSION
+
+        retriever = HybridEvidenceRetriever(self.index_path)
+        result = retriever.retrieve(self.resources["L101"], "禹怎样治水？")
+        with closing(sqlite3.connect(self.index_path)) as connection:
+            connection.execute(
+                "UPDATE rag_scopes SET schema_version = ? WHERE scope_key = ?",
+                ("chronovita-rag-index/v1", result.scope_key),
+            )
+            connection.commit()
+        rebuilt = retriever.retrieve(self.resources["L101"], "禹怎样治水？")
+        self.assertEqual(rebuilt.scope_key, result.scope_key)
+        with closing(sqlite3.connect(self.index_path)) as connection:
+            stored = connection.execute(
+                "SELECT schema_version FROM rag_scopes WHERE scope_key = ?",
+                (result.scope_key,),
+            ).fetchone()
+        self.assertEqual(stored[0], INDEX_SCHEMA_VERSION)
 
     def test_truncated_sqlite_cache_is_replaced_from_sealed_evidence(self):
         retriever = HybridEvidenceRetriever(self.index_path)

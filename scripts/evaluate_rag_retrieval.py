@@ -13,7 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from services.content import workflow
 from services.rag.query import QUERY_PLANNER_VERSION, plan_rag_query
-from services.rag.retrieval import FastEmbedVectorizer, HybridEvidenceRetriever
+from services.rag.retrieval import OnnxBgeVectorizer, HybridEvidenceRetriever
 
 
 DEFAULT_FIXTURE = (
@@ -36,7 +36,7 @@ def parse_args() -> argparse.Namespace:
 def evaluate(args: argparse.Namespace, *, index_path: Path) -> dict:
     benchmark = json.loads(args.fixture.read_text(encoding="utf-8"))
     vectorizer = (
-        FastEmbedVectorizer(args.vector_model_root)
+        OnnxBgeVectorizer(args.vector_model_root)
         if args.vector_model_root is not None
         else None
     )

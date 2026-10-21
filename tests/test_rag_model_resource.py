@@ -4,14 +4,11 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import sys
 import tempfile
-import types
 import unittest
-from unittest.mock import patch
 
 from scripts import prepare_rag_model
-from services.rag.retrieval import FastEmbedVectorizer
+from services.rag.retrieval import OnnxBgeVectorizer
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -24,22 +21,8 @@ MODEL_MANIFEST = (
 )
 
 
-class _FakeTextEmbedding:
-    calls: list[dict] = []
-
-    def __init__(self, **kwargs) -> None:
-        self.calls.append(kwargs)
-
-    def embed(self, texts, **_kwargs):
-        return ([1.0] + [0.0] * 511 for _ in texts)
-
-    def query_embed(self, texts):
-        return ([1.0] + [0.0] * 511 for _ in texts)
-
-
 class RagModelResourceTests(unittest.TestCase):
     def setUp(self) -> None:
-        _FakeTextEmbedding.calls.clear()
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.model_root = Path(self.temp_dir.name)
@@ -67,31 +50,9 @@ class RagModelResourceTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-    def test_checked_bundle_loads_fastembed_in_offline_mode(self) -> None:
-        fake_module = types.SimpleNamespace(TextEmbedding=_FakeTextEmbedding)
-        with patch.dict(sys.modules, {"fastembed": fake_module}):
-            vectorizer = FastEmbedVectorizer(self.model_root)
-            self.assertTrue(vectorizer.available)
-            vector = vectorizer.embed_query("课堂离线检索")
-
-        self.assertEqual(len(vector), 512)
-        self.assertEqual(
-            _FakeTextEmbedding.calls,
-            [
-                {
-                    "model_name": "BAAI/bge-small-zh-v1.5",
-                    "specific_model_path": str(self.model_root),
-                    "local_files_only": True,
-                }
-            ],
-        )
-
     def test_tampered_model_file_disables_vector_path(self) -> None:
         (self.model_root / "tiny-model.bin").write_bytes(b"tampered")
-        fake_module = types.SimpleNamespace(TextEmbedding=_FakeTextEmbedding)
-        with patch.dict(sys.modules, {"fastembed": fake_module}):
-            self.assertFalse(FastEmbedVectorizer(self.model_root).available)
-        self.assertEqual(_FakeTextEmbedding.calls, [])
+        self.assertFalse(OnnxBgeVectorizer(self.model_root).available)
 
     def test_distribution_manifest_is_pinned_and_well_formed(self) -> None:
         manifest = prepare_rag_model._read_manifest(MODEL_MANIFEST)
@@ -124,9 +85,7 @@ class RagModelResourceTests(unittest.TestCase):
             source.symlink_to(real_source)
         except OSError as exc:
             self.skipTest(f"symbolic links are unavailable: {exc}")
-        fake_module = types.SimpleNamespace(TextEmbedding=_FakeTextEmbedding)
-        with patch.dict(sys.modules, {"fastembed": fake_module}):
-            self.assertFalse(FastEmbedVectorizer(self.model_root).available)
+        self.assertFalse(OnnxBgeVectorizer(self.model_root).available)
 
 
 if __name__ == "__main__":

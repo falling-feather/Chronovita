@@ -12,6 +12,8 @@ from tempfile import TemporaryDirectory
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 DEFAULT_TARGET = (
     PROJECT_ROOT / "distribution" / "models" / "BAAI-bge-small-zh-v1.5"
 )
@@ -29,7 +31,7 @@ class ModelResourceError(RuntimeError):
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Fetch and verify the pinned offline FastEmbed resource used by Chronovita."
+            "Fetch and verify the pinned offline BGE ONNX resource used by Chronovita."
         )
     )
     parser.add_argument("--target", type=Path, default=DEFAULT_TARGET)
@@ -165,21 +167,17 @@ def _verify_target(target: Path, manifest: dict) -> None:
 
 
 def _smoke_test(target: Path, manifest: dict) -> None:
-    from fastembed import TextEmbedding
+    from services.rag.retrieval import OnnxBgeVectorizer
 
-    model = TextEmbedding(
-        model_name=manifest["model_id"],
-        specific_model_path=str(target),
-        local_files_only=True,
-    )
-    vector = tuple(float(value) for value in next(iter(model.embed(["离线检索自检"]))))
+    model = OnnxBgeVectorizer(target)
+    vector = model.embed_query("离线检索自检")
     norm = math.sqrt(sum(value * value for value in vector))
     if (
         len(vector) != manifest["dimension"]
         or not all(math.isfinite(value) for value in vector)
         or not 0.99 <= norm <= 1.01
     ):
-        raise ModelResourceError("FastEmbed returned an unexpected vector dimension")
+        raise ModelResourceError("BGE ONNX returned an unexpected vector dimension")
 
 
 def _safe_child(root: Path, relative: str) -> Path:

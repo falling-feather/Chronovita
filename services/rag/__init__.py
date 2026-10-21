@@ -6,7 +6,7 @@ from threading import RLock
 from .retrieval import (
     DEFAULT_VECTOR_MODEL,
     EvidenceIntegrityError,
-    FastEmbedVectorizer,
+    OnnxBgeVectorizer,
     HybridEvidenceRetriever,
     RagIndexUnavailable,
     RagRetrievalError,
@@ -61,7 +61,7 @@ def configure_rag(
     global _SERVICE
     selected_vectorizer = vectorizer
     if selected_vectorizer is None:
-        selected_vectorizer = FastEmbedVectorizer(
+        selected_vectorizer = OnnxBgeVectorizer(
             model_root,
             enabled=vector_enabled,
         )
@@ -89,7 +89,7 @@ def shutdown_rag() -> None:
 __all__ = [
     "DEFAULT_VECTOR_MODEL",
     "EvidenceIntegrityError",
-    "FastEmbedVectorizer",
+    "OnnxBgeVectorizer",
     "HybridEvidenceRetriever",
     "LOCAL_REPLY_VERSION",
     "QUERY_PLANNER_VERSION",
