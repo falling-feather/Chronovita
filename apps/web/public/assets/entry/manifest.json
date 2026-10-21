@@ -1,0 +1,157 @@
+{
+  "schema": "chronovita-entry-visual-assets/v1",
+  "processor": {
+    "sharp": "0.35.3",
+    "vips": "8.18.3"
+  },
+  "source_policy": "Original imagegen PNG files remain outside Git. Generated IDs, source hashes, prompt briefs, final dimensions and final hashes are recorded here.",
+  "historical_boundary": "Every scene is an original teaching illustration and must not be described as a primary source, photograph, exact reconstruction, or historical portrait.",
+  "post_processing": "Auto-orient, crop only to the declared responsive canvas, resize with Lanczos3, convert to sRGB and encode local WebP variants.",
+  "gallery": {
+    "flood": {
+      "generated_id": "exec-69f4d4c5-73b1-4728-8c41-2af38228120c",
+      "alt": "河谷中的治水共同体协作分流教学插画",
+      "prompt_brief": "早期治水共同体、分流河道、木构水工与集体劳动；原创教学插画。",
+      "source": {
+        "width": 1024,
+        "height": 1536,
+        "bytes": 3060527,
+        "sha256": "61d10f82840a251adfef5f9e14de9eddd2d52b6d4646eb7d3d33f91076bc335b"
+      },
+      "variants": [
+        {
+          "file": "login-flood-420.webp",
+          "format": "webp",
+          "width": 420,
+          "height": 630,
+          "bytes": 56648,
+          "sha256": "ffcdfdd014042391deec2ee9667ddb03c7af4ef8fc7a011f07d63c512485dd09"
+        },
+        {
+          "file": "login-flood-640.webp",
+          "format": "webp",
+          "width": 640,
+          "height": 960,
+          "bytes": 168360,
+          "sha256": "dc5c7c6845f0ef6358b209681ff92b37414a39b8a03087e04512b13e0fc4f0c1"
+        }
+      ]
+    },
+    "qin-reform": {
+      "generated_id": "exec-97985f9b-cf1c-4d2b-8709-cc1af45620db",
+      "alt": "战国秦制度辩论与社会承受者教学插画",
+      "prompt_brief": "战国秦夯土木构议事空间、简牍、官员与制度承受者；原创教学插画。",
+      "source": {
+        "width": 1024,
+        "height": 1536,
+        "bytes": 2649525,
+        "sha256": "acd87f5270d0e143400ca995081ef1a0f6c362dcfb9612041d52448167a2d064"
+      },
+      "variants": [
+        {
+          "file": "login-qin-reform-420.webp",
+          "format": "webp",
+          "width": 420,
+          "height": 630,
+          "bytes": 36908,
+          "sha256": "1460870f59f1d0df6dfe7ddf1917327623f7d275d7417d0922f04156aa967908"
+        },
+        {
+          "file": "login-qin-reform-640.webp",
+          "format": "webp",
+          "width": 640,
+          "height": 960,
+          "bytes": 126338,
+          "sha256": "ef271a6c9220fac7f8dc44c285a17092365b36c0622463d1a1bf39294d3879ba"
+        }
+      ]
+    },
+    "han-caravan": {
+      "generated_id": "exec-2a135e3d-89ac-4298-8860-7430b7202d8c",
+      "alt": "汉代西行商旅在绿洲商议路线教学插画",
+      "prompt_brief": "汉代西行商旅、双峰驼、关塞与跨地域交流；原创教学插画。",
+      "source": {
+        "width": 1024,
+        "height": 1536,
+        "bytes": 3097506,
+        "sha256": "81d686d8dce4e1fdb9b069b787e9c3bc02f9f994d535c8620d158110632d294c"
+      },
+      "variants": [
+        {
+          "file": "login-han-caravan-420.webp",
+          "format": "webp",
+          "width": 420,
+          "height": 630,
+          "bytes": 59576,
+          "sha256": "870b74bafe8f9c7e835e33c8a35849dfeb5ca36bb88c6158b69969a7597375a4"
+        },
+        {
+          "file": "login-han-caravan-640.webp",
+          "format": "webp",
+          "width": 640,
+          "height": 960,
+          "bytes": 178538,
+          "sha256": "eafb6e169f352b4c502835aed61ef78535097ae5ce12ab20fd29ddb74e6871dc"
+        }
+      ]
+    },
+    "tang-city": {
+      "generated_id": "exec-162162c1-141c-47ec-8536-ac7e7cd44d7f",
+      "alt": "唐代城市街巷与文化交流教学插画",
+      "prompt_brief": "唐代城市街巷、市场、行旅与文化交流；原创教学插画。",
+      "source": {
+        "width": 1024,
+        "height": 1536,
+        "bytes": 2668278,
+        "sha256": "c48dc09ac400d79eb44e4eb662558445e1d8830a91b0965c012ffb9f2b13b8b1"
+      },
+      "variants": [
+        {
+          "file": "login-tang-city-420.webp",
+          "format": "webp",
+          "width": 420,
+          "height": 630,
+          "bytes": 47900,
+          "sha256": "2c20b42af6180c19f209b6b47858c8f944fb20bb15ed28366e40f967ceb9db33"
+        },
+        {
+          "file": "login-tang-city-640.webp",
+          "format": "webp",
+          "width": 640,
+          "height": 960,
+          "bytes": 141356,
+          "sha256": "2cd233dc49a818c7a3d30ac96f923dd4635f73467712bf68e1841ba009478b6e"
+        }
+      ]
+    }
+  },
+  "panorama": {
+    "generated_id": "exec-c3d422c8-8a69-49b2-878b-6ad38632a0ed",
+    "alt": "从治水河谷延展到城市与长城的中国历史教学长卷",
+    "prompt_brief": "治水、秦制、汉代交通、唐宋城市与山河长城连续成卷；原创教学插画。",
+    "source": {
+      "width": 1672,
+      "height": 941,
+      "bytes": 2633137,
+      "sha256": "2d14c8043d3d870bdbe57a7d0f1044ee08dcd399ede1b5b0e9f823ee17850ab2"
+    },
+    "variants": [
+      {
+        "file": "home-history-panorama-1366.webp",
+        "format": "webp",
+        "width": 1366,
+        "height": 768,
+        "bytes": 184758,
+        "sha256": "d5997c49c0017aca761ee9eff05e5f57148626156a8cde46f1e1ae1ef02eb8c2"
+      },
+      {
+        "file": "home-history-panorama-1920.webp",
+        "format": "webp",
+        "width": 1920,
+        "height": 1080,
+        "bytes": 362182,
+        "sha256": "5839737993437463ebb525b87d5a195cc95a32a66565158556cd7ffda0130ee0"
+      }
+    ]
+  }
+}

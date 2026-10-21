@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-5b7379e430ad130391f738f7",
+  "word": "经世致用",
+  "pinyin": "jīng shì zhì yòng",
+  "gloss": "让学问回应国家治理 百姓生活和现实问题的治学主张",
+  "era": "明清",
+  "category": "思想",
+  "examples": [
+    "本课结合“经世致用”说明让学问回应国家治理 百姓生活和现实问题的治学主张。",
+    "讲解“经世致用”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "顾炎武",
+    "王夫之"
+  ],
+  "related_lessons": [
+    "L1403"
+  ],
+  "source_refs": [
+    {
+      "title": "L1403《顾炎武与王夫之》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1403.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1403-01.json\", \"member_sha256\": \"306f3b6170849d5b2056f5d5d332ddfea3d9b374aeb558fb4d7ec34b345abb01\", \"source_id\": \"keyword-l1403-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.685581Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

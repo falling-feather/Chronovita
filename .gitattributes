@@ -26,3 +26,6 @@
 *.py text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+
+# Vendored, minified browser runtimes are immutable third-party artifacts.
+media/hyperframes/**/assets/*.min.js binary

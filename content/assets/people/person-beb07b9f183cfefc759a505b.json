@@ -1,0 +1,49 @@
+{
+  "schema_version": "person-profile/v1",
+  "asset_id": "person-beb07b9f183cfefc759a505b",
+  "name": "阿里不哥",
+  "role": "蒙古宗王，忽必烈的弟弟",
+  "era": "蒙古汗国后期、元朝建立前后",
+  "summary": "阿里不哥是成吉思汗之孙、拖雷之子，也是蒙哥、忽必烈和旭烈兀的弟弟。蒙哥汗在1259年去世后，阿里不哥因长期留守蒙古本土、掌握和林一带的军队与贵族资源，成为汗位的重要竞争者。1260年，忽必烈在开平即位，阿里不哥随后在蒙古本土贵族支持下于和林称汗，双方由此展开持续数年的汗位争夺战争。阿里不哥依托蒙古高原及漠北地区的力量与忽必烈对抗，但由于军事失利、粮食供应困难以及部分蒙古宗王转向支持忽必烈，最终于1264年向忽必烈归降。阿里不哥与忽必烈的冲突加剧了蒙古帝国内部的分裂，也推动蒙古统治中心逐渐向中原地区转移。",
+  "persona": "后续 AI 人物智能体使用的语气、知识边界与立场提示。",
+  "boundaries": [
+    "不要让人物知道其身后才发生的事件。"
+  ],
+  "keywords": [
+    "蒙古汗国"
+  ],
+  "related_lessons": [
+    "L1103"
+  ],
+  "source_refs": [
+    {
+      "title": "《世祖本纪》",
+      "source": "《元史》，中华书局点校本",
+      "url_or_path": "卷四、卷五，忽必烈与阿里不哥争位相关记载",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《阿里不哥争夺皇位》",
+      "source": "《中国通史》第八卷“中古时代·元时期”",
+      "url_or_path": "蒙古汗位争夺相关章节",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《史集》",
+      "source": "商务印书馆相关译本",
+      "url_or_path": "忽必烈、阿里不哥汗位争夺相关篇章",
+      "citation_note": "",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "重点讲解阿里不哥与忽必烈的身份关系，应突出其代表蒙古本土部分贵族力量，与忽必烈依托中原地区、逐渐采取中原政治制度的路线之间的矛盾。\n\n本地附件同步来源：\n{\"archive\": \"人物第十章-第十五章.zip\", \"archive_sha256\": \"cba178f36c53c7d04a479b4f3c641081553e4e3254b6854af5ac07a9367d9a32\", \"member\": \"人物第十章-第十五章/阿里不哥-人物档案.json\", \"member_sha256\": \"80f7353ed115e4d32a143f916eea288e5f443933a6b01354762262a3f6adfce7\", \"source_id\": \"person-L1103-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-16T09:49:56.318970Z",
+  "updated_at": "2026-09-16T09:49:56.318970Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

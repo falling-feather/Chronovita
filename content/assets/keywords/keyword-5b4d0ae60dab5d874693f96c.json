@@ -1,0 +1,38 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-5b4d0ae60dab5d874693f96c",
+  "word": "玄学",
+  "pinyin": "xuán xué",
+  "gloss": "魏晋时期讨论世界根本和人生问题的思想潮流；重视儒道经典的新解释",
+  "era": "魏晋南北朝",
+  "category": "思想",
+  "examples": [
+    "本课结合“玄学”说明魏晋时期讨论世界根本和人生问题的思想潮流；重视儒道经典的新解释。",
+    "讲解“玄学”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "王弼",
+    "嵇康",
+    "阮籍"
+  ],
+  "related_lessons": [
+    "L602"
+  ],
+  "source_refs": [
+    {
+      "title": "L602《清谈玄学与竹林七贤》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L602.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l602-01.json\", \"member_sha256\": \"4f691c0aad0fc29c4d8a69e39e0c38cc04f12e56a2e038dea162d2f2052638e7\", \"source_id\": \"keyword-l602-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.975993Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

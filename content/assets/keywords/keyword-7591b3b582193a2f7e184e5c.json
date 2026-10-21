@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-7591b3b582193a2f7e184e5c",
+  "word": "门下省",
+  "pinyin": "mén xià shěng",
+  "gloss": "三省之一；负责审议诏令并提出意见",
+  "era": "隋唐",
+  "category": "制度",
+  "examples": [
+    "本课结合“门下省”说明三省之一；负责审议诏令并提出意见。",
+    "讲解“门下省”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L702"
+  ],
+  "source_refs": [
+    {
+      "title": "L702《三省六部与科举》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L702.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l702-03.json\", \"member_sha256\": \"6ee97812542092b0fc6d5d3e5a4ea3e2b6339c96082b8954caceed815e9da929\", \"source_id\": \"keyword-l702-03\"}\n课时待关联或对应课文缺稿；本次保留素材，不生成旧课文或互动内容。",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.225342Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

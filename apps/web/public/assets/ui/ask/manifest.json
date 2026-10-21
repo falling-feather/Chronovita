@@ -1,0 +1,23 @@
+{
+  "schema": "chronovita-ask-paper-asset/v1",
+  "generated_id": "exec-3d400407-9e28-49ea-bd71-7256de286f23",
+  "use": "Low-contrast xuan paper material for the code-native Ask scroll and citation leaves.",
+  "prompt_brief": "Warm flat xuan paper, natural mulberry fibres, no text, symbols, objects, shadows or strong stains.",
+  "source": {
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2346795,
+    "sha256": "4f87d101c9e7479b013883af09db458a335e811e6f9d567dffaf84775118b256"
+  },
+  "output": {
+    "file": "xuan-paper-1024.webp",
+    "width": 1024,
+    "height": 1024,
+    "bytes": 65950,
+    "sha256": "af11e114433199b82dfce646cd933aa7b84e96971c6a9ca433ac8b9e8d334016"
+  },
+  "processor": {
+    "sharp": "0.35.3",
+    "vips": "8.18.3"
+  }
+}

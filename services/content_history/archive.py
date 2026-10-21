@@ -17,6 +17,7 @@ from pydantic import BaseModel, ValidationError
 
 from services import content as content_data
 from services.content import LessonContentPackage, package_checksum
+from services.content import runtime_artifacts
 from services.content import workflow as content_workflow
 from services.contracts.archive_v1 import (
     ARCHIVE_MANIFEST_FILENAME,
@@ -36,7 +37,12 @@ from services.contracts.archive_v1 import (
     lesson_archive_paths,
     safe_archive_filename,
     scenario_archive_path,
+    supplement_archive_path,
     sign_archive_manifest,
+)
+from services.contracts.persona_v1 import (
+    PersonaPackV1,
+    verify_persona_checksum,
 )
 from services.contracts.release_v2 import parse_signed_course_release_manifest
 from services.contracts.v1 import (
@@ -292,6 +298,74 @@ def build_course_archive(course_id: str, release_id: str) -> BuiltCourseArchive:
                 )
             )
 
+        for supplement_descriptor in _supplement_references(item):
+            try:
+                if supplement_descriptor.kind == "evidence-corpus":
+                    runtime_artifacts.load_release_evidence(
+                        supplement_descriptor
+                    )
+                elif supplement_descriptor.kind == "lesson-presentation":
+                    runtime_artifacts.load_release_presentation(
+                        supplement_descriptor
+                    )
+                elif supplement_descriptor.kind == "persona-pack":
+                    runtime_artifacts.load_release_persona(
+                        supplement_descriptor
+                    )
+                else:
+                    raise ArchiveBuildError(
+                        "release contains an unsupported supplemental artifact"
+                    )
+            except runtime_artifacts.RuntimeArtifactError as exc:
+                raise ArchiveBuildError(
+                    "supplement or presentation assets failed verification: "
+                    f"{supplement_descriptor.artifact_id}"
+                ) from exc
+            supplement_raw = _read_content_relative_bytes(
+                supplement_descriptor.path
+            )
+            supplement = _parse_supplement(
+                supplement_raw,
+                supplement_descriptor.kind,
+                item.lesson_id,
+            )
+            supplement_id, supplement_version = _supplement_identity(
+                supplement,
+                supplement_descriptor.kind,
+            )
+            if (
+                supplement.checksum != supplement_descriptor.checksum
+                or supplement.course_id != item.course_id
+                or supplement.lesson_id != item.lesson_id
+                or supplement.schema_version != supplement_descriptor.schema_version
+                or supplement_id != supplement_descriptor.artifact_id
+                or supplement_version != supplement_descriptor.version
+            ):
+                raise ArchiveBuildError(
+                    "supplement does not match release descriptor: "
+                    f"{supplement_descriptor.artifact_id}"
+                )
+            target = supplement_archive_path(
+                item.lesson_id,
+                supplement_descriptor.kind,
+                supplement_descriptor.artifact_id,
+                supplement_descriptor.version,
+            )
+            payloads[target] = supplement_raw
+            descriptors.append(
+                _file_descriptor(
+                    path=target,
+                    kind=supplement_descriptor.kind,
+                    media_type=_JSON_MEDIA_TYPE,
+                    payload=supplement_raw,
+                    lesson_id=item.lesson_id,
+                    artifact_id=supplement_descriptor.artifact_id,
+                    artifact_version=supplement_descriptor.version,
+                    schema_version=supplement_descriptor.schema_version,
+                    contract_checksum=supplement_descriptor.checksum,
+                )
+            )
+
         lesson_paths = tuple(
             sorted(
                 (
@@ -410,6 +484,53 @@ def _scenario_references(item) -> tuple[tuple[object, bool], ...]:
         )
         for descriptor in item.scenarios
     )
+
+
+def _supplement_references(item) -> tuple[object, ...]:
+    if not hasattr(item, "evidence_corpus"):
+        return ()
+    references = [item.evidence_corpus, item.lesson_presentation]
+    if hasattr(item, "persona_pack"):
+        references.append(item.persona_pack)
+    return tuple(references)
+
+
+def _parse_supplement(raw: bytes, kind: str, lesson_id: str):
+    from services.contracts.evidence_v1 import (
+        LessonPresentationV1,
+        verify_evidence_checksum,
+    )
+    from services.contracts.evidence_v2 import parse_evidence_corpus
+
+    if kind == "evidence-corpus":
+        supplement = _parse_json_contract(
+            raw,
+            parse_evidence_corpus,
+            f"{kind} {lesson_id}",
+        )
+        if not verify_evidence_checksum(supplement):
+            raise ArchiveBuildError(f"{kind} failed checksum verification")
+    elif kind == "lesson-presentation":
+        supplement = _parse_json_model(raw, LessonPresentationV1, f"{kind} {lesson_id}")
+        if not verify_evidence_checksum(supplement):
+            raise ArchiveBuildError(f"{kind} failed checksum verification")
+    elif kind == "persona-pack":
+        supplement = _parse_json_model(raw, PersonaPackV1, f"{kind} {lesson_id}")
+        if not verify_persona_checksum(supplement):
+            raise ArchiveBuildError(f"{kind} failed checksum verification")
+    else:
+        raise ArchiveBuildError(f"unsupported release supplement kind: {kind}")
+    return supplement
+
+
+def _supplement_identity(supplement, kind: str) -> tuple[str, int]:
+    if kind == "evidence-corpus":
+        return supplement.corpus_id, supplement.corpus_version
+    if kind == "lesson-presentation":
+        return supplement.presentation_id, supplement.presentation_version
+    if kind == "persona-pack":
+        return supplement.pack_id, supplement.pack_version
+    raise ArchiveBuildError(f"unsupported release supplement kind: {kind}")
 
 
 def _file_descriptor(

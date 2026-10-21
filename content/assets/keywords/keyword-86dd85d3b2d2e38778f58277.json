@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-86dd85d3b2d2e38778f58277",
+  "word": "考据学",
+  "pinyin": "kǎo jù xué",
+  "gloss": "通过文字 音韵 文献和实物辨明史实与经典含义的治学方法",
+  "era": "明清",
+  "category": "思想",
+  "examples": [
+    "本课结合“考据学”说明通过文字 音韵 文献和实物辨明史实与经典含义的治学方法。",
+    "讲解“考据学”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "顾炎武"
+  ],
+  "related_lessons": [
+    "L1403"
+  ],
+  "source_refs": [
+    {
+      "title": "L1403《顾炎武与王夫之》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1403.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1403-03.json\", \"member_sha256\": \"b137d2815a032ced9fe00778a0dc0ae9a590b73c04e6eddcbefb5adaf8810adf\", \"source_id\": \"keyword-l1403-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.709890Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

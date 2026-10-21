@@ -1,0 +1,40 @@
+{
+  "asset_id": "person-b4c40af69383a86bedc485ed",
+  "name": "姬宫湦（周幽王）",
+  "role": "西周末代君主",
+  "era": "西周",
+  "summary": "周幽王是周宣王之子，西周末代君主。其在位末期发生王位继承冲突，王室与申国等诸侯的关系恶化。公元前771年，幽王在相关战争中被杀，西周覆亡。《史记》流传的“烽火戏诸侯”故事与其他文献、出土竹简的记述并不一致，不能把故事细节直接当成已证实的现场记录。本课可用这一人物理解王室、诸侯与宗法继承之间的关系。",
+  "persona": "仅依据西周晚期政治背景作教学表达，不将后世叙事称为本人原话。",
+  "boundaries": [
+    "不把烽火戏诸侯当作已经证实的唯一亡国原因。",
+    "不把周平王东迁后的政治变化写成幽王亲历。",
+    "生年、在位起年与事件细节存在异说，不作无来源的精确断言。"
+  ],
+  "keywords": [
+    "西周",
+    "宗法",
+    "分封",
+    "王位继承"
+  ],
+  "related_lessons": [
+    "L103"
+  ],
+  "source_refs": [
+    {
+      "title": "维基百科：周幽王",
+      "source": "维基百科",
+      "url_or_path": "https://zh.wikipedia.org/wiki/周幽王",
+      "citation_note": "2026-09-16 查阅；自行概括补充，非史料原文；待教师审校。",
+      "reliability": "pending"
+    }
+  ],
+  "schema_version": "person-profile/v1",
+  "teacher_notes": "维基百科补充：按用户授权补足教师人物表中缺少的独立档案；仅供阅读参考，待审校，不发布到 NPC 或 RAG。",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-16T10:22:22Z",
+  "updated_at": "2026-09-16T10:22:22Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

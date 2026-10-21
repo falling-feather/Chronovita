@@ -24,6 +24,8 @@ def _run_powershell(
     check: bool = True,
 ) -> subprocess.CompletedProcess[str]:
     merged_environment = os.environ.copy()
+    # PowerShell 5.1 must discover its own built-in modules, not PS7's inherited path.
+    merged_environment["PSMODULEPATH"] = str(Path(os.environ["SystemRoot"]) / "System32/WindowsPowerShell/v1.0/Modules")
     if environment:
         merged_environment.update(environment)
     completed = subprocess.run(

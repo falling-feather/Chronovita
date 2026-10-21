@@ -1,0 +1,520 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/evidence/v2/evidence-corpus.schema.json",
+  "$comment": "Pydantic semantic validation additionally enforces stable ordering, cross-source references, classroom media boundaries and citation grounding.",
+  "$defs": {
+    "EvidenceAnswerSlotV1": {
+      "additionalProperties": false,
+      "properties": {
+        "slot_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Slot Id",
+          "type": "string"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "supported",
+            "unsupported"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "response_mode": {
+          "enum": [
+            "overview",
+            "identity",
+            "topic",
+            "boundary"
+          ],
+          "title": "Response Mode",
+          "type": "string"
+        },
+        "question_form": {
+          "default": "any",
+          "enum": [
+            "any",
+            "identity",
+            "creator_identity",
+            "causality",
+            "comparison",
+            "evidence_boundary"
+          ],
+          "title": "Question Form",
+          "type": "string"
+        },
+        "term_groups": {
+          "items": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "minItems": 1,
+          "title": "Term Groups",
+          "type": "array"
+        },
+        "passage_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Passage Ids",
+          "type": "array"
+        },
+        "boundary_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Boundary Ids",
+          "type": "array"
+        },
+        "api_synthesis_allowed": {
+          "default": false,
+          "title": "Api Synthesis Allowed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "slot_id",
+        "label",
+        "status",
+        "response_mode",
+        "term_groups"
+      ],
+      "title": "EvidenceAnswerSlotV1",
+      "type": "object"
+    },
+    "EvidenceBoundaryV1": {
+      "additionalProperties": false,
+      "properties": {
+        "boundary_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Boundary Id",
+          "type": "string"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "chronology",
+            "source_distance",
+            "claim_limit",
+            "causation",
+            "persona_knowledge",
+            "modern_concept",
+            "teaching_model"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 1200,
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "boundary_id",
+        "label",
+        "category",
+        "statement"
+      ],
+      "title": "EvidenceBoundaryV1",
+      "type": "object"
+    },
+    "EvidencePassageV2": {
+      "additionalProperties": false,
+      "properties": {
+        "passage_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Passage Id",
+          "type": "string"
+        },
+        "source_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 1200,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 1200,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "source_locator": {
+          "minLength": 1,
+          "title": "Source Locator",
+          "type": "string"
+        },
+        "fact_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Fact Ids",
+          "type": "array"
+        },
+        "person_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Person Ids",
+          "type": "array"
+        },
+        "keywords": {
+          "default": [],
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Keywords",
+          "type": "array"
+        },
+        "answer_slot_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Answer Slot Ids",
+          "type": "array"
+        },
+        "boundary_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+            "type": "string"
+          },
+          "title": "Boundary Ids",
+          "type": "array"
+        },
+        "persona_scope": {
+          "default": "expert_only",
+          "enum": [
+            "expert_only",
+            "expert_and_listed_people"
+          ],
+          "title": "Persona Scope",
+          "type": "string"
+        },
+        "evidence_kind": {
+          "enum": [
+            "curriculum_goal",
+            "transmitted_text",
+            "archaeological_evidence",
+            "scholarly_interpretation",
+            "teaching_explanation",
+            "boundary_note"
+          ],
+          "title": "Evidence Kind",
+          "type": "string"
+        },
+        "certainty": {
+          "enum": [
+            "consensus",
+            "interpretation",
+            "legend",
+            "disputed"
+          ],
+          "title": "Certainty",
+          "type": "string"
+        },
+        "chronology_note": {
+          "minLength": 1,
+          "title": "Chronology Note",
+          "type": "string"
+        },
+        "teaching_note": {
+          "default": "",
+          "title": "Teaching Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "passage_id",
+        "source_id",
+        "title",
+        "text",
+        "summary",
+        "source_locator",
+        "evidence_kind",
+        "certainty",
+        "chronology_note"
+      ],
+      "title": "EvidencePassageV2",
+      "type": "object"
+    },
+    "EvidenceSourceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "curriculum",
+            "textbook",
+            "primary_source",
+            "archaeology",
+            "museum",
+            "research",
+            "other"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "author_or_institution": {
+          "default": "",
+          "title": "Author Or Institution",
+          "type": "string"
+        },
+        "publisher": {
+          "default": "",
+          "title": "Publisher",
+          "type": "string"
+        },
+        "published_year": {
+          "anyOf": [
+            {
+              "maximum": 3000,
+              "minimum": -3000,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Published Year"
+        },
+        "url_or_path": {
+          "minLength": 1,
+          "title": "Url Or Path",
+          "type": "string"
+        },
+        "locator": {
+          "default": "",
+          "title": "Locator",
+          "type": "string"
+        },
+        "citation_note": {
+          "default": "",
+          "title": "Citation Note",
+          "type": "string"
+        },
+        "reliability": {
+          "default": "reviewed",
+          "enum": [
+            "reviewed",
+            "disputed"
+          ],
+          "title": "Reliability",
+          "type": "string"
+        },
+        "rights_note": {
+          "minLength": 1,
+          "title": "Rights Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "title",
+        "kind",
+        "url_or_path",
+        "rights_note"
+      ],
+      "title": "EvidenceSourceV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "evidence-corpus/v2",
+      "default": "evidence-corpus/v2",
+      "enum": [
+        "evidence-corpus/v2"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "corpus_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Corpus Id",
+      "type": "string"
+    },
+    "course_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Course Id",
+      "type": "string"
+    },
+    "lesson_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Lesson Id",
+      "type": "string"
+    },
+    "corpus_version": {
+      "minimum": 1,
+      "title": "Corpus Version",
+      "type": "integer"
+    },
+    "status": {
+      "const": "sealed",
+      "default": "sealed",
+      "enum": [
+        "sealed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "scope_note": {
+      "minLength": 1,
+      "title": "Scope Note",
+      "type": "string"
+    },
+    "supersedes_checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Supersedes Checksum",
+      "type": "string"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/EvidenceSourceV1"
+      },
+      "minItems": 1,
+      "title": "Sources",
+      "type": "array"
+    },
+    "boundaries": {
+      "items": {
+        "$ref": "#/$defs/EvidenceBoundaryV1"
+      },
+      "minItems": 1,
+      "title": "Boundaries",
+      "type": "array"
+    },
+    "answer_slots": {
+      "items": {
+        "$ref": "#/$defs/EvidenceAnswerSlotV1"
+      },
+      "minItems": 1,
+      "title": "Answer Slots",
+      "type": "array"
+    },
+    "passages": {
+      "items": {
+        "$ref": "#/$defs/EvidencePassageV2"
+      },
+      "minItems": 1,
+      "title": "Passages",
+      "type": "array"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "sealed_at": {
+      "format": "date-time",
+      "title": "Sealed At",
+      "type": "string"
+    },
+    "sealed_by": {
+      "minLength": 1,
+      "title": "Sealed By",
+      "type": "string"
+    },
+    "checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Checksum",
+      "type": "string"
+    }
+  },
+  "required": [
+    "corpus_id",
+    "course_id",
+    "lesson_id",
+    "corpus_version",
+    "title",
+    "scope_note",
+    "supersedes_checksum",
+    "sources",
+    "boundaries",
+    "answer_slots",
+    "passages",
+    "created_at",
+    "sealed_at",
+    "sealed_by",
+    "checksum"
+  ],
+  "title": "EvidenceCorpusV2",
+  "type": "object"
+}

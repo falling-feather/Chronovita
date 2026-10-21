@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/evidence/v1/lesson-presentation.schema.json",
+  "$comment": "Pydantic semantic validation additionally enforces stable ordering, cross-source references, classroom media boundaries and citation grounding.",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "lesson-presentation/v1",
+      "default": "lesson-presentation/v1",
+      "enum": [
+        "lesson-presentation/v1"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "presentation_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Presentation Id",
+      "type": "string"
+    },
+    "course_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Course Id",
+      "type": "string"
+    },
+    "lesson_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Lesson Id",
+      "type": "string"
+    },
+    "presentation_version": {
+      "minimum": 1,
+      "title": "Presentation Version",
+      "type": "integer"
+    },
+    "status": {
+      "const": "sealed",
+      "default": "sealed",
+      "enum": [
+        "sealed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "estimated_minutes": {
+      "maximum": 45,
+      "minimum": 35,
+      "title": "Estimated Minutes",
+      "type": "integer"
+    },
+    "phase_minutes": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Phase Minutes",
+      "type": "object"
+    },
+    "video_path": {
+      "minLength": 1,
+      "title": "Video Path",
+      "type": "string"
+    },
+    "poster_path": {
+      "minLength": 1,
+      "title": "Poster Path",
+      "type": "string"
+    },
+    "transcript_path": {
+      "minLength": 1,
+      "title": "Transcript Path",
+      "type": "string"
+    },
+    "video_duration_seconds": {
+      "maximum": 60.0,
+      "minimum": 45.0,
+      "title": "Video Duration Seconds",
+      "type": "number"
+    },
+    "video_width": {
+      "const": 1920,
+      "default": 1920,
+      "enum": [
+        1920
+      ],
+      "title": "Video Width",
+      "type": "integer"
+    },
+    "video_height": {
+      "const": 1080,
+      "default": 1080,
+      "enum": [
+        1080
+      ],
+      "title": "Video Height",
+      "type": "integer"
+    },
+    "video_fps": {
+      "const": 30,
+      "default": 30,
+      "enum": [
+        30
+      ],
+      "title": "Video Fps",
+      "type": "integer"
+    },
+    "video_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Video Sha256",
+      "type": "string"
+    },
+    "poster_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Poster Sha256",
+      "type": "string"
+    },
+    "transcript_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Transcript Sha256",
+      "type": "string"
+    },
+    "skip_allowed": {
+      "const": true,
+      "default": true,
+      "enum": [
+        true
+      ],
+      "title": "Skip Allowed",
+      "type": "boolean"
+    },
+    "accessibility_note": {
+      "minLength": 1,
+      "title": "Accessibility Note",
+      "type": "string"
+    },
+    "sealed_at": {
+      "format": "date-time",
+      "title": "Sealed At",
+      "type": "string"
+    },
+    "sealed_by": {
+      "minLength": 1,
+      "title": "Sealed By",
+      "type": "string"
+    },
+    "checksum": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Checksum",
+      "type": "string"
+    }
+  },
+  "required": [
+    "presentation_id",
+    "course_id",
+    "lesson_id",
+    "presentation_version",
+    "title",
+    "estimated_minutes",
+    "phase_minutes",
+    "video_path",
+    "poster_path",
+    "transcript_path",
+    "video_duration_seconds",
+    "video_sha256",
+    "poster_sha256",
+    "transcript_sha256",
+    "accessibility_note",
+    "sealed_at",
+    "sealed_by",
+    "checksum"
+  ],
+  "title": "LessonPresentationV1",
+  "type": "object"
+}

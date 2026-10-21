@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#091b33"/>
+  <rect x="108" y="92" width="1704" height="896" rx="28" fill="#efe4ce"/>
+  <rect x="108" y="92" width="24" height="896" fill="#b08a47"/>
+  <text x="190" y="188" fill="#7b5c2e" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="30" font-weight="700" letter-spacing="6">第一层 · 后世如何记忆</text>
+  <text x="190" y="310" fill="#152f42" font-family="Noto Serif SC, SimSun, serif" font-size="78" font-weight="700">传说与传世文献</text>
+  <line x1="192" y1="355" x2="1640" y2="355" stroke="#b08a47" stroke-width="3" opacity=".65"/>
+  <text x="195" y="455" fill="#243c4b" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="43">禹、鲧、疏河与“三过家门”的故事，</text>
+  <text x="195" y="525" fill="#243c4b" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="43">主要由晚于传统事件年代的文字保存。</text>
+  <rect x="190" y="620" width="1500" height="170" rx="20" fill="#d8c5a0" opacity=".65"/>
+  <text x="238" y="688" fill="#173849" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="36" font-weight="700">能支持：</text>
+  <text x="420" y="688" fill="#173849" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="36">古人怎样理解公共责任与政治秩序</text>
+  <text x="238" y="750" fill="#8a3f2d" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="36" font-weight="700">不能直接证明：</text>
+  <text x="500" y="750" fill="#8a3f2d" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="36">现场对白、准确次数与完整施工路线</text>
+  <text x="195" y="900" fill="#667781" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="29">《孟子》 · 《尚书·禹贡》 · 《史记·夏本纪》</text>
+</svg>

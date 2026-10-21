@@ -81,6 +81,8 @@ const gridStyle = {
 
 interface ScenarioRuleEditorProps {
   token: string;
+  canAuthor: boolean;
+  canPublish: boolean;
   sourceLessons: LessonSourceRecord[];
   runtimeScenarios: RuntimeScenarioRecord[];
   onRefreshRuntimeScenarios: () => Promise<void>;
@@ -102,6 +104,8 @@ interface EffectRowsProps {
 
 export default function ScenarioRuleEditor({
   token,
+  canAuthor,
+  canPublish,
   sourceLessons,
   runtimeScenarios,
   onRefreshRuntimeScenarios,
@@ -630,10 +634,10 @@ export default function ScenarioRuleEditor({
             <h2 style={{ margin: '3px 0 0', fontSize: 20, letterSpacing: 0 }}>关卡规则</h2>
           </div>
           <Space size={[6, 6]} wrap>
-            <Button disabled={Boolean(busy)} icon={<FileAddOutlined />} loading={busy === 'template'} onClick={createNew}>新建</Button>
-            <Button disabled={Boolean(busy) || Boolean(scenarioIdError)} type="primary" icon={<SaveOutlined />} loading={busy === 'save'} onClick={saveDraft}>保存</Button>
-            <Button disabled={Boolean(busy) || Boolean(scenarioIdError)} icon={<SafetyCertificateOutlined />} loading={busy === 'validate'} onClick={validateDraft}>校验</Button>
-            <Button disabled={Boolean(busy) || Boolean(scenarioIdError)} icon={<LockOutlined />} loading={busy === 'seal'} onClick={sealDraft}>封存</Button>
+            <Button disabled={Boolean(busy) || !canAuthor} icon={<FileAddOutlined />} loading={busy === 'template'} onClick={createNew}>新建</Button>
+            <Button disabled={Boolean(busy) || !canAuthor || Boolean(scenarioIdError)} type="primary" icon={<SaveOutlined />} loading={busy === 'save'} onClick={saveDraft}>保存</Button>
+            <Button disabled={Boolean(busy) || !canAuthor || Boolean(scenarioIdError)} icon={<SafetyCertificateOutlined />} loading={busy === 'validate'} onClick={validateDraft}>校验</Button>
+            <Button disabled={Boolean(busy) || !canPublish || Boolean(scenarioIdError)} icon={<LockOutlined />} loading={busy === 'seal'} onClick={sealDraft}>封存</Button>
             <Button disabled={Boolean(busy)} icon={<EyeOutlined />} onClick={focusPreview}>预览</Button>
           </Space>
         </div>
@@ -800,6 +804,7 @@ export default function ScenarioRuleEditor({
         )) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="封存后会出现在这里；发布前学生不可见" />}
         <AssetPublicationPanel
           token={token}
+          canPublish={canPublish}
           assetKind="scenario"
           assetId={draft.scenario_id.trim()}
           assetTitle={draft.title.trim()}

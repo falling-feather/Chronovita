@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-0baec874d8ac43abffaa7e14",
+  "word": "崖山海战",
+  "pinyin": "yá shān hǎi zhàn",
+  "gloss": "公元1279年元军击败南宋残余力量的海战；宋朝统治结束",
+  "era": "宋元",
+  "category": "事件",
+  "examples": [
+    "本课结合“崖山海战”说明公元1279年元军击败南宋残余力量的海战；宋朝统治结束。",
+    "讲解“崖山海战”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "忽必烈"
+  ],
+  "related_lessons": [
+    "L1103"
+  ],
+  "source_refs": [
+    {
+      "title": "L1103《忽必烈与行省制》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1103.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1103-04.json\", \"member_sha256\": \"ccf048d7d042b934cd035ef65fd9253a3f68a5882b6bc04735323817dcd7594d\", \"source_id\": \"keyword-l1103-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.088699Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

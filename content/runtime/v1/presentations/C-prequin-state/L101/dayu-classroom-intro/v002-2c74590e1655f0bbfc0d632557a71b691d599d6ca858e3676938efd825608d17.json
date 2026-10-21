@@ -1,0 +1,31 @@
+{
+  "schema_version": "lesson-presentation/v1",
+  "presentation_id": "dayu-classroom-intro",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L101",
+  "presentation_version": 2,
+  "status": "sealed",
+  "title": "大禹治水：四层证据课堂导读",
+  "estimated_minutes": 40,
+  "phase_minutes": {
+    "observe": 9,
+    "decide": 14,
+    "consult": 7,
+    "dossier": 10
+  },
+  "video_path": "media/lessons/L101/v002/dayu-intro.mp4",
+  "poster_path": "media/lessons/L101/v002/dayu-poster.webp",
+  "transcript_path": "media/lessons/L101/v002/dayu-transcript.md",
+  "video_duration_seconds": 45.0,
+  "video_width": 1920,
+  "video_height": 1080,
+  "video_fps": 30,
+  "video_sha256": "1bb20fd03c34fa13195709989b4dfaf92c343b304a49b5b4998beda20883886c",
+  "poster_sha256": "a0e8e68221f39409661a8e969d6e17c4209230af9e005dc46edacbef76dce410",
+  "transcript_sha256": "a3ce6c726344be64cac4843a7b2739ede8876f7e5567d808c4bdd72c5896aac8",
+  "skip_allowed": true,
+  "accessibility_note": "无声 HyperFrames 中文动画；关键信息全部写入画面并提供本地 Markdown 文字稿，学生可随时跳过。",
+  "sealed_at": "2026-08-14T02:58:25.165739Z",
+  "sealed_by": "content-publisher-admin",
+  "checksum": "2c74590e1655f0bbfc0d632557a71b691d599d6ca858e3676938efd825608d17"
+}

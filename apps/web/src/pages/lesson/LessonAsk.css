@@ -1,0 +1,792 @@
+.chrono-ask-stage {
+  --ask-ink: #1a2426;
+  --ask-muted: #6f6556;
+  --ask-paper: #f4e7c9;
+  --ask-paper-deep: #e8d4ad;
+  --ask-cinnabar: #9b352c;
+  --ask-bronze: #b99355;
+  --ask-jade: #386a61;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(18px, 2.8vw, 38px);
+  border: 1px solid #203c49;
+  background:
+    radial-gradient(circle at 84% 10%, rgba(185, 147, 85, .14), transparent 27%),
+    linear-gradient(135deg, #071a25 0%, #0b2632 52%, #061721 100%);
+}
+
+.chrono-ask-stage::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  background:
+    repeating-linear-gradient(90deg, transparent 0 74px, rgba(185, 147, 85, .025) 75px 76px),
+    linear-gradient(180deg, rgba(0, 0, 0, .34), transparent 22%, transparent 78%, rgba(0, 0, 0, .3));
+  pointer-events: none;
+}
+
+.chrono-ask-scroll {
+  position: relative;
+  max-width: 1320px;
+  min-height: 650px;
+  margin: 0 auto;
+  padding: clamp(26px, 3.6vw, 52px) clamp(28px, 5.2vw, 76px) clamp(22px, 3vw, 40px);
+  color: var(--ask-ink);
+  border: 1px solid rgba(137, 95, 45, .62);
+  background-color: var(--ask-paper);
+  background-image:
+    linear-gradient(90deg, rgba(135, 86, 38, .07), transparent 5%, transparent 95%, rgba(135, 86, 38, .07)),
+    url('/assets/ui/ask/xuan-paper-1024.webp');
+  background-position: center, center top;
+  background-repeat: no-repeat, repeat;
+  background-size: auto, 720px 720px;
+  box-shadow:
+    0 30px 70px rgba(0, 0, 0, .44),
+    inset 0 0 45px rgba(128, 83, 33, .13);
+}
+
+.chrono-ask-scroll::before,
+.chrono-ask-scroll::after {
+  position: absolute;
+  top: -12px;
+  bottom: -12px;
+  width: 16px;
+  content: '';
+  border: 1px solid #6f4c24;
+  background:
+    linear-gradient(90deg, #6c4721, #d2a864 28%, #755025 51%, #c69b59 74%, #5a391b),
+    #936a33;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .38);
+}
+
+.chrono-ask-scroll::before { left: -17px; }
+.chrono-ask-scroll::after { right: -17px; }
+
+.chrono-ask-scroll-header {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(119, 82, 38, .28);
+}
+
+.chrono-ask-heading { max-width: 560px; }
+
+.chrono-ask-heading h2 {
+  margin: 0;
+  color: var(--ask-ink);
+  font-family: '霞鹜文楷', 'Noto Serif SC', 'Songti SC', serif;
+  font-size: clamp(29px, 3vw, 42px);
+  font-weight: 600;
+  letter-spacing: .08em;
+  line-height: 1.2;
+}
+
+.chrono-ask-heading h2::after {
+  display: block;
+  width: 38px;
+  height: 2px;
+  margin-top: 13px;
+  content: '';
+  background: var(--ask-cinnabar);
+}
+
+.chrono-ask-heading p {
+  margin: 13px 0 0;
+  color: #554a3d;
+  font-family: '霞鹜文楷', 'Noto Serif SC', serif;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.chrono-ask-persona-shell {
+  display: grid;
+  width: min(610px, 52%);
+  gap: 7px;
+  justify-items: end;
+}
+
+.chrono-ask-persona-shell > small {
+  color: #786b59;
+  font-size: 10px;
+  letter-spacing: .03em;
+}
+
+.chrono-ask-personas {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.chrono-ask-personas > button,
+.chrono-ask-person-picker > summary {
+  position: relative;
+  display: grid;
+  min-height: 72px;
+  grid-template-columns: 52px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 13px;
+  color: #42372a;
+  border: 1px solid rgba(122, 84, 40, .35);
+  background: rgba(248, 236, 208, .76);
+  box-shadow: 0 5px 12px rgba(82, 51, 20, .1);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px);
+}
+
+.chrono-ask-personas > button:hover,
+.chrono-ask-personas > button:focus-visible,
+.chrono-ask-person-picker > summary:hover,
+.chrono-ask-person-picker > summary:focus-visible {
+  color: #35291e;
+  border-color: rgba(155, 53, 44, .72);
+  outline: 2px solid rgba(155, 53, 44, .22);
+  outline-offset: 2px;
+}
+
+.chrono-ask-personas > button.active,
+.chrono-ask-person-picker.active > summary {
+  border-color: var(--ask-cinnabar);
+  box-shadow: inset 0 0 0 1px rgba(155, 53, 44, .35), 0 6px 14px rgba(82, 51, 20, .14);
+}
+
+.chrono-ask-persona-portrait,
+.chrono-ask-scholar-seal {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  overflow: hidden;
+  color: #f4e7c9;
+  border: 1px solid rgba(92, 61, 28, .46);
+  border-radius: 50%;
+  background: #75603f;
+  object-fit: contain;
+  object-position: center top;
+  font: 600 22px '霞鹜文楷', 'Noto Serif SC', serif;
+}
+
+.chrono-ask-persona-portrait img {
+  display: block;
+  width: 100%;
+  height: 128%;
+  object-fit: contain;
+  object-position: center top;
+  transform: scale(1.42);
+  transform-origin: center 18%;
+}
+
+.chrono-ask-personas button > span:nth-child(2),
+.chrono-ask-person-picker summary > span:nth-child(2),
+.chrono-ask-person-menu button > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.chrono-ask-personas strong,
+.chrono-ask-person-picker strong,
+.chrono-ask-person-menu strong {
+  overflow: hidden;
+  color: #34291f;
+  font-family: '霞鹜文楷', 'Noto Serif SC', serif;
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-ask-personas small,
+.chrono-ask-person-picker small,
+.chrono-ask-person-menu small {
+  overflow: hidden;
+  color: #786b59;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-ask-personas .anticon {
+  color: var(--ask-cinnabar);
+  font-size: 13px;
+}
+
+.chrono-ask-person-picker { position: relative; }
+.chrono-ask-person-picker > summary { list-style: none; }
+.chrono-ask-person-picker > summary::-webkit-details-marker { display: none; }
+
+.chrono-ask-person-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 12;
+  display: grid;
+  width: min(420px, 88vw);
+  max-height: 360px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: auto;
+  padding: 7px;
+  border: 1px solid rgba(107, 72, 34, .55);
+  background: #f1e2c2 url('/assets/ui/ask/xuan-paper-1024.webp') center / cover;
+  box-shadow: 0 18px 35px rgba(41, 26, 12, .3);
+}
+
+.chrono-ask-person-menu button {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  color: inherit;
+  border: 0;
+  background: rgba(255, 249, 233, .32);
+  cursor: pointer;
+  text-align: left;
+}
+
+.chrono-ask-person-menu button:hover,
+.chrono-ask-person-menu button:focus-visible,
+.chrono-ask-person-menu button[aria-selected='true'] {
+  background: rgba(155, 53, 44, .1);
+  outline: 1px solid rgba(155, 53, 44, .36);
+}
+
+.chrono-ask-person-menu .chrono-ask-persona-portrait,
+.chrono-ask-person-menu .chrono-ask-scholar-seal { width: 42px; height: 42px; }
+
+.chrono-ask-history {
+  position: relative;
+  min-height: 390px;
+  max-height: 720px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 30px 10px 12px;
+  scrollbar-color: rgba(155, 53, 44, .38) transparent;
+  scrollbar-width: thin;
+}
+
+.chrono-ask-history::-webkit-scrollbar { width: 7px; }
+.chrono-ask-history::-webkit-scrollbar-thumb { background: rgba(155, 53, 44, .32); }
+
+.chrono-ask-empty {
+  display: flex;
+  min-height: 340px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #665c4f;
+  text-align: center;
+}
+
+.chrono-ask-empty > span {
+  display: grid;
+  width: 74px;
+  height: 74px;
+  margin-bottom: 20px;
+  place-items: center;
+  color: rgba(155, 53, 44, .78);
+  border: 2px double rgba(155, 53, 44, .44);
+  border-radius: 50%;
+  font: 500 36px '霞鹜文楷', 'Noto Serif SC', serif;
+  transform: rotate(-5deg);
+}
+
+.chrono-ask-empty strong {
+  color: #30261d;
+  font-family: '霞鹜文楷', 'Noto Serif SC', serif;
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.chrono-ask-empty p { margin: 9px 0 0; font-size: 13px; }
+
+.chrono-ask-turn {
+  display: grid;
+  grid-template-areas: 'answer question';
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 30%);
+  gap: clamp(24px, 4vw, 58px);
+  padding: 8px 0 42px;
+  border-bottom: 1px solid rgba(120, 81, 36, .18);
+  content-visibility: auto;
+  contain-intrinsic-size: 520px;
+}
+
+.chrono-ask-turn + .chrono-ask-turn { padding-top: 36px; }
+.chrono-ask-turn:last-of-type { border-bottom: 0; }
+
+.chrono-ask-question {
+  grid-area: question;
+  align-self: start;
+  margin-top: 54px;
+  padding: 4px 0 4px 20px;
+  color: var(--ask-cinnabar);
+  border-left: 2px solid var(--ask-cinnabar);
+  background: linear-gradient(90deg, rgba(155, 53, 44, .055), transparent 78%);
+}
+
+.chrono-ask-question span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.chrono-ask-question p {
+  margin: 0;
+  color: #7f3029;
+  font-family: '霞鹜文楷', 'Noto Serif SC', serif;
+  font-size: clamp(16px, 1.5vw, 20px);
+  font-weight: 600;
+  line-height: 1.75;
+}
+
+.chrono-ask-answer { grid-area: answer; min-width: 0; }
+
+.chrono-ask-answer-speaker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.chrono-ask-answer-speaker > span {
+  display: grid;
+  width: 35px;
+  height: 35px;
+  flex: 0 0 35px;
+  place-items: center;
+  color: #f3e6ca;
+  border: 1px solid #704d27;
+  background: #805c32;
+  font: 600 17px '霞鹜文楷', 'Noto Serif SC', serif;
+  transform: rotate(-2deg);
+}
+
+.chrono-ask-answer.is-insufficient .chrono-ask-answer-speaker > span { background: #69716c; }
+
+.chrono-ask-answer-speaker > div { display: grid; gap: 2px; }
+
+.chrono-ask-answer-speaker strong {
+  color: #32271d;
+  font-family: '霞鹜文楷', 'Noto Serif SC', serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.chrono-ask-answer-speaker small { color: #756858; font-size: 10px; }
+
+.chrono-ask-answer-body {
+  margin: 0;
+  color: var(--ask-ink);
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  font-size: clamp(16px, 1.35vw, 18px);
+  line-height: 2;
+  white-space: pre-wrap;
+}
+
+.chrono-ask-boundary {
+  margin: 18px 0 0;
+  padding: 10px 13px;
+  color: #31544e;
+  border-left: 3px solid var(--ask-jade);
+  background: rgba(56, 106, 97, .075);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.chrono-ask-boundary.is-insufficient {
+  color: #77473e;
+  border-color: var(--ask-cinnabar);
+  background: rgba(155, 53, 44, .07);
+}
+
+.chrono-ask-role-note {
+  margin: 10px 0 0;
+  color: #776b5c;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.chrono-ask-citation-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 18px;
+  padding: 10px 2px 8px;
+  color: var(--ask-cinnabar);
+  border: 0;
+  border-bottom: 1px solid rgba(155, 53, 44, .26);
+  background: transparent;
+  cursor: pointer;
+  font: 600 12px inherit;
+  text-align: left;
+}
+
+.chrono-ask-citation-toggle:focus-visible {
+  outline: 2px solid rgba(155, 53, 44, .38);
+  outline-offset: 3px;
+}
+
+.chrono-ask-citation-toggle:disabled { color: #8b8174; cursor: default; }
+.chrono-ask-citation-toggle span { display: flex; align-items: center; gap: 7px; }
+
+.chrono-ask-citations {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  margin: 10px 3px 0;
+  padding: 14px 18px;
+  border: 1px solid rgba(119, 79, 35, .34);
+  background: rgba(237, 217, 177, .74) url('/assets/ui/ask/xuan-paper-1024.webp') center / cover;
+  box-shadow: 0 8px 18px rgba(75, 46, 18, .1);
+  animation: chrono-citation-unfold .28s ease-out both;
+}
+
+.chrono-ask-citations::before {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: -5px;
+  width: 8px;
+  content: '';
+  border: 1px solid #854137;
+  border-radius: 50%;
+  background: #a44a3d;
+}
+
+.chrono-ask-citations blockquote { margin: 0; padding: 0 0 12px; border-bottom: 1px dashed rgba(113, 76, 36, .3); }
+.chrono-ask-citations blockquote:last-child { padding-bottom: 0; border-bottom: 0; }
+.chrono-ask-citations blockquote > header { display: flex; align-items: center; gap: 10px; }
+
+.chrono-ask-citations blockquote > header > span {
+  display: grid;
+  width: 23px;
+  height: 23px;
+  flex: 0 0 23px;
+  place-items: center;
+  color: #f4e7c9;
+  background: #82603a;
+  font: 600 11px Georgia, serif;
+}
+
+.chrono-ask-citations blockquote header > div { display: grid; gap: 1px; }
+.chrono-ask-citations strong { color: #33291f; font-size: 13px; }
+.chrono-ask-citations small { color: #7c6b57; font-size: 10px; }
+
+.chrono-ask-citations blockquote > p {
+  margin: 9px 0 0 33px;
+  color: #4c4033;
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.chrono-ask-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 22px;
+  color: #756858;
+  font-size: 12px;
+}
+
+.chrono-ask-loading i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ask-cinnabar);
+  box-shadow: 16px 0 0 rgba(155, 53, 44, .55), 32px 0 0 rgba(155, 53, 44, .22);
+  animation: chrono-ink-dry .9s ease-in-out infinite alternate;
+}
+
+.chrono-ask-loading span { margin-left: 30px; }
+
+.chrono-ask-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 4px 4px 14px;
+  padding: 10px 13px;
+  color: #713b33;
+  border-left: 3px solid var(--ask-cinnabar);
+  background: rgba(155, 53, 44, .08);
+  font-size: 12px;
+}
+
+.chrono-ask-error button { color: inherit; border: 0; background: transparent; cursor: pointer; font-weight: 700; }
+
+.chrono-ask-composer {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(119, 82, 38, .28);
+}
+
+.chrono-ask-bookmarks {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 7px;
+  scrollbar-width: none;
+}
+
+.chrono-ask-bookmarks::-webkit-scrollbar { display: none; }
+
+.chrono-ask-bookmarks button {
+  position: relative;
+  flex: 0 0 auto;
+  max-width: 310px;
+  padding: 9px 16px 9px 23px;
+  overflow: hidden;
+  color: #4c4033;
+  border: 1px solid rgba(119, 79, 35, .32);
+  background: rgba(247, 234, 204, .78);
+  box-shadow: 0 4px 8px rgba(72, 44, 18, .08);
+  cursor: pointer;
+  font: 500 12px inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrono-ask-bookmarks button::before {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 9px;
+  width: 2px;
+  content: '';
+  background: var(--ask-cinnabar);
+  box-shadow: 3px 0 0 rgba(155, 53, 44, .18);
+}
+
+.chrono-ask-bookmarks button:hover,
+.chrono-ask-bookmarks button:focus-visible {
+  color: var(--ask-cinnabar);
+  border-color: rgba(155, 53, 44, .54);
+  outline: 0;
+  transform: translateY(-1px);
+}
+
+.chrono-ask-writing-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 12px;
+  padding: 12px 12px 9px 18px;
+  border: 1px solid rgba(118, 78, 34, .38);
+  background: rgba(249, 238, 214, .88);
+  box-shadow: 0 9px 18px rgba(70, 43, 17, .1), inset 0 -1px rgba(255, 255, 255, .46);
+}
+
+.chrono-ask-writing-strip > label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.chrono-ask-writing-strip .ant-input-textarea { min-width: 0; }
+
+.chrono-ask-writing-strip .ant-input {
+  min-height: 54px !important;
+  padding: 5px 2px !important;
+  color: #2d251d;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(118, 78, 34, .22) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  font-size: 16px;
+  line-height: 1.7;
+  resize: none;
+}
+
+.chrono-ask-writing-strip .ant-input::placeholder { color: #847664; }
+
+.chrono-ask-send.ant-btn,
+.chrono-ask-writing-strip > .ant-btn {
+  min-width: 112px;
+  height: auto;
+  min-height: 54px;
+  align-self: stretch;
+  color: #f5ead3;
+  border: 1px solid #7f2f29;
+  border-radius: 0;
+  background: var(--ask-cinnabar);
+  box-shadow: inset 0 0 0 1px rgba(255, 231, 196, .2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.chrono-ask-send.ant-btn:hover,
+.chrono-ask-writing-strip > .ant-btn:hover { color: #fff5df !important; border-color: #6f211d !important; background: #842a24 !important; }
+.chrono-ask-writing-strip > .ant-btn:disabled { color: #a89b87; border-color: #c9b998; background: #e5d6b8; }
+.chrono-ask-composer > small { justify-self: end; color: #7d705f; font-size: 9px; }
+
+.chrono-legacy-ask-history {
+  display: grid;
+  min-height: 360px;
+  max-height: 680px;
+  align-content: start;
+  gap: 14px;
+  overflow-y: auto;
+  padding: 28px 4px;
+}
+
+.chrono-legacy-turn {
+  width: fit-content;
+  max-width: 76%;
+  padding: 12px 14px;
+  color: #42372a;
+  border-left: 2px solid #80623c;
+  background: rgba(245, 231, 201, .56);
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.chrono-legacy-turn.user { margin-left: auto; color: #7d302a; border-color: var(--ask-cinnabar); }
+.chrono-ask-stage.is-legacy .chrono-ask-writing-strip { grid-template-columns: minmax(0, 1fr) auto auto; }
+.chrono-ask-stage.is-legacy .chrono-ask-writing-strip > .ant-btn:last-child { min-width: 76px; color: #5c4b39; border-color: #bca77d; background: transparent; }
+
+.chrono-ask-answer.compact {
+  padding: 12px;
+  color: #e7e0d1;
+  border: 1px solid #34515c;
+  background: #071a28;
+}
+
+.chrono-ask-answer.compact .chrono-ask-answer-speaker { margin-bottom: 9px; }
+.chrono-ask-answer.compact .chrono-ask-answer-speaker > span { width: 28px; height: 28px; flex-basis: 28px; font-size: 13px; }
+.chrono-ask-answer.compact .chrono-ask-answer-speaker strong { color: #f1e7d3; font-size: 12px; }
+.chrono-ask-answer.compact .chrono-ask-answer-speaker small { color: #92a8ae; font-size: 9px; }
+.chrono-ask-answer.compact .chrono-ask-answer-body { color: #d8e0df; font-family: inherit; font-size: 11px; line-height: 1.65; }
+.chrono-ask-answer.compact .chrono-ask-role-note { color: #91a6ad; }
+.chrono-ask-answer.compact > footer { margin-top: 9px; padding-top: 8px; color: #91a6ad; border-top: 1px solid #34515c; font-size: 9px; }
+
+@keyframes chrono-citation-unfold {
+  from { opacity: 0; transform: translateY(-8px) scaleY(.97); transform-origin: top; }
+  to { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
+@keyframes chrono-ink-dry {
+  from { opacity: .45; transform: translateX(-3px); }
+  to { opacity: 1; transform: translateX(3px); }
+}
+
+@media (max-width: 980px) {
+  .chrono-ask-scroll-header { flex-direction: column; }
+  .chrono-ask-persona-shell { width: 100%; justify-items: stretch; }
+  .chrono-ask-turn { grid-template-columns: minmax(0, 1fr) minmax(200px, 32%); gap: 24px; }
+}
+
+@media (max-width: 720px) {
+  .chrono-ask-stage { padding: 14px; }
+  .chrono-ask-scroll { padding: 30px 26px 22px; }
+  .chrono-ask-scroll::before,
+  .chrono-ask-scroll::after { display: none; }
+  .chrono-ask-turn {
+    grid-template-areas: 'question' 'answer';
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding-bottom: 34px;
+  }
+  .chrono-ask-question { width: min(88%, 520px); margin: 0 0 0 auto; }
+  .chrono-ask-answer { padding-right: 0; }
+  .chrono-ask-history { max-height: none; }
+}
+
+@media (max-width: 560px) {
+  .chrono-lesson-classroom.layer-ask .chrono-lesson-masthead { display: none; }
+  .chrono-lesson-classroom.layer-ask .chrono-stage-rail { grid-template-columns: repeat(4, minmax(76px, 1fr)); overflow-x: auto; }
+  .chrono-lesson-classroom.layer-ask .chrono-stage-rail button,
+  .chrono-lesson-classroom.layer-ask .chrono-stage-rail button:nth-child(3),
+  .chrono-lesson-classroom.layer-ask .chrono-stage-rail button:nth-child(4) {
+    min-height: 56px;
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 5px;
+    padding: 7px 6px;
+    border-top: 0;
+    border-left: 1px solid #d8c7a7;
+  }
+  .chrono-lesson-classroom.layer-ask .chrono-stage-rail button:first-child { border-left: 0; }
+  .chrono-lesson-classroom.layer-ask .chrono-stage-number { width: 26px; height: 26px; }
+  .chrono-lesson-classroom.layer-ask .chrono-stage-rail strong { font-size: 12px; }
+  .chrono-lesson-classroom.layer-ask .chrono-stage-rail small,
+  .chrono-lesson-classroom.layer-ask .chrono-stage-rail time { display: none; }
+  .chrono-lesson-classroom.layer-ask .chrono-lesson-workspace { padding-top: 10px; }
+
+  .chrono-ask-stage { margin-inline: -16px; padding: 8px; border-right: 0; border-left: 0; }
+  .chrono-ask-scroll { min-height: 620px; padding: 28px 18px 18px; }
+  .chrono-ask-scroll-header { gap: 22px; padding-bottom: 18px; }
+  .chrono-ask-heading h2 { font-size: 30px; letter-spacing: .05em; }
+  .chrono-ask-heading p { font-size: 13px; }
+  .chrono-ask-personas { gap: 6px; }
+  .chrono-ask-personas > button,
+  .chrono-ask-person-picker > summary {
+    min-height: 64px;
+    grid-template-columns: 42px minmax(0, 1fr) 15px;
+    gap: 7px;
+    padding: 7px;
+  }
+  .chrono-ask-persona-portrait,
+  .chrono-ask-scholar-seal { width: 42px; height: 42px; font-size: 18px; }
+  .chrono-ask-personas strong,
+  .chrono-ask-person-picker strong { font-size: 13px; }
+  .chrono-ask-personas small,
+  .chrono-ask-person-picker small { font-size: 8px; }
+  .chrono-ask-person-menu { position: fixed; top: auto; right: 10px; bottom: 86px; left: 10px; width: auto; max-height: 48vh; }
+  .chrono-ask-history { min-height: 340px; padding: 24px 0 8px; }
+  .chrono-ask-empty { min-height: 300px; }
+  .chrono-ask-question { width: 91%; padding-left: 14px; }
+  .chrono-ask-question p { font-size: 17px; }
+  .chrono-ask-answer-body { font-size: 16px; line-height: 1.9; }
+  .chrono-ask-answer-speaker strong { font-size: 16px; }
+  .chrono-ask-citations { padding: 13px; }
+  .chrono-ask-citations blockquote > p { margin-left: 0; font-size: 12px; }
+  .chrono-ask-composer {
+    position: sticky;
+    bottom: 0;
+    margin: 0 -10px -10px;
+    padding: 12px 10px 10px;
+    background: #f2e2c1 url('/assets/ui/ask/xuan-paper-1024.webp') center / cover;
+    box-shadow: 0 -10px 22px rgba(79, 49, 19, .12);
+  }
+  .chrono-ask-bookmarks button { max-width: 240px; padding-block: 8px; }
+  .chrono-ask-writing-strip { grid-template-columns: minmax(0, 1fr) 52px; gap: 7px; padding: 8px 8px 6px 12px; }
+  .chrono-ask-writing-strip .ant-input { min-height: 48px !important; font-size: 15px; }
+  .chrono-ask-send.ant-btn,
+  .chrono-ask-writing-strip > .ant-btn { min-width: 52px; min-height: 50px; padding-inline: 0; font-size: 0; }
+  .chrono-ask-writing-strip > .ant-btn .anticon { margin: 0; font-size: 17px; }
+  .chrono-ask-stage.is-legacy .chrono-ask-writing-strip { grid-template-columns: minmax(0, 1fr) 52px 52px; }
+  .chrono-ask-composer > small { display: none; }
+  .chrono-legacy-turn { max-width: 90%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrono-ask-citations,
+  .chrono-ask-loading i { animation: none; }
+  .chrono-ask-bookmarks button { transition: none; }
+}

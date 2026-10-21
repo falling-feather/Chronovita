@@ -1,0 +1,794 @@
+{
+  "schema_version": "evidence-corpus-draft/v1",
+  "corpus_id": "shangyang-evidence",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L103",
+  "title": "L103 商鞅变法正式证据库",
+  "scope_note": "仅服务 C-prequin-state/L103 的精确发布。西汉传世叙事、累积思想文本、公元前344年器物和较晚秦简分层使用；角色不得越过当前片段或把教学变量当史实。",
+  "sources": [
+    {
+      "source_id": "src-cambridge-shangjunshu",
+      "title": "Dating a Pre-Imperial Text: The Case Study of the Book of Lord Shang",
+      "kind": "research",
+      "author_or_institution": "Yuri Pines",
+      "publisher": "Early China / Cambridge University Press",
+      "published_year": 2016,
+      "url_or_path": "https://www.cambridge.org/core/journals/early-china/article/dating-a-preimperial-text-the-case-study-of-the-book-of-lord-shang/199B57467F51A62EBD492DE47DA3360A",
+      "locator": "Textual history, dating criteria and conclusion",
+      "citation_note": "用于累积成书与篇章分层边界。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-hanfeizi-dingfa",
+      "title": "《韩非子·定法》",
+      "kind": "primary_source",
+      "author_or_institution": "传世文献；中国哲学书电子化计划底本索引",
+      "publisher": "",
+      "published_year": null,
+      "url_or_path": "https://ctext.org/hanfeizi/ding-fa/zh",
+      "locator": "商鞅之法与申不害之术相关段落",
+      "citation_note": "较晚战国思想评价，不是改革行政档案。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-hb-archaeology-slips",
+      "title": "湖北简牍地理，一窥湖北简牍之风采",
+      "kind": "archaeology",
+      "author_or_institution": "湖北省文物考古研究院",
+      "publisher": "湖北省文物考古研究院",
+      "published_year": 2023,
+      "url_or_path": "https://www.hbww.org.cn/yjy_mtbd/p/8892.html",
+      "locator": "睡虎地秦简年代与内容概览",
+      "citation_note": "用于战国晚期与秦始皇时期的书写年代边界。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-hubei-museum-slips",
+      "title": "云梦睡虎地秦简",
+      "kind": "museum",
+      "author_or_institution": "湖北省博物馆",
+      "publisher": "湖北省博物馆",
+      "published_year": null,
+      "url_or_path": "https://www.hbww.org.cn/zgzb/p/6912.html",
+      "locator": "出土信息与秦律范围",
+      "citation_note": "用于出土地点和统一前后法律文献概览。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-moe-2022",
+      "title": "义务教育历史课程标准（2022年版）",
+      "kind": "curriculum",
+      "author_or_institution": "中华人民共和国教育部",
+      "publisher": "人民教育出版社",
+      "published_year": 2022,
+      "url_or_path": "https://www.moe.gov.cn/srcsite/A26/s8001/202204/t20220420_619921.html",
+      "locator": "核心素养与学业质量要求",
+      "citation_note": "用于适龄目标和有依据的历史解释。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-nopss-qin",
+      "title": "秦文化的历史特点与当代价值",
+      "kind": "research",
+      "author_or_institution": "彭卫等 / 中国社会科学院",
+      "publisher": "全国哲学社会科学工作办公室",
+      "published_year": 2022,
+      "url_or_path": "https://www.nopss.gov.cn/n1/2022/0706/c219544-32467522.html",
+      "locator": "商鞅变法、县制、迁都与耕战部分",
+      "citation_note": "现代综合解释；不代替原始材料。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-pep-seven-history",
+      "title": "义务教育教科书·中国历史七年级上册目录与课程位置",
+      "kind": "textbook",
+      "author_or_institution": "人民教育出版社",
+      "publisher": "人民教育出版社",
+      "published_year": null,
+      "url_or_path": "https://www.pep.com.cn/products/jc/czjks/201802/t20180227_1922743.shtml",
+      "locator": "七年级上册战国社会变革相关单元",
+      "citation_note": "只用于学段定位，不复制教材正文。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-shanghaimuseum-fangsheng",
+      "title": "商鞅方升——每月一珍",
+      "kind": "museum",
+      "author_or_institution": "上海博物馆",
+      "publisher": "上海博物馆",
+      "published_year": 2024,
+      "url_or_path": "https://www.shanghaimuseum.net/mu/show/202411/4335e32d-3cce-4602-955b-17ed7e0b9e59/",
+      "locator": "器形、容量、两组铭文与年代",
+      "citation_note": "同时代标准量器的直接实物资料。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-shangjunshu",
+      "title": "《商君书》",
+      "kind": "primary_source",
+      "author_or_institution": "传世文献；中国哲学书电子化计划底本索引",
+      "publisher": "",
+      "published_year": null,
+      "url_or_path": "https://ctext.org/shang-jun-shu/zh",
+      "locator": "农战、法令、国家能力相关篇章",
+      "citation_note": "累积文本，具体篇章须分别判断年代和作者。",
+      "reliability": "disputed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    },
+    {
+      "source_id": "src-shiji-shangjun",
+      "title": "《史记·商君列传》",
+      "kind": "primary_source",
+      "author_or_institution": "司马迁；中国哲学书电子化计划底本索引",
+      "publisher": "传世文献",
+      "published_year": -90,
+      "url_or_path": "https://ctext.org/shiji/shang-jun-lie-zhuan/zhs",
+      "locator": "入秦、变法、徙木、施行与结局叙事",
+      "citation_note": "西汉后世叙事，不作为逐字现场记录。",
+      "reliability": "reviewed",
+      "rights_note": "仅保存项目自写摘要和必要短引，课堂展示时保留出处；不复制受版权保护的整章内容。"
+    }
+  ],
+  "passages": [
+    {
+      "passage_id": "shangyang-p001",
+      "source_id": "src-moe-2022",
+      "title": "课程目标：用证据解释社会变革",
+      "text": "本课依据义务教育历史课程核心素养取向，让学生在时空背景中比较材料，解释制度变革的原因、作用和代价。",
+      "summary": "历史解释必须写明材料、推论与边界。",
+      "fact_ids": [
+        "fact-dc3e4e17"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "历史解释",
+        "证据边界"
+      ],
+      "evidence_kind": "curriculum_goal",
+      "certainty": "consensus",
+      "chronology_note": "2022年现代课程标准，用于教学目标而非古代事实。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p002",
+      "source_id": "src-pep-seven-history",
+      "title": "七年级内容位置",
+      "text": "七年级上册把战国时期的社会变革置于学生初次系统学习中国古代史的阶段，本课据此控制概念和阅读难度。",
+      "summary": "课程定位于七年级战国变革主题，不复制教材章节。",
+      "fact_ids": [
+        "fact-26e05675"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "七年级",
+        "战国"
+      ],
+      "evidence_kind": "curriculum_goal",
+      "certainty": "consensus",
+      "chronology_note": "现代教材目录信息。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p003",
+      "source_id": "src-shiji-shangjun",
+      "title": "卫鞅入秦与孝公求变",
+      "text": "《史记·商君列传》把秦孝公求贤、卫鞅入秦和宫廷论辩编为改革开端，呈现后世理解的政治窗口。",
+      "summary": "支持改革关系和后世叙事框架，不提供逐字录音。",
+      "fact_ids": [
+        "fact-0b8262fb",
+        "fact-33ae0793"
+      ],
+      "person_ids": [
+        "person-bd001399",
+        "person-c797c18e"
+      ],
+      "keywords": [
+        "改革窗口",
+        "求贤"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "《史记》成书于西汉，晚于事件二百多年。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p004",
+      "source_id": "src-shiji-shangjun",
+      "title": "两阶段改革的教学年代",
+      "text": "传世叙事把孝公时期多项改革按先后组织，现代教学常以约公元前356年和前350年前后概括两阶段。",
+      "summary": "年代用于排序，不等于全部措施同日生效。",
+      "fact_ids": [
+        "fact-b4c904b0"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "公元前350年",
+        "公元前356年"
+      ],
+      "evidence_kind": "boundary_note",
+      "certainty": "interpretation",
+      "chronology_note": "现代教学约数建立于传世年代框架。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p005",
+      "source_id": "src-shiji-shangjun",
+      "title": "徙木立信的故事",
+      "text": "《史记》记载法令将行时以徙木和兑现重赏取得信任，后世以此说明改革者重视信赏。",
+      "summary": "故事能启发制度信用问题，现场细节不能逐项核验。",
+      "fact_ids": [
+        "fact-b7c6c3a2",
+        "fact-f3fe8320"
+      ],
+      "person_ids": [
+        "person-c797c18e"
+      ],
+      "keywords": [
+        "制度信用",
+        "徙木立信"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "legend",
+      "chronology_note": "西汉文本保存的战国改革故事。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p006",
+      "source_id": "src-shiji-shangjun",
+      "title": "军功与旧特权",
+      "text": "《史记》把依军功授爵、宗室无军功不得列入属籍等内容列为改革措施，呈现身份秩序的重大调整。",
+      "summary": "军功提供新通道，也把身份和战争绑定。",
+      "fact_ids": [
+        "fact-34814f17"
+      ],
+      "person_ids": [
+        "person-44990ad0",
+        "person-75b468fa"
+      ],
+      "keywords": [
+        "世袭特权",
+        "军功爵"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "西汉对战国制度传统的整理。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p007",
+      "source_id": "src-shiji-shangjun",
+      "title": "耕织激励与家庭负担",
+      "text": "传世叙事以耕织成绩、粮帛产出和服役奖惩说明改革如何把家庭生产纳入国家目标。",
+      "summary": "奖励和压力可能同时进入农耕家庭。",
+      "fact_ids": [
+        "fact-56a9aeb0",
+        "fact-dc3e4e17"
+      ],
+      "person_ids": [
+        "person-a748c58d"
+      ],
+      "keywords": [
+        "奖励耕战",
+        "赋役"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "后世文本对战国制度的概括。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p008",
+      "source_id": "src-shiji-shangjun",
+      "title": "什伍与相互追责",
+      "text": "《史记》相关段落把户籍编组、告发和连带处置写入变法叙事，反映后世所理解的严密基层控制。",
+      "summary": "执行能力增强不取消惩罚外溢的代价。",
+      "fact_ids": [
+        "fact-1c5d4753"
+      ],
+      "person_ids": [
+        "person-829de766",
+        "person-a748c58d"
+      ],
+      "keywords": [
+        "什伍",
+        "连带责任"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "西汉传世叙事，具体执行须与较晚秦简互证。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p009",
+      "source_id": "src-shiji-shangjun",
+      "title": "县政与地方治理",
+      "text": "传世叙事把合并小乡聚、设置县及令丞等官吏同改革联系起来，展示命令直接抵达地方的方向。",
+      "summary": "县政强化地方执行，形成过程不是单日完成。",
+      "fact_ids": [
+        "fact-89ff8386",
+        "fact-b4c904b0"
+      ],
+      "person_ids": [
+        "person-829de766"
+      ],
+      "keywords": [
+        "县制",
+        "地方官吏"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "后世对公元前四世纪制度变化的记述。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p010",
+      "source_id": "src-shiji-shangjun",
+      "title": "开阡陌的解释边界",
+      "text": "《史记》以开阡陌封疆等语言描述田制调整，现代叙述常进一步概括土地制度变化。",
+      "summary": "不可直接等同于现代完整私有产权。",
+      "fact_ids": [
+        "fact-b3de11a4"
+      ],
+      "person_ids": [
+        "person-a748c58d"
+      ],
+      "keywords": [
+        "土地制度",
+        "开阡陌"
+      ],
+      "evidence_kind": "boundary_note",
+      "certainty": "disputed",
+      "chronology_note": "传世记载及现代解释之间存在概念距离。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p011",
+      "source_id": "src-shiji-shangjun",
+      "title": "商鞅之死与制度延续",
+      "text": "《史记》叙述孝公死后商鞅遭追捕和处死，同时呈现秦国继续沿用改革制度的历史张力。",
+      "summary": "人物结局、支持联盟和制度存续需要分开评价。",
+      "fact_ids": [
+        "fact-242808fb",
+        "fact-33ae0793"
+      ],
+      "person_ids": [
+        "person-75b468fa",
+        "person-bd001399",
+        "person-c797c18e"
+      ],
+      "keywords": [
+        "制度延续"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "西汉史家对战国人物和制度的后世叙事。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p012",
+      "source_id": "src-shanghaimuseum-fangsheng",
+      "title": "公元前344年的商鞅方升",
+      "text": "上海博物馆藏商鞅方升带秦孝公十八年与大良造鞅相关铭文，标准容量约202毫升。",
+      "summary": "铭文与器物直接支持秦推行标准量器。",
+      "fact_ids": [
+        "fact-4e4b5f90",
+        "fact-b4c904b0"
+      ],
+      "person_ids": [
+        "person-c797c18e"
+      ],
+      "keywords": [
+        "商鞅方升",
+        "度量衡"
+      ],
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "器物第一组铭文明确对应公元前344年。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p013",
+      "source_id": "src-shanghaimuseum-fangsheng",
+      "title": "尺度进入赋税与交换",
+      "text": "标准容量让粮食计量、交换和赋税拥有共同参照，显示国家权力能够介入日常尺度。",
+      "summary": "统一尺度连接行政能力，但不能证明全部改革。",
+      "fact_ids": [
+        "fact-4e4b5f90",
+        "fact-dc3e4e17"
+      ],
+      "person_ids": [
+        "person-829de766",
+        "person-a748c58d"
+      ],
+      "keywords": [
+        "计量",
+        "赋税"
+      ],
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "interpretation",
+      "chronology_note": "由战国量器形制、铭文和用途形成的历史解释。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p014",
+      "source_id": "src-shanghaimuseum-fangsheng",
+      "title": "两次铭文与制度沿用",
+      "text": "方升后来又加刻秦始皇时期诏文，显示同一标准器跨越战国秦与统一时期被继续使用。",
+      "summary": "器物可以观察制度延续和再次推广。",
+      "fact_ids": [
+        "fact-242808fb",
+        "fact-4e4b5f90"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "制度延续",
+        "秦始皇诏"
+      ],
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "第一组铭文为公元前344年，后刻文字晚一百多年。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p015",
+      "source_id": "src-hubei-museum-slips",
+      "title": "睡虎地秦简的出土与内容",
+      "text": "1975年湖北云梦睡虎地秦墓出土大量秦简，其中包含秦统一前后法律文献，是系统观察秦律的重要材料。",
+      "summary": "出土简文让成熟秦法可读，但不是商鞅原令合集。",
+      "fact_ids": [
+        "fact-e2fba344"
+      ],
+      "person_ids": [
+        "person-829de766"
+      ],
+      "keywords": [
+        "睡虎地秦简",
+        "秦律"
+      ],
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "材料主要处于战国晚期和秦统一前后。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p016",
+      "source_id": "src-hb-archaeology-slips",
+      "title": "秦简晚于最初变法",
+      "text": "湖北省文物考古研究院说明睡虎地秦简写于战国晚期及秦始皇时期，距离公元前四世纪中叶改革已有百余年。",
+      "summary": "年代距离禁止把每条简文直接署名商鞅。",
+      "fact_ids": [
+        "fact-7355435e",
+        "fact-e2fba344"
+      ],
+      "person_ids": [
+        "person-829de766",
+        "person-c797c18e"
+      ],
+      "keywords": [
+        "年代边界"
+      ],
+      "evidence_kind": "boundary_note",
+      "certainty": "consensus",
+      "chronology_note": "战国晚期至秦始皇时期，晚于约前356/350年。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p017",
+      "source_id": "src-hb-archaeology-slips",
+      "title": "法律与行政进入日常",
+      "text": "睡虎地材料涵盖法律制度、行政文书和官吏相关内容，显示成熟秦制深入农业、市场、徭役和地方执行。",
+      "summary": "可观察制度运行，不等于原初设计从未变化。",
+      "fact_ids": [
+        "fact-89ff8386",
+        "fact-e2fba344"
+      ],
+      "person_ids": [
+        "person-829de766",
+        "person-a748c58d"
+      ],
+      "keywords": [
+        "官吏",
+        "行政"
+      ],
+      "evidence_kind": "archaeological_evidence",
+      "certainty": "consensus",
+      "chronology_note": "较晚秦制的直接文字材料。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p018",
+      "source_id": "src-shangjunshu",
+      "title": "《商君书》的农战思想",
+      "text": "《商君书》多篇强调农业、战争、赏罚和国家力量的连接，是理解商鞅学派政治思想的重要材料。",
+      "summary": "思想主题相关，作者和篇章年代须分别判断。",
+      "fact_ids": [
+        "fact-56a9aeb0",
+        "fact-e90ebe23"
+      ],
+      "person_ids": [
+        "person-c797c18e"
+      ],
+      "keywords": [
+        "农战",
+        "商鞅学派"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "disputed",
+      "chronology_note": "战国至后续传抄形成的累积文本。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p019",
+      "source_id": "src-shangjunshu",
+      "title": "明法与官吏责任",
+      "text": "《商君书》相关篇章讨论法令公开、官吏掌握规则和追责，展示战国国家思想对可执行制度的重视。",
+      "summary": "可讨论制度公开，不直接套用现代法治概念。",
+      "fact_ids": [
+        "fact-b7c6c3a2",
+        "fact-e1c7298f",
+        "fact-e90ebe23"
+      ],
+      "person_ids": [
+        "person-829de766"
+      ],
+      "keywords": [
+        "官吏",
+        "明法"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "disputed",
+      "chronology_note": "具体篇章年代和作者存在研究讨论。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p020",
+      "source_id": "src-cambridge-shangjunshu",
+      "title": "累积文本而非单一作者手稿",
+      "text": "Yuri Pines 的研究把《商君书》视为可分辨不同暂时层次、经增补和传抄演变的文本。",
+      "summary": "不得把整部书逐句当成商鞅自述。",
+      "fact_ids": [
+        "fact-e90ebe23"
+      ],
+      "person_ids": [
+        "person-c797c18e"
+      ],
+      "keywords": [
+        "作者边界",
+        "累积文本"
+      ],
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "consensus",
+      "chronology_note": "2016年现代文本史研究。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p021",
+      "source_id": "src-cambridge-shangjunshu",
+      "title": "分篇判断年代",
+      "text": "现代研究不再把整部《商君书》强行定为一个日期，而是比较词汇、制度和思想线索判断各篇层次。",
+      "summary": "材料年代需要逐篇判断，不能整书一刀切。",
+      "fact_ids": [
+        "fact-e90ebe23"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "年代",
+        "文本分层"
+      ],
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "interpretation",
+      "chronology_note": "现代文献学方法说明。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p022",
+      "source_id": "src-hanfeizi-dingfa",
+      "title": "《韩非子》对商鞅之法的评价",
+      "text": "《韩非子·定法》从较晚战国思想语境评说商鞅重法、申不害重术及其得失，反映战国末期的理论总结。",
+      "summary": "这是后期评价，不是孝公朝行政档案。",
+      "fact_ids": [
+        "fact-2742a743",
+        "fact-b7c6c3a2"
+      ],
+      "person_ids": [
+        "person-c797c18e"
+      ],
+      "keywords": [
+        "术",
+        "法"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "较晚战国时期文本，晚于商鞅。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p023",
+      "source_id": "src-nopss-qin",
+      "title": "县制、迁都与国家建设",
+      "text": "现代综合研究把县制、迁都咸阳、耕战政策和行政发展放入秦长期国家建设过程。",
+      "summary": "改革措施需要理解为相互连接且逐步推进。",
+      "fact_ids": [
+        "fact-56a9aeb0",
+        "fact-89ff8386",
+        "fact-b4c904b0"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "咸阳",
+        "国家建设"
+      ],
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "interpretation",
+      "chronology_note": "现代研究对战国秦制度变迁的综合。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p024",
+      "source_id": "src-nopss-qin",
+      "title": "富国强兵的多因解释",
+      "text": "秦的强盛还涉及地理、人口资源、历代政策、官僚执行、军事行动与统一过程，商鞅改革是重要基础而非唯一变量。",
+      "summary": "人物中心叙事不能取代多代历史因果。",
+      "fact_ids": [
+        "fact-242808fb",
+        "fact-26e05675"
+      ],
+      "person_ids": [
+        "person-bd001399",
+        "person-c797c18e"
+      ],
+      "keywords": [
+        "多因解释",
+        "富国强兵"
+      ],
+      "evidence_kind": "scholarly_interpretation",
+      "certainty": "consensus",
+      "chronology_note": "现代历史综合解释。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p025",
+      "source_id": "src-shiji-shangjun",
+      "title": "旧特权与改革阻力",
+      "text": "《史记》以廷议、太子犯法及孝公死后追究等情节表现改革触动旧利益和支持联盟变化。",
+      "summary": "可研究阻力主题，不虚构所有贵族立场。",
+      "fact_ids": [
+        "fact-0b8262fb",
+        "fact-33ae0793",
+        "fact-34814f17"
+      ],
+      "person_ids": [
+        "person-75b468fa",
+        "person-bd001399",
+        "person-c797c18e"
+      ],
+      "keywords": [
+        "改革阻力",
+        "旧贵族"
+      ],
+      "evidence_kind": "transmitted_text",
+      "certainty": "interpretation",
+      "chronology_note": "西汉后世叙事。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p026",
+      "source_id": "src-moe-2022",
+      "title": "现代法治概念不可直接倒置",
+      "text": "战国秦的法令服务君主国家、赏罚和动员；课堂比较规则公开与执行时，仍须区别于现代权利保障和宪政法治。",
+      "summary": "相似词语不代表制度含义相同。",
+      "fact_ids": [
+        "fact-b7c6c3a2",
+        "fact-e1c7298f"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "概念边界",
+        "法治"
+      ],
+      "evidence_kind": "boundary_note",
+      "certainty": "consensus",
+      "chronology_note": "现代概念史与课堂边界。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p027",
+      "source_id": "src-moe-2022",
+      "title": "制度评价同时记录代价",
+      "text": "六项课堂变量让国家能力、军事准备、粮食供给、制度信用、社会压力和旧贵族阻力同时可见。",
+      "summary": "变量训练权衡，不是秦国统计表。",
+      "fact_ids": [
+        "fact-242808fb",
+        "fact-dc3e4e17"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "制度代价",
+        "教学模型"
+      ],
+      "evidence_kind": "teaching_explanation",
+      "certainty": "interpretation",
+      "chronology_note": "V0.10现代课堂设计。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p028",
+      "source_id": "src-shiji-shangjun",
+      "title": "合成人群补回制度承受者",
+      "text": "传世人物叙事多集中于君主、改革者和反对者，课堂加入农耕家庭、士卒与吏员，观察制度如何进入日常。",
+      "summary": "群体角色是教学建模，不是假造具名自述。",
+      "fact_ids": [
+        "fact-56a9aeb0",
+        "fact-89ff8386",
+        "fact-dc3e4e17"
+      ],
+      "person_ids": [
+        "person-44990ad0",
+        "person-829de766",
+        "person-a748c58d"
+      ],
+      "keywords": [
+        "制度执行",
+        "普通人"
+      ],
+      "evidence_kind": "teaching_explanation",
+      "certainty": "interpretation",
+      "chronology_note": "依据制度主题形成的现代课堂表达。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p029",
+      "source_id": "src-shanghaimuseum-fangsheng",
+      "title": "不同材料具有不同证明力",
+      "text": "方升可直接证明标准量器与铭文，秦简可直接观察较晚法律行政，《史记》则直接证明汉代史家怎样组织改革叙事。",
+      "summary": "材料真实不等于能证明同一件事。",
+      "fact_ids": [
+        "fact-33ae0793",
+        "fact-4e4b5f90",
+        "fact-7355435e"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "年代",
+        "证据强度"
+      ],
+      "evidence_kind": "boundary_note",
+      "certainty": "consensus",
+      "chronology_note": "跨材料方法说明。",
+      "teaching_note": ""
+    },
+    {
+      "passage_id": "shangyang-p030",
+      "source_id": "src-moe-2022",
+      "title": "卷宗保存选择、代价与来源",
+      "text": "史官卷宗要求保存六次选择、状态轨迹、事件、主要代价、历史解释和来源，再以多因解释导入知识画板。",
+      "summary": "学习成果记录推理过程而不只显示胜负。",
+      "fact_ids": [
+        "fact-242808fb",
+        "fact-dc3e4e17"
+      ],
+      "person_ids": [],
+      "keywords": [
+        "史官卷宗",
+        "复盘"
+      ],
+      "evidence_kind": "teaching_explanation",
+      "certainty": "consensus",
+      "chronology_note": "V0.10现代课堂评价设计。",
+      "teaching_note": ""
+    }
+  ],
+  "revision": 1,
+  "created_at": "2026-08-13T02:32:39.066452Z",
+  "updated_at": "2026-08-13T02:32:39.066452Z",
+  "created_by": "content-author-shangyang",
+  "updated_by": "content-author-shangyang"
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "chronovita-game-scene-assets/v1",
+  "processor": {
+    "sharp": "0.35.3",
+    "vips": "8.18.3"
+  },
+  "source_policy": "Original imagegen PNG files remain outside Git. Generated IDs, source hashes, prompts briefs, final dimensions and final hashes are recorded here.",
+  "post_processing": "Auto-orient, crop only to the exact 16:9 canvas, resize with Lanczos3, convert to sRGB and encode responsive WebP variants.",
+  "scenes": {
+    "L101": {
+      "lesson_id": "L101",
+      "generated_id": "exec-2e0cc5a6-3db5-44e5-ad1f-32eeb2f4e9b7",
+      "alt": "暴雨后的河道、低地聚落与协作治水现场教学插画",
+      "prompt_brief": "早期青铜时代洪泛平原、低地聚落与治水协作；左中部留暗色界面空间。",
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2270659,
+        "sha256": "0f8713ca3500a852402612556351bb2eb81b3cae9d420531f0da77a2c9ee34e5"
+      },
+      "variants": [
+        {
+          "file": "L101-flood-council-960.webp",
+          "format": "webp",
+          "width": 960,
+          "height": 540,
+          "bytes": 50144,
+          "sha256": "b122eb1b678637dff9b684ade8dd2f5a211bf7bdaeda0a1df739ee1ef62ba06f"
+        },
+        {
+          "file": "L101-flood-council-1600.webp",
+          "format": "webp",
+          "width": 1600,
+          "height": 900,
+          "bytes": 175640,
+          "sha256": "19e6834b2fa47d1cc4cf68a9ce63d3ae58e6fc3e16aa2b53b7407b9d3c6d7273"
+        }
+      ]
+    },
+    "L103": {
+      "lesson_id": "L103",
+      "generated_id": "exec-74d22702-c8f7-4417-895a-f68cef930cec",
+      "alt": "战国秦土木议事空间、简牍与农田城墙教学插画",
+      "prompt_brief": "战国秦夯土行政空间、简牍、度量与农田；左中部留暗色界面空间。",
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2317920,
+        "sha256": "e328529b59f8e92b33babb30345c3d62f4a88ad9339f5f3d4aafc437a6c01124"
+      },
+      "variants": [
+        {
+          "file": "L103-qin-reform-council-960.webp",
+          "format": "webp",
+          "width": 960,
+          "height": 540,
+          "bytes": 57420,
+          "sha256": "7e83b3dc75d02c113a2afb621c019fa82d58a1d88dbeccd3bea28f13c0df1163"
+        },
+        {
+          "file": "L103-qin-reform-council-1600.webp",
+          "format": "webp",
+          "width": 1600,
+          "height": 900,
+          "bytes": 199724,
+          "sha256": "c6069668118c11f8f37444e56c03eda18640204318ba48fe9b6bbc8502924b71"
+        }
+      ]
+    }
+  }
+}

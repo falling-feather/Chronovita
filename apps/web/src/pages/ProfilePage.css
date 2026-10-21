@@ -1,0 +1,21 @@
+.chrono-profile-page { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 24px; max-width: 1100px; margin: 0 auto; }
+.chrono-profile-nav { padding: 28px 20px; align-self: start; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.chrono-profile-nav h1 { font-size: 22px; margin: 0; overflow-wrap: anywhere; }
+.chrono-profile-nav p { margin: 0; color: var(--text-mute); overflow-wrap: anywhere; }
+.chrono-profile-nav nav { display: grid; width: 100%; gap: 8px; margin: 16px 0; }
+.chrono-profile-nav nav button { padding: 12px; border: 1px solid var(--border-soft); background: transparent; color: inherit; cursor: pointer; border-radius: 8px; }
+.chrono-profile-nav nav button[aria-current=page] { background: #122e39; color: #f7edd9; }
+.chrono-profile-main { padding: clamp(20px, 3vw, 36px); min-width: 0; }
+.chrono-profile-main h2 { margin-top: 0; }
+.chrono-profile-main form { display: flex; flex-direction: column; gap: 12px; max-width: 700px; }
+.chrono-profile-main label { font-weight: 600; margin-top: 8px; }
+.chrono-profile-main small, .chrono-profile-actions span { color: var(--text-mute); font-size: 12px; }
+.chrono-profile-main input[type=file] { max-width: 100%; }
+.chrono-profile-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.chrono-profile-data { margin-top: 32px; border-top: 1px solid var(--border-soft); padding-top: 20px; }
+.chrono-profile-data .ant-btn { margin: 4px 8px 4px 0; }
+.chrono-profile-main .ant-alert { margin-bottom: 18px; }
+@media (max-width: 760px) {
+  .chrono-profile-page { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .chrono-profile-nav nav { grid-template-columns: repeat(3, 1fr); }
+}

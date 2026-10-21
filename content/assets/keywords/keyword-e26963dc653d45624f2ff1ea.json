@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-e26963dc653d45624f2ff1ea",
+  "word": "均田制",
+  "pinyin": "jūn tián zhì",
+  "gloss": "国家按身份 年龄和劳动力情况授田的制度；以稳定生产和户籍为目标",
+  "era": "隋唐",
+  "category": "制度",
+  "examples": [
+    "本课结合“均田制”说明国家按身份 年龄和劳动力情况授田的制度；以稳定生产和户籍为目标。",
+    "讲解“均田制”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L703"
+  ],
+  "source_refs": [
+    {
+      "title": "L703《均田制、租庸调制与府兵制》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L703.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l703-01.json\", \"member_sha256\": \"639967081a840182216db8a28924912b3a9cc03c22987e0b8f69401e6f4d7333\", \"source_id\": \"keyword-l703-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.294768Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-66278938738391a11b46ce86",
+  "word": "临淄",
+  "pinyin": "lín zī",
+  "gloss": "齐国都城；秦灭六国的最后重要目标",
+  "era": "秦汉",
+  "category": "地点",
+  "examples": [
+    "本课结合“临淄”说明齐国都城；秦灭六国的最后重要目标。",
+    "讲解“临淄”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L302"
+  ],
+  "source_refs": [
+    {
+      "title": "L302《秦王嬴政统一战争》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L302.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l302-03.json\", \"member_sha256\": \"79188fd463ff30d12cd9b28a2c3c71192b152d4bd6f34f1cdd29ad57a7509922\", \"source_id\": \"keyword-l302-03\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l302-03.json\", \"member_sha256\": \"79188fd463ff30d12cd9b28a2c3c71192b152d4bd6f34f1cdd29ad57a7509922\", \"source_id\": \"keyword-l302-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.420804Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

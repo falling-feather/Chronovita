@@ -1,0 +1,47 @@
+{
+  "schema": "chronovita-home-chronodial-assets/v1",
+  "generated_id": "exec-9443ef4c-5cdf-4f43-99b1-1fce47b2b8dd",
+  "prompt_brief": "正交俯视的现代历史仪青铜盘面：精密刻槽、旧化金属、绿锈、玉色轴承与少量朱砂定位点；无指针、无可读文字。",
+  "source_policy": "Original imagegen PNG remains outside Git. Generated ID, source hash, deterministic derivatives and final hashes are recorded here.",
+  "license": "Original AI-assisted visual produced for Chronovita; it is a fictional teaching instrument, not an excavated-object reconstruction.",
+  "source": {
+    "width": 1254,
+    "height": 1254,
+    "bytes": 3968950,
+    "sha256": "a0b3adcdec499e0d0c0c46b7a18e5376862cc45c20e1fc2f6ac28de2b8e9861e"
+  },
+  "processor": {
+    "sharp": "0.35.3",
+    "vips": "8.18.3"
+  },
+  "post_processing": "Resize and colour-balance albedo, derive normalized grayscale bump, and derive blurred inverted roughness. All maps use identical UV space.",
+  "outputs": [
+    {
+      "kind": "albedo-and-static-fallback",
+      "file": "chronodial-albedo-1024.webp",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp",
+      "bytes": 699632,
+      "sha256": "4178c0f3439a98995be11766476b1e66e26424053de25e02beaaf32d454061bb"
+    },
+    {
+      "kind": "bump",
+      "file": "chronodial-bump-1024.webp",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp",
+      "bytes": 574758,
+      "sha256": "38509456897f148a463707b8837bce17fea5daf3aa7b8a79e8eb5d29ebbc1031"
+    },
+    {
+      "kind": "roughness",
+      "file": "chronodial-roughness-1024.webp",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp",
+      "bytes": 97176,
+      "sha256": "e9b83b710b8cc404bbf2aa5ee5dbbf24620ae2253a1a98f086910cd13eb913e8"
+    }
+  ]
+}

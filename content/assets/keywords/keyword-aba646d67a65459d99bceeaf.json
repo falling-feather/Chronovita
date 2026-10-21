@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-aba646d67a65459d99bceeaf",
+  "word": "唐诗",
+  "pinyin": "táng shī",
+  "gloss": "唐代诗歌的总称；题材丰富；风格多样；名家众多",
+  "era": "隋唐",
+  "category": "文献",
+  "examples": [
+    "本课结合“唐诗”说明唐代诗歌的总称；题材丰富；风格多样；名家众多。",
+    "讲解“唐诗”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "李白",
+    "杜甫"
+  ],
+  "related_lessons": [
+    "L901"
+  ],
+  "source_refs": [
+    {
+      "title": "L901《李白与杜甫》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L901.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l901-01.json\", \"member_sha256\": \"99b6477ad9927d0b3011d414e1e7b63e3f539c39180012845b3accd235ba2186\", \"source_id\": \"keyword-l901-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.506066Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

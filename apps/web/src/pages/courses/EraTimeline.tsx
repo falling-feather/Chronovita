@@ -1,5 +1,4 @@
 // 时代时间轴 · 6 段位 · v0.2.2
-import { useEffect } from 'react';
 import { ERA_OVERLAYS } from './eraMap';
 
 interface Props {
@@ -8,19 +7,6 @@ interface Props {
 }
 
 export default function EraTimeline({ current, onChange }: Props) {
-  // 键盘 ←/→ 切换时代
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      const idx = ERA_OVERLAYS.findIndex((x) => x.id === current);
-      if (idx === -1) return;
-      if (e.key === 'ArrowLeft' && idx > 0) onChange(ERA_OVERLAYS[idx - 1].id);
-      if (e.key === 'ArrowRight' && idx < ERA_OVERLAYS.length - 1) onChange(ERA_OVERLAYS[idx + 1].id);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [current, onChange]);
-
   const idx = ERA_OVERLAYS.findIndex((x) => x.id === current);
   const progress = idx === -1 ? 0 : (idx / (ERA_OVERLAYS.length - 1)) * 100;
 
@@ -36,9 +22,19 @@ export default function EraTimeline({ current, onChange }: Props) {
               key={e.id}
               role="tab"
               aria-selected={active}
+              tabIndex={active ? 0 : -1}
               type="button"
               className={`chrono-eratl-stop${active ? ' active' : ''}`}
               onClick={() => onChange(e.id)}
+              onKeyDown={(event) => {
+                const next = event.key === 'ArrowLeft' ? Math.max(0, i - 1)
+                  : event.key === 'ArrowRight' ? Math.min(ERA_OVERLAYS.length - 1, i + 1)
+                    : event.key === 'Home' ? 0 : event.key === 'End' ? ERA_OVERLAYS.length - 1 : null;
+                if (next === null) return;
+                event.preventDefault();
+                onChange(ERA_OVERLAYS[next].id);
+                event.currentTarget.parentElement?.querySelectorAll('button')[next]?.focus();
+              }}
               style={{ left: `${(i / (ERA_OVERLAYS.length - 1)) * 100}%` }}
             >
               <span className="chrono-eratl-dot" style={active ? { background: e.hue.primary } : undefined} />

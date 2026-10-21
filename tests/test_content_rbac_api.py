@@ -28,6 +28,8 @@ from auth_dependencies import AuthContext
 from settings import settings
 from services import content, persistence
 from services.content import workflow as content_workflow
+from services.content import evidence_workflow
+from services.contracts.evidence_v1 import EvidencePassageV1, EvidenceSourceV1
 from services.contracts.archive_examples import build_dayu_publish_request
 from services.auth import (
     AuthServiceConfig,
@@ -497,6 +499,146 @@ class ContentRbacApiTests(unittest.TestCase):
         )
         publication_factory.assert_not_called()
 
+        seed_lesson = self._lesson_payload(
+            "rbac-evidence-audit-lesson",
+            payload["course_id"],
+        )
+        content.save_draft(
+            content.LessonContentPackage.model_validate(seed_lesson),
+            saved_by=self.teacher_a["user_id"],
+        )
+        evidence = self._evidence_payload(
+            "rbac-evidence-audit",
+            payload["course_id"],
+            seed_lesson["lesson_id"],
+        )
+        with patch.object(
+            get_identity().store,
+            "append_audit",
+            side_effect=AuthStoreError("forced evidence audit outage"),
+        ):
+            response = self.client.post(
+                "/api/v1/admin/content/evidence-drafts",
+                headers=self.teacher_a["headers"],
+                json=evidence,
+            )
+        self.assertEqual(response.status_code, 503, response.text)
+        self.assertIsNone(
+            evidence_workflow.get_evidence_draft("rbac-evidence-audit")
+        )
+
+    def test_evidence_role_matrix_and_self_review(self):
+        lesson = self._lesson_payload("rbac-evidence-lesson", "C-rbac-evidence")
+        saved_lesson = self.client.post(
+            "/api/v1/admin/content/drafts",
+            headers=self.teacher_a["headers"],
+            json=lesson,
+        )
+        self.assertEqual(saved_lesson.status_code, 200, saved_lesson.text)
+        evidence = self._evidence_payload(
+            "rbac-evidence",
+            lesson["course_id"],
+            lesson["lesson_id"],
+        )
+
+        self.assertEqual(
+            self.client.post(
+                "/api/v1/admin/content/evidence-drafts",
+                headers=self.reviewer["headers"],
+                json=evidence,
+            ).status_code,
+            403,
+        )
+        saved = self.client.post(
+            "/api/v1/admin/content/evidence-drafts",
+            headers=self.teacher_a["headers"],
+            json=evidence,
+        )
+        self.assertEqual(saved.status_code, 200, saved.text)
+        self.assertEqual(
+            saved.json()["item"]["created_by"],
+            self.teacher_a["user_id"],
+        )
+        self.assertEqual(
+            self.client.put(
+                "/api/v1/admin/content/evidence-drafts/rbac-evidence",
+                headers=self.teacher_b["headers"],
+                json=saved.json()["item"],
+            ).status_code,
+            403,
+        )
+        validated = self.client.post(
+            "/api/v1/admin/content/evidence-drafts/rbac-evidence/validate",
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(validated.status_code, 200, validated.text)
+        submitted = self.client.post(
+            "/api/v1/admin/content/evidence-drafts/rbac-evidence/submit-review",
+            headers=self.teacher_a["headers"],
+        )
+        self.assertEqual(submitted.status_code, 200, submitted.text)
+        approved = self.client.post(
+            "/api/v1/admin/content/evidence-drafts/rbac-evidence/review",
+            headers=self.reviewer["headers"],
+            json={"decision": "approve", "note": "Evidence reviewed."},
+        )
+        self.assertEqual(approved.status_code, 200, approved.text)
+        self.assertEqual(
+            approved.json()["workflow"]["history"][-1]["actor"],
+            self.reviewer["user_id"],
+        )
+        self.assertEqual(
+            self.client.post(
+                "/api/v1/admin/content/evidence-drafts/rbac-evidence/seal",
+                headers=self.teacher_a["headers"],
+            ).status_code,
+            403,
+        )
+        sealed = self.client.post(
+            "/api/v1/admin/content/evidence-drafts/rbac-evidence/seal",
+            headers=self.admin["headers"],
+        )
+        self.assertEqual(sealed.status_code, 200, sealed.text)
+
+        dual_lesson = self._lesson_payload(
+            "rbac-dual-evidence-lesson",
+            "C-rbac-dual-evidence",
+        )
+        self.assertEqual(
+            self.client.post(
+                "/api/v1/admin/content/drafts",
+                headers=self.dual_role["headers"],
+                json=dual_lesson,
+            ).status_code,
+            200,
+        )
+        dual_evidence = self._evidence_payload(
+            "rbac-dual-evidence",
+            dual_lesson["course_id"],
+            dual_lesson["lesson_id"],
+        )
+        for path in (
+            "/evidence-drafts",
+            "/evidence-drafts/rbac-dual-evidence/validate",
+            "/evidence-drafts/rbac-dual-evidence/submit-review",
+        ):
+            response = self.client.post(
+                f"/api/v1/admin/content{path}",
+                headers=self.dual_role["headers"],
+                json=dual_evidence if path == "/evidence-drafts" else {},
+            )
+            self.assertEqual(response.status_code, 200, response.text)
+        self_review = self.client.post(
+            "/api/v1/admin/content/evidence-drafts/rbac-dual-evidence/review",
+            headers=self.dual_role["headers"],
+            json={"decision": "approve"},
+        )
+        self.assertEqual(self_review.status_code, 403, self_review.text)
+        self.assertEqual(
+            self_review.json()["detail"]["code"],
+            "self_review_forbidden",
+        )
+
     def test_concurrent_first_save_assigns_one_author(self):
         payload = self._lesson_payload("rbac-owner-race", "C-rbac-race")
         start = Barrier(2)
@@ -592,6 +734,31 @@ class ContentRbacApiTests(unittest.TestCase):
             ("POST", f"{prefix}/drafts/{{lesson_id}}/submit-review"): "content.author",
             ("POST", f"{prefix}/drafts/{{lesson_id}}/review"): "content.review",
             ("POST", f"{prefix}/drafts/{{lesson_id}}/seal"): "content.publish",
+            ("POST", f"{prefix}/evidence-drafts"): "content.author",
+            (
+                "PUT",
+                f"{prefix}/evidence-drafts/{{corpus_id}}",
+            ): "content.author",
+            (
+                "POST",
+                f"{prefix}/evidence-drafts/{{corpus_id}}/validate",
+            ): "content.author",
+            (
+                "POST",
+                f"{prefix}/evidence-drafts/{{corpus_id}}/submit-review",
+            ): "content.author",
+            (
+                "POST",
+                f"{prefix}/evidence-drafts/{{corpus_id}}/review",
+            ): "content.review",
+            (
+                "POST",
+                f"{prefix}/evidence-drafts/{{corpus_id}}/seal",
+            ): "content.publish",
+            (
+                "POST",
+                f"{prefix}/lesson-presentations",
+            ): "content.publish",
             ("POST", f"{prefix}/runtime-scenarios"): "content.publish",
             ("POST", f"{prefix}/scenario-drafts"): "content.author",
             ("PUT", f"{prefix}/scenario-drafts/{{scenario_id}}"): "content.author",
@@ -690,6 +857,40 @@ class ContentRbacApiTests(unittest.TestCase):
         package.era = "Test era"
         package.body = ["First paragraph.", "Second paragraph.", "Third paragraph."]
         return package.model_dump(mode="json")
+
+    @staticmethod
+    def _evidence_payload(corpus_id: str, course_id: str, lesson_id: str) -> dict:
+        from services.contracts.v1 import course_package_from_legacy
+
+        package = course_package_from_legacy(content.get_draft(lesson_id))
+        source = EvidenceSourceV1(
+            source_id=f"source-{corpus_id}",
+            title="RBAC reviewed source",
+            kind="research",
+            url_or_path="https://example.test/rbac",
+            rights_note="Self-authored summary for authorization tests.",
+        )
+        passage = EvidencePassageV1(
+            passage_id=f"passage-{corpus_id}",
+            source_id=source.source_id,
+            title="RBAC evidence passage",
+            text="A stable evidence passage for authorization tests.",
+            summary="Authorization test summary.",
+            fact_ids=(package.facts[0].fact_id,),
+            person_ids=(package.people[0].person_id,),
+            evidence_kind="teaching_explanation",
+            certainty="interpretation",
+            chronology_note="Modern authorization test material.",
+        )
+        return evidence_workflow.EvidenceCorpusDraftV1(
+            corpus_id=corpus_id,
+            course_id=course_id,
+            lesson_id=lesson_id,
+            title="RBAC evidence corpus",
+            scope_note="Bound to one authorization test lesson.",
+            sources=(source,),
+            passages=(passage,),
+        ).model_dump(mode="json")
 
 if __name__ == "__main__":
     unittest.main()

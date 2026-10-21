@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-d37779a75d480de865aad91d",
+  "word": "开元盛世",
+  "pinyin": "kāi yuán shèng shì",
+  "gloss": "唐玄宗开元年间政治较稳定和经济文化繁荣的局面",
+  "era": "隋唐",
+  "category": "时代",
+  "examples": [
+    "本课结合“开元盛世”说明唐玄宗开元年间政治较稳定和经济文化繁荣的局面。",
+    "讲解“开元盛世”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "李隆基（唐玄宗）",
+    "姚崇"
+  ],
+  "related_lessons": [
+    "L802"
+  ],
+  "source_refs": [
+    {
+      "title": "L802《武周与开元盛世》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L802.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l802-04.json\", \"member_sha256\": \"70d84e7a99cadd92e1fbd74d61228e4b6aba0ac709df2c93baee8001b5bde10d\", \"source_id\": \"keyword-l802-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.420394Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

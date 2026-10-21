@@ -1,0 +1,52 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-2cb1f17044fbdb5b4e49eba3",
+  "word": "洛邑",
+  "pinyin": "luò yì",
+  "gloss": "周朝东部政治中心；位于今河南洛阳一带",
+  "era": "先秦",
+  "category": "地点",
+  "examples": [
+    "本课结合“洛邑”说明周朝东部政治中心；位于今河南洛阳一带。",
+    "讲解“洛邑”时，应联系本课叙事理解它在先秦历史中的作用。"
+  ],
+  "related_people": [
+    "姬发（周武王）",
+    "姬旦（周公）",
+    "姬诵（周成王）"
+  ],
+  "related_lessons": [
+    "L103"
+  ],
+  "source_refs": [
+    {
+      "title": "琉璃河遗址：西周分封制的力证",
+      "source": "北京市房山区人民政府",
+      "url_or_path": "https://www.bjfsh.gov.cn/zhxw/fsdt/202507/t20250725_40091097_fs.shtml",
+      "citation_note": "介绍琉璃河遗址、燕国城址和青铜器铭文所反映的西周分封",
+      "reliability": "pending"
+    },
+    {
+      "title": "周代礼制发展史",
+      "source": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2024/0509/c373410-40232165.html",
+      "citation_note": "介绍周代礼制、宗法关系和政治秩序",
+      "reliability": "pending"
+    },
+    {
+      "title": "中国古代选官标准和方式的演变",
+      "source": "中华人民共和国司法部",
+      "url_or_path": "https://legalinfo.moj.gov.cn/zhfxfzwh/fzwhfsgs/202303/t20230308_473682.html",
+      "citation_note": "介绍西周分封体系和贵族等级关系",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l103-03.json\", \"member_sha256\": \"7cf74fea3ed2d864bce15539a1b0bd1f34356e5cac2f518afc879fad7e76d11c\", \"source_id\": \"keyword-l103-03\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l103-03.json\", \"member_sha256\": \"7cf74fea3ed2d864bce15539a1b0bd1f34356e5cac2f518afc879fad7e76d11c\", \"source_id\": \"keyword-l103-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T13:36:29.179693Z",
+  "updated_at": "2026-09-16T09:49:52.890525Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

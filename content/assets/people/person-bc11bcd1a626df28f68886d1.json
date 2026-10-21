@@ -1,0 +1,42 @@
+{
+  "schema_version": "person-profile/v1",
+  "asset_id": "person-bc11bcd1a626df28f68886d1",
+  "name": "胡惟庸",
+  "role": "明朝初年官员，曾任中书省丞相",
+  "era": "明初洪武时期",
+  "summary": "胡惟庸是明朝初年的重要官员，早年跟随朱元璋参与明朝政权建设，后来逐渐进入中央政治核心。洪武年间，他担任中书省丞相，掌握较大的行政权力。随着权力扩大，胡惟庸与其他官员及皇权之间的矛盾逐渐加深。1380年，朱元璋以胡惟庸谋反等罪名将其处置，并进一步扩大案件的追查范围，形成历史上所说的“胡惟庸案”。此案严重打击了中书省及丞相集团的政治力量，也成为朱元璋废除丞相制度的重要背景。胡惟庸本人并非废除丞相制度的决策者，但他的案件直接处于这一制度变动的关键节点。讲解胡惟庸时，应区分史料记载、案件定性和后世评价。",
+  "persona": "后续 AI 人物智能体使用的语气、知识边界与立场提示。",
+  "boundaries": [
+    "不要让人物知道其身后才发生的事件。"
+  ],
+  "keywords": [
+    "胡惟庸案"
+  ],
+  "related_lessons": [
+    "L1201"
+  ],
+  "source_refs": [
+    {
+      "title": "《胡惟庸传》",
+      "source": "《明史》，中华书局点校本",
+      "url_or_path": "卷三百八，相关篇章",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《太祖本纪》",
+      "source": "《明史》，中华书局点校本",
+      "url_or_path": "洪武十三年相关记载",
+      "citation_note": "",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "重点说明胡惟庸的官职、政治地位以及胡惟庸案与废除丞相制度之间的关系。注意不能把后世关于胡惟庸罪行的所有叙述都视为完全确定的事实，应引导学生区分官方定性与历史研究中的不同看法。\n\n本地附件同步来源：\n{\"archive\": \"人物第十章-第十五章.zip\", \"archive_sha256\": \"cba178f36c53c7d04a479b4f3c641081553e4e3254b6854af5ac07a9367d9a32\", \"member\": \"人物第十章-第十五章/胡惟庸-人物档案.json\", \"member_sha256\": \"e0a1718dda5f5bca872c4d90ec9c391a5bceecb56234b36e000d20a3fedae1c2\", \"source_id\": \"person-L1201-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-16T09:49:56.242903Z",
+  "updated_at": "2026-09-16T09:49:56.242903Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

@@ -70,6 +70,10 @@ RUNTIME_TABLE_PRIVILEGES = {
     "kv": frozenset({"SELECT", "INSERT", "UPDATE"}),
     "game_sessions": frozenset({"SELECT", "INSERT", "UPDATE"}),
     "game_dossiers": frozenset({"SELECT", "INSERT"}),
+    "game_npc_dialogues": frozenset({"SELECT", "INSERT"}),
+    "learning_submissions": frozenset({"SELECT", "INSERT"}),
+    "learning_feedback": frozenset({"SELECT", "INSERT"}),
+    "persona_conversations": frozenset({"SELECT", "INSERT", "UPDATE"}),
     "auth_users": frozenset({"SELECT", "INSERT", "UPDATE"}),
     "auth_sessions": frozenset({"SELECT", "INSERT", "UPDATE"}),
     "auth_audit_head": frozenset({"SELECT", "UPDATE"}),
@@ -985,13 +989,19 @@ class PostgresServiceTests(unittest.TestCase):
                     password="CI student password 123!",
                 )
                 student_headers = {"Authorization": f"Bearer {student_token}"}
+                current_lesson = client.get(
+                    "/api/v1/courses/C-prequin-state/lessons/L101",
+                    headers=student_headers,
+                )
+                self.assertEqual(current_lesson.status_code, 200, current_lesson.text)
                 progress = client.post(
                     "/api/v1/learning/progress/touch",
                     headers=student_headers,
                     json={
-                        "lesson_id": "postgres-service-lesson",
+                        "lesson_id": "L101",
                         "layer": "watch",
                         "completed": True,
+                        "teacher_text_checksum": current_lesson.json()["teacher_text_checksum"],
                     },
                 )
                 self.assertEqual(progress.status_code, 200, progress.text)

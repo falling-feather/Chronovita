@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs><linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#081a30"/><stop offset="1" stop-color="#164d57"/></linearGradient></defs>
+  <rect width="1920" height="1080" fill="url(#bg3)"/>
+  <g transform="translate(104 100)">
+    <rect width="920" height="850" rx="30" fill="#0d2940" stroke="#af8b50" stroke-width="3"/>
+    <path d="M100 145H810M100 330H810M100 515H810M100 700H810M220 70V790M460 70V790M700 70V790" stroke="#5cb8b4" stroke-width="16" opacity=".55"/>
+    <rect x="280" y="385" width="360" height="260" rx="12" fill="#bd9a58" opacity=".9"/>
+    <rect x="330" y="430" width="260" height="170" fill="#eadfc7" opacity=".92"/>
+    <circle cx="155" cy="250" r="44" fill="#c17351"/><circle cx="760" cy="615" r="54" fill="#7aa68f"/>
+    <text x="82" y="825" fill="#9cccca" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="27">示意：道路 · 宫殿 · 作坊 · 分区</text>
+  </g>
+  <text x="1110" y="185" fill="#d8b46e" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="30" font-weight="700" letter-spacing="6">第二层 · 可观察的遗存</text>
+  <text x="1110" y="310" fill="#f2e7d2" font-family="Noto Serif SC, SimSun, serif" font-size="82" font-weight="700">二里头</text>
+  <text x="1110" y="408" fill="#b5dedb" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="41">大型都邑、道路网、宫殿、</text>
+  <text x="1110" y="470" fill="#b5dedb" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="41">祭祀区、作坊与等级差异</text>
+  <rect x="1110" y="560" width="670" height="210" rx="22" fill="#efe4ce"/>
+  <text x="1155" y="635" fill="#173849" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="34" font-weight="700">高度相关 ≠ 无条件等同</text>
+  <text x="1155" y="698" fill="#3e5058" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="31">“二里头文化”是考古学命名；</text>
+  <text x="1155" y="745" fill="#3e5058" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="31">进一步认定夏文化需要综合论证。</text>
+  <text x="1110" y="885" fill="#93aeb6" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="28">这里没有一条可公认直读为“禹”的同时代铭文。</text>
+</svg>

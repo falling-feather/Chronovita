@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-a4499489c27f0fe9fa61df7e",
+  "word": "清军入关",
+  "pinyin": "qīng jūn rù guān",
+  "gloss": "公元1644年清军越过山海关并进入北京的历史进程",
+  "era": "明清",
+  "category": "事件",
+  "examples": [
+    "本课结合“清军入关”说明公元1644年清军越过山海关并进入北京的历史进程。",
+    "讲解“清军入关”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L1303"
+  ],
+  "source_refs": [
+    {
+      "title": "L1303《明亡与南明》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1303.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1303-03.json\", \"member_sha256\": \"41ca4f27393e1fd8f79d23a0de3dea62012dd166dfbc1951f12d5863a6f97294\", \"source_id\": \"keyword-l1303-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.515624Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

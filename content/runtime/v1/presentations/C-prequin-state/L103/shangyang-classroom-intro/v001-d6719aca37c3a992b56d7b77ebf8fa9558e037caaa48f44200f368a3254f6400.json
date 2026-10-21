@@ -1,0 +1,31 @@
+{
+  "schema_version": "lesson-presentation/v1",
+  "presentation_id": "shangyang-classroom-intro",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L103",
+  "presentation_version": 1,
+  "status": "sealed",
+  "title": "商鞅变法：材料年代与制度代价导读",
+  "estimated_minutes": 40,
+  "phase_minutes": {
+    "observe": 9,
+    "decide": 14,
+    "consult": 7,
+    "dossier": 10
+  },
+  "video_path": "media/lessons/L103/v001/shangyang-intro.mp4",
+  "poster_path": "media/lessons/L103/v001/shangyang-poster.webp",
+  "transcript_path": "media/lessons/L103/v001/shangyang-transcript.md",
+  "video_duration_seconds": 45.0,
+  "video_width": 1920,
+  "video_height": 1080,
+  "video_fps": 30,
+  "video_sha256": "b4bd06cecdfcf749757edc26a037b39bb7b1e76ddb8d6aa33d53df703323a1bb",
+  "poster_sha256": "c7f96433fbe1600ec6aad13952a7ee45399bf6e7b598d5ed89c5692bdbb8093e",
+  "transcript_sha256": "2571be3f18596486887444f978a291c2a4cbe1e8c2b81fe606e6eb5173bcc2c3",
+  "skip_allowed": true,
+  "accessibility_note": "无声中文文字导读；全部关键信息写入画面并提供本地 Markdown 文字稿，学生可随时跳过。",
+  "sealed_at": "2026-08-13T02:32:39.167705Z",
+  "sealed_by": "content-publisher-admin",
+  "checksum": "d6719aca37c3a992b56d7b77ebf8fa9558e037caaa48f44200f368a3254f6400"
+}

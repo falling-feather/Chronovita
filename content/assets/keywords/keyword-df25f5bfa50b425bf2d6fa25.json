@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-df25f5bfa50b425bf2d6fa25",
+  "word": "蒙古第三次西征",
+  "pinyin": "měng gǔ dì sān cì xī zhēng",
+  "gloss": "公元1253年开始的西亚远征；攻占巴格达并进入叙利亚",
+  "era": "宋元",
+  "category": "事件",
+  "examples": [
+    "本课结合“蒙古第三次西征”说明公元1253年开始的西亚远征；攻占巴格达并进入叙利亚。",
+    "讲解“蒙古第三次西征”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "旭烈兀"
+  ],
+  "related_lessons": [
+    "L1102"
+  ],
+  "source_refs": [
+    {
+      "title": "L1102《蒙古三次西征》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1102.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1102-05.json\", \"member_sha256\": \"73d8a315dbd042d6ba218cad48c4bb90df5524877e4d548ca7b966e54bf094c4\", \"source_id\": \"keyword-l1102-05\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.027401Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

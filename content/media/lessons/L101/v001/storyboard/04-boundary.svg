@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#081a30"/>
+  <text x="120" y="150" fill="#d8b46e" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="30" font-weight="700" letter-spacing="6">第三层 · 有争议的研究</text>
+  <text x="120" y="275" fill="#f2e7d2" font-family="Noto Serif SC, SimSun, serif" font-size="78" font-weight="700">积石峡洪水能证明什么？</text>
+  <g transform="translate(120 390)">
+    <rect width="470" height="370" rx="24" fill="#15475a" stroke="#64c3be" stroke-width="3"/>
+    <text x="42" y="78" fill="#aee0dc" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="34" font-weight="700">自然事件</text>
+    <path d="M42 165 C120 95 190 240 280 155 S400 120 430 190" fill="none" stroke="#6bd0cc" stroke-width="16"/>
+    <text x="42" y="275" fill="#e8f3ef" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="30">特定地点与时段可能</text>
+    <text x="42" y="325" fill="#e8f3ef" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="30">发生大型溃决洪水</text>
+  </g>
+  <path d="M625 575H785" stroke="#d7b46e" stroke-width="8" stroke-dasharray="18 14"/><path d="M765 548L805 575 765 602" fill="none" stroke="#d7b46e" stroke-width="8"/>
+  <g transform="translate(825 390)">
+    <rect width="390" height="370" rx="24" fill="#efe4ce"/>
+    <text x="42" y="78" fill="#7b5c2e" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="34" font-weight="700">文化记忆</text>
+    <text x="42" y="170" fill="#243c4b" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="31">洪水传说如何形成、</text>
+    <text x="42" y="220" fill="#243c4b" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="31">传播并被重新解释？</text>
+    <text x="42" y="315" fill="#9a4d36" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="28">需要独立证据链</text>
+  </g>
+  <path d="M1250 575H1380" stroke="#d7b46e" stroke-width="8" stroke-dasharray="18 14"/><path d="M1360 548L1400 575 1360 602" fill="none" stroke="#d7b46e" stroke-width="8"/>
+  <g transform="translate(1420 390)">
+    <rect width="380" height="370" rx="24" fill="#512d35" stroke="#c67b68" stroke-width="3"/>
+    <text x="42" y="78" fill="#f1c0af" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="34" font-weight="700">人物与王朝</text>
+    <text x="42" y="170" fill="#f6e8df" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="31">不能从“有洪水”</text>
+    <text x="42" y="220" fill="#f6e8df" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="31">直接跳到“禹与夏”</text>
+    <text x="42" y="315" fill="#f1c0af" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="28">结论不得跨级</text>
+  </g>
+  <text x="120" y="910" fill="#adc4ca" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="34">证据能走多远，结论才走多远。</text>
+</svg>

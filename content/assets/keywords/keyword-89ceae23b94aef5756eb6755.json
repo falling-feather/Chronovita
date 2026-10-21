@@ -1,0 +1,58 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-89ceae23b94aef5756eb6755",
+  "word": "鸣条之战",
+  "pinyin": "míng tiáo zhī zhàn",
+  "gloss": "传统文献记载的商汤伐夏之战",
+  "era": "先秦",
+  "category": "事件",
+  "examples": [
+    "本课结合“鸣条之战”说明传统文献记载的商汤伐夏之战。",
+    "讲解“鸣条之战”时，应联系本课叙事理解它在先秦历史中的作用。"
+  ],
+  "related_people": [
+    "商汤",
+    "夏桀"
+  ],
+  "related_lessons": [
+    "L101"
+  ],
+  "source_refs": [
+    {
+      "title": "夏商周断代工程与夏代年代框架",
+      "source": "人民政协网",
+      "url_or_path": "https://www.cppcc.gov.cn/zxww/2022/11/10/ARTI1668053116436252.shtml",
+      "citation_note": "夏代约公元前2070年至公元前1600年的基本年代框架",
+      "reliability": "pending"
+    },
+    {
+      "title": "有关夏的三个误解",
+      "source": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2023/0726/c448861-40043828.html",
+      "citation_note": "说明考古学文化不能简单等同于族属、朝代和国家",
+      "reliability": "pending"
+    },
+    {
+      "title": "甄器尚象：夏代文明之光",
+      "source": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2023/0726/c448861-40043837.html",
+      "citation_note": "介绍二里头文化的遗址、遗物和社会组织特征",
+      "reliability": "pending"
+    },
+    {
+      "title": "寻夏记：一个广域王权国家的诞生",
+      "source": "河南省文物局",
+      "url_or_path": "https://wwj.henan.gov.cn/2022/12-12/2655215.html",
+      "citation_note": "介绍夏代传说、年代和早期国家相关研究",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l101-11.json\", \"member_sha256\": \"eb3d9a4cc18bae1f58e6fd49c0039e6ede97aba5252e4648f2a387b465904ddb\", \"source_id\": \"keyword-l101-11\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l101-11.json\", \"member_sha256\": \"eb3d9a4cc18bae1f58e6fd49c0039e6ede97aba5252e4648f2a387b465904ddb\", \"source_id\": \"keyword-l101-11\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T13:36:29.019378Z",
+  "updated_at": "2026-09-16T09:49:52.778615Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

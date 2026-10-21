@@ -17,6 +17,7 @@ from services.contracts.v1 import (
     GameSessionV1,
     PlayerInput,
 )
+from services import courses
 from services.game_runtime import (
     AdvanceResultV1,
     ActionUnavailable,
@@ -31,6 +32,7 @@ from services.game_runtime import (
     UnknownAction,
 )
 from services.game_runtime.catalog import ScenarioCatalogNotFound
+from services.game_runtime.dialogue_models import ScenarioNpcDialogueV1
 from services.game_runtime.service import (
     DossierNotReady,
     DuplicateStartConflict,
@@ -87,6 +89,13 @@ class GameStartResponse(BaseModel):
     session_storage: Literal["sqlite-json"] = "sqlite-json"
 
 
+class GameDialogueListResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    items: list[ScenarioNpcDialogueV1]
+    session_storage: Literal["sqlite-json"] = "sqlite-json"
+
+
 @router.get("/scenarios", response_model=GameScenarioListResponse)
 async def list_game_scenarios() -> GameScenarioListResponse:
     try:
@@ -101,6 +110,13 @@ async def start_game_session(
     request: GameStartRequest,
     context: AuthContext = Depends(require_student_context),
 ) -> GameStartResponse:
+    if request.release_pin is not None:
+        pin = request.release_pin
+        lesson = courses.get_lesson(pin.lesson_id)
+        if courses.get_course(pin.course_id) is not None and (
+            lesson is None or lesson.course_id != pin.course_id or lesson.interaction_status != "ready"
+        ):
+            raise HTTPException(409, detail={"code": "interaction_not_adapted", "message": "本课推演尚未对齐教师新稿。"})
     try:
         runtime = get_game_runtime().for_owner(context.principal.user_id)
         scenario, session = runtime.start_session(
@@ -124,6 +140,22 @@ async def get_game_session(
     except Exception as exc:
         _raise_runtime_error(exc)
     return session
+
+
+@router.get(
+    "/sessions/{session_id}/dialogues",
+    response_model=GameDialogueListResponse,
+)
+async def get_game_dialogues(
+    session_id: str,
+    context: AuthContext = Depends(require_student_context),
+) -> GameDialogueListResponse:
+    try:
+        runtime = get_game_runtime().for_owner(context.principal.user_id)
+        dialogues = runtime.get_dialogues(session_id)
+    except Exception as exc:
+        _raise_runtime_error(exc)
+    return GameDialogueListResponse(items=list(dialogues))
 
 
 @router.get(

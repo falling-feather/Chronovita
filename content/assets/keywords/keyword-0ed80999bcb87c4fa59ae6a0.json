@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-0ed80999bcb87c4fa59ae6a0",
+  "word": "三长制",
+  "pinyin": "sān zhǎng zhì",
+  "gloss": "北魏建立的基层管理制度；用于整理户籍并征收赋役",
+  "era": "魏晋南北朝",
+  "category": "制度",
+  "examples": [
+    "本课结合“三长制”说明北魏建立的基层管理制度；用于整理户籍并征收赋役。",
+    "讲解“三长制”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "冯太后"
+  ],
+  "related_lessons": [
+    "L603"
+  ],
+  "source_refs": [
+    {
+      "title": "L603《北魏孝文帝改革》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L603.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l603-03.json\", \"member_sha256\": \"a7c8e5857df43230914b53fd1eb0fc4b19389a74ef7c986079d4c10d71d90b51\", \"source_id\": \"keyword-l603-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.042914Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

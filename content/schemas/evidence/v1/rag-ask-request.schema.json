@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronovita.local/schemas/evidence/v1/rag-ask-request.schema.json",
+  "$comment": "Pydantic semantic validation additionally enforces stable ordering, cross-source references, classroom media boundaries and citation grounding.",
+  "additionalProperties": false,
+  "properties": {
+    "course_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Course Id",
+      "type": "string"
+    },
+    "lesson_id": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+      "title": "Lesson Id",
+      "type": "string"
+    },
+    "persona_mode": {
+      "enum": [
+        "expert",
+        "person"
+      ],
+      "title": "Persona Mode",
+      "type": "string"
+    },
+    "person_id": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Person Id"
+    },
+    "question": {
+      "maxLength": 400,
+      "minLength": 1,
+      "title": "Question",
+      "type": "string"
+    }
+  },
+  "required": [
+    "course_id",
+    "lesson_id",
+    "persona_mode",
+    "question"
+  ],
+  "title": "RagAskRequestV1",
+  "type": "object"
+}

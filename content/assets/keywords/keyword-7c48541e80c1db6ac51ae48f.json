@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-7c48541e80c1db6ac51ae48f",
+  "word": "大顺政权",
+  "pinyin": "dà shùn zhèng quán",
+  "gloss": "李自成于公元1644年建立的政权；曾控制西安和北京",
+  "era": "明清",
+  "category": "时代",
+  "examples": [
+    "本课结合“大顺政权”说明李自成于公元1644年建立的政权；曾控制西安和北京。",
+    "讲解“大顺政权”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "李自成"
+  ],
+  "related_lessons": [
+    "L1303"
+  ],
+  "source_refs": [
+    {
+      "title": "L1303《明亡与南明》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1303.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1303-01.json\", \"member_sha256\": \"2f080640b6b3b42210cea91985580f063a0fb7e6465683710aebaf6b6d6c1d4c\", \"source_id\": \"keyword-l1303-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.492511Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

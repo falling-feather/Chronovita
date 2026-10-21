@@ -136,7 +136,7 @@ class StudentResourceOwnershipApiTests(unittest.TestCase):
         self.assertEqual(unmapped.status_code, 200, unmapped.text)
         self.assertIsNone(unmapped.json()["item"])
 
-        shared_lesson = "lesson-owner-progress"
+        shared_lesson = "L101"
         first_a = self._touch(
             self.student_a_headers,
             shared_lesson,

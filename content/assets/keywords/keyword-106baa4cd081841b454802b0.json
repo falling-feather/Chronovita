@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-106baa4cd081841b454802b0",
+  "word": "姚崇",
+  "pinyin": "yáo chóng",
+  "gloss": "唐玄宗开元初年宰相；主张整顿吏治并裁减冗官",
+  "era": "隋唐",
+  "category": "人物",
+  "examples": [
+    "姚崇曾在武周及唐朝任职，不只在开元时期参与政治。",
+    "在《武周与开元盛世》中，联系教师正文理解“姚崇”。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L802"
+  ],
+  "source_refs": [
+    {
+      "title": "维基百科：姚崇",
+      "source": "维基百科",
+      "url_or_path": "https://zh.wikipedia.org/wiki/姚崇",
+      "citation_note": "2026-09-16 查阅；自行概括补充，非史料原文；待教师审校。",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "维基百科补充：保留教师原有词名、拼音和释义，只补独立档案、例句及参考来源；待教师审校。李世民与唐太宗是教师分别标注的两个词条，不生成重复人物档案。",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-16T10:22:22Z",
+  "updated_at": "2026-09-16T10:22:22Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

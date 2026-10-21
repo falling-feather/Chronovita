@@ -23,9 +23,9 @@ def post_stream(path, body):
         chunks.append(b.decode("utf-8", errors="replace"))
     return "".join(chunks)
 
-def test_lesson(lid):
+def run_lesson(lid):
     t0 = time.time()
-    r = post(f"/practice/saga/start", {"lesson_id": lid})
+    r = post("/practice/saga/start", {"lesson_id": lid})
     state = json.loads(r.read())
     saga_id = state["saga_id"]
     title = state["title"]
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     ok = 0
     for lid in ids:
         try:
-            if test_lesson(lid):
+            if run_lesson(lid):
                 ok += 1
         except Exception as e:
             print(f"\n=== {lid} ===\n  ❌ 异常: {e}")

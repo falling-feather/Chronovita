@@ -25,6 +25,13 @@ PACKAGE_ROOT_PATTERN = re.compile(
 )
 
 EXACT_SOURCE_FILES = {
+    PurePosixPath("apps/readerContracts.ts"),
+    PurePosixPath("scripts/build_shiji_reader.mjs"),
+    PurePosixPath("apps/shiji-reader/package.json"),
+    PurePosixPath("apps/shiji-reader/package-lock.json"),
+    PurePosixPath("apps/shiji-reader/tsconfig.json"),
+    PurePosixPath("apps/shiji-reader/vite.config.ts"),
+    PurePosixPath("apps/shiji-reader/index.html"),
     PurePosixPath("scripts/teacher-editor.cmd"),
     PurePosixPath("scripts/teacher-editor.ps1"),
     PurePosixPath("scripts/configure-content-history.cmd"),
@@ -37,6 +44,8 @@ EXACT_SOURCE_FILES = {
 SOURCE_PREFIXES = (
     PurePosixPath("apps/api"),
     PurePosixPath("apps/web"),
+    PurePosixPath("apps/shiji-reader/src"),
+    PurePosixPath("apps/shiji-reader/public"),
     PurePosixPath("services"),
     PurePosixPath("content/schemas"),
 )
@@ -49,6 +58,9 @@ ROOT_COMMAND_FILES = frozenset(
     }
 )
 REQUIRED_PACKAGE_FILES = {
+    PurePosixPath("apps/readerContracts.ts"),
+    PurePosixPath("apps/shiji-reader/package.json"),
+    PurePosixPath("scripts/build_shiji_reader.mjs"),
     *ROOT_COMMAND_FILES,
     PurePosixPath("scripts/teacher-editor.cmd"),
     PurePosixPath("scripts/teacher-editor.ps1"),
@@ -358,18 +370,12 @@ def collect_package_files(
         for path in tracked
         if len(path.parts) == 1 and path.suffix.casefold() == ".cmd"
     )
-    if root_commands != ROOT_COMMAND_FILES:
+    if not ROOT_COMMAND_FILES.issubset(root_commands):
         missing = ROOT_COMMAND_FILES - root_commands
-        unexpected = root_commands - ROOT_COMMAND_FILES
         details = []
         if missing:
             details.append(
                 "missing " + ", ".join(sorted(path.name for path in missing))
-            )
-        if unexpected:
-            details.append(
-                "unexpected "
-                + ", ".join(sorted(path.name for path in unexpected))
             )
         raise TeacherPackageError(
             "tracked teacher-facing root CMD set is invalid: "

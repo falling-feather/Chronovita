@@ -1,35 +1,37 @@
 {
+  "schema_version": "keyword-profile/v1",
   "asset_id": "yangwu-yundong",
   "word": "洋务运动",
-  "pinyin": "yang wu yun dong",
-  "gloss": "19 世纪 60 至 90 年代，清政府部分官员以“自强”“求富”为目标，学习西方器物技术、兴办近代工业和海防的改革尝试。",
+  "pinyin": "yáng wù yùn dòng",
+  "gloss": "十九世纪六十至九十年代清朝官员推动学习西方技术并兴办近代事业的活动",
   "era": "明清",
-  "category": "近代化概念",
+  "category": "事件",
   "examples": [
-    "洋务运动可以从军工企业、民用企业、新式教育和海防建设四个方面观察。",
-    "评价洋务运动时，应同时看到近代化起点和制度局限。"
+    "本课结合“洋务运动”说明十九世纪六十至九十年代清朝官员推动学习西方技术并兴办近代事业的活动。",
+    "讲解“洋务运动”时，应联系本课正文理解其历史含义。"
   ],
   "related_people": [
-    "李鸿章",
     "曾国藩",
-    "左宗棠",
-    "张之洞"
+    "李鸿章"
   ],
   "related_lessons": [
-    "L1403",
-    "yangwu-yundong-tansuo"
+    "L1503"
   ],
   "source_refs": [
     {
-      "title": "晚清洋务运动相关教材段落",
-      "source": "教师资料",
-      "url_or_path": "",
-      "citation_note": "用于核对时间范围、代表人物与主要企业。",
+      "title": "L1503《洋务运动、甲午战争与辛亥革命》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1503.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
       "reliability": "pending"
     }
   ],
-  "teacher_notes": "样板关键词档案：用于关键词卡、RAG 检索、人物问答和课程正文的一致解释。",
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1503-01.json\", \"member_sha256\": \"f2763e4d4feb09ebf9f04022cf6bd057c4f4284490f47e1fc6c2b3bf976f2c2a\", \"source_id\": \"keyword-l1503-01\"}",
   "status": "draft",
   "version": 0,
-  "updated_at": null
+  "created_at": null,
+  "updated_at": "2026-09-16T09:49:55.912164Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
 }

@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-45b3efcb9a64106ae8c7a138",
+  "word": "《九章算术》",
+  "pinyin": "jiǔ zhāng suàn shù",
+  "gloss": "秦汉时期逐步形成的数学著作；汇集生产和治理中的实用算法",
+  "era": "秦汉",
+  "category": "文献",
+  "examples": [
+    "本课结合“《九章算术》”说明秦汉时期逐步形成的数学著作；汇集生产和治理中的实用算法。",
+    "讲解“《九章算术》”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "刘徽"
+  ],
+  "related_lessons": [
+    "L503"
+  ],
+  "source_refs": [
+    {
+      "title": "L503《造纸术、地动仪与《九章算术》》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L503.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l503-04.json\", \"member_sha256\": \"97296f11227031df46858043c960d9d12ab53cfb30213d57b7807634bce70294\", \"source_id\": \"keyword-l503-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.896722Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

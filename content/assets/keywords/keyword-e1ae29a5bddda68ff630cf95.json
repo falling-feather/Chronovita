@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-e1ae29a5bddda68ff630cf95",
+  "word": "百家争鸣",
+  "pinyin": "bǎi jiā zhēng míng",
+  "gloss": "春秋战国时期思想活跃的局面；不同学派围绕社会问题提出主张",
+  "era": "先秦",
+  "category": "思想",
+  "examples": [
+    "本课结合“百家争鸣”说明春秋战国时期思想活跃的局面；不同学派围绕社会问题提出主张。",
+    "讲解“百家争鸣”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "孔子",
+    "韩非"
+  ],
+  "related_lessons": [
+    "L201"
+  ],
+  "source_refs": [
+    {
+      "title": "L201《孔子与儒家》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L201.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l201-01.json\", \"member_sha256\": \"b05f8424e8d280440260b5c3f64df8e79419621734625f2e76ea602aaa4b16ed\", \"source_id\": \"keyword-l201-01\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l201-01.json\", \"member_sha256\": \"b05f8424e8d280440260b5c3f64df8e79419621734625f2e76ea602aaa4b16ed\", \"source_id\": \"keyword-l201-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.098244Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-c305daf9c4eff2e2e6316f21",
+  "word": "蜀汉",
+  "pinyin": "shǔ hàn",
+  "gloss": "刘备建立的政权；都城成都；公元263年灭亡",
+  "era": "魏晋南北朝",
+  "category": "时代",
+  "examples": [
+    "本课结合“蜀汉”说明刘备建立的政权；都城成都；公元263年灭亡。",
+    "讲解“蜀汉”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "刘备"
+  ],
+  "related_lessons": [
+    "L601"
+  ],
+  "source_refs": [
+    {
+      "title": "L601《三国鼎立》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L601.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l601-03.json\", \"member_sha256\": \"19e3b4794200e5cf41074393e75fbd7545a973f8219fad707dbb9e8a5c75643e\", \"source_id\": \"keyword-l601-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.947039Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs><linearGradient id="bg5" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07182e"/><stop offset="1" stop-color="#123f49"/></linearGradient></defs>
+  <rect width="1920" height="1080" fill="url(#bg5)"/>
+  <text x="120" y="150" fill="#d8b46e" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="30" font-weight="700" letter-spacing="6">进入抉择 · 六回合危机治理</text>
+  <text x="120" y="275" fill="#f2e7d2" font-family="Noto Serif SC, SimSun, serif" font-size="82" font-weight="700">水退，是否就等于成功？</text>
+  <g font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="32" text-anchor="middle">
+    <g transform="translate(220 420)"><circle cx="110" cy="110" r="104" fill="#154d61" stroke="#65c9c4" stroke-width="4"/><text x="110" y="102" fill="#e9f4ef">洪水</text><text x="110" y="148" fill="#e9f4ef">风险</text></g>
+    <g transform="translate(490 420)"><circle cx="110" cy="110" r="104" fill="#6b5532" stroke="#d8b46e" stroke-width="4"/><text x="110" y="125" fill="#fbefda">粮食</text></g>
+    <g transform="translate(760 420)"><circle cx="110" cy="110" r="104" fill="#4b393b" stroke="#c88470" stroke-width="4"/><text x="110" y="125" fill="#f6e8df">劳作</text></g>
+    <g transform="translate(1030 420)"><circle cx="110" cy="110" r="104" fill="#264b42" stroke="#7fc4a9" stroke-width="4"/><text x="110" y="125" fill="#e8f4ea">信任</text></g>
+    <g transform="translate(1300 420)"><circle cx="110" cy="110" r="104" fill="#303e60" stroke="#91a9df" stroke-width="4"/><text x="110" y="102" fill="#edf0fa">地形</text><text x="110" y="148" fill="#edf0fa">认知</text></g>
+    <g transform="translate(1570 420)"><circle cx="110" cy="110" r="104" fill="#5b3e5f" stroke="#c397cf" stroke-width="4"/><text x="110" y="125" fill="#f3eaf5">协作</text></g>
+  </g>
+  <path d="M325 705H1680" stroke="#b28d50" stroke-width="4" opacity=".7"/>
+  <text x="120" y="815" fill="#b5dedb" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="41">六次选择 · 每项代价 · 每条来源</text>
+  <text x="120" y="900" fill="#f2e7d2" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="48" font-weight="700">让史官卷宗保留完整的判断过程。</text>
+  <text x="120" y="990" fill="#91aab2" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="27">固定行动在断网时仍可完成 · 变量是教学模型，不是夏代统计</text>
+</svg>

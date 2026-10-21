@@ -87,6 +87,7 @@ export interface AssetPublicationVersion {
 
 interface AssetPublicationPanelProps {
   token: string;
+  canPublish: boolean;
   assetKind: ContentAssetKind;
   assetId: string;
   assetTitle: string;
@@ -181,6 +182,7 @@ function publicationResultUrl(record: AssetGitPublicationRecord): string | undef
 
 export default function AssetPublicationPanel({
   token,
+  canPublish,
   assetKind,
   assetId,
   assetTitle,
@@ -649,7 +651,8 @@ export default function AssetPublicationPanel({
           icon={<CloudUploadOutlined />}
           loading={activity === 'publish'}
           disabled={
-            busy
+            !canPublish
+            || busy
             || !archiveMatchesSelection
             || (mode === 'direct_commit' && !directCommitConfirmed)
           }
@@ -722,7 +725,7 @@ export default function AssetPublicationPanel({
                   <Button
                     icon={<ReloadOutlined />}
                     loading={activity === 'retry'}
-                    disabled={busy || !activePublicationMatchesSelection}
+                    disabled={!canPublish || busy || !activePublicationMatchesSelection}
                     onClick={retryPublication}
                   >
                     重新尝试

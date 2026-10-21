@@ -2,9 +2,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping, Sequence
 from typing import Annotated, Literal, TYPE_CHECKING
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    ValidationInfo,
+    model_validator,
+)
 
 from services.contracts.rules_v1 import (
     RuleActionUnavailable,
@@ -494,8 +503,13 @@ class ActionClassificationEvidenceV1(ContractModel):
     schema_version: Literal["action-classification-evidence/v1"] = (
         "action-classification-evidence/v1"
     )
-    source: Literal["fixed", "exact", "llm"]
-    reason_code: Literal["fixed_action", "exact_match", "semantic_match"]
+    source: Literal["fixed", "exact", "local_state", "llm"]
+    reason_code: Literal[
+        "fixed_action",
+        "exact_match",
+        "local_semantic_match",
+        "semantic_match",
+    ]
     policy_version: Literal["action-classifier/v1"] = "action-classifier/v1"
     available_action_ids: list[ContractId]
     reviewed_fact_refs: list[ContractId] = Field(default_factory=list)
@@ -511,6 +525,7 @@ class ActionClassificationEvidenceV1(ContractModel):
         expected_reason = {
             "fixed": "fixed_action",
             "exact": "exact_match",
+            "local_state": "local_semantic_match",
             "llm": "semantic_match",
         }[self.source]
         if self.reason_code != expected_reason:
@@ -852,7 +867,7 @@ class RuntimeBundleV1(ContractModel):
     dossier: DossierV1 | None = None
 
     @model_validator(mode="after")
-    def validate_cross_references(self) -> "RuntimeBundleV1":
+    def validate_cross_references(self, info: ValidationInfo) -> "RuntimeBundleV1":
         course = self.course
         scenario = self.scenario
         if (scenario.course_id, scenario.lesson_id) != (course.course_id, course.lesson_id):
@@ -970,6 +985,11 @@ class RuntimeBundleV1(ContractModel):
                 course,
                 scenario,
                 session,
+                classification_fact_sources=(
+                    info.context.get("classification_fact_sources")
+                    if isinstance(info.context, dict)
+                    else None
+                ),
             )
 
         if self.dossier is not None:
@@ -1227,8 +1247,13 @@ def calculate_action_classification_basis_checksum(
     reviewed_fact_refs: list[str] | tuple[str, ...],
     action_id: str,
     confidence: float,
-    source: Literal["fixed", "exact", "llm"],
-    reason_code: Literal["fixed_action", "exact_match", "semantic_match"],
+    source: Literal["fixed", "exact", "local_state", "llm"],
+    reason_code: Literal[
+        "fixed_action",
+        "exact_match",
+        "local_semantic_match",
+        "semantic_match",
+    ],
     policy_version: str = "action-classifier/v1",
 ) -> str:
     return _canonical_sha256(
@@ -1369,24 +1394,59 @@ def reviewed_classification_fact_refs(
     course: CoursePackageV1,
     scenario: ScenarioTemplateV1,
     available_action_ids: list[str] | tuple[str, ...],
+    *,
+    classification_fact_sources: Mapping[str, Sequence[str]] | None = None,
 ) -> list[str]:
+    return list(
+        reviewed_classification_fact_sources(
+            course,
+            scenario,
+            available_action_ids,
+            classification_fact_sources=classification_fact_sources,
+        )
+    )
+
+
+def reviewed_classification_fact_sources(
+    course: CoursePackageV1,
+    scenario: ScenarioTemplateV1,
+    available_action_ids: list[str] | tuple[str, ...],
+    *,
+    classification_fact_sources: Mapping[str, Sequence[str]] | None = None,
+) -> dict[str, tuple[str, ...]]:
+    """Resolve the reviewed facts for one exact pre-turn rule state.
+
+    Native course packages bind sources directly on ``FactV1``. Converted
+    flagship packages instead receive an immutable EvidenceCorpus-derived map
+    from their release-aware runtime. Without that trusted map the original
+    CoursePackage-only policy remains unchanged.
+    """
+
     sources = {item.source_id: item for item in course.source_refs}
     action_by_id = {item.action_id: item for item in scenario.action_rules}
     relevant_fact_ids = set(scenario.fact_refs)
     for action_id in available_action_ids:
         relevant_fact_ids.update(action_by_id[action_id].fact_refs)
     facts = {item.fact_id: item for item in course.facts}
-    return [
-        fact_id
-        for fact_id in sorted(relevant_fact_ids)
-        if (fact := facts.get(fact_id)) is not None
-        and fact.source_ref_ids
-        and "教师待审" not in fact.statement
-        and all(
+    result: dict[str, tuple[str, ...]] = {}
+    for fact_id in sorted(relevant_fact_ids):
+        fact = facts.get(fact_id)
+        if fact is None or "教师待审" in fact.statement:
+            continue
+        if classification_fact_sources is not None:
+            reviewed_sources = tuple(
+                sorted(set(classification_fact_sources.get(fact_id, ())))
+            )
+        elif fact.source_ref_ids and all(
             source_id in sources and sources[source_id].reliability == "reviewed"
             for source_id in fact.source_ref_ids
-        )
-    ]
+        ):
+            reviewed_sources = tuple(sorted(set(fact.source_ref_ids)))
+        else:
+            reviewed_sources = ()
+        if reviewed_sources:
+            result[fact_id] = reviewed_sources
+    return result
 
 
 def _rule_snapshot_payload(snapshot: RuleSnapshotV1) -> dict[str, object]:
@@ -1656,6 +1716,8 @@ def _validate_turn_replay(
     course: CoursePackageV1,
     scenario: ScenarioTemplateV1,
     session: GameSessionV1,
+    *,
+    classification_fact_sources: Mapping[str, Sequence[str]] | None = None,
 ) -> None:
     snapshot = initial_rule_snapshot(scenario)
     expected_history = [
@@ -1724,6 +1786,7 @@ def _validate_turn_replay(
                 result=result,
                 available_action_ids=available_before,
                 rule_narrative=rule_narrative,
+                classification_fact_sources=classification_fact_sources,
             )
 
         recorded_npcs = {item.person_id: item for item in turn.npc_changes}
@@ -1834,6 +1897,7 @@ def _validate_turn_evidence(
     result: RuleTurnResultV1,
     available_action_ids: tuple[str, ...],
     rule_narrative: str,
+    classification_fact_sources: Mapping[str, Sequence[str]] | None = None,
 ) -> None:
     classification = turn.classification_evidence
     narrative = turn.narrative_evidence
@@ -1847,6 +1911,12 @@ def _validate_turn_evidence(
         expected_classification = ("fixed", "fixed_action", 1.0)
     elif turn.action_source == "free_input" and classification.source == "exact":
         expected_classification = ("exact", "exact_match", 1.0)
+    elif turn.action_source == "free_input" and classification.source == "local_state":
+        expected_classification = (
+            "local_state",
+            "local_semantic_match",
+            turn.classification_confidence,
+        )
     elif turn.action_source == "free_input" and classification.source == "llm":
         expected_classification = (
             "llm",
@@ -1869,6 +1939,7 @@ def _validate_turn_evidence(
             course,
             scenario,
             available_action_ids,
+            classification_fact_sources=classification_fact_sources,
         )
         if classification.source == "llm"
         else []

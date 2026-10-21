@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-c82e0431b4e531f599289dff",
+  "word": "法",
+  "pinyin": "fǎ",
+  "gloss": "公开明确的规则和赏罚标准；法家治理思想的组成部分",
+  "era": "先秦",
+  "category": "思想",
+  "examples": [
+    "本课结合“法”说明公开明确的规则和赏罚标准；法家治理思想的组成部分。",
+    "讲解“法”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "韩非"
+  ],
+  "related_lessons": [
+    "L203"
+  ],
+  "source_refs": [
+    {
+      "title": "L203《韩非与法家》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L203.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l203-03.json\", \"member_sha256\": \"856e1a1fd87385053f2db53de2f6c7f3369032c0a7ee6c1174b77506f77e6000\", \"source_id\": \"keyword-l203-03\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l203-03.json\", \"member_sha256\": \"856e1a1fd87385053f2db53de2f6c7f3369032c0a7ee6c1174b77506f77e6000\", \"source_id\": \"keyword-l203-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.292910Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

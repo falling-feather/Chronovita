@@ -1,0 +1,48 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-d4eff00ad4710a5e24664d35",
+  "word": "战国",
+  "pinyin": "zhàn guó",
+  "gloss": "东周后期的历史时期；诸侯国长期竞争并相继变法",
+  "era": "先秦",
+  "category": "时代",
+  "examples": [
+    "本课结合“战国”说明东周后期的历史时期；诸侯国长期竞争并相继变法。",
+    "讲解“战国”时，应联系本课叙事理解它在先秦历史中的作用。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L105"
+  ],
+  "source_refs": [
+    {
+      "title": "普通高中历史课程相关教学材料",
+      "source": "成都市教育局",
+      "url_or_path": "https://jyj.changdu.gov.cn/cdsjyj/c101476/202205/764ee1914e3c45aaba8e372f1b628a34/files/98a04fa1c8ef411ca0ee34ebcb4bcd73.pdf",
+      "citation_note": "整理商鞅变法中农战、军功、连坐、土地和县制等主要措施及其影响",
+      "reliability": "pending"
+    },
+    {
+      "title": "徙木立信：商鞅变法中的法令信用",
+      "source": "中央网信办",
+      "url_or_path": "https://www.cac.gov.cn/2022-12/12/c_1672477198256264.htm",
+      "citation_note": "介绍徙木立信的传统故事及商鞅重视法令执行的历史记忆",
+      "reliability": "pending"
+    },
+    {
+      "title": "商鞅变法与秦国制度变化",
+      "source": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2023/0612/c219544-40011381.html",
+      "citation_note": "说明军功爵制及商鞅变法对秦国政治和社会结构的影响",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l105-01.json\", \"member_sha256\": \"cc1abb0939badb05495b689b1eff56ce3703ffe0a81597b6e3939b00338ef8d4\", \"source_id\": \"keyword-l105-01\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l105-01.json\", \"member_sha256\": \"cc1abb0939badb05495b689b1eff56ce3703ffe0a81597b6e3939b00338ef8d4\", \"source_id\": \"keyword-l105-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T13:36:29.349877Z",
+  "updated_at": "2026-09-16T09:49:53.006460Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

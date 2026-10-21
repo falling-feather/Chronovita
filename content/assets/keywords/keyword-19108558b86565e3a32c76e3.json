@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-19108558b86565e3a32c76e3",
+  "word": "拜上帝会",
+  "pinyin": "bài shàng dì huì",
+  "gloss": "洪秀全创立的宗教组织；吸收部分基督教观念并组织起义群众",
+  "era": "明清",
+  "category": "群体",
+  "examples": [
+    "本课结合“拜上帝会”说明洪秀全创立的宗教组织；吸收部分基督教观念并组织起义群众。",
+    "讲解“拜上帝会”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "洪秀全"
+  ],
+  "related_lessons": [
+    "L1502"
+  ],
+  "source_refs": [
+    {
+      "title": "L1502《太平天国》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1502.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1502-01.json\", \"member_sha256\": \"9c0d8f46bf8b93bcab96e60f34ca8b130c6306f266a45657402385e112ebc7b4\", \"source_id\": \"keyword-l1502-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.822823Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

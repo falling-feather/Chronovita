@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-6c1d299f64d5b84ea8bc2e1e",
+  "word": "《白虎通义》",
+  "pinyin": "bái hǔ tōng yì",
+  "gloss": "整理白虎观经学讨论成果的著作；反映东汉官方经学解释",
+  "era": "秦汉",
+  "category": "文献",
+  "examples": [
+    "本课结合“《白虎通义》”说明整理白虎观经学讨论成果的著作；反映东汉官方经学解释。",
+    "讲解“《白虎通义》”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "刘炟（汉章帝）"
+  ],
+  "related_lessons": [
+    "L502"
+  ],
+  "source_refs": [
+    {
+      "title": "L502《今古文经学与白虎观》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L502.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l502-06.json\", \"member_sha256\": \"ce46124bf14213d05ef032f495173130468276f8a40b84e5be09200ffbbc229c\", \"source_id\": \"keyword-l502-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.863397Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

@@ -1,0 +1,179 @@
+import { expect, request, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+const BASE = process.env.CHRONO_E2E_BASE_URL || 'http://127.0.0.1:8765';
+const PASSWORD = process.env.CHRONO_E2E_USER_PASSWORD || '';
+
+async function createStudent(username: string) {
+  const admin = await request.newContext({ baseURL: BASE, extraHTTPHeaders: { Origin: BASE } });
+  try {
+    const login = await admin.post('/api/v1/auth/login', { data: {
+      username: process.env.CHRONO_E2E_ADMIN_USERNAME || 'classroom.admin',
+      password: process.env.CHRONO_E2E_ADMIN_PASSWORD || '',
+    } });
+    expect(login.ok()).toBeTruthy();
+    const created = await admin.post('/api/v1/auth/users', { data: {
+      username, password: PASSWORD, display_name: '资料验收', roles: ['student'],
+    } });
+    expect(created.status()).toBe(201);
+  } finally { await admin.dispose(); }
+}
+
+test('个人资料、阅读确认、反馈入口与改密退出形成真实闭环', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'classroom-1920x1080', 'Profile is checked on desktop and mobile.');
+  const username = `profile.qa.${Date.now()}`;
+  await createStudent(username);
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/login');
+  await page.getByLabel('课堂账号', { exact: true }).fill(username);
+  await page.getByLabel('密码', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: '进入课堂' }).click();
+  await expect(page).toHaveURL(`${BASE}/`);
+  await page.goto('/profile');
+  await page.getByLabel('昵称', { exact: true }).fill('已保存的新昵称');
+  await page.getByLabel('联系邮箱（可选）').fill('student@example.com');
+  await page.getByLabel('个性签名').fill('阅读原文，再核对依据。');
+  await page.getByLabel('头像', { exact: true }).setInputFiles({
+    name: 'avatar.webp', mimeType: 'image/webp',
+    buffer: readFileSync(new URL('../public/assets/ui/ask/xuan-paper-1024.webp', import.meta.url)),
+  });
+  await page.getByRole('button', { name: '移除头像' }).waitFor();
+  await page.getByRole('button', { name: '保存修改', exact: true }).click();
+  await expect(page.locator('.chrono-account-trigger')).toContainText('已保存的新昵称');
+  await expect(page.locator('.chrono-account-trigger img')).toHaveAttribute('src', /^data:image\/webp;base64,/);
+  await page.reload();
+  await expect(page.getByLabel('昵称', { exact: true })).toHaveValue('已保存的新昵称');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth
+    <= document.documentElement.clientWidth + 1)).toBeTruthy();
+  await page.screenshot({ path: join(tmpdir(), `chronovita-profile-${testInfo.project.name}.png`), fullPage: true });
+  await page.getByRole('button', { name: '阅读偏好', exact: true }).click();
+  await page.getByText('大字', { exact: true }).click();
+  await page.getByRole('button', { name: '保存修改', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('与账号资料一致');
+
+  await page.goto('/courses/C-prequin-state/lessons/L101?layer=watch');
+  await expect(page.locator('.chrono-reading-body p').first()).toHaveCSS('font-size', '22px');
+  let rejected = false;
+  await page.route('**/api/v1/learning/progress/touch', async (route) => {
+    if (route.request().postDataJSON()?.completed && !rejected) {
+      rejected = true; await route.abort('failed');
+    } else await route.continue();
+  });
+  const confirm = page.getByRole('button', { name: '我已读完这篇课文', exact: true });
+  await confirm.click();
+  await expect(page.locator('.chrono-lesson-workspace .ant-alert')).toContainText('已读确认未保存');
+  await expect(confirm).toBeEnabled();
+  await page.unroute('**/api/v1/learning/progress/touch');
+  await page.getByRole('button', { name: '重试已读确认', exact: true }).click();
+  await expect(page.getByRole('button', { name: '已确认读完当前课文' })).toBeDisabled();
+  await page.reload();
+  await expect(page.getByRole('button', { name: '已确认读完当前课文' })).toBeDisabled();
+  await page.goto('/learning');
+  await expect(page.locator('.chrono-learning-hero')).toContainText('1/46');
+  const firstRecord = page.locator('.chrono-learning-progress-grid article').first();
+  await expect(firstRecord).toBeVisible();
+  const cardBounds = await firstRecord.boundingBox();
+  const coverBounds = await firstRecord.locator('picture, .chrono-course-cover-fallback').boundingBox();
+  expect(cardBounds).not.toBeNull();
+  expect(coverBounds).not.toBeNull();
+  expect(coverBounds!.x).toBeGreaterThanOrEqual(cardBounds!.x - 1);
+  expect(coverBounds!.y).toBeGreaterThanOrEqual(cardBounds!.y - 1);
+  expect(coverBounds!.width).toBeLessThanOrEqual(cardBounds!.width + 1);
+  expect(coverBounds!.height).toBeLessThanOrEqual(cardBounds!.height + 1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth
+    <= document.documentElement.clientWidth + 1)).toBeTruthy();
+  await expect(page.locator('.chrono-user-slot .ant-badge-dot')).toHaveCount(0);
+  await page.getByRole('button', { name: '查看教师反馈', exact: true }).click();
+  await expect(page).toHaveURL(/tab=submissions/);
+
+  await page.goto('/profile');
+  await page.getByRole('button', { name: '账号与数据', exact: true }).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: '导出个人资料' }).click();
+  expect((await download).suggestedFilename()).toBe('Chronovita-个人资料.json');
+  await page.getByLabel('当前密码', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('新密码', { exact: true }).fill(PASSWORD + '-new');
+  await page.getByLabel('确认新密码', { exact: true }).fill(PASSWORD + '-new');
+  await page.getByRole('button', { name: '修改密码并退出' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page.getByLabel('课堂账号', { exact: true }).fill(username);
+  await page.getByLabel('密码', { exact: true }).fill(PASSWORD + '-new');
+  await page.getByRole('button', { name: '进入课堂' }).click();
+  await expect(page).toHaveURL(`${BASE}/profile`);
+  await page.route('**/api/v1/auth/logout', (route) => route.abort('failed'));
+  await page.getByRole('button', { name: '退出登录', exact: true }).click();
+  await expect(page.getByText('退出请求未完成，账号仍可能在线。请恢复网络后重试。')).toBeVisible();
+  await expect(page).toHaveURL(/\/profile$/);
+  await page.unroute('**/api/v1/auth/logout');
+  await page.getByRole('button', { name: '退出登录', exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page.reload();
+  await expect(page.getByLabel('课堂账号', { exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('迟到的访问留痕不能撤回稍后确认的已读状态', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'classroom-1366x768', '响应乱序在桌面定向检查。');
+  const username = `progress.race.${Date.now()}`;
+  await createStudent(username);
+  await page.goto('/login');
+  await page.getByLabel('课堂账号', { exact: true }).fill(username);
+  await page.getByLabel('密码', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: '进入课堂' }).click();
+  await expect(page).toHaveURL(`${BASE}/`);
+  let releaseVisit!: () => void;
+  const visitGate = new Promise<void>((resolve) => { releaseVisit = resolve; });
+  let visitHeld = false;
+  let visitFetched = false;
+  await page.route('**/api/v1/learning/progress/touch', async (route) => {
+    if (!route.request().postDataJSON()?.completed && !visitHeld) {
+      visitHeld = true;
+      const response = await route.fetch();
+      visitFetched = true;
+      await visitGate;
+      await route.fulfill({ response });
+    } else await route.continue();
+  });
+  try {
+    await page.goto('/courses/C-prequin-state/lessons/L101?layer=watch');
+    await expect.poll(() => visitFetched).toBe(true);
+    await page.getByRole('button', { name: '我已读完这篇课文', exact: true }).click();
+    const confirmed = page.getByRole('button', { name: '已确认读完当前课文', exact: true });
+    await expect(confirmed).toBeDisabled();
+    const lateResponse = page.waitForResponse((response) =>
+      response.url().endsWith('/api/v1/learning/progress/touch')
+      && response.request().postDataJSON()?.completed !== true);
+    releaseVisit();
+    await (await lateResponse).finished();
+    // Flush the response-driven React render, not an arbitrary network timeout.
+    await page.evaluate(() => new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect(confirmed).toBeDisabled();
+    await page.reload();
+    await expect(confirmed).toBeDisabled();
+  } finally { releaseVisit(); await page.unrouteAll({ behavior: 'wait' }); }
+});
+
+test('展示资料延迟不应阻塞正文和阅读确认', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'classroom-1366x768', '可选展示资料延迟定向检查。');
+  const username = `reading.delay.${Date.now()}`;
+  await createStudent(username);
+  let releasePresentation!: () => void;
+  const presentationGate = new Promise<void>((resolve) => { releasePresentation = resolve; });
+  await page.route('**/api/v1/courses/C-prequin-state/lessons/L101/presentation', async (route) => {
+    await presentationGate;
+    await route.continue();
+  });
+  try {
+    await page.goto('/courses/C-prequin-state/lessons/L101?layer=watch');
+    await page.getByLabel('课堂账号', { exact: true }).fill(username);
+    await page.getByLabel('密码', { exact: true }).fill(PASSWORD);
+    await page.getByRole('button', { name: '进入课堂' }).click();
+    await expect(page.locator('.chrono-reading-body p').first()).toBeVisible();
+    await page.getByRole('button', { name: '我已读完这篇课文', exact: true }).click();
+    await expect(page.getByRole('button', { name: '已确认读完当前课文', exact: true })).toBeDisabled();
+  } finally { releasePresentation(); await page.unrouteAll({ behavior: 'wait' }); }
+});

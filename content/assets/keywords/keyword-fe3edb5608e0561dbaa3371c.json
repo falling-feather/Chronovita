@@ -1,0 +1,57 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-fe3edb5608e0561dbaa3371c",
+  "word": "禅让制",
+  "pinyin": "chán ràng zhì",
+  "gloss": "传统叙事中部落联盟首领通过推举产生的权力传承方式",
+  "era": "先秦",
+  "category": "制度",
+  "examples": [
+    "本课结合“禅让制”说明传统叙事中部落联盟首领通过推举产生的权力传承方式。",
+    "讲解“禅让制”时，应联系本课叙事理解它在先秦历史中的作用。"
+  ],
+  "related_people": [
+    "禹"
+  ],
+  "related_lessons": [
+    "L101"
+  ],
+  "source_refs": [
+    {
+      "title": "夏商周断代工程与夏代年代框架",
+      "source": "人民政协网",
+      "url_or_path": "https://www.cppcc.gov.cn/zxww/2022/11/10/ARTI1668053116436252.shtml",
+      "citation_note": "夏代约公元前2070年至公元前1600年的基本年代框架",
+      "reliability": "pending"
+    },
+    {
+      "title": "有关夏的三个误解",
+      "source": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2023/0726/c448861-40043828.html",
+      "citation_note": "说明考古学文化不能简单等同于族属、朝代和国家",
+      "reliability": "pending"
+    },
+    {
+      "title": "甄器尚象：夏代文明之光",
+      "source": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2023/0726/c448861-40043837.html",
+      "citation_note": "介绍二里头文化的遗址、遗物和社会组织特征",
+      "reliability": "pending"
+    },
+    {
+      "title": "寻夏记：一个广域王权国家的诞生",
+      "source": "河南省文物局",
+      "url_or_path": "https://wwj.henan.gov.cn/2022/12-12/2655215.html",
+      "citation_note": "介绍夏代传说、年代和早期国家相关研究",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l101-03.json\", \"member_sha256\": \"b78a9d11e4f5dcab47bd6a2d4bf526b24add1bead68e6dff8553d84b17f368b2\", \"source_id\": \"keyword-l101-03\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l101-03.json\", \"member_sha256\": \"b78a9d11e4f5dcab47bd6a2d4bf526b24add1bead68e6dff8553d84b17f368b2\", \"source_id\": \"keyword-l101-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T13:36:28.888554Z",
+  "updated_at": "2026-09-16T09:49:52.685553Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

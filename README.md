@@ -1,109 +1,57 @@
-# 历史未来课堂 · Chronovita
+# Chronovita · 历史未来课堂
 
-> 面向中小学历史教学与历史仿真创新训练的 AI 实践平台。当前版本 **V0.9.38**；`class` 分支已完成确定性课程归档、GitHub PR 后端链路、教师发布界面和无密钥 Windows 教师包，并根据独立审查收紧重试绑定、GitHub API 主机、归档路径与包体密钥扫描。[v0.9.38 prerelease](https://github.com/falling-feather/Chronovita/releases/tag/v0.9.38) 已通过精确提交四路门禁和完整 Windows 标签流水线验收。
+把历史学习组织成“读课文、做抉择、问依据、写笔记”的课堂。面向七年级、本地 Windows 与可信局域网；当前源码 **V1.4.14** 收束工程并交接后续内容工作，依赖与阅读竞态修复已经通过集中验收；[PR #6](https://github.com/falling-feather/Chronovita/pull/6) 保存远端检查与集成依据。现有公开发行为 V1.2.0；本轮不发布新安装包，源码、Pages 与下载包分别交付。
 
-[远端仓库](https://github.com/falling-feather/Chronovita) · [项目总纲](docs/00-项目总纲.md) · [开发者文档](docs/01-开发者文档.md) · [项目规划](docs/02-项目规划与设计总纲.md) · [开发历史](docs/05-发布历史与归档.md)
+## 先了解当前状态
 
-## 一句话定位
+- 已同步教师稿：**17 个课程分组、46 节课文**，覆盖先秦至明清。
+- 当前资产库：**111 个人物、322 个关键词档案**；教师标注的缺档已补齐参考稿，维基百科补充内容待审校；V1.1.1 下载包不包含本轮更新。
+- 当前阅读只采用教师稿：旧正文、旧简介和旧直达课号已撤下，阅读人物与旧互动身份分开；不匹配的旧短片不再展示。
+- 本地课堂个人中心可保存昵称、头像、阅读字号并修改密码；阅读页点击“我已读完这篇课文”后才计入已读，旧稿记录不会冒充新课文完成。
+- 当前 L101 大禹、L105 商鞅已绑定教师正文、六回合规则、证据库、人物、短片与卷宗；L103 西周不调用旧商鞅场景。自然语言可由模型在当前行动范围内解释，变量和结局仍由规则结算。
+- 管理员可在“API 配置”统一维护本地课堂的模型提供方、地址、模型和密钥；学生学习页只统计当前课号，撤下课号仅作为历史记录提示。
+- “史记阅读”提供 130 卷正文、目录、简繁/译读与来源页；百衲本和四库本共 11,342 页 OCR、识别框及独立书影包保留人工待审标记。课文可进入相关篇章，原句摘录带出处保存到私人书案；助教使用当前选中句或篇章材料，复用管理员模型配置。
+- 教师可发布课堂任务；学生明确选择任务并提交后，教师才能看到作品并按史实、证据、解释三项人工反馈。私人笔记、阅读确认和上传版本分别展示，不自动生成成绩。
+- 本轮是“两门完整互动课 + 46 课阅读与书案 + 史料阅读器”的本地教学作品，不是 46 节完整互动课或公网生产系统。软件验收不等于已有真实课堂效果研究。
 
-把传统"听讲—背诵—考试"的历史课，重构为「**看 → 练 → 问 → 创**」四层递进的实践课堂，由生成式 AI 驱动，由真实课堂验证。
+逐课状态与来源以[课程同步台账](doc/04-课程同步台账.md)为准。软件版本、课程发布号、教师 PR 编号是三个不同概念。
 
-四层教学法是底层方法论，**不是顶层导航**。顶层呈现给学生的是一个完整的课堂平台。
+## 从哪里开始读
 
-## 平台五大模块
+| 你想了解 | 入口 |
+| --- | --- |
+| 项目是什么、能做什么 | [00 项目总纲](doc/00-项目总纲.md) |
+| 如何启动、架构怎样连接、去哪里改代码 | [01 开发者手册](doc/01-开发者文档.md) |
+| 下一步做什么 | [02 项目规划](doc/02-项目规划.md) |
+| 已完成什么、如何追溯提交 | [03 开发历史](doc/03-开发历史.md) |
+| 某课来自哪个 PR、哪些配套没同步 | [04 课程同步台账](doc/04-课程同步台账.md) |
 
-| 模块 | 职责 | 状态 |
-| --- | --- | --- |
-| 首页 | 学情概览、继续学习、推荐课程、平台公告 | 可用，继续学习读取真实进度 |
-| 课程中心 | 以历史地图为入口，按朝代、板块和关键词进入课程 | 可用 |
-| 我的学习 | 已选课程、学习进度、笔记与学习成果 | 可用，进度由后端 KV 持久化 |
-| 实践课堂 | 决策推演、沙盘剧本、即时反馈与课堂任务 | 可用，48 节 saga 模板覆盖 |
-| 个人中心 | 账号信息、学习偏好和设置 | 本地体验可用，组织级账号前端待建设 |
+## 普通使用者：Windows 课堂包
 
-每一节课内部都按「**看** · 沉浸叙事 → **练** · 沙盘推演 → **问** · 双模智者 → **创** · 知识谱系」的四层流程组织，环环相扣、逐步递进。各层当前实现见 [开发者文档](docs/01-开发者文档.md)，后续任务见 [项目规划](docs/02-项目规划与设计总纲.md)；`Development_Spec.md` 仅保留为 V0.7.4 历史快照。
+从 [GitHub Releases](https://github.com/falling-feather/Chronovita/releases) 下载对应版本的 Windows ZIP，并核对同名 SHA-256。完整解压，安装 **64 位 Python 3.11**，双击“启动Chronovita课堂.cmd”。
 
-## 技术栈
+首次启动创建管理员密码；包内不附带测试账号或密码。默认仅本机访问 `http://127.0.0.1:8000`。局域网开放、停止及数据保留见[课堂使用说明](distribution/classroom/课堂使用说明.txt)。
 
-- 前端：React 18 + Vite 8 + TypeScript 5 + Ant Design 5 + React Router 7 + React Flow 11 + Zustand
-- 后端：Python 3.11-3.13 + FastAPI + Pydantic v2 + SQLAlchemy 2.0 + SQLite（本地）/ PostgreSQL（生产边界）
-- LLM：DeepSeek v4-flash（saga 流式叙事） + DeepSeek v4-pro（「问」跨时对话，准确度优先） + mock 回落
-- 包管理：npm + package lock / Node.js LTS / Python venv
-- 设计：Pencil（`assets/design/*.pen`）
-- 基础设施：Docker Compose（中长期接入 Postgres / Redis / 向量库）
+包内包含预构建网页、离线 Python 依赖、本地 BGE 检索模型及已有媒体。**BGE 是检索模型，不是生成式“小大模型”**。在线 API 可选；无 API 不影响课文阅读、本地笔记和既有确定性功能。
 
-## 仓库结构
+## 开发者：本地运行
 
-```
-.
-├── apps/
-│   ├── web/                  前端平台壳（5 模块 + lesson 四层面板）
-│   └── api/                  后端 FastAPI（5 路由 + practice 下 saga/sandbox/canvas/ask）
-├── packages/
-│   └── shared/               前后端共享类型与常量
-├── services/
-│   ├── persistence/          SQLAlchemy + SQLite 持久化层
-│   ├── courses/              14 朝代 48 节课程数据集
-│   ├── saga/                 互动剧本引擎 + 48 个模板
-│   ├── sandbox/              决策推演通用引擎（商鞅变法首发）
-│   └── llm/                  DeepSeek + mock 适配层
-├── infra/                    docker-compose 与基础设施
-├── content/                  课程草稿、封存件、运行制品与发布清单
-├── scripts/                  一键启动、维护、迁移、校验与发行打包
-├── distribution/             教师发行包说明等受控发行源
-├── assets/design/            Pencil 设计稿（.pen）
-├── muban/                    可复用页面 / 区块模板
-├── docs/                     项目总纲、开发者文档、规划、历史、内容规范与 ADR
-├── UI/                       美术绘制的 UI 视觉稿
-└── todo/                     立项申报书与初始引导
-```
+在应用仓库根目录执行，首次先准备环境：
 
-> 课程级业务（看练问创各自的具体引擎、剧本、人物语料）已随朝代详表完成于 `services/courses/`、`services/saga/`、`services/sandbox/`中。
-
-## 视觉规范
-
-- 主题色：深海军蓝 `#0B1E3A` 底 / 米白 `#F5E6CC` 文 / 金色 `#D4A95C` 强调
-- 字体：标题"霞鹜文楷 / 思源宋体"，正文"思源黑体"
-- 风格：古典中式 + 现代教育平台，禁止中英混排，禁止花哨配色
-
-## 快速启动
-
-### 教师一键启动
-
-Windows 教师从 [v0.9.38 Release](https://github.com/falling-feather/Chronovita/releases/tag/v0.9.38) 下载 `Chronovita-Teacher-Editor-v0.9.38-windows.zip` 并完整解压后，双击根目录的 `点我一键启动（部署）.cmd`。首次运行会自动创建本地环境、按完整哈希锁安装后端依赖、按 package lock 安装前端依赖、完成生产构建，并以生产预览服务打开 `http://127.0.0.1:5173/admin/content`；依赖安装完成后，本地编辑与预览不依赖 Google Fonts 或 GitHub。发行包不携带数据库、草稿、缓存、日志或 GitHub 凭据，ZIP 的 SHA-256 为 `e0879b2dd74d4f672feb39d6416b8bf16af2e233caa7cf2afbc02777b329a266`。当前教师包要求电脑预先安装 Python 3.11-3.13 和 Node.js 20.19+ 或 22.12+ LTS。
-
-课程历史投稿凭据由项目管理员单独发放，教师运行 `scripts/configure-content-history.cmd` 后以 Windows DPAPI 加密保存在本机；普通编辑、保存和 ZIP 导出不要求配置凭据。当前 `class` 源码可双击根目录的 `点我一键关闭.cmd` 停止服务；原始 V0.9.38 教师包只需把这一个文件放入解压根目录即可获得同样入口，不必替换草稿、依赖或配置。未安装热更新时仍可使用 `scripts/stop-teacher-editor.cmd`。完整说明见 [课程内容历史库运维指南](docs/07-课程内容历史库运维指南.md)。
-
-### 先决条件
-- Node.js 20.19+ 或 22.12+ LTS
-- Python 3.11、3.12 或 3.13
-- 项目根虚拟环境 `.venv/`，后端以 PowerShell `& ".\.venv\Scripts\python.exe" -m uvicorn ...` 启动
-
-### 启动后端
 ```powershell
-# 仓库根
-Python -m venv .venv
-& ".\.venv\Scripts\python.exe" -m pip install -r apps/api/requirements.txt
-cd apps/api
-& "..\..\.venv\Scripts\python.exe" -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+py -3.11 -m venv .venv
+./.venv/Scripts/python.exe -m pip install -r apps/api/requirements.txt
+npm --prefix apps/web ci
+./.venv/Scripts/python.exe scripts/initialize_classroom.py --database data/chronovita.db
+./scripts/classroom-review.ps1 -LexicalOnly
 ```
-后端文档：`http://127.0.0.1:8000/docs`
 
-> 访问真 DeepSeek：复制 `apps/api/.env.example` 为 `apps/api/.env`，填入 `CHRONO_DEEPSEEK_API_KEY`，并将 `CHRONO_LLM_PROVIDER=deepseek`；`.env` 已在 `.gitignore`。
+初始化仅在空库提示设置管理员密码，已有账号不会重置；已有课堂库请显式使用相同的 `-DatabasePath`，不要误连另一份空库。访问 `http://127.0.0.1:5174`，API 为 `http://127.0.0.1:8010`。`-LexicalOnly` 明确选择不依赖向量模型的词法模式；使用混合检索前按[手册](doc/01-开发者文档.md#5-入口与运行流程)准备模型。停止运行 `./scripts/stop-classroom-review.ps1`。
 
-### 启动前端
-```powershell
-cd apps/web
-npm ci
-npm run dev
-```
-前端：`http://127.0.0.1:5173`
+## 技术与发行边界
 
-## 提交规范
+React / TypeScript / Vite 构建界面；FastAPI 提供 API；SQLite 保存账号与学习数据；JSON 文件保存课文与可追溯发布制品；《史记》运行时以带 SHA-256 的压缩资料包按篇读取。问答采用本地规则与答案槽优先、证据充分的复杂问题按需调用 API。
 
-- 提交信息：`V大.中.小 GROUP type(scope): 描述（TASK-ID）`，例如 `V0.9.31 FE feat(content): 接通教师课程历史发布界面（FE-004）`
-- 中版本递增时同步创建 `backup/v0.X.0` 分支作为历史可查点
-- 详见 [项目总纲第 6 节](docs/00-项目总纲.md#6-版本与任务规则) 与 [项目规划](docs/02-项目规划与设计总纲.md)
+GitHub Pages 是另一种**只读前端展示**，不提供账号、问答、推演或保存；推送源码、发布 ZIP 不等于更新 Pages。代码、数据和维护入口见开发者手册。
 
-## 许可
-
-待定。在确定许可前，仓库内容仅供 Chronovita 团队内部研发使用。
+许可证尚未统一确定；第三方依赖与模型按随包许可清单使用。不要把项目内素材默认视为可任意再分发。

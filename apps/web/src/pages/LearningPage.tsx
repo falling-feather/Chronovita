@@ -1,172 +1,300 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Avatar, Button, Progress, Row, Col, Tag, Empty } from 'antd';
-import { UserOutlined, PlusOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { api, type ProgressItem } from '../utils/api';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Button, Drawer, Empty, Spin, Tag } from 'antd';
+import {
+  ArrowRightOutlined,
+  BookOutlined,
+  ClockCircleOutlined,
+  FileDoneOutlined,
+} from '@ant-design/icons';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { readingComplete, readingLabel, resumeLayer } from '../features/classroom/readingProgress';
+import { useAuth } from '../auth/AuthContext';
+import CourseCoverPicture from '../features/courses/CourseCoverPicture';
+import { listPrivateLearning, type PrivateLearningSummary } from '../features/classroom/learningLedger';
+import {
+  api,
+  type LearningSubmissionDetail,
+  type LearningSubmissionListItem,
+  type ProgressItem,
+} from '../utils/api';
+import './LearningPage.css';
 
-const tabs = ['进行中', '我的收藏', '学习记录', '我的笔记'];
+const LearningSubmissionViewer = lazy(
+  () => import('../features/classroom/LearningSubmissionViewer'),
+);
+
 const LAYER_LABEL: Record<string, string> = {
-  watch: '看', practice: '练', ask: '问', create: '创',
+  watch: '踏勘', practice: '抉择', ask: '召见', create: '书案',
 };
 
 function formatTime(iso: string): string {
-  try {
-    const d = new Date(iso);
-    const now = Date.now();
-    const diff = (now - d.getTime()) / 1000;
-    if (diff < 60) return '刚刚';
-    if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
-    if (diff < 86400 * 7) return `${Math.floor(diff / 86400)} 天前`;
-    return d.toLocaleDateString('zh-CN');
-  } catch { return iso; }
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const diff = (Date.now() - date.getTime()) / 1000;
+  if (diff < 60) return '刚刚';
+  if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))} 分钟前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
+  if (diff < 86400 * 7) return `${Math.floor(diff / 86400)} 天前`;
+  return date.toLocaleDateString('zh-CN');
 }
 
-function progressPct(item: ProgressItem): number {
-  const arr = [item.layers.watch, item.layers.practice, item.layers.ask, item.layers.create];
-  return Math.round(arr.filter(Boolean).length * 25);
+function feedbackLabel(item: LearningSubmissionListItem): { label: string; color: string } {
+  const status = item.latest_feedback?.completion_status;
+  if (status === 'completed') return { label: '教师确认完成', color: 'green' };
+  if (status === 'changes_requested') return { label: '教师建议修改', color: 'volcano' };
+  if (status === 'in_review') return { label: '教师已查看', color: 'gold' };
+  return { label: '等待教师查看', color: 'default' };
+}
+
+function SpaceCounts({ record }: { record: PrivateLearningSummary }) {
+  return <p className="chrono-learning-private-counts">
+    <span>{record.note_count} 张便签</span><span>{record.stroke_count} 条笔迹</span>
+    <span>{record.quote_count} 次史料摘录留痕</span><span>{record.decision_count} 次抉择记录</span>
+    <span>{record.question_count} 次提问记录</span>
+  </p>;
 }
 
 export default function LearningPage() {
+  const auth = useAuth();
   const nav = useNavigate();
-  const [tab, setTab] = useState(0);
+  const [params, setParams] = useSearchParams();
+  const tab = ['submissions', 'private'].includes(params.get('tab') || '') ? params.get('tab')! : 'progress';
+  const setTab = (value: string) => setParams(value === 'progress' ? {} : { tab: value }, { replace: true });
+  const [totalLessons, setTotalLessons] = useState(0);
+  const [retry, setRetry] = useState(0);
   const [items, setItems] = useState<ProgressItem[]>([]);
+  const [submissions, setSubmissions] = useState<LearningSubmissionListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detail, setDetail] = useState<LearningSubmissionDetail | null>(null);
+  const detailRequest = useRef(0);
+  const owner = auth.principal?.user_id ?? auth.mode;
+  const [loadedOwner, setLoadedOwner] = useState<string | null>(null);
+  const [privateWork, setPrivateWork] = useState<PrivateLearningSummary[]>([]);
+  const [privateError, setPrivateError] = useState('');
+  const [privateLoading, setPrivateLoading] = useState(true);
+  const [privatePartial, setPrivatePartial] = useState(false);
+  const [privateOwner, setPrivateOwner] = useState<string | null>(null);
+  const hasCurrentData = loadedOwner !== null && loadedOwner === owner;
 
   useEffect(() => {
-    api.progressList()
-      .then((r) => setItems(r.items || []))
-      .finally(() => setLoading(false));
-  }, []);
+    let current = true;
+    setPrivateWork([]); setPrivateOwner(null); setPrivateError(''); setPrivateLoading(true); setPrivatePartial(false);
+    if (!auth.principal?.user_id) { setPrivateLoading(false); return; }
+    void listPrivateLearning(auth.principal.user_id).then((result) => {
+      if (current) { setPrivateWork(result.items); setPrivateOwner(owner); setPrivatePartial(result.partial); }
+    }).catch((failure) => { if (current) setPrivateError(failure instanceof Error ? failure.message : '本机学习资料暂不可读取'); })
+      .finally(() => { if (current) setPrivateLoading(false); });
+    return () => { current = false; };
+  }, [owner, retry]);
 
-  const stats = useMemo(() => {
-    const total = items.length;
-    const done = items.filter((i) => progressPct(i) === 100).length;
-    const inProgress = total - done;
-    return [
-      { v: String(inProgress), l: '进行中' },
-      { v: String(done), l: '已完成' },
-      { v: '0', l: '收藏' },
-      { v: '—', l: '本周时长' },
-    ];
-  }, [items]);
+  useEffect(() => {
+    detailRequest.current += 1;
+    setItems([]); setSubmissions([]); setDetail(null); setDetailOpen(false);
+    setLoadedOwner(null);
+    return () => { detailRequest.current += 1; };
+  }, [owner]);
 
-  const continueItem = items[0];
-  const showItems = items.slice(0, 6);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError('');
+    Promise.all([
+      api.progressList(),
+      auth.mode === 'accounts'
+        ? api.learningSubmissions({ limit: 100 })
+        : Promise.resolve({ items: [] as LearningSubmissionListItem[] }),
+    ]).then(([progress, submitted]) => {
+      if (!active) return;
+      setItems(progress.items || []);
+      setTotalLessons(progress.total_lessons ?? 0);
+      setSubmissions(submitted.items || []);
+      setLoadedOwner(owner);
+    }).catch((loadError) => {
+      if (active) setError(loadError instanceof TypeError ? '网络连接失败，学习记录暂不可用，请重试。'
+        : loadError instanceof Error ? loadError.message.replace(/^\d{3}\s+/, '') : '学习记录载入失败');
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [auth.mode, owner, retry]);
+
+  const currentItems = useMemo(
+    () => items.filter((item) => item.reading_status !== 'unavailable'),
+    [items],
+  );
+  const archivedItems = useMemo(
+    () => items.filter((item) => item.reading_status === 'unavailable'),
+    [items],
+  );
+  const stats = useMemo(() => ({
+    lessons: currentItems.length,
+    completedLessons: items.filter(readingComplete).length,
+    submissions: submissions.length,
+    feedback: submissions.filter((item) => item.latest_feedback).length,
+  }), [currentItems.length, items, submissions]);
+
+  const openDetail = async (submissionId: string) => {
+    const requestId = ++detailRequest.current;
+    setDetail(null);
+    setDetailOpen(true);
+    setDetailLoading(true);
+    try {
+      const result = await api.learningSubmission(submissionId);
+      if (detailRequest.current === requestId) setDetail(result);
+    } catch (loadError) {
+      if (detailRequest.current === requestId) {
+        setError(loadError instanceof Error ? loadError.message.replace(/^\d{3}\s+/, '') : '成果版本载入失败');
+      }
+    } finally {
+      if (detailRequest.current === requestId) setDetailLoading(false);
+    }
+  };
 
   return (
-    <div style={{ maxWidth: 1392, margin: '0 auto' }}>
-      <div className="chrono-card-warm" style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Avatar size={56} icon={<UserOutlined />} style={{ background: 'var(--accent-gold)' }} />
-          <div>
-            <div className="chrono-title" style={{ fontSize: 22 }}>你好，未命名学徒</div>
-            <div style={{ color: 'var(--text-mute)', fontSize: 12, marginTop: 4 }}>
-              {continueItem
-                ? `上次学到：${continueItem.title ?? continueItem.lesson_id} · ${LAYER_LABEL[continueItem.last_layer] ?? continueItem.last_layer} 层`
-                : '尚未开始任何课程，去课程中心挑一节吧'}
-            </div>
-          </div>
+    <div className="chrono-learning-page">
+      <header className="chrono-learning-hero">
+        <div className="chrono-learning-hero-mark" aria-hidden="true"><span>学</span></div>
+        <div className="chrono-learning-hero-copy">
+          <p>PERSONAL · HISTORY DESK</p>
+          <h1>{auth.principal?.display_name ?? '本地学徒'}的学习长卷</h1>
+          <span>阅读统计只记录本人确认的当前课文，不代表测验掌握度；互动完成标记仅是历史活动记录。</span>
         </div>
-        <div style={{ display: 'flex', gap: 32 }}>
-          {stats.map((s) => (
-            <div key={s.l} style={{ textAlign: 'center' }}>
-              <div className="chrono-title" style={{ fontSize: 26, color: 'var(--accent-gold)' }}>{s.v}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-mute)' }}>{s.l}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+        <dl>
+          <div><dt>{hasCurrentData ? stats.lessons : '—'}</dt><dd>有活动记录的课时 · 含旧记录</dd></div>
+          <div><dt>{hasCurrentData ? `${stats.completedLessons}/${totalLessons}` : '—'}</dt><dd>本人确认已读当前课文</dd></div>
+          <div><dt>{hasCurrentData ? stats.submissions : '—'}</dt><dd>已提交版本 · 最近 100 条</dd></div>
+          <div><dt>{hasCurrentData ? stats.feedback : '—'}</dt><dd>其中有教师反馈</dd></div>
+        </dl>
+      </header>
 
-      <div style={{ display: 'flex', gap: 24, borderBottom: '1px solid var(--border-soft)', marginBottom: 20 }}>
-        {tabs.map((t, i) => (
-          <div key={t}
-               onClick={() => setTab(i)}
-               style={{
-                 padding: '10px 0',
-                 borderBottom: i === tab ? '2px solid var(--accent-gold)' : '2px solid transparent',
-                 color: i === tab ? 'var(--accent-gold)' : 'var(--text-mute)',
-                 fontWeight: i === tab ? 600 : 400,
-                 cursor: 'pointer',
-                 fontSize: 14,
-               }}>{t}</div>
-        ))}
-      </div>
+      {error ? <Alert type="warning" showIcon message={error} action={<Button onClick={() => setRetry((value) => value + 1)}>重试</Button>} /> : null}
 
-      {tab === 0 && (
-        <>
-          {loading ? (
-            <div className="chrono-empty">加载中…</div>
-          ) : showItems.length === 0 ? (
-            <Empty description={<span style={{ color: 'var(--text-mute)' }}>还没有学习记录，去开启第一节课吧</span>}>
-              <Button type="primary" onClick={() => nav('/courses')}>去课程中心</Button>
-            </Empty>
-          ) : (
-            <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
-              {showItems.map((it) => {
-                const pct = progressPct(it);
-                return (
-                  <Col span={12} key={it.lesson_id}>
-                    <div className="chrono-card" style={{ padding: 0, overflow: 'hidden' }}>
-                      <div style={{ display: 'flex' }}>
-                        <div style={{ width: 160, background: 'var(--accent-bronze)' }} />
-                        <div style={{ padding: 20, flex: 1 }}>
-                          <div className="chrono-title" style={{ fontSize: 16 }}>
-                            {it.title ?? it.lesson_id}
-                          </div>
-                          <div style={{ color: 'var(--text-mute)', fontSize: 12, margin: '6px 0 12px', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                            <span>上次：{LAYER_LABEL[it.last_layer] ?? it.last_layer} 层</span>
-                            <span>·</span>
-                            <span>{formatTime(it.updated_at)}</span>
-                            <Tag color={pct === 100 ? 'gold' : 'default'} style={{ marginLeft: 4 }}>
-                              {(['watch', 'practice', 'ask', 'create'] as const).map(
-                                (k) => (it.layers[k] ? LAYER_LABEL[k] : '·')
-                              ).join('')}
-                            </Tag>
-                          </div>
-                          <Progress percent={pct} strokeColor="var(--accent-gold)" showInfo={false} />
-                          <div style={{ fontSize: 11, color: 'var(--text-mute)', margin: '4px 0 14px' }}>
-                            已完成 {pct}%（按四层任意进入计）
-                          </div>
-                          <Button type="primary" onClick={() => {
-                            if (it.course_id) {
-                              nav(`/courses/${it.course_id}/lessons/${it.lesson_id}?layer=${it.last_layer}`);
-                            } else {
-                              nav('/courses');
-                            }
-                          }}>
-                            继续学习
-                          </Button>
-                        </div>
-                      </div>
+      <nav className="chrono-learning-tabs" aria-label="学习记录分类">
+        <button type="button" className={tab === 'progress' ? 'active' : ''} onClick={() => setTab('progress')}>
+          <BookOutlined /> 学习进程 <span>{currentItems.length}</span>
+        </button>
+        <button type="button" className={tab === 'submissions' ? 'active' : ''} onClick={() => setTab('submissions')}>
+          <FileDoneOutlined /> 已提交成果 <span>{submissions.length}</span>
+        </button>
+        {auth.mode === 'accounts' ? <button type="button" className={tab === 'private' ? 'active' : ''} onClick={() => setTab('private')}>
+          <BookOutlined /> 本机私人书案 <span>{privateOwner === owner ? privateWork.length : '—'}</span>
+        </button> : null}
+      </nav>
+
+      {tab === 'private' ? <section aria-label="本机私人学习资料">
+        <p>这里只读取当前账号在本浏览器保存的书案与最近 2000 条留痕，不会上传教师；换电脑后不会自动出现。旧笔记不一定与当前课文一致。</p>
+        {privatePartial ? <Alert type="warning" message="主存储暂不可用，以下仅为可恢复副本，不是全部记录。" /> : null}
+        {privateError ? <Alert type="warning" message={privateError} action={<Button onClick={() => setRetry((value) => value + 1)}>重读本机记录</Button>} /> : null}
+        {privateLoading ? <Spin /> : privateOwner !== owner ? null : privateWork.length ? <div className="chrono-learning-private-grid">
+          {privateWork.map((record) => <article key={record.course_id + '/' + record.lesson_id}>
+            <Tag>本机私人资料</Tag><h2>{record.title}</h2><p>{record.body_excerpt || '本课留下了学习活动记录。'}</p>
+            <SpaceCounts record={record} />
+            <ol>{record.recent_events.map((event) => <li key={event.event_id}><strong>{event.title}</strong><p>{event.summary}</p></li>)}</ol>
+            <footer><time>{formatTime(record.updated_at)}</time><Button onClick={() => nav('/courses/' + encodeURIComponent(record.course_id) + '/lessons/' + encodeURIComponent(record.lesson_id) + '?layer=create')}>回到书案</Button></footer>
+          </article>)}
+        </div> : <Empty description="本浏览器还没有当前账号的私人书案与学习留痕" />}
+      </section> : loading || (loadedOwner !== null && !hasCurrentData) ? (
+        <div className="chrono-learning-loading"><Spin /><span>正在展开学习长卷…</span></div>
+      ) : !hasCurrentData && error ? <Empty description="学习记录暂不可用，恢复连接后可重试。" /> : tab === 'progress' ? (
+        currentItems.length > 0 ? (
+          <>
+          <section className="chrono-learning-progress-grid">
+            {currentItems.map((item) => {
+              return (
+                <article key={item.lesson_id}>
+                  <CourseCoverPicture
+                    courseId={item.course_id || 'C-prequin-state'}
+                    width={720}
+                    fallbackColor="#69553e"
+                  />
+                  <div>
+                    <p>{item.lesson_id} · 上次进入{LAYER_LABEL[item.last_layer] ?? item.last_layer}</p>
+                    <h2>{item.title ?? item.lesson_id}</h2>
+                    <div className="chrono-learning-stage-marks">
+                      <span>{readingLabel(item)}</span>
+                      {(['practice', 'ask', 'create'] as const).map((layer) => (
+                        <span key={layer}>
+                          <ClockCircleOutlined />
+                          {LAYER_LABEL[layer]}{item.layers[layer] ? '有历史完成标记' : '未记录完成'}
+                        </span>
+                      ))}
                     </div>
-                  </Col>
-                );
-              })}
-              <Col span={12}>
-                <div className="chrono-empty"
-                     onClick={() => nav('/courses')}
-                     style={{
-                       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                       minHeight: 200, border: '1px dashed var(--border-soft)', cursor: 'pointer',
-                     }}>
-                  <PlusOutlined style={{ fontSize: 28, color: 'var(--text-disabled)', marginBottom: 8 }} />
-                  <div style={{ color: 'var(--text-mute)' }}>添加新课程</div>
-                </div>
-              </Col>
-            </Row>
-          )}
-        </>
+                    <footer>
+                      <time>{formatTime(item.updated_at)}</time>
+                      <Button type="link" disabled={item.reading_status === 'unavailable'} onClick={() => item.course_id
+                        ? nav(`/courses/${item.course_id}/lessons/${item.lesson_id}?layer=${resumeLayer(item)}`)
+                        : nav('/courses')}
+                      >继续学习 <ArrowRightOutlined /></Button>
+                    </footer>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+          {archivedItems.length > 0 ? (
+            <Alert
+              type="info"
+              showIcon
+              message={`另有 ${archivedItems.length} 条历史课号记录已撤下`}
+              description="这些记录保留用于审计，不计入当前课程进度，也不会作为继续学习入口。"
+            />
+          ) : null}
+          </>
+        ) : (
+          <Empty description={archivedItems.length > 0 ? '当前课表暂无活动记录（历史课号已撤下）' : '还没有学习记录'}>
+            <Button type="primary" onClick={() => nav('/courses')}>选择第一门课程</Button>
+          </Empty>
+        )
+      ) : submissions.length > 0 ? (
+        <section className="chrono-learning-submission-grid">
+          {submissions.map((item) => {
+            const feedback = feedbackLabel(item);
+            return (
+              <article key={item.submission_id}>
+                <header>
+                  <span>第 {item.version} 版</span>
+                  <Tag color={feedback.color}>{feedback.label}</Tag>
+                </header>
+                <h2>{item.title}</h2>
+                <p>{item.lesson_title ?? `已撤下课时 ${item.lesson_id}`}</p>
+                <blockquote>{item.body_excerpt || '本版主要由便签、笔迹或导图构成。'}</blockquote>
+                <dl>
+                  <div><dt>{item.sticky_note_count}</dt><dd>便签</dd></div>
+                  <div><dt>{item.stroke_count}</dt><dd>笔迹</dd></div>
+                  <div><dt>{item.canvas_node_count}</dt><dd>节点</dd></div>
+                  <div><dt>{item.event_count}</dt><dd>轨迹</dd></div>
+                </dl>
+                <footer>
+                  <time>{new Date(item.submitted_at).toLocaleString('zh-CN')}</time>
+                  <Button type="primary" ghost onClick={() => void openDetail(item.submission_id)}>查看版本</Button>
+                </footer>
+              </article>
+            );
+          })}
+        </section>
+      ) : (
+        <Empty description={auth.mode === 'accounts' ? '还没有明确提交的学习成果' : '兼容模式不能提交版本化学习成果'}>
+          <Button type="primary" onClick={() => nav('/courses')}>进入课程书案</Button>
+        </Empty>
       )}
 
-      {tab !== 0 && (
-        <div className="chrono-empty">
-          <div style={{ color: 'var(--text-disabled)', marginBottom: 4 }}>该子页将在 v0.9.x 接入</div>
-          <div style={{ fontSize: 12 }}>详见 docs/Planning.md M6「我的学习面板深化」</div>
-        </div>
-      )}
+      <Drawer
+        title="学习成果版本"
+        width="min(980px, 96vw)"
+        open={detailOpen}
+        onClose={() => { detailRequest.current += 1; setDetailOpen(false); }}
+      >
+        {detailLoading ? (
+          <div className="chrono-learning-loading"><Spin /><span>正在展开成果版本…</span></div>
+        ) : detail ? (
+          <Suspense fallback={<div className="chrono-learning-loading"><Spin /></div>}>
+            <LearningSubmissionViewer detail={detail} showStudent={false} />
+          </Suspense>
+        ) : <Empty description="成果版本暂不可用" />}
+      </Drawer>
     </div>
   );
 }

@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-729ddfedc8f84f13bcfce02d",
+  "word": "二圣临朝",
+  "pinyin": "èr shèng lín cháo",
+  "gloss": "唐高宗与武则天共同处理朝政的政治局面",
+  "era": "隋唐",
+  "category": "事件",
+  "examples": [
+    "本课结合“二圣临朝”说明唐高宗与武则天共同处理朝政的政治局面。",
+    "讲解“二圣临朝”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "武则天"
+  ],
+  "related_lessons": [
+    "L802"
+  ],
+  "source_refs": [
+    {
+      "title": "L802《武周与开元盛世》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L802.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l802-01.json\", \"member_sha256\": \"8a494cfef6f2376f965088a7672bf3fff65c34898c7de2b0ff6a37582b4f724c\", \"source_id\": \"keyword-l802-01\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.393317Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

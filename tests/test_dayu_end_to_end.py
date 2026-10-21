@@ -37,6 +37,7 @@ class DayuEndToEndTests(unittest.TestCase):
             "admin_actor": settings.admin_actor,
             "llm_provider": settings.llm_provider,
             "deepseek_api_key": settings.deepseek_api_key,
+            "auth_mode": settings.auth_mode,
         }
         settings.content_root = str(self.content_root)
         settings.game_catalog_path = "scenarios/catalog.v1.json"
@@ -46,6 +47,7 @@ class DayuEndToEndTests(unittest.TestCase):
         settings.admin_actor = "dayu-e2e-reviewer"
         settings.llm_provider = "mock"
         settings.deepseek_api_key = ""
+        settings.auth_mode = "legacy-local"
         self.headers = {"X-Admin-Token": settings.admin_token}
         persistence.close_engine()
         shutdown_game_runtime()
@@ -89,6 +91,8 @@ class DayuEndToEndTests(unittest.TestCase):
                 )
             )["release"]
             self.assertEqual(release["schema_version"], "course-release/v2")
+            from tests.release_fixture import install_teacher_text
+            install_teacher_text("dayu-e2e")
 
             lesson = self._response_json(
                 first_client.get("/api/v1/courses/C-dayu-e2e/lessons/dayu-e2e")

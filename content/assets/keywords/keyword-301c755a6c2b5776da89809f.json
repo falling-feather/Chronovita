@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-301c755a6c2b5776da89809f",
+  "word": "致良知",
+  "pinyin": "zhì liáng zhī",
+  "gloss": "扩充内心辨别善恶的能力并在日常行动中落实的修养方法",
+  "era": "明清",
+  "category": "思想",
+  "examples": [
+    "本课结合“致良知”说明扩充内心辨别善恶的能力并在日常行动中落实的修养方法。",
+    "讲解“致良知”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "王阳明"
+  ],
+  "related_lessons": [
+    "L1401"
+  ],
+  "source_refs": [
+    {
+      "title": "L1401《王阳明心学》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1401.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1401-05.json\", \"member_sha256\": \"1e4be07ddaaf70e03dfa81c8231d6e71ed3c0109335137bd1faabd4a848331f7\", \"source_id\": \"keyword-l1401-05\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.597094Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

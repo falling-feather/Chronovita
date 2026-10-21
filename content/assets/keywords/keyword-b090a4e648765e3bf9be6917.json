@@ -1,0 +1,48 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-b090a4e648765e3bf9be6917",
+  "word": "礼制",
+  "pinyin": "lǐ zhì",
+  "gloss": "以礼仪规范身份等级和社会秩序的制度",
+  "era": "先秦",
+  "category": "制度",
+  "examples": [
+    "本课结合“礼制”说明以礼仪规范身份等级和社会秩序的制度。",
+    "讲解“礼制”时，应联系本课叙事理解它在先秦历史中的作用。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L103"
+  ],
+  "source_refs": [
+    {
+      "title": "琉璃河遗址：西周分封制的力证",
+      "source": "北京市房山区人民政府",
+      "url_or_path": "https://www.bjfsh.gov.cn/zhxw/fsdt/202507/t20250725_40091097_fs.shtml",
+      "citation_note": "介绍琉璃河遗址、燕国城址和青铜器铭文所反映的西周分封",
+      "reliability": "pending"
+    },
+    {
+      "title": "周代礼制发展史",
+      "source": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2024/0509/c373410-40232165.html",
+      "citation_note": "介绍周代礼制、宗法关系和政治秩序",
+      "reliability": "pending"
+    },
+    {
+      "title": "中国古代选官标准和方式的演变",
+      "source": "中华人民共和国司法部",
+      "url_or_path": "https://legalinfo.moj.gov.cn/zhfxfzwh/fzwhfsgs/202303/t20230308_473682.html",
+      "citation_note": "介绍西周分封体系和贵族等级关系",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l103-08.json\", \"member_sha256\": \"d0db46a3a26d7e7f8438f2774fc72cb029a776a3c56f481c5b2ed1d5b369df44\", \"source_id\": \"keyword-l103-08\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l103-08.json\", \"member_sha256\": \"d0db46a3a26d7e7f8438f2774fc72cb029a776a3c56f481c5b2ed1d5b369df44\", \"source_id\": \"keyword-l103-08\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T13:36:29.240584Z",
+  "updated_at": "2026-09-16T09:49:52.938971Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

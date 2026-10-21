@@ -1,0 +1,360 @@
+{
+  "schema": "chronovita-companion-portrait-assets/v1",
+  "processor": {
+    "sharp": "0.35.3",
+    "vips": "8.18.3"
+  },
+  "source_policy": "Original imagegen PNG sprite sheets remain outside Git. Generated IDs, source hashes, crop cells, post-processing and final hashes are recorded here.",
+  "post_processing": "Detect the two neutral checkerboard tones, derive a feathered alpha matte from colour distance, crop each 3x2 cell, and fit to a transparent 4:5 canvas.",
+  "lessons": {
+    "L101": {
+      "generated_id": "exec-c9025302-ed91-4e2b-b4f3-1c438859dc21",
+      "source": {
+        "width": 1536,
+        "height": 1024,
+        "bytes": 1693820,
+        "sha256": "cf20ecba345c8b5d4087a46c38dbdb6c6a14a5ea99e13bd96e544d12b1b3421c",
+        "detected_background_tones": [
+          247,
+          254
+        ]
+      },
+      "portraits": {
+        "yu": {
+          "name": "禹",
+          "role": "治水共同体的协调者",
+          "source_cell": 0,
+          "source_bounds": {
+            "left": 164,
+            "top": 10,
+            "width": 278,
+            "height": 466
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L101-yu-256.webp",
+              "bytes": 23396,
+              "sha256": "f72eb6fc2aa7f020b73686a8d23e8a650bd444448c2cf9bc7541cd58ba143c46"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L101-yu-512.webp",
+              "bytes": 61716,
+              "sha256": "bd04d918c64bfaf1560a251785bae04056a5d49e5bb6a48a9ea602c1e245a988"
+            }
+          ]
+        },
+        "gun": {
+          "name": "鲧",
+          "role": "前期治水主事者",
+          "source_cell": 1,
+          "source_bounds": {
+            "left": 123,
+            "top": 15,
+            "width": 277,
+            "height": 461
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L101-gun-256.webp",
+              "bytes": 23920,
+              "sha256": "2317d073ff5fd32e3642f4c293a446d9a290ae91bb65f0eaf9411c483faffb7a"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L101-gun-512.webp",
+              "bytes": 68326,
+              "sha256": "2426fa211c905f3b04f8f7a3b0b18606cdcbe15048c6bd9925fa9ab8f868c5f1"
+            }
+          ]
+        },
+        "yi": {
+          "name": "益（伯益）",
+          "role": "协作与观察者",
+          "source_cell": 2,
+          "source_bounds": {
+            "left": 55,
+            "top": 21,
+            "width": 286,
+            "height": 461
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L101-yi-256.webp",
+              "bytes": 19806,
+              "sha256": "f2ee60bd221e66ac623f3d50acd23e2427117a59ac3402dc79f1130307df6bbf"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L101-yi-512.webp",
+              "bytes": 53166,
+              "sha256": "c01b74c6836ab6ab3a4ea79300b95a00bfb9eaf0546a54c55cbbf8993bc16306"
+            }
+          ]
+        },
+        "settlement-representative": {
+          "name": "聚落代表",
+          "role": "受洪水影响的聚落意见群体",
+          "source_cell": 3,
+          "source_bounds": {
+            "left": 170,
+            "top": 0,
+            "width": 287,
+            "height": 472
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L101-settlement-representative-256.webp",
+              "bytes": 17884,
+              "sha256": "37711ba5ea34e8bc63ac18e1b49fdf450e9fc23ec056627a22be24581d52c417"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L101-settlement-representative-512.webp",
+              "bytes": 49858,
+              "sha256": "6a72a56463e41a66485cdf610ae3931a4f8b39b6d9460cce71fadb119ede7222"
+            }
+          ]
+        },
+        "flood-worker": {
+          "name": "治水劳作者",
+          "role": "承担勘察、开渠与运输的劳动群体",
+          "source_cell": 4,
+          "source_bounds": {
+            "left": 93,
+            "top": 0,
+            "width": 304,
+            "height": 474
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L101-flood-worker-256.webp",
+              "bytes": 20422,
+              "sha256": "04725d25edc79d65117942ae9e811e4fed78033b4382f8e3ba17fd1ff5c5348c"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L101-flood-worker-512.webp",
+              "bytes": 56436,
+              "sha256": "0a5e338b24cc6d6aebd72b8a1aab670203a0706b89345e51e4731cf36f047189"
+            }
+          ]
+        }
+      }
+    },
+    "L103": {
+      "generated_id": "exec-df0f9257-e25e-4e53-a293-7dc9125450ee",
+      "source": {
+        "width": 1536,
+        "height": 1024,
+        "bytes": 1982694,
+        "sha256": "9f7ad915cd6bae5fcd69f65af8ac6dbe64c46904149194765470c5b2d013be02",
+        "detected_background_tones": [
+          241,
+          254
+        ]
+      },
+      "portraits": {
+        "shang-yang": {
+          "name": "商鞅",
+          "role": "制度改革的主张者与执行者",
+          "source_cell": 0,
+          "source_bounds": {
+            "left": 180,
+            "top": 8,
+            "width": 272,
+            "height": 504
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L103-shang-yang-256.webp",
+              "bytes": 17534,
+              "sha256": "14519d561e4104ca58636fb90159a9fd138ce4c71a100bf0cdfbf028b6ddf442"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L103-shang-yang-512.webp",
+              "bytes": 54014,
+              "sha256": "016bb3c7549427a344607de70160ff0a11c709578fb8351ed9ad43e61490b8bc"
+            }
+          ]
+        },
+        "duke-xiao": {
+          "name": "秦孝公",
+          "role": "改革的政治支持者",
+          "source_cell": 1,
+          "source_bounds": {
+            "left": 120,
+            "top": 2,
+            "width": 259,
+            "height": 510
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L103-duke-xiao-256.webp",
+              "bytes": 17530,
+              "sha256": "f960f23a135d3139d6c7af7ed614c683547f3f707544feaa54fa251a0d3fda2b"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L103-duke-xiao-512.webp",
+              "bytes": 54070,
+              "sha256": "3c86e17dfac009e2b0a9089188d54579877f81f61e4412279e16797f7aebe1f7"
+            }
+          ]
+        },
+        "hereditary-aristocrat": {
+          "name": "旧贵族代表",
+          "role": "既有身份与特权的维护者",
+          "source_cell": 2,
+          "source_bounds": {
+            "left": 46,
+            "top": 11,
+            "width": 251,
+            "height": 501
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L103-hereditary-aristocrat-256.webp",
+              "bytes": 18492,
+              "sha256": "ae2a63c11f99d6f846ad9ec22c39959fc541e4c605b6c2fc10b5286748ecc2eb"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L103-hereditary-aristocrat-512.webp",
+              "bytes": 60480,
+              "sha256": "7d86a61a575e8197cd60c550abc184483778893100b6a57d647317275a90c7f3"
+            }
+          ]
+        },
+        "farming-household": {
+          "name": "农耕家庭代表",
+          "role": "承担耕作、赋役与连带责任的家庭",
+          "source_cell": 3,
+          "source_bounds": {
+            "left": 169,
+            "top": 0,
+            "width": 255,
+            "height": 500
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L103-farming-household-256.webp",
+              "bytes": 17100,
+              "sha256": "e1e17467cb570a02c28af200c90b063a8196e842475b76b5a9c39b5dd1b8df2b"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L103-farming-household-512.webp",
+              "bytes": 51306,
+              "sha256": "762e951554613d5eb4b8878500a4531d581bd01cbf03141fb11dcfc43f5dba32"
+            }
+          ]
+        },
+        "merit-soldier": {
+          "name": "军功士卒",
+          "role": "以战功争取身份上升的军士",
+          "source_cell": 4,
+          "source_bounds": {
+            "left": 115,
+            "top": 0,
+            "width": 245,
+            "height": 501
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L103-merit-soldier-256.webp",
+              "bytes": 20942,
+              "sha256": "f25db29bd7ebc96d6ea28fbcf2233cc5c0ac58bb6de55b091040ed9aed08f473"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L103-merit-soldier-512.webp",
+              "bytes": 59768,
+              "sha256": "d54f58ea834e262c0289c72d1daa2b3a8926400be7af621a8d93c68acf0bc721"
+            }
+          ]
+        },
+        "county-clerk": {
+          "name": "县廷吏员",
+          "role": "执行户籍、法令与行政记录的基层吏员",
+          "source_cell": 5,
+          "source_bounds": {
+            "left": 68,
+            "top": 0,
+            "width": 232,
+            "height": 499
+          },
+          "variants": [
+            {
+              "width": 256,
+              "height": 320,
+              "format": "webp",
+              "file": "L103-county-clerk-256.webp",
+              "bytes": 14466,
+              "sha256": "b08b5f46c0b7ca60b66bea741edf61a3f69a2ef792d2fb408a0345575056c9f1"
+            },
+            {
+              "width": 512,
+              "height": 640,
+              "format": "webp",
+              "file": "L103-county-clerk-512.webp",
+              "bytes": 43060,
+              "sha256": "f6b66596e74384189fe20d72fff3935e95924824e7da5bd89bb6c608fc29182e"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

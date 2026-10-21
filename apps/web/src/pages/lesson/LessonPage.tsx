@@ -1,81 +1,353 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Tabs, Spin } from 'antd';
-import { api, type Lesson } from '../../utils/api';
-import LessonWatch from './LessonWatch';
+import { Alert, Button, Spin } from 'antd';
+import {
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  SafetyCertificateOutlined,
+} from '@ant-design/icons';
+import { api, type Lesson, type LessonPresentationResponse, type ProgressItem } from '../../utils/api';
+import { readingComplete, readingLabel } from '../../features/classroom/readingProgress';
+import {
+  CLASSROOM_STAGES,
+  classroomStage,
+  lessonInteractionReady,
+  presentationStageDuration,
+  type ClassroomLayer,
+} from '../../features/classroom/classroomModel';
+import LessonCompanion from '../../features/classroom/LessonCompanion';
+import CourseCoverPicture from '../../features/courses/CourseCoverPicture';
+import LessonWatch, { LessonWatchMedia } from './LessonWatch';
 import LessonAsk from './LessonAsk';
 import LessonPractice from './LessonPractice';
+import { useAuth } from '../../auth/AuthContext';
+import {
+  LEARNING_EVENT_REQUEST,
+  LEARNING_LEDGER_UPDATED,
+  appendLearningEvent,
+  isLearningEventRequest,
+  type LearningEventRequest,
+  type LearningScopeIdentity,
+} from '../../features/classroom/learningLedger';
+import { IS_STATIC_PREVIEW } from '../../runtime';
 
 const LessonCreate = lazy(() => import('./LessonCreate'));
+const VALID_LAYERS = new Set(CLASSROOM_STAGES.map((stage) => stage.layer));
 
-const LAYERS = [
-  { key: 'watch',    label: '看 · 沉浸叙事' },
-  { key: 'practice', label: '练 · 决策沙盘' },
-  { key: 'ask',      label: '问 · 跨时对话' },
-  { key: 'create',   label: '创 · 知识画板' },
-];
+type ReadingResource =
+  | { scope: string; status: 'loading' }
+  | { scope: string; status: 'ready'; lesson: Lesson }
+  | { scope: string; status: 'error'; message: string };
 
 export default function LessonPage() {
   const { courseId = '', lessonId = '' } = useParams();
   const [params, setParams] = useSearchParams();
-  const layer = params.get('layer') || 'watch';
+  const requestedLayer = params.get('layer');
+  const layer = (IS_STATIC_PREVIEW
+    ? 'watch'
+    : VALID_LAYERS.has(requestedLayer as ClassroomLayer) ? requestedLayer : 'watch') as ClassroomLayer;
   const nav = useNavigate();
-  const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [loading, setLoading] = useState(true);
+  const auth = useAuth();
+  const lessonScope = `${courseId}/${lessonId}`;
+  const [readingResource, setReadingResource] = useState<ReadingResource>({
+    scope: lessonScope, status: 'loading',
+  });
+  const lesson = readingResource.scope === lessonScope && readingResource.status === 'ready'
+    ? readingResource.lesson : null;
+  const [presentation, setPresentation] = useState<LessonPresentationResponse | null>(null);
+  const [progress, setProgress] = useState<ProgressItem | null>(null);
+  const [progressError, setProgressError] = useState<{
+    message: string; retry: 'touch' | 'confirm';
+  } | null>(null);
+  const [progressRetry, setProgressRetry] = useState(0);
+  const [savingRead, setSavingRead] = useState(false);
+  const enteredStagesRef = useRef(new Set<string>());
+  const progressRequestRef = useRef(0);
+
+  const learningIdentity = useMemo<LearningScopeIdentity | null>(() => {
+    const ownerId = auth.principal?.user_id
+      ?? (auth.mode === 'legacy-local' ? 'legacy-local' : '');
+    if (!ownerId || !courseId || !lessonId) return null;
+    return { ownerId, courseId, lessonId };
+  }, [auth.mode, auth.principal?.user_id, courseId, lessonId]);
+
+  const persistLearningEvent = useCallback(async (request: LearningEventRequest) => {
+    if (!learningIdentity) return;
+    try {
+      const record = await appendLearningEvent(learningIdentity, request);
+      window.dispatchEvent(new CustomEvent(LEARNING_LEDGER_UPDATED, { detail: record }));
+    } catch {
+      // 学习留痕是本地增强层，存储不可用不能阻断正式课堂流程。
+    }
+  }, [learningIdentity]);
 
   useEffect(() => {
-    setLoading(true);
-    api.lesson(courseId, lessonId).then(setLesson).finally(() => setLoading(false));
-  }, [courseId, lessonId]);
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail;
+      if (!isLearningEventRequest(detail)) return;
+      if (detail.course_id !== courseId || detail.lesson_id !== lessonId) return;
+      void persistLearningEvent(detail);
+    };
+    window.addEventListener(LEARNING_EVENT_REQUEST, receive);
+    return () => window.removeEventListener(LEARNING_EVENT_REQUEST, receive);
+  }, [courseId, lessonId, persistLearningEvent]);
 
-  // 学习进度打点：每次 lessonId 或 layer 变更，touch 一次
   useEffect(() => {
-    if (!lessonId) return;
-    api.progressTouch({ lesson_id: lessonId, layer: layer as any }).catch(() => {});
-  }, [lessonId, layer]);
+    if (!lesson || !learningIdentity) return;
+    const key = `${learningIdentity.ownerId}:${courseId}:${lessonId}:${layer}`;
+    if (enteredStagesRef.current.has(key)) return;
+    enteredStagesRef.current.add(key);
+    try {
+      const storageKey = `chronovita.learning.stage.v1.${encodeURIComponent(key)}`;
+      const lastEnteredAt = Number(window.sessionStorage.getItem(storageKey) || 0);
+      if (Date.now() - lastEnteredAt < 30 * 60 * 1000) return;
+      window.sessionStorage.setItem(storageKey, String(Date.now()));
+    } catch {
+      // sessionStorage 不可用时仍依赖组件内去重。
+    }
+    const stage = classroomStage(layer);
+    void persistLearningEvent({
+      course_id: courseId,
+      lesson_id: lessonId,
+      kind: 'stage_entered',
+      title: `进入${stage.title}`,
+      summary: stage.purpose,
+      metadata: { layer },
+    });
+  }, [courseId, layer, learningIdentity, lesson, lessonId, persistLearningEvent]);
 
-  const openLayer = useCallback((nextLayer: string) => {
+  useEffect(() => {
+    let active = true;
+    setReadingResource({ scope: lessonScope, status: 'loading' });
+    setPresentation(null);
+    api.lesson(courseId, lessonId).then((nextLesson) => {
+      if (!active) return;
+      setReadingResource({ scope: lessonScope, status: 'ready', lesson: nextLesson });
+      // Optional display metadata must not hold the teacher text or reading progress.
+      if (nextLesson.reading_media_available !== false) {
+        void api.lessonPresentation(courseId, lessonId).then((nextPresentation) => {
+          if (active) setPresentation(nextPresentation);
+        }).catch(() => { if (active) setPresentation(null); });
+      }
+    }).catch((loadError) => {
+      if (!active) return;
+      setReadingResource({ scope: lessonScope, status: 'error',
+        message: loadError instanceof Error ? loadError.message.replace(/^\d{3}\s+/, '') : '课时载入失败',
+      });
+    });
+    return () => { active = false; };
+  }, [courseId, lessonId, lessonScope]);
+
+  useEffect(() => {
+    if (!lesson || lesson.id !== lessonId || IS_STATIC_PREVIEW) return;
+    let active = true;
+    const requestId = ++progressRequestRef.current;
+    setSavingRead(false);
+    setProgressError(null);
+    api.progressTouch({ lesson_id: lessonId, layer,
+      ...(layer === 'watch' && lesson.teacher_text_checksum ? { teacher_text_checksum: lesson.teacher_text_checksum } : {}),
+    }).then((response) => {
+      if (active && requestId === progressRequestRef.current) setProgress(response.item);
+    }).catch(() => { if (active && requestId === progressRequestRef.current) setProgressError({
+        message: '学习记录暂未同步，不影响阅读。请恢复网络后重试。', retry: 'touch',
+      }); });
+    return () => { active = false; ++progressRequestRef.current; };
+  }, [lessonId, lesson, layer, progressRetry, auth.principal?.user_id]);
+
+  const confirmReading = useCallback(async () => {
+    if (!lesson?.teacher_text_checksum || savingRead) return;
+    const requestId = ++progressRequestRef.current;
+    setSavingRead(true); setProgressError(null);
+    try {
+      const response = await api.progressTouch({ lesson_id: lesson.id, layer: 'watch',
+        completed: true, teacher_text_checksum: lesson.teacher_text_checksum });
+      if (requestId === progressRequestRef.current) setProgress(response.item);
+    } catch (failure) {
+      if (requestId === progressRequestRef.current) setProgressError({
+        message: failure instanceof TypeError ? '网络连接失败，已读确认未保存，请重试。'
+          : failure instanceof Error ? failure.message.replace(/^\d{3}\s+/, '') : '已读确认未保存，请重试。',
+        retry: 'confirm',
+      });
+    } finally { if (requestId === progressRequestRef.current) setSavingRead(false); }
+  }, [lesson, savingRead]);
+
+  const openLayer = useCallback((nextLayer: ClassroomLayer, options?: { question?: string; personId?: string }) => {
     setParams((current) => {
       const next = new URLSearchParams(current);
       next.set('layer', nextLayer);
+      if (options?.question) next.set('question', options.question);
+      else next.delete('question');
+      if (options?.personId) next.set('person', options.personId);
+      else next.delete('person');
       return next;
     }, { replace: true });
   }, [setParams]);
 
-  const items = useMemo(() => LAYERS.map((l) => ({
-    key: l.key,
-    label: l.label,
-    children: !lesson ? null :
-      l.key === 'watch'    ? <LessonWatch lesson={lesson} /> :
-      l.key === 'practice' ? <LessonPractice lesson={lesson} onOpenDossier={() => openLayer('create')} /> :
-      l.key === 'ask'      ? <LessonAsk lesson={lesson} /> :
-                              (
-                                <Suspense fallback={<div className="chrono-create-loading"><Spin /></div>}>
-                                  <LessonCreate
-                                    key={lesson.id}
-                                    lesson={lesson}
-                                    active={layer === 'create'}
-                                    onOpenPractice={() => openLayer('practice')}
-                                  />
-                                </Suspense>
-                              ),
-  })), [layer, lesson, openLayer]);
+  const activeStage = classroomStage(layer);
+  const stageIndex = CLASSROOM_STAGES.findIndex((stage) => stage.layer === layer);
+  const nextStage = CLASSROOM_STAGES[stageIndex + 1];
+  const previousStage = CLASSROOM_STAGES[stageIndex - 1];
 
-  if (loading || !lesson) return <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div>;
+  // Reading profiles follow teacher text; practice keeps its published identities.
+  const interactionLesson = useMemo(() => lesson ? {
+    ...lesson,
+    people: lesson.interaction_people ?? lesson.people,
+    figures: lesson.interaction_figures ?? lesson.figures,
+  } : null, [lesson]);
+
+  const content = useMemo(() => {
+    if (!lesson || !interactionLesson) return null;
+    if (layer === 'watch') return <LessonWatch lesson={lesson} onReadComplete={IS_STATIC_PREVIEW ? undefined : confirmReading}
+      readComplete={readingComplete(progress?.lesson_id === lesson.id ? progress : null)} savingRead={savingRead} />;
+    if ((layer === 'practice' || layer === 'ask') && !lessonInteractionReady(lesson)) {
+      return <Alert type="info" showIcon message="本课互动资料尚未对齐教师新稿"
+        description="课文、关键词和阅读笔记可以使用；这里不调用旧主题的推演或人物回答。"
+        action={<Button onClick={() => openLayer('create')}>打开学习书案</Button>} />;
+    }
+    if (layer === 'practice') {
+      return <LessonPractice lesson={interactionLesson} onOpenDossier={() => openLayer('create')} />;
+    }
+    if (layer === 'ask') {
+      return (
+        <LessonAsk
+          lesson={interactionLesson}
+          presentation={presentation}
+          initialQuestion={params.get('question') ?? undefined}
+          initialPersonId={params.get('person') ?? undefined}
+        />
+      );
+    }
+    return (
+      <Suspense fallback={<div className="chrono-create-loading"><Spin /></div>}>
+        <LessonCreate
+          key={lesson.id}
+          lesson={interactionLesson}
+          active
+          onOpenPractice={() => openLayer('practice')}
+        />
+      </Suspense>
+    );
+  }, [layer, lesson, interactionLesson, openLayer, params, presentation, confirmReading, progress, savingRead]);
+
+  if (readingResource.scope !== lessonScope || readingResource.status === 'loading') {
+    return <div className="chrono-page-loading"><Spin /><span>正在核对课时发布…</span></div>;
+  }
+  if (!lesson) {
+    return <Alert type="error" showIcon message="课时暂不可用"
+      description={readingResource.status === 'error' ? readingResource.message : '没有找到当前课时。'} />;
+  }
 
   return (
-    <div style={{ maxWidth: 1392, margin: '0 auto' }}>
-      <div style={{ marginBottom: 12 }}>
-        <a onClick={() => nav(`/courses/${courseId}`)} style={{ color: 'var(--text-mute)', fontSize: 12 }}>
-          ← 返回课程详情
-        </a>
+    <div className={`chrono-lesson-classroom layer-${layer}`}>
+      <button className="chrono-back-link" type="button" onClick={() => nav(`/courses/${courseId}`)}>
+        <ArrowLeftOutlined /> 返回课程路线
+      </button>
+
+      <header className="chrono-lesson-masthead">
+        <CourseCoverPicture
+          courseId={lesson.course_id || courseId}
+          width={1440}
+          eager
+          fallbackColor="#354b50"
+          className="chrono-lesson-masthead-art"
+        />
+        <div className="chrono-lesson-masthead-copy">
+          <h1>{lesson.title}</h1>
+          <span>{lesson.num} · {lesson.era || lesson.unit}</span>
+          <p>{lesson.abstract}</p>
+        </div>
+        <div className="chrono-lesson-release">
+          {presentation ? (
+            <>
+              <SafetyCertificateOutlined />
+              <div>
+                <strong>正式课堂资料</strong>
+                <span>按教师当前课文阅读</span>
+              </div>
+              <span className="chrono-lesson-release-state">可学习</span>
+            </>
+          ) : (
+            <>
+              <ClockCircleOutlined />
+              <div><strong>教师课文</strong><span>人物与关键词按本课内容展示</span></div>
+            </>
+          )}
+        </div>
+      </header>
+
+      {layer === 'watch' ? <LessonWatchMedia lesson={lesson} presentation={presentation} /> : null}
+
+      <nav className="chrono-stage-rail" aria-label="课堂四阶段">
+        {CLASSROOM_STAGES.map((stage) => {
+          const active = stage.layer === layer;
+          const currentProgress = progress?.lesson_id === lesson.id ? progress : null;
+          const visited = stage.layer === 'watch' ? readingComplete(currentProgress) : false;
+          return (
+            <button
+              key={stage.layer}
+              type="button"
+              className={`${active ? 'active' : ''}${visited ? ' visited' : ''}`}
+              aria-current={active ? 'step' : undefined}
+              disabled={IS_STATIC_PREVIEW && stage.layer !== 'watch'}
+              title={IS_STATIC_PREVIEW && stage.layer !== 'watch' ? '完整交互请使用本地课堂版' : undefined}
+              onClick={() => openLayer(stage.layer)}
+            >
+              <span className="chrono-stage-number">{visited ? <CheckCircleOutlined /> : stage.index}</span>
+              <span><strong>{stage.title}</strong><small>{stage.verb}</small></span>
+              <time>{presentationStageDuration(stage, presentation)}</time>
+            </button>
+          );
+        })}
+      </nav>
+
+      {IS_STATIC_PREVIEW ? (
+        <Alert
+          className="chrono-static-preview-notice"
+          type="info"
+          showIcon
+          message="纯前端内容预览"
+          description="当前页面提供教师课文、人物与关键词预览；互动与学习保存请使用本地课堂服务。"
+        />
+      ) : null}
+
+      <div className={`chrono-lesson-workspace companion-floating${layer === 'ask' ? ' consult-wide' : ''}${layer === 'watch' ? ' observe-wide' : ''}`}>
+        {progressError ? <Alert type="warning" showIcon message={progressError.message}
+          action={<><Button disabled={savingRead} onClick={() => progressError.retry === 'confirm'
+            ? void confirmReading() : setProgressRetry((value) => value + 1)}>
+            {progressError.retry === 'confirm' ? '重试已读确认' : '重试同步'}</Button>
+            <Button onClick={() => window.location.reload()}>刷新课文</Button></>} /> : null}
+        {!IS_STATIC_PREVIEW && layer === 'watch' ? <p role="status">{readingLabel(progress?.lesson_id === lesson.id ? progress : null)}</p> : null}
+        <main>{content}</main>
       </div>
-      <Tabs
-        size="large"
-        activeKey={layer}
-        onChange={openLayer}
-        items={items}
-      />
+
+      {!IS_STATIC_PREVIEW && interactionLesson ? (
+        <LessonCompanion
+          lesson={interactionLesson}
+          presentation={presentation}
+          onOpenConsult={(question, personId) => openLayer('ask', { question, personId })}
+        />
+      ) : null}
+
+      <footer className="chrono-stage-footer">
+        <div>
+          <span>当前阶段</span>
+          <strong>{activeStage.title} · {activeStage.purpose}</strong>
+        </div>
+        <div>
+          {previousStage ? (
+            <Button onClick={() => openLayer(previousStage.layer)}>
+              <ArrowLeftOutlined /> {previousStage.title}
+            </Button>
+          ) : null}
+          {nextStage && !IS_STATIC_PREVIEW ? (
+            <Button type="primary" onClick={() => openLayer(nextStage.layer)}>
+              进入{nextStage.title} <ArrowRightOutlined />
+            </Button>
+          ) : null}
+        </div>
+      </footer>
     </div>
   );
 }

@@ -1,0 +1,42 @@
+{
+  "schema_version": "person-profile/v1",
+  "asset_id": "person-377ebe9f62f4ee59fc804a74",
+  "name": "札木合",
+  "role": "蒙古高原部落首领",
+  "era": "南宋、金朝时期，蒙古汗国建立前后",
+  "summary": "札木合是蒙古高原上的部落首领，早年曾与铁木真结为安答，双方一度建立密切的政治和军事关系。随着各自势力发展，札木合与铁木真在部众归属、政治领导权和部落联盟等问题上产生矛盾，最终由盟友转变为竞争者。札木合曾组织力量与铁木真对抗，并在蒙古高原的部落斗争中发挥过重要作用。铁木真逐渐取得更多部众支持后，札木合的政治影响力不断下降。札木合的经历反映了蒙古汗国建立前蒙古高原长期存在的部落竞争和联盟变化，也说明铁木真的统一过程并非一帆风顺，而是伴随着复杂的政治斗争和军事冲突。",
+  "persona": "后续 AI 人物智能体使用的语气、知识边界与立场提示。",
+  "boundaries": [
+    "不要让人物知道其身后才发生的事件。"
+  ],
+  "keywords": [
+    "蒙古汗国"
+  ],
+  "related_lessons": [
+    "L1101"
+  ],
+  "source_refs": [
+    {
+      "title": "《太祖本纪》",
+      "source": "《元史》，中华书局点校本",
+      "url_or_path": "卷一，铁木真早年及统一蒙古相关篇章",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《蒙古秘史》",
+      "source": "中华书局整理本",
+      "url_or_path": "札木合与铁木真关系及部落斗争相关篇章",
+      "citation_note": "",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "重点讲解札木合与铁木真从结盟到竞争的关系变化。注意札木合不是蒙古汗国的建立者，也不能将他简单描述为单纯的“反派人物”；应通过其经历说明蒙古高原部落政治的复杂性。\n\n本地附件同步来源：\n{\"archive\": \"人物第十章-第十五章.zip\", \"archive_sha256\": \"cba178f36c53c7d04a479b4f3c641081553e4e3254b6854af5ac07a9367d9a32\", \"member\": \"人物第十章-第十五章/札木合-人物档案.json\", \"member_sha256\": \"fcdd264396cc1b87e3ff3b0d28f6af874ceda29681488ea6eff9439ff2fba27e\", \"source_id\": \"person-L1101-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-16T09:49:56.114219Z",
+  "updated_at": "2026-09-16T09:49:56.114219Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

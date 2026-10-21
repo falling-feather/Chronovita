@@ -55,6 +55,11 @@ class SessionResponse(ApiModel):
     principal: dict
 
 
+class AuthRuntimeResponse(ApiModel):
+    mode: Literal["accounts", "legacy-local"]
+    browser_transport: Literal["http-only-cookie"] = "http-only-cookie"
+
+
 class UserListResponse(ApiModel):
     items: list[UserView]
 
@@ -90,6 +95,14 @@ class AuditResponse(ApiModel):
 class SessionRevocationResponse(ApiModel):
     user: UserView
     revoked_sessions: int = Field(ge=0)
+
+
+@router.get("/config", response_model=AuthRuntimeResponse)
+async def auth_runtime(response: Response) -> AuthRuntimeResponse:
+    """Expose only the browser-safe authentication mode, never credentials."""
+
+    response.headers["Cache-Control"] = "no-store"
+    return AuthRuntimeResponse(mode=settings.auth_mode)
 
 
 @router.post(

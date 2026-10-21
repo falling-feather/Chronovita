@@ -1,0 +1,641 @@
+{
+  "schema": "chronovita-course-cover-assets/v1",
+  "processor": {
+    "sharp": "0.35.3",
+    "vips": "8.18.3"
+  },
+  "source_policy": "Original imagegen PNGs remain outside Git; prompts and generated IDs are recorded in project documentation.",
+  "aspect_ratio": "16:9",
+  "courses": {
+    "C-mingqing-global": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2926722,
+        "sha256": "7103ac1677e22f2093bad0de0a10e583a49354f0595e1ddf253bfe7cca2ac0c2"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-mingqing-global-720.avif",
+          "bytes": 29693,
+          "sha256": "aa8a369677a0d989afa878af4ea9757b2997841bcddf304b86ae084d5de9643e"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-mingqing-global-720.webp",
+          "bytes": 53504,
+          "sha256": "cb7b5110e3e8a4495b3ea2922d3b6367af597008babe1001fa95af0abe6a3879"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-mingqing-global-1440.avif",
+          "bytes": 147940,
+          "sha256": "9b17effb684608e6fb1c4d20d1fd54015f98273749884107a6a8a9ce3114e673"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-mingqing-global-1440.webp",
+          "bytes": 236798,
+          "sha256": "fb7fac1d78f842a4ae4ec861cc5219047a812c7f1a12228ca81f17486e6ca8e4"
+        }
+      ]
+    },
+    "C-mingqing-late": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2874651,
+        "sha256": "6ac9a861ddce7d1ddaaf044b53752558ab1eec641ea42d2f5fd7dec0e501da39"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-mingqing-late-720.avif",
+          "bytes": 28002,
+          "sha256": "2196b2d1622499b39b33ae47f7a7703a75aa919e5bf15e4c0e03c320734dd0de"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-mingqing-late-720.webp",
+          "bytes": 49694,
+          "sha256": "c4979260e2e544a93ccf67591ae982c6c366284dcdf5fad7ada792f419400f83"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-mingqing-late-1440.avif",
+          "bytes": 142782,
+          "sha256": "9dc64b4ab5695b50dabc96ee68250c66266742714e3e1e75ea80ec305419812e"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-mingqing-late-1440.webp",
+          "bytes": 230802,
+          "sha256": "61702cd0c0c3666d50e78165dca8b162dba26680ae25aa138234493aa5751c86"
+        }
+      ]
+    },
+    "C-mingqing-system": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2737403,
+        "sha256": "4c5cc67594a6f5829d84a12648f99f2d6892504279be0c18fb93887ab2ff2d6c"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-mingqing-system-720.avif",
+          "bytes": 23608,
+          "sha256": "d933f343fe95bf3fb55de8221520d2db248c6f2dd9830d27e07643871e06eb92"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-mingqing-system-720.webp",
+          "bytes": 39074,
+          "sha256": "93864b64333ad1d936eec1cff43117fc942a50209d5d54be619f69aea0ddc137"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-mingqing-system-1440.avif",
+          "bytes": 129572,
+          "sha256": "1b7de872e06db8e4c93c72b6067f69457eb3845acf18ee717558d882c62d5618"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-mingqing-system-1440.webp",
+          "bytes": 193502,
+          "sha256": "785fa81d84be876c3895defb0a5b2f0e193ab9cf8205b9b01f2a1ab582320fa8"
+        }
+      ]
+    },
+    "C-mingqing-thought": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 3037787,
+        "sha256": "dda8a7dd9b8bf8af162a125db0a0fd7150d36c5175bc05cc7f3a577b70667234"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-mingqing-thought-720.avif",
+          "bytes": 31110,
+          "sha256": "874aae3c4cefa24966ddd6dfb484747849f7319445fae6248fe0a50f0477ea53"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-mingqing-thought-720.webp",
+          "bytes": 60066,
+          "sha256": "3a78e03d1d1c1c172b36b44fdc552538afc761f0e577ac25f038dfdb0a48a977"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-mingqing-thought-1440.avif",
+          "bytes": 151588,
+          "sha256": "dbeee0759ad3b7a699c2cf590a1515b29b4644fd5ba0b5d78bfca9766b626464"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-mingqing-thought-1440.webp",
+          "bytes": 262510,
+          "sha256": "5fe5efe56a1991d81884a2fbf81dcaf16beef278ad7d09f402eb7fa83ed9ce71"
+        }
+      ]
+    },
+    "C-prequin-state": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 3052777,
+        "sha256": "136ababc9860921296c03962550925dda6e84a3032730e0e36b5fbb0a91d22ae"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-prequin-state-720.avif",
+          "bytes": 29840,
+          "sha256": "fa0950b9adfb45617412c24bc15a443f07ca8d2504bd075a21c0bb1da362fd2e"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-prequin-state-720.webp",
+          "bytes": 56976,
+          "sha256": "35054e1ce4d69431526ea71fc032637acbd2484154e6f9ea697cdf4ee7d1b18c"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-prequin-state-1440.avif",
+          "bytes": 154545,
+          "sha256": "f5a9022156fbce663fc9ad915d288df6e4409bcda618afa45dbba5632fdb0958"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-prequin-state-1440.webp",
+          "bytes": 264458,
+          "sha256": "5566bbd7f986c97b81baaf0bbf62bf396d305162e4e37828cbfc20dfa638d04a"
+        }
+      ]
+    },
+    "C-prequin-thought": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2873436,
+        "sha256": "9ffc5a312c0b73f58eed19953adcd00ee241e2082e899bef75d977e9f2c74c37"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-prequin-thought-720.avif",
+          "bytes": 28233,
+          "sha256": "502faf4270119479f84b54d5360418dba86efedfb08b0d3dfece9ed110bcef4c"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-prequin-thought-720.webp",
+          "bytes": 51630,
+          "sha256": "abc3e1f8233a4abf58cf0051d28d56322c09c76913d5c9a2a2ebf4a685b768c3"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-prequin-thought-1440.avif",
+          "bytes": 145840,
+          "sha256": "ced2363a5dcb0295e49c9daeb95e61a1a836b8388283ebbeabdc51fc21c9bab1"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-prequin-thought-1440.webp",
+          "bytes": 239346,
+          "sha256": "b0dbb795b403bb5e9beeeae0ebec18605f1a45593a8332b20adff6a28b335ca0"
+        }
+      ]
+    },
+    "C-prequin-unify": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2934488,
+        "sha256": "721715711cd4bfb6ee9540e42ef73b990f6618a9ab271be927e1472168a07754"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-prequin-unify-720.avif",
+          "bytes": 30999,
+          "sha256": "a9fe20b54fda9dd961fbdc550838bc475c09ebfc771d0115eb83cb13471f3c74"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-prequin-unify-720.webp",
+          "bytes": 54978,
+          "sha256": "7eb22c7b0273de3e6e4968b55ab381b98d133e61170dded9f9eae3cd2871adeb"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-prequin-unify-1440.avif",
+          "bytes": 150478,
+          "sha256": "684bbff26cbbe995b3977ca2fed24c5c9291f18c0ac456aa7504230358cb84bf"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-prequin-unify-1440.webp",
+          "bytes": 238684,
+          "sha256": "14d6a51e51a6d40b61b917ebc20920813e860db600bc72f10b00e45fdacc50d2"
+        }
+      ]
+    },
+    "C-qinhan-founding": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2972016,
+        "sha256": "cfcab8551f765c363b76c5e6f4828fb482fa78dfef349475ef1d7c99907ea693"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-qinhan-founding-720.avif",
+          "bytes": 27305,
+          "sha256": "1ffeb68aa252736aaebec68d84402df180addbe18865b93fd01488f10b04f863"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-qinhan-founding-720.webp",
+          "bytes": 50858,
+          "sha256": "a032114d79312a954391bda38b2a0e4e5c795b07158caf7b1b7001752407c5cc"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-qinhan-founding-1440.avif",
+          "bytes": 149908,
+          "sha256": "5f810175d80fcd4e0cce278882575cff5c115123d763c6d29e44f0b2f4c602d6"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-qinhan-founding-1440.webp",
+          "bytes": 252576,
+          "sha256": "5af595de76da7034536606e8da444e16882ef8d72108c435a910a82228303882"
+        }
+      ]
+    },
+    "C-qinhan-thought": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2726387,
+        "sha256": "bf486f00bf1bcd01c83a05374cdc0a14e7dc4a6e907f3b499d18812e5a246886"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-qinhan-thought-720.avif",
+          "bytes": 23831,
+          "sha256": "a2fde1516b7d96cba522c07c4c9361c8587f1c8e960d2a89002067ef91a0cb48"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-qinhan-thought-720.webp",
+          "bytes": 39694,
+          "sha256": "03c5d09052f63474a106db2bc32e6039113bb6250281831e1ac11a9b508e1de4"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-qinhan-thought-1440.avif",
+          "bytes": 128927,
+          "sha256": "026a60bdbbaeadaa62923ccae8fe6521a2b8d3157d8f3df688b7eaf02ae1b2d8"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-qinhan-thought-1440.webp",
+          "bytes": 191306,
+          "sha256": "f8bcb0754bf426e6c1bf75d2b006997c1e32da3524bafa2c7fb131a9501f86e0"
+        }
+      ]
+    },
+    "C-songyuan-mongol": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2914215,
+        "sha256": "3903634e0f10887836acddc4111a6312d44f3a92a7a93d9afb96bf7a9d04f765"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-songyuan-mongol-720.avif",
+          "bytes": 29854,
+          "sha256": "f257ddde387577725fdcb4498486252174058d250eaa796be616b70dfccc473c"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-songyuan-mongol-720.webp",
+          "bytes": 54694,
+          "sha256": "bb835954cf589d52f984c74a80ff8b9788cfe8a945447bb9fac4e0f3fbf3b05d"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-songyuan-mongol-1440.avif",
+          "bytes": 147517,
+          "sha256": "2d02d045e01c2ff881febbe8675e8ed62f9224bb213f59e49a979e72dcca7fc2"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-songyuan-mongol-1440.webp",
+          "bytes": 237684,
+          "sha256": "abfb52bf4e06cfdbc2c5f8ecc05050356aa34bee5056792971c56f3536f18adc"
+        }
+      ]
+    },
+    "C-songyuan-song": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 3074385,
+        "sha256": "a3c0d82a377c7cdfacce47a24dbc2ef091d67dfe237af38c52f93dd09e4ce7ef"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-songyuan-song-720.avif",
+          "bytes": 30847,
+          "sha256": "6fa8d9de7438a8d7f228fb6d6d89152d3cc80577f41227299de0c77f588ac648"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-songyuan-song-720.webp",
+          "bytes": 60134,
+          "sha256": "e0daceee2b52d31682a0562ded5a3e606e1e41beb731ad0c0ae43b6a9b449709"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-songyuan-song-1440.avif",
+          "bytes": 154499,
+          "sha256": "68ab41549e3381a144a0b6e8268fd2131514b058839ed03a27bc7da6fc529902"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-songyuan-song-1440.webp",
+          "bytes": 283136,
+          "sha256": "be8804d621e6e9fca98b792ab86d5a09d1739ac500eeca228a282185eb8aa209"
+        }
+      ]
+    },
+    "C-suitang-culture": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2811534,
+        "sha256": "30bbb66136c30534c92a4780448fbe5edabe6598a3725a8a9c592cea3354b1c6"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-suitang-culture-720.avif",
+          "bytes": 26689,
+          "sha256": "37e34212864d59d3344e9fad232604dbbc0c9e98429d4938adad3fbe4d83cb7d"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-suitang-culture-720.webp",
+          "bytes": 47478,
+          "sha256": "c7a1596316d0a114b76b840e2552a995165d8c8c3aa2c23588db46f214e59569"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-suitang-culture-1440.avif",
+          "bytes": 139563,
+          "sha256": "a2ae8bbf735697bb666b5d6aef408aafb57f3c91facdc06829014f4cbe8ddf93"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-suitang-culture-1440.webp",
+          "bytes": 221860,
+          "sha256": "adb3f1e81ef338c0ee3b30235ad9dd471ad44e908b74798de033873169b30af0"
+        }
+      ]
+    },
+    "C-suitang-system": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 3113254,
+        "sha256": "e086dcbd42827c3b266d8c726b87a676e42ecadd675280bab2f361aedd08c1d5"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-suitang-system-720.avif",
+          "bytes": 33432,
+          "sha256": "83c45dca12470bc00a31ec26ffeadb9348aeab12ffba5172fb04e04669af0198"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-suitang-system-720.webp",
+          "bytes": 65064,
+          "sha256": "0764e2360612ac4e3ce50c302c45305c47e0a53d20a3dd3ef9f565be818fd0de"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-suitang-system-1440.avif",
+          "bytes": 165046,
+          "sha256": "7a5f9d84d490502652f85aa8cebca4106b99c27dcd249c21c83723ff8fe6ba74"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-suitang-system-1440.webp",
+          "bytes": 295276,
+          "sha256": "b63c132785cf96b4cdd3a8348bf052d2057e3bbfcf872aa9edac0264db3a432f"
+        }
+      ]
+    },
+    "C-suitang-tang": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 3083879,
+        "sha256": "fb47480a3d4a4b884b41f00749c7bdac4337ef243f901b0e72ba0c06a422084b"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-suitang-tang-720.avif",
+          "bytes": 32193,
+          "sha256": "1f8273af6b112d9fc781fd22bc99c7d8a659eeaaba51a448e2969413ef9d7142"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-suitang-tang-720.webp",
+          "bytes": 62908,
+          "sha256": "b66b87a278fce0d015e30d61ca4e26a5220efb3427b5ca5ed0d693c2825549d3"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-suitang-tang-1440.avif",
+          "bytes": 166105,
+          "sha256": "e2d65e25b8c8cec0dac631b3f17af51a7ef75c374c77db22a5f759258f349a6f"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-suitang-tang-1440.webp",
+          "bytes": 291398,
+          "sha256": "af58c289adcecd7d8034e5983b586632f032c0711b3a50265baabc23ab0b5b2f"
+        }
+      ]
+    },
+    "C-weijin-fusion": {
+      "source": {
+        "width": 1672,
+        "height": 941,
+        "bytes": 2907021,
+        "sha256": "5c77e27ebc0e48e8bc8f0aa0d1508ca8b2d10ba1352a94c4eef17a873f25c048"
+      },
+      "variants": [
+        {
+          "width": 720,
+          "height": 405,
+          "format": "avif",
+          "file": "C-weijin-fusion-720.avif",
+          "bytes": 26632,
+          "sha256": "5e7210232f61d74056c305daa979069ee329b0b4ea25ca25e469eb3d1b6cb9d9"
+        },
+        {
+          "width": 720,
+          "height": 405,
+          "format": "webp",
+          "file": "C-weijin-fusion-720.webp",
+          "bytes": 46634,
+          "sha256": "c517a628db07ef342a24734c0117f272b0c8b25b5bbc945221b3095660b05126"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "avif",
+          "file": "C-weijin-fusion-1440.avif",
+          "bytes": 135094,
+          "sha256": "bc4c014bcb1c955177b4081f5a2866242de1723901a93cb4b5d2fefecc846992"
+        },
+        {
+          "width": 1440,
+          "height": 810,
+          "format": "webp",
+          "file": "C-weijin-fusion-1440.webp",
+          "bytes": 214506,
+          "sha256": "b250d9cffadec227706e13b149686954676904dd764d438d86603d926a71a174"
+        }
+      ]
+    }
+  }
+}

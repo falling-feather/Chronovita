@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-c5c6567d5c9e8ab3118cd61e",
+  "word": "天下兴亡匹夫有责",
+  "pinyin": "tiān xià xīng wáng pǐ fū yǒu zé",
+  "gloss": "后人根据顾炎武论述提炼的名句；强调普通人的公共责任",
+  "era": "明清",
+  "category": "思想",
+  "examples": [
+    "本课结合“天下兴亡匹夫有责”说明后人根据顾炎武论述提炼的名句；强调普通人的公共责任。",
+    "讲解“天下兴亡匹夫有责”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L1403"
+  ],
+  "source_refs": [
+    {
+      "title": "L1403《顾炎武与王夫之》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1403.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1403-04.json\", \"member_sha256\": \"9ec1c9ea6a8dc82332d1af7a522f4ec99fda6910c4e7bc6b0cf7387b65a2f983\", \"source_id\": \"keyword-l1403-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.722769Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

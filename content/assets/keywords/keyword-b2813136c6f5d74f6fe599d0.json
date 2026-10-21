@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-b2813136c6f5d74f6fe599d0",
+  "word": "天京",
+  "pinyin": "tiān jīng",
+  "gloss": "太平天国对南京的改称；公元1853年后成为政权中心",
+  "era": "明清",
+  "category": "地点",
+  "examples": [
+    "本课结合“天京”说明太平天国对南京的改称；公元1853年后成为政权中心。",
+    "讲解“天京”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "洪秀全",
+    "洪仁玕"
+  ],
+  "related_lessons": [
+    "L1502"
+  ],
+  "source_refs": [
+    {
+      "title": "L1502《太平天国》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1502.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1502-04.json\", \"member_sha256\": \"8d5bb61a78309dc99d461d5df1edec2f0685ba9058d6479f3c6313bb1658b255\", \"source_id\": \"keyword-l1502-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.862028Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

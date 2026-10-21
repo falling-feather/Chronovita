@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-12a997f983288d40630e45bb",
+  "word": "遣唐使",
+  "pinyin": "qiǎn táng shǐ",
+  "gloss": "日本派往唐朝的官方使团；承担外交和文化学习任务",
+  "era": "隋唐",
+  "category": "群体",
+  "examples": [
+    "本课结合“遣唐使”说明日本派往唐朝的官方使团；承担外交和文化学习任务。",
+    "讲解“遣唐使”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "阿倍仲麻吕"
+  ],
+  "related_lessons": [
+    "L903"
+  ],
+  "source_refs": [
+    {
+      "title": "L903《丝绸之路与世界中的长安》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L903.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l903-07.json\", \"member_sha256\": \"04ae42673fbca9a929ec316fcd77664a2c86ff4cbad1aa26a112a739770b4263\", \"source_id\": \"keyword-l903-07\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.664502Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

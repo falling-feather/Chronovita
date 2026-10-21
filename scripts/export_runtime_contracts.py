@@ -15,23 +15,46 @@ from services.contracts.archive_examples import (
 )
 from services.contracts.archive_v1 import (
     ARCHIVE_SCHEMA_DOCUMENTS,
+)
+from services.contracts.archive_v1 import (
     schema_document as archive_schema_document,
 )
+from services.contracts.evidence_v1 import (
+    EVIDENCE_SCHEMA_DOCUMENTS,
+    evidence_schema_document,
+)
+from services.contracts.evidence_v2 import EVIDENCE_V2_SCHEMA_DOCUMENTS
 from services.contracts.examples import example_documents
-from services.contracts.release_examples import release_example_documents
-from services.contracts.release_v2 import RELEASE_SCHEMA_DOCUMENTS
+from services.contracts.persona_v1 import (
+    PERSONA_SCHEMA_DOCUMENTS,
+    persona_schema_document,
+)
+from services.contracts.release_examples import (
+    release_example_documents,
+    release_v3_example_documents,
+)
+from services.contracts.release_v2 import (
+    RELEASE_SCHEMA_DOCUMENTS,
+    RELEASE_V3_SCHEMA_DOCUMENTS,
+    RELEASE_V4_SCHEMA_DOCUMENTS,
+    RELEASE_V5_SCHEMA_DOCUMENTS,
+)
 from services.contracts.v1 import SCHEMA_DOCUMENTS, schema_document
-
 
 SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "v1"
 EXAMPLE_DIR = REPO_ROOT / "content" / "examples" / "v1"
 RELEASE_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "releases" / "v2"
 RELEASE_EXAMPLE_DIR = REPO_ROOT / "content" / "examples" / "releases" / "v2"
+RELEASE_V3_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "releases" / "v3"
+RELEASE_V3_EXAMPLE_DIR = REPO_ROOT / "content" / "examples" / "releases" / "v3"
+EVIDENCE_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "evidence" / "v1"
+EVIDENCE_V2_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "evidence" / "v2"
+PERSONA_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "persona" / "v1"
+RELEASE_V4_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "releases" / "v4"
+RELEASE_V5_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "releases" / "v5"
 ARCHIVE_SCHEMA_DIR = REPO_ROOT / "content" / "schemas" / "archive" / "v1"
 ARCHIVE_EXAMPLE_DIR = REPO_ROOT / "content" / "examples" / "archive" / "v1"
-ARCHIVE_EXAMPLE_PACKAGE_DIR = (
-    ARCHIVE_EXAMPLE_DIR / ARCHIVE_EXAMPLE_PACKAGE_DIRECTORY
-)
+ARCHIVE_EXAMPLE_PACKAGE_DIR = ARCHIVE_EXAMPLE_DIR / ARCHIVE_EXAMPLE_PACKAGE_DIRECTORY
 
 
 def export_runtime_contracts() -> None:
@@ -39,6 +62,13 @@ def export_runtime_contracts() -> None:
     EXAMPLE_DIR.mkdir(parents=True, exist_ok=True)
     RELEASE_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
     RELEASE_EXAMPLE_DIR.mkdir(parents=True, exist_ok=True)
+    RELEASE_V3_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
+    RELEASE_V3_EXAMPLE_DIR.mkdir(parents=True, exist_ok=True)
+    EVIDENCE_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
+    EVIDENCE_V2_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
+    PERSONA_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
+    RELEASE_V4_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
+    RELEASE_V5_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
     ARCHIVE_SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
     ARCHIVE_EXAMPLE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -48,10 +78,31 @@ def export_runtime_contracts() -> None:
     }
     examples = example_documents()
     release_schema_documents = {
-        filename: builder()
-        for filename, builder in RELEASE_SCHEMA_DOCUMENTS.items()
+        filename: builder() for filename, builder in RELEASE_SCHEMA_DOCUMENTS.items()
+    }
+    release_v3_schema_documents = {
+        filename: builder() for filename, builder in RELEASE_V3_SCHEMA_DOCUMENTS.items()
     }
     release_examples = release_example_documents()
+    release_v3_examples = release_v3_example_documents()
+    evidence_schema_documents = {
+        filename: evidence_schema_document(model, schema_id)
+        for filename, (model, schema_id) in EVIDENCE_SCHEMA_DOCUMENTS.items()
+    }
+    evidence_v2_schema_documents = {
+        filename: evidence_schema_document(model, schema_id)
+        for filename, (model, schema_id) in EVIDENCE_V2_SCHEMA_DOCUMENTS.items()
+    }
+    persona_schema_documents = {
+        filename: persona_schema_document(model, schema_id)
+        for filename, (model, schema_id) in PERSONA_SCHEMA_DOCUMENTS.items()
+    }
+    release_v4_schema_documents = {
+        filename: builder() for filename, builder in RELEASE_V4_SCHEMA_DOCUMENTS.items()
+    }
+    release_v5_schema_documents = {
+        filename: builder() for filename, builder in RELEASE_V5_SCHEMA_DOCUMENTS.items()
+    }
     archive_schema_documents = {
         filename: archive_schema_document(model, schema_id, comment)
         for filename, (model, schema_id, comment) in ARCHIVE_SCHEMA_DOCUMENTS.items()
@@ -62,6 +113,13 @@ def export_runtime_contracts() -> None:
     _remove_stale_json(EXAMPLE_DIR, set(examples))
     _remove_stale_json(RELEASE_SCHEMA_DIR, set(release_schema_documents))
     _remove_stale_json(RELEASE_EXAMPLE_DIR, set(release_examples))
+    _remove_stale_json(RELEASE_V3_SCHEMA_DIR, set(release_v3_schema_documents))
+    _remove_stale_json(RELEASE_V3_EXAMPLE_DIR, set(release_v3_examples))
+    _remove_stale_json(EVIDENCE_SCHEMA_DIR, set(evidence_schema_documents))
+    _remove_stale_json(EVIDENCE_V2_SCHEMA_DIR, set(evidence_v2_schema_documents))
+    _remove_stale_json(PERSONA_SCHEMA_DIR, set(persona_schema_documents))
+    _remove_stale_json(RELEASE_V4_SCHEMA_DIR, set(release_v4_schema_documents))
+    _remove_stale_json(RELEASE_V5_SCHEMA_DIR, set(release_v5_schema_documents))
     _remove_stale_json(ARCHIVE_SCHEMA_DIR, set(archive_schema_documents))
     _remove_stale_json(ARCHIVE_EXAMPLE_DIR, set(archive_examples))
 
@@ -76,6 +134,23 @@ def export_runtime_contracts() -> None:
             RELEASE_EXAMPLE_DIR / filename,
             document.model_dump(mode="json"),
         )
+    for filename, document in release_v3_schema_documents.items():
+        _write_json(RELEASE_V3_SCHEMA_DIR / filename, document)
+    for filename, document in release_v3_examples.items():
+        _write_json(
+            RELEASE_V3_EXAMPLE_DIR / filename,
+            document.model_dump(mode="json"),
+        )
+    for filename, document in evidence_schema_documents.items():
+        _write_json(EVIDENCE_SCHEMA_DIR / filename, document)
+    for filename, document in evidence_v2_schema_documents.items():
+        _write_json(EVIDENCE_V2_SCHEMA_DIR / filename, document)
+    for filename, document in persona_schema_documents.items():
+        _write_json(PERSONA_SCHEMA_DIR / filename, document)
+    for filename, document in release_v4_schema_documents.items():
+        _write_json(RELEASE_V4_SCHEMA_DIR / filename, document)
+    for filename, document in release_v5_schema_documents.items():
+        _write_json(RELEASE_V5_SCHEMA_DIR / filename, document)
     for filename, document in archive_schema_documents.items():
         _write_json(ARCHIVE_SCHEMA_DIR / filename, document)
     for filename, document in archive_examples.items():
@@ -100,13 +175,13 @@ def _remove_stale_json(directory: Path, expected_filenames: set[str]) -> None:
 
 
 def _sync_binary_tree(directory: Path, payloads: dict[str, bytes]) -> None:
-    expected = {
-        PurePosixPath(relative_path).as_posix()
-        for relative_path in payloads
-    }
+    expected = {PurePosixPath(relative_path).as_posix() for relative_path in payloads}
     if directory.exists():
         for path in directory.rglob("*"):
-            if path.is_file() and path.relative_to(directory).as_posix() not in expected:
+            if (
+                path.is_file()
+                and path.relative_to(directory).as_posix() not in expected
+            ):
                 path.unlink()
 
     for relative_path, payload in payloads.items():
@@ -132,5 +207,16 @@ if __name__ == "__main__":
     print(f"Exported examples to {EXAMPLE_DIR.relative_to(REPO_ROOT)}")
     print(f"Exported release schemas to {RELEASE_SCHEMA_DIR.relative_to(REPO_ROOT)}")
     print(f"Exported release examples to {RELEASE_EXAMPLE_DIR.relative_to(REPO_ROOT)}")
+    print(
+        f"Exported V3 release schemas to {RELEASE_V3_SCHEMA_DIR.relative_to(REPO_ROOT)}"
+    )
+    print(
+        f"Exported V3 release examples to {RELEASE_V3_EXAMPLE_DIR.relative_to(REPO_ROOT)}"
+    )
+    print(f"Exported evidence schemas to {EVIDENCE_SCHEMA_DIR.relative_to(REPO_ROOT)}")
+    print(f"Exported persona schemas to {PERSONA_SCHEMA_DIR.relative_to(REPO_ROOT)}")
+    print(
+        f"Exported V5 release schemas to {RELEASE_V5_SCHEMA_DIR.relative_to(REPO_ROOT)}"
+    )
     print(f"Exported archive schemas to {ARCHIVE_SCHEMA_DIR.relative_to(REPO_ROOT)}")
     print(f"Exported archive examples to {ARCHIVE_EXAMPLE_DIR.relative_to(REPO_ROOT)}")

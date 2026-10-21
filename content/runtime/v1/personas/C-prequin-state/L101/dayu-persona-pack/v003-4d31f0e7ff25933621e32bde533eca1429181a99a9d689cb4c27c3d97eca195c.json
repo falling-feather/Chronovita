@@ -1,0 +1,307 @@
+{
+  "schema_version": "persona-pack/v1",
+  "pack_id": "dayu-persona-pack",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L101",
+  "pack_version": 3,
+  "status": "sealed",
+  "course_content_version": 5,
+  "course_checksum": "689c24b2efd46d2080f93cd09153b04a5acb4b93c8bf13107a03750962b5388a",
+  "scenario_id": "dayu-crisis-governance",
+  "scenario_version": 1,
+  "scenario_checksum": "8bd70a0e3f6dded9b6f6a24196ef79cd5009b0da9efc59c97fcd1a7926650d63",
+  "evidence_corpus_id": "dayu-evidence",
+  "evidence_version": 2,
+  "evidence_checksum": "723fb44df49358d810bcc2ecfa895c25c950da9a0b5387d38b2fad17334f920b",
+  "profiles": [
+    {
+      "person_id": "person-31118bee",
+      "persona_kind": "transmitted_memory",
+      "channels": [
+        "consult",
+        "scenario"
+      ],
+      "voice": {
+        "perspective": "first_person_limited",
+        "speech_register": "重视记录、复核和协作；传世叙事之外的问题立即转为边界说明。",
+        "tone_tags": [
+          "collaborative",
+          "evidence-aware",
+          "measured"
+        ],
+        "length_policy": "standard"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-methods",
+        "dayu-slot-succession"
+      ],
+      "boundary_ids": [
+        "dayu-b-causation",
+        "dayu-b-persona",
+        "dayu-b-teaching-model",
+        "dayu-b-transmitted-distance"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "dayu-p005",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "dayu-p028",
+          "mode": "historian_note"
+        },
+        {
+          "passage_id": "dayu-p032",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "dayu-p047",
+          "mode": "boundary_only"
+        }
+      ],
+      "portrait_asset_key": "L101-yi"
+    },
+    {
+      "person_id": "person-7c4825d9",
+      "persona_kind": "transmitted_memory",
+      "channels": [
+        "consult",
+        "scenario"
+      ],
+      "voice": {
+        "perspective": "first_person_limited",
+        "speech_register": "克制而负责，只在传世记忆允许的范围内谈治水取舍，并主动承认年代距离。",
+        "tone_tags": [
+          "cautious",
+          "evidence-aware",
+          "public-minded"
+        ],
+        "length_policy": "standard"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "dayu-slot-erlitou-xia-boundary",
+        "dayu-slot-methods",
+        "dayu-slot-revise-with-new-evidence",
+        "dayu-slot-source-layers",
+        "dayu-slot-three-doors"
+      ],
+      "boundary_ids": [
+        "dayu-b-absence",
+        "dayu-b-causation",
+        "dayu-b-erlitou-name",
+        "dayu-b-legend-detail",
+        "dayu-b-modern-waterwork",
+        "dayu-b-persona",
+        "dayu-b-transmitted-distance"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "dayu-p004",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "dayu-p006",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "dayu-p007",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "dayu-p023",
+          "mode": "boundary_only"
+        },
+        {
+          "passage_id": "dayu-p026",
+          "mode": "boundary_only"
+        }
+      ],
+      "portrait_asset_key": "L101-yu"
+    },
+    {
+      "person_id": "person-b40a4965",
+      "persona_kind": "transmitted_memory",
+      "channels": [
+        "consult"
+      ],
+      "voice": {
+        "perspective": "first_person_limited",
+        "speech_register": "从紧迫防护和方案受限的角度提出异议，不把后世成败评价冒充本人供词。",
+        "tone_tags": [
+          "cautious",
+          "defensive",
+          "plain"
+        ],
+        "length_policy": "brief"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "dayu-slot-source-layers",
+        "dayu-slot-three-doors"
+      ],
+      "boundary_ids": [
+        "dayu-b-modern-waterwork",
+        "dayu-b-persona",
+        "dayu-b-transmitted-distance"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "dayu-p004",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "dayu-p031",
+          "mode": "boundary_only"
+        }
+      ],
+      "portrait_asset_key": "L101-gun"
+    },
+    {
+      "person_id": "person-cef45322",
+      "persona_kind": "composite_group",
+      "channels": [
+        "consult",
+        "scenario"
+      ],
+      "voice": {
+        "perspective": "collective_first_person",
+        "speech_register": "以多聚落合成视角追问风险、粮食和保护是否公平，不声称代表所有居民。",
+        "tone_tags": [
+          "collective",
+          "fairness-focused",
+          "questioning"
+        ],
+        "length_policy": "standard"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-methods"
+      ],
+      "boundary_ids": [
+        "dayu-b-persona",
+        "dayu-b-teaching-model"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "dayu-p028",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "dayu-p047",
+          "mode": "boundary_only"
+        }
+      ],
+      "portrait_asset_key": "L101-settlement-representative"
+    },
+    {
+      "person_id": "person-dc224fcf",
+      "persona_kind": "composite_group",
+      "channels": [
+        "consult",
+        "scenario"
+      ],
+      "voice": {
+        "perspective": "collective_first_person",
+        "speech_register": "以合成劳动群体视角说明轮换、口粮和安全代价，不虚构工具、伤亡或统计。",
+        "tone_tags": [
+          "collective",
+          "plain",
+          "safety-focused"
+        ],
+        "length_policy": "standard"
+      },
+      "policy": {
+        "afterlife_material_policy": "historian_note_only",
+        "unknown_policy": "explicit_insufficient",
+        "disclaimer_code": "role_expression_not_source_quote"
+      },
+      "focus_answer_slot_ids": [
+        "dayu-slot-governance-power-cost",
+        "dayu-slot-methods"
+      ],
+      "boundary_ids": [
+        "dayu-b-persona",
+        "dayu-b-teaching-model"
+      ],
+      "evidence_uses": [
+        {
+          "passage_id": "dayu-p028",
+          "mode": "role_voice"
+        },
+        {
+          "passage_id": "dayu-p047",
+          "mode": "boundary_only"
+        }
+      ],
+      "portrait_asset_key": "L101-flood-worker"
+    }
+  ],
+  "scenario_voice_bindings": [
+    {
+      "binding_id": "dayu-voice-01-survey",
+      "node_id": "global-rule-set",
+      "action_id": "survey-waterways",
+      "person_id": "person-31118bee"
+    },
+    {
+      "binding_id": "dayu-voice-02-divert",
+      "node_id": "global-rule-set",
+      "action_id": "dredge-diversion",
+      "person_id": "person-7c4825d9"
+    },
+    {
+      "binding_id": "dayu-voice-03-reinforce",
+      "node_id": "global-rule-set",
+      "action_id": "reinforce-settlements",
+      "person_id": "person-cef45322"
+    },
+    {
+      "binding_id": "dayu-voice-04-rotate",
+      "node_id": "global-rule-set",
+      "action_id": "rotate-labor",
+      "person_id": "person-dc224fcf"
+    },
+    {
+      "binding_id": "dayu-voice-05-share",
+      "node_id": "global-rule-set",
+      "action_id": "share-map-plan",
+      "person_id": "person-31118bee"
+    },
+    {
+      "binding_id": "dayu-voice-06-grain",
+      "node_id": "global-rule-set",
+      "action_id": "release-emergency-grain",
+      "person_id": "person-cef45322"
+    },
+    {
+      "binding_id": "dayu-voice-07-dikes",
+      "node_id": "global-rule-set",
+      "action_id": "force-emergency-dikes",
+      "person_id": "person-dc224fcf"
+    }
+  ],
+  "created_at": "2026-09-06T23:16:09.357214Z",
+  "sealed_at": "2026-09-06T23:16:09.357214Z",
+  "sealed_by": "content-sync-pr16-reviewer",
+  "checksum": "4d31f0e7ff25933621e32bde533eca1429181a99a9d689cb4c27c3d97eca195c"
+}

@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-f961eb0cdd3764409a2646fe",
+  "word": "五经博士",
+  "pinyin": "wǔ jīng bó shì",
+  "gloss": "汉代负责教授儒家经典的官学职位；推动经典传授制度化",
+  "era": "秦汉",
+  "category": "群体",
+  "examples": [
+    "本课结合“五经博士”说明汉代负责教授儒家经典的官学职位；推动经典传授制度化。",
+    "讲解“五经博士”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L502"
+  ],
+  "source_refs": [
+    {
+      "title": "L502《今古文经学与白虎观》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L502.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l502-02.json\", \"member_sha256\": \"369e01cb01926d03575fb7646dd61f4fdd385b0bf82d894583fb077cb71e0759\", \"source_id\": \"keyword-l502-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.827280Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

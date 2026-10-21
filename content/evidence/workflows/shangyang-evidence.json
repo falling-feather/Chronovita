@@ -1,0 +1,91 @@
+{
+  "schema_version": "evidence-workflow/v1",
+  "corpus_id": "shangyang-evidence",
+  "course_id": "C-prequin-state",
+  "lesson_id": "L103",
+  "state": "sealed",
+  "revision": 5,
+  "draft_revision": 1,
+  "draft_fingerprint": "75bc4c754286b37dc8fdc62850e71bbffabf64460fbee8157a1af9ca28136c19",
+  "validation": {
+    "schema_version": "evidence-validation/v1",
+    "validator_version": "evidence-publication/v1",
+    "corpus_id": "shangyang-evidence",
+    "course_id": "C-prequin-state",
+    "lesson_id": "L103",
+    "draft_revision": 1,
+    "draft_fingerprint": "75bc4c754286b37dc8fdc62850e71bbffabf64460fbee8157a1af9ca28136c19",
+    "valid": true,
+    "issues": [],
+    "source_count": 10,
+    "passage_count": 30,
+    "validated_at": "2026-08-13T02:32:39.138269Z",
+    "validated_by": "content-publisher-admin"
+  },
+  "sealed_version": 1,
+  "sealed_checksum": "06ab368e3f54051f21e56e4047ab9efb8f447cb81e2ef68620105995db4ce633",
+  "updated_at": "2026-08-13T02:32:39.160966Z",
+  "history": [
+    {
+      "sequence": 1,
+      "action": "save",
+      "from_state": "draft",
+      "to_state": "draft",
+      "actor": "content-author-shangyang",
+      "note": "",
+      "occurred_at": "2026-08-13T02:32:39.067194Z",
+      "draft_revision": 1,
+      "draft_fingerprint": "75bc4c754286b37dc8fdc62850e71bbffabf64460fbee8157a1af9ca28136c19",
+      "sealed_version": null
+    },
+    {
+      "sequence": 2,
+      "action": "validation_passed",
+      "from_state": "draft",
+      "to_state": "validated",
+      "actor": "content-author-shangyang",
+      "note": "",
+      "occurred_at": "2026-08-13T02:32:39.098453Z",
+      "draft_revision": 1,
+      "draft_fingerprint": "75bc4c754286b37dc8fdc62850e71bbffabf64460fbee8157a1af9ca28136c19",
+      "sealed_version": null
+    },
+    {
+      "sequence": 3,
+      "action": "submit_review",
+      "from_state": "validated",
+      "to_state": "in_review",
+      "actor": "content-author-shangyang",
+      "note": "10 项来源与 30 个稳定片段已逐项绑定事实，申请独立审校。",
+      "occurred_at": "2026-08-13T02:32:39.112390Z",
+      "draft_revision": 1,
+      "draft_fingerprint": "75bc4c754286b37dc8fdc62850e71bbffabf64460fbee8157a1af9ca28136c19",
+      "sealed_version": null
+    },
+    {
+      "sequence": 4,
+      "action": "approve",
+      "from_state": "in_review",
+      "to_state": "approved",
+      "actor": "content-reviewer-shangyang",
+      "note": "来源年代、文本层次、权利说明、人物边界和争议标记均已核对。",
+      "occurred_at": "2026-08-13T02:32:39.124301Z",
+      "draft_revision": 1,
+      "draft_fingerprint": "75bc4c754286b37dc8fdc62850e71bbffabf64460fbee8157a1af9ca28136c19",
+      "sealed_version": null
+    },
+    {
+      "sequence": 5,
+      "action": "seal",
+      "from_state": "approved",
+      "to_state": "sealed",
+      "actor": "content-publisher-admin",
+      "note": "Sealed immutable evidence corpus version 1.",
+      "occurred_at": "2026-08-13T02:32:39.160966Z",
+      "draft_revision": 1,
+      "draft_fingerprint": "75bc4c754286b37dc8fdc62850e71bbffabf64460fbee8157a1af9ca28136c19",
+      "sealed_version": 1
+    }
+  ],
+  "checksum": "e0a1094c6206d0590f16a191cba9a4a74efe92a5c3850c6bf8164c1868bbaa2d"
+}

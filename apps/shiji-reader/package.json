@@ -1,0 +1,24 @@
+{
+  "name": "@chronovita/shiji-reader",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@lucide/vue": "^1.28.0",
+    "@vitejs/plugin-vue": "latest",
+    "vite": "8.1.6",
+    "vue": "latest",
+    "vue-router": "latest"
+  },
+  "devDependencies": {
+    "postcss": "^8.5.25",
+    "typescript": "latest",
+    "vue-tsc": "latest"
+  }
+}

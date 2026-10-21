@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-da201959845f94a402e1f3d4",
+  "word": "武周",
+  "pinyin": "wǔ zhōu",
+  "gloss": "武则天于公元690年建立的政权；公元705年结束",
+  "era": "隋唐",
+  "category": "时代",
+  "examples": [
+    "本课结合“武周”说明武则天于公元690年建立的政权；公元705年结束。",
+    "讲解“武周”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "武则天"
+  ],
+  "related_lessons": [
+    "L802"
+  ],
+  "source_refs": [
+    {
+      "title": "L802《武周与开元盛世》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L802.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l802-02.json\", \"member_sha256\": \"2d601e99c51cdfce26d2c5e7d3a0182906b88f48b7fc86d6009c101288432c1a\", \"source_id\": \"keyword-l802-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.400389Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

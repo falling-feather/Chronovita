@@ -59,7 +59,7 @@ class ContentWorkflowTests(unittest.TestCase):
         self.assertEqual(sealed_v1.version, 1)
         self.assertEqual(sealed_record.state, "sealed")
         self.assertEqual(workflow.load_published_packages(), [])
-        self.assertIsNone(courses.get_lesson(draft.lesson_id))
+        self.assertIsNone(courses.get_interactive_lesson(draft.lesson_id))
 
         release_v1, published_v1 = workflow.publish_version(
             draft.lesson_id,
@@ -73,7 +73,7 @@ class ContentWorkflowTests(unittest.TestCase):
         self.assertEqual(len(public_v1), 1)
         self.assertEqual(public_v1[0].content_version, 1)
         self.assertEqual(public_v1[0].body[0], "Version one, revised after review.")
-        self.assertEqual(courses.get_lesson(draft.lesson_id).content_status, "published")
+        self.assertEqual(courses.get_interactive_lesson(draft.lesson_id).content_status, "published")
 
         draft_v2 = content.get_draft(draft.lesson_id)
         draft_v2.body[0] = "Version two remains invisible until publish."
@@ -84,7 +84,7 @@ class ContentWorkflowTests(unittest.TestCase):
         sealed_v2, _, _ = workflow.seal_approved_draft(draft.lesson_id, actor="reviewer")
         self.assertEqual(sealed_v2.version, 2)
         self.assertEqual(workflow.load_published_packages()[0].content_version, 1)
-        self.assertEqual(courses.get_lesson(draft.lesson_id).body[0], "Version one, revised after review.")
+        self.assertEqual(courses.get_interactive_lesson(draft.lesson_id).body[0], "Version one, revised after review.")
 
         release_v2, _ = workflow.publish_version(
             draft.lesson_id,
@@ -104,7 +104,7 @@ class ContentWorkflowTests(unittest.TestCase):
         self.assertEqual(rollback.restored_from_release_id, release_v1.release_id)
         restored = workflow.load_published_packages()[0]
         self.assertEqual(restored.content_version, 1)
-        self.assertEqual(courses.get_lesson(draft.lesson_id).content_version, 1)
+        self.assertEqual(courses.get_interactive_lesson(draft.lesson_id).content_version, 1)
         self.assertEqual(len(workflow.list_releases(draft.course_id)), 4)
 
         record = workflow.get_workflow(draft.lesson_id)
@@ -330,7 +330,7 @@ class ContentWorkflowTests(unittest.TestCase):
         (content.workflow_dir() / f"{draft.lesson_id}.json").unlink()
 
         self.assertEqual(workflow.load_published_packages(), [])
-        self.assertIsNone(courses.get_lesson(draft.lesson_id))
+        self.assertIsNone(courses.get_interactive_lesson(draft.lesson_id))
 
         release = workflow.bootstrap_legacy_release(
             draft.course_id,
@@ -346,7 +346,7 @@ class ContentWorkflowTests(unittest.TestCase):
         self.assertEqual(release.operation, "bootstrap")
         self.assertEqual(release.release_no, 1)
         self.assertEqual(release.created_by, "migration-admin")
-        self.assertEqual(courses.get_lesson(draft.lesson_id).body[0], "Legacy reviewed body")
+        self.assertEqual(courses.get_interactive_lesson(draft.lesson_id).body[0], "Legacy reviewed body")
 
     def test_course_release_updates_every_lesson_workflow_projection(self):
         release_a = self._publish("shared-a", "C-shared", "First lesson")
@@ -523,7 +523,7 @@ class ContentWorkflowTests(unittest.TestCase):
         )
         self.assertEqual(workflow.get_workflow("atomic-lesson"), before_record)
         self.assertEqual(workflow.list_releases("C-atomic"), before_history)
-        self.assertEqual(courses.get_lesson("atomic-lesson").body[0], "Version one")
+        self.assertEqual(courses.get_interactive_lesson("atomic-lesson").body[0], "Version one")
 
     def test_failed_first_publish_removes_uncommitted_baseline_and_release(self):
         draft = content.save_draft(
@@ -541,7 +541,7 @@ class ContentWorkflowTests(unittest.TestCase):
 
         self.assertIsNone(workflow.get_current_release(draft.course_id))
         self.assertEqual(workflow.list_releases(draft.course_id), [])
-        self.assertIsNone(courses.get_lesson(draft.lesson_id))
+        self.assertIsNone(courses.get_interactive_lesson(draft.lesson_id))
 
     def test_public_pointer_does_not_move_when_atomic_activation_fails(self):
         release_v1 = self._publish("pointer-lesson", "C-pointer", "Version one")
@@ -564,7 +564,7 @@ class ContentWorkflowTests(unittest.TestCase):
             release_v1.release_id,
         )
         self.assertEqual(workflow.get_workflow("pointer-lesson"), before_record)
-        self.assertEqual(courses.get_lesson("pointer-lesson").body[0], "Version one")
+        self.assertEqual(courses.get_interactive_lesson("pointer-lesson").body[0], "Version one")
 
     def test_manifest_pointer_and_runtime_package_tampering_fail_closed(self):
         release = self._publish("tamper-lesson", "C-tamper", "Trusted content")

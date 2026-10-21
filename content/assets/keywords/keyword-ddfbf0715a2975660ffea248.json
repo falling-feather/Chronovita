@@ -1,0 +1,34 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-ddfbf0715a2975660ffea248",
+  "word": "清谈",
+  "pinyin": "qīng tán",
+  "gloss": "魏晋士人围绕哲理和人物品评展开的谈论；重视语言与思辨",
+  "era": "魏晋南北朝",
+  "category": "思想",
+  "examples": [
+    "本课结合“清谈”说明魏晋士人围绕哲理和人物品评展开的谈论；重视语言与思辨。",
+    "讲解“清谈”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [],
+  "related_lessons": [
+    "L602"
+  ],
+  "source_refs": [
+    {
+      "title": "L602《清谈玄学与竹林七贤》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L602.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l602-03.json\", \"member_sha256\": \"fcd40cc6ef2f455ff1258f74115f25c1b3084016aec7773d7202845d569e7b04\", \"source_id\": \"keyword-l602-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:53.997505Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

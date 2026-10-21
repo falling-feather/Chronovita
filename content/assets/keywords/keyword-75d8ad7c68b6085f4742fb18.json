@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-75d8ad7c68b6085f4742fb18",
+  "word": "廷寄",
+  "pinyin": "tíng jì",
+  "gloss": "军机处向地方高级官员秘密传递皇帝命令的公文方式",
+  "era": "明清",
+  "category": "制度",
+  "examples": [
+    "本课结合“廷寄”说明军机处向地方高级官员秘密传递皇帝命令的公文方式。",
+    "讲解“廷寄”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "胤禛（雍正帝）"
+  ],
+  "related_lessons": [
+    "L1202"
+  ],
+  "source_refs": [
+    {
+      "title": "L1202《军机处》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1202.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1202-04.json\", \"member_sha256\": \"b9d634b8a32073fb6342b0b0c704ae7c534590e9bd9e1d6beae72a8b1458c331\", \"source_id\": \"keyword-l1202-04\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.245740Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

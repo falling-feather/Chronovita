@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-c4a0e2aff45a54d9b2c27115",
+  "word": "盐铁官营",
+  "pinyin": "yán tiě guān yíng",
+  "gloss": "国家经营盐铁等重要产业的政策；用于增加财政收入和控制资源",
+  "era": "秦汉",
+  "category": "制度",
+  "examples": [
+    "本课结合“盐铁官营”说明国家经营盐铁等重要产业的政策；用于增加财政收入和控制资源。",
+    "讲解“盐铁官营”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "刘彻（汉武帝）"
+  ],
+  "related_lessons": [
+    "L402"
+  ],
+  "source_refs": [
+    {
+      "title": "L402《文景之治与汉武大一统》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L402.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l402-06.json\", \"member_sha256\": \"ad7adb72bf2f0ea3bf845eff2838c3b054fd742583275c464329e24c2a0b3446\", \"source_id\": \"keyword-l402-06\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l402-06.json\", \"member_sha256\": \"ad7adb72bf2f0ea3bf845eff2838c3b054fd742583275c464329e24c2a0b3446\", \"source_id\": \"keyword-l402-06\"}\n课时待关联或对应课文缺稿；本次保留素材，不生成旧课文或互动内容。",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.647728Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

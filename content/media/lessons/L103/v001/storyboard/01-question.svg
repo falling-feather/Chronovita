@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07182e"/><stop offset="1" stop-color="#243c48"/></linearGradient><pattern id="g" width="72" height="72" patternUnits="userSpaceOnUse"><path d="M72 0H0V72" fill="none" stroke="#c7a461" stroke-opacity=".08" stroke-width="2"/></pattern></defs>
+  <rect width="1920" height="1080" fill="url(#bg)"/><rect width="1920" height="1080" fill="url(#g)"/>
+  <rect x="130" y="120" width="12" height="282" rx="6" fill="#c7a461"/>
+  <text x="180" y="184" fill="#d9bd7b" font-family="Microsoft YaHei, sans-serif" font-size="32" font-weight="600" letter-spacing="7">L103 · 课堂导读</text>
+  <text x="180" y="300" fill="#f4ead7" font-family="SimSun, serif" font-size="86" font-weight="700">秦国变强，</text>
+  <text x="180" y="414" fill="#f4ead7" font-family="SimSun, serif" font-size="86" font-weight="700">是否等于每个人都获益？</text>
+  <text x="184" y="505" fill="#a9d9d5" font-family="Microsoft YaHei, sans-serif" font-size="36">同时观察国家能力、制度信用与社会代价。</text>
+  <g transform="translate(1380 135)"><circle cx="200" cy="200" r="170" fill="none" stroke="#c7a461" stroke-width="4"/><path d="M85 280V95M145 280V155M205 280V120M265 280V65M325 280V180" stroke="#66c7c1" stroke-width="28"/><path d="M55 300H350" stroke="#d9bd7b" stroke-width="7"/></g>
+  <rect x="180" y="690" width="420" height="146" rx="22" fill="#143d52" stroke="#66c7c1"/><rect x="750" y="690" width="420" height="146" rx="22" fill="#143d52" stroke="#c7a461"/><rect x="1320" y="690" width="420" height="146" rx="22" fill="#143d52" stroke="#c86f55"/>
+  <text x="390" y="780" text-anchor="middle" fill="#c7eee9" font-family="Microsoft YaHei, sans-serif" font-size="42" font-weight="700">国家能力</text><text x="960" y="780" text-anchor="middle" fill="#f1d79f" font-family="Microsoft YaHei, sans-serif" font-size="42" font-weight="700">制度信用</text><text x="1530" y="780" text-anchor="middle" fill="#efb19f" font-family="Microsoft YaHei, sans-serif" font-size="42" font-weight="700">社会代价</text>
+  <text x="180" y="972" fill="#97aeb8" font-family="Microsoft YaHei, sans-serif" font-size="27">可观察 · 可干预 · 可反馈 · 可复盘</text>
+</svg>

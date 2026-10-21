@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-963cd73004547f843e0530d7",
+  "word": "韩国",
+  "pinyin": "hán guó",
+  "gloss": "战国七雄之一；韩非所属的诸侯国",
+  "era": "先秦",
+  "category": "时代",
+  "examples": [
+    "本课结合“韩国”说明战国七雄之一；韩非所属的诸侯国。",
+    "讲解“韩国”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "韩非"
+  ],
+  "related_lessons": [
+    "L203"
+  ],
+  "source_refs": [
+    {
+      "title": "L203《韩非与法家》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L203.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l203-02.json\", \"member_sha256\": \"a4e6e2f6d4606b70e5d6cbd645bd6ff26847e1c573ced454b1dc1073534959c7\", \"source_id\": \"keyword-l203-02\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l203-02.json\", \"member_sha256\": \"a4e6e2f6d4606b70e5d6cbd645bd6ff26847e1c573ced454b1dc1073534959c7\", \"source_id\": \"keyword-l203-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.284393Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-762189fcdd302d6da09a30bc",
+  "word": "废除丞相",
+  "pinyin": "fèi chú chéng xiàng",
+  "gloss": "明太祖撤销丞相职位并让中央各部门直接向皇帝负责的改革",
+  "era": "明清",
+  "category": "事件",
+  "examples": [
+    "本课结合“废除丞相”说明明太祖撤销丞相职位并让中央各部门直接向皇帝负责的改革。",
+    "讲解“废除丞相”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "朱元璋（明太祖）"
+  ],
+  "related_lessons": [
+    "L1201"
+  ],
+  "source_refs": [
+    {
+      "title": "L1201《胡惟庸案与废相》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1201.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1201-02.json\", \"member_sha256\": \"8b4883b9c9b44631d423cf00e307e1096f5b4f301fd5593509a8b67a8dc1471a\", \"source_id\": \"keyword-l1201-02\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:55.158514Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

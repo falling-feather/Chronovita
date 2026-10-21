@@ -1,0 +1,57 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-9d2f40a4a0647dcd962b943b",
+  "word": "家天下",
+  "pinyin": "jiā tiān xià",
+  "gloss": "后世对王权逐渐由王室家族控制这一现象的概括",
+  "era": "先秦",
+  "category": "思想",
+  "examples": [
+    "本课结合“家天下”说明后世对王权逐渐由王室家族控制这一现象的概括。",
+    "讲解“家天下”时，应联系本课叙事理解它在先秦历史中的作用。"
+  ],
+  "related_people": [
+    "启"
+  ],
+  "related_lessons": [
+    "L101"
+  ],
+  "source_refs": [
+    {
+      "title": "夏商周断代工程与夏代年代框架",
+      "source": "人民政协网",
+      "url_or_path": "https://www.cppcc.gov.cn/zxww/2022/11/10/ARTI1668053116436252.shtml",
+      "citation_note": "夏代约公元前2070年至公元前1600年的基本年代框架",
+      "reliability": "pending"
+    },
+    {
+      "title": "有关夏的三个误解",
+      "source": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2023/0726/c448861-40043828.html",
+      "citation_note": "说明考古学文化不能简单等同于族属、朝代和国家",
+      "reliability": "pending"
+    },
+    {
+      "title": "甄器尚象：夏代文明之光",
+      "source": "全国哲学社会科学工作办公室",
+      "url_or_path": "https://www.nopss.gov.cn/n1/2023/0726/c448861-40043837.html",
+      "citation_note": "介绍二里头文化的遗址、遗物和社会组织特征",
+      "reliability": "pending"
+    },
+    {
+      "title": "寻夏记：一个广域王权国家的诞生",
+      "source": "河南省文物局",
+      "url_or_path": "https://wwj.henan.gov.cn/2022/12-12/2655215.html",
+      "citation_note": "介绍夏代传说、年代和早期国家相关研究",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l101-06.json\", \"member_sha256\": \"951d2bbd1a2a13fee57c50c2352769fdeb42f237a6bb974a9a40c7209359d6d3\", \"source_id\": \"keyword-l101-06\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l101-06.json\", \"member_sha256\": \"951d2bbd1a2a13fee57c50c2352769fdeb42f237a6bb974a9a40c7209359d6d3\", \"source_id\": \"keyword-l101-06\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T13:36:28.940395Z",
+  "updated_at": "2026-09-16T09:49:52.726636Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

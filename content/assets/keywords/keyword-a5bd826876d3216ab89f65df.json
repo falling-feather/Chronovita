@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-a5bd826876d3216ab89f65df",
+  "word": "七国之乱",
+  "pinyin": "qī guó zhī luàn",
+  "gloss": "公元前154年诸侯王发动的叛乱；平定后王国力量受到削弱",
+  "era": "秦汉",
+  "category": "事件",
+  "examples": [
+    "本课结合“七国之乱”说明公元前154年诸侯王发动的叛乱；平定后王国力量受到削弱。",
+    "讲解“七国之乱”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "刘启（汉景帝）"
+  ],
+  "related_lessons": [
+    "L402"
+  ],
+  "source_refs": [
+    {
+      "title": "L402《文景之治与汉武大一统》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L402.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l402-03.json\", \"member_sha256\": \"6b8758f06fdf3e7abb70f5c934673b850c077d4682fd32a26fc61753aacde8b0\", \"source_id\": \"keyword-l402-03\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l402-03.json\", \"member_sha256\": \"6b8758f06fdf3e7abb70f5c934673b850c077d4682fd32a26fc61753aacde8b0\", \"source_id\": \"keyword-l402-03\"}\n课时待关联或对应课文缺稿；本次保留素材，不生成旧课文或互动内容。",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.613969Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

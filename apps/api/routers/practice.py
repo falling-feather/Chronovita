@@ -4,15 +4,25 @@ import asyncio
 import json
 import re
 from threading import Lock
-from typing import Annotated, Any, Callable, Literal
+from typing import Annotated, Any, Callable, Literal, NoReturn
 
+from auth_dependencies import AuthContext, require_student_context
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from settings import secret_value, settings
 
-from auth_dependencies import AuthContext, require_student_context
-from settings import settings
-from services import llm, persistence, sandbox, saga
+from services import (
+    content,
+    llm,
+    persistence,
+    persona_conversation,
+    rag,
+    saga,
+    sandbox,
+)
+from services.content import workflow as content_workflow
+from services.contracts.evidence_v1 import RagAnswerV1, RagAskRequestV1
 from services.contracts.v1 import ContractId
 from services.operations import ConcurrentCallLimiter, TokenBucketLimiter
 
@@ -26,6 +36,14 @@ _PRACTICE_LLM_CONCURRENCY_LIMITER = ConcurrentCallLimiter(
     max_calls=settings.practice_llm_max_concurrent_per_user,
     max_clients=settings.practice_llm_rate_limit_max_users,
 )
+
+
+def _require_teacher_interaction(course_id: str, lesson_id: str) -> None:
+    from services.courses import teacher_interaction_status
+
+    resources = content_workflow.get_published_lesson_resources(course_id, lesson_id)
+    if teacher_interaction_status(course_id, lesson_id, resources.course_package) == "not_adapted":
+        raise HTTPException(409, detail={"code": "interaction_not_adapted", "message": "当前互动尚未对齐教师新稿。"})
 
 
 class _CleanupStreamingResponse(StreamingResponse):
@@ -79,6 +97,7 @@ async def _close_async_iterator(iterator) -> None:
 
 # ============= 「练」 互动小说 saga（V0.3.0 新） =============
 
+
 class SagaStartRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -107,6 +126,11 @@ async def saga_start(
     req: SagaStartRequest,
     context: AuthContext = Depends(require_student_context),
 ):
+    from services import courses
+
+    lesson = courses.get_lesson(req.lesson_id)
+    if lesson is not None and lesson.interaction_status != "ready":
+        raise HTTPException(409, detail="本课互动尚未对齐教师新稿，不启动旧主题剧本。")
     try:
         state = saga.start(
             req.lesson_id,
@@ -253,18 +277,19 @@ def _saga_capacity_error(scope: str) -> HTTPException:
 
 # ============= 「创」 知识画板 LLM 自动生成（V0.3.0 新） =============
 
+
 class CanvasGenRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     lesson_id: ContractId
     lesson_title: str = Field(min_length=1, max_length=200)
     abstract: str = Field(min_length=1, max_length=4000)
-    keywords: list[
-        Annotated[str, Field(min_length=1, max_length=80)]
-    ] = Field(default_factory=list, max_length=32)
-    seed: list[
-        Annotated[str, Field(min_length=1, max_length=100)]
-    ] = Field(default_factory=list, max_length=100)
+    keywords: list[Annotated[str, Field(min_length=1, max_length=80)]] = Field(
+        default_factory=list, max_length=32
+    )
+    seed: list[Annotated[str, Field(min_length=1, max_length=100)]] = Field(
+        default_factory=list, max_length=100
+    )
 
 
 @router.post("/canvas/generate")
@@ -275,8 +300,8 @@ async def canvas_generate(
     sys = (
         "你是一名历史教师，正在为学生构建一张「知识谱系图」。"
         "给定一节课程的标题与摘要，输出 6-9 个核心知识节点与它们之间的关系（边）。\n"
-        "严格输出 JSON：{\"nodes\":[{\"id\":\"n1\",\"label\":\"...\",\"category\":\"事件|人物|制度|概念|地点\"}],"
-        "\"edges\":[{\"from\":\"n1\",\"to\":\"n2\",\"label\":\"导致|包含|对应|继承|对立\"}]}\n"
+        '严格输出 JSON：{"nodes":[{"id":"n1","label":"...","category":"事件|人物|制度|概念|地点"}],'
+        '"edges":[{"from":"n1","to":"n2","label":"导致|包含|对应|继承|对立"}]}\n'
         "不要输出任何 JSON 之外的文字。"
     )
     user = (
@@ -287,10 +312,12 @@ async def canvas_generate(
         "请生成 6-9 个节点与若干边。"
     )
     limiter_key = _acquire_llm_lease(_context)
-    stream = llm.stream_chat([
-        {"role": "system", "content": sys},
-        {"role": "user", "content": user},
-    ])
+    stream = llm.stream_chat(
+        [
+            {"role": "system", "content": sys},
+            {"role": "user", "content": user},
+        ]
+    )
     try:
         try:
             async with asyncio.timeout(settings.practice_llm_timeout_seconds):
@@ -329,6 +356,235 @@ async def canvas_generate(
 
 
 # ============= 「问」 跨时对话 =============
+
+
+class PersonaConversationCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    course_id: ContractId
+    lesson_id: ContractId
+    person_id: ContractId
+
+
+class PersonaConversationMessageRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    client_message_id: str = Field(
+        min_length=1,
+        max_length=64,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+    )
+    expected_revision: int = Field(ge=1, strict=True)
+    question: str = Field(min_length=1, max_length=400)
+
+
+class PersonaConversationMessageResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    conversation: persona_conversation.PersonaConversationV1
+    answer: RagAnswerV1
+    reused: bool
+    continuity_applied: bool
+
+
+def _rag_external_generator(context: AuthContext):
+    if (
+        settings.llm_provider.strip().casefold() != "deepseek"
+        or not secret_value(settings.deepseek_api_key).strip()
+    ):
+        return None
+    model_generator = rag.structured_model_generator(
+        llm.StructuredLLMAdapter(),
+        model=settings.deepseek_model_pro,
+    )
+
+    async def generate_with_lazy_lease(messages):
+        # Only a grounded complex route invokes this closure. Deterministic local
+        # replies, clarification and refusal never consume online capacity.
+        try:
+            limiter_key = _acquire_llm_lease(context)
+        except HTTPException as exc:
+            raise rag.RagExternalAnswerUnavailable(
+                "online model capacity is unavailable"
+            ) from exc
+        try:
+            try:
+                return await model_generator(messages)
+            except llm.StructuredLLMError as exc:
+                raise rag.RagExternalAnswerUnavailable(
+                    "online model request failed"
+                ) from exc
+        finally:
+            _PRACTICE_LLM_CONCURRENCY_LIMITER.release(limiter_key)
+
+    return generate_with_lazy_lease
+
+
+def _persona_coordinator() -> persona_conversation.PersonaConversationCoordinator:
+    try:
+        store = persona_conversation.get_persona_conversations()
+        rag_service = rag.get_rag_service()
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "persona_conversation_unavailable",
+                "message": "人物会话服务暂不可用。",
+            },
+        ) from exc
+    return persona_conversation.PersonaConversationCoordinator(store, rag_service)
+
+
+@router.post(
+    "/persona/conversations",
+    response_model=persona_conversation.PersonaConversationV1,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_persona_conversation(
+    request: PersonaConversationCreateRequest,
+    context: AuthContext = Depends(require_student_context),
+) -> persona_conversation.PersonaConversationV1:
+    try:
+        _require_teacher_interaction(request.course_id, request.lesson_id)
+        return _persona_coordinator().create_conversation(
+            owner_user_id=context.principal.user_id,
+            course_id=request.course_id,
+            lesson_id=request.lesson_id,
+            person_id=request.person_id,
+        )
+    except content_workflow.ContentNotFound as exc:
+        raise HTTPException(404, detail={"code": "persona_release_unavailable", "message": "本课人物资料尚未发布。"}) from exc
+    except Exception as exc:
+        _raise_persona_conversation_error(exc)
+
+
+@router.get(
+    "/persona/conversations/{conversation_id}",
+    response_model=persona_conversation.PersonaConversationV1,
+)
+async def get_persona_conversation(
+    conversation_id: ContractId,
+    context: AuthContext = Depends(require_student_context),
+) -> persona_conversation.PersonaConversationV1:
+    try:
+        return _persona_coordinator().get_conversation(
+            conversation_id,
+            owner_user_id=context.principal.user_id,
+        )
+    except Exception as exc:
+        _raise_persona_conversation_error(exc)
+
+
+@router.post(
+    "/persona/conversations/{conversation_id}/messages",
+    response_model=PersonaConversationMessageResponse,
+)
+async def send_persona_conversation_message(
+    conversation_id: ContractId,
+    request: PersonaConversationMessageRequest,
+    context: AuthContext = Depends(require_student_context),
+) -> PersonaConversationMessageResponse:
+    try:
+        result = await _persona_coordinator().send_message(
+            conversation_id,
+            owner_user_id=context.principal.user_id,
+            client_message_id=request.client_message_id,
+            expected_revision=request.expected_revision,
+            question=request.question,
+            external_generator=_rag_external_generator(context),
+        )
+    except Exception as exc:
+        _raise_persona_conversation_error(exc)
+    return PersonaConversationMessageResponse(
+        conversation=result.conversation,
+        answer=result.answer,
+        reused=result.reused,
+        continuity_applied=result.continuity_applied,
+    )
+
+
+def _raise_persona_conversation_error(exc: Exception) -> NoReturn:
+    if isinstance(
+        exc,
+        (
+            persona_conversation.PersonaConversationNotFound,
+            persona_conversation.PersonaConversationPersonUnavailable,
+            persona_conversation.PersonaConversationReleaseUnavailable,
+            rag.RagPersonNotFound,
+            content_workflow.ContentNotFound,
+        ),
+    ):
+        http_status = status.HTTP_404_NOT_FOUND
+    elif isinstance(
+        exc,
+        (
+            persona_conversation.PersonaConversationConflict,
+            persona_conversation.PersonaConversationReleaseChanged,
+        ),
+    ):
+        http_status = status.HTTP_409_CONFLICT
+    elif isinstance(
+        exc,
+        (
+            persona_conversation.PersonaConversationStoreError,
+            persona_conversation.PersonaConversationBindingInvalid,
+            content.ContentIntegrityError,
+            rag.RagRetrievalError,
+            rag.RagServiceUnavailable,
+        ),
+    ):
+        http_status = status.HTTP_503_SERVICE_UNAVAILABLE
+    else:
+        raise exc
+    code = getattr(exc, "code", "persona_conversation_unavailable")
+    raise HTTPException(
+        status_code=http_status,
+        detail={"code": code, "message": str(exc)},
+    ) from exc
+
+
+@router.post("/ask/rag", response_model=RagAnswerV1)
+async def ask_rag(
+    req: RagAskRequestV1,
+    context: AuthContext = Depends(require_student_context),
+):
+    """Answer only from the exact evidence corpus pinned by the active V3 release."""
+
+    try:
+        _require_teacher_interaction(req.course_id, req.lesson_id)
+        return await rag.get_rag_service().ask(
+            req,
+            external_generator=_rag_external_generator(context),
+        )
+    except content_workflow.ContentNotFound as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "rag_release_not_found",
+                "message": "当前课时尚未发布可用的证据库。",
+            },
+        ) from exc
+    except rag.RagPersonNotFound as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "rag_person_not_found",
+                "message": "当前发布课程中不存在该人物或群体。",
+            },
+        ) from exc
+    except (
+        content.ContentIntegrityError,
+        rag.RagRetrievalError,
+        rag.RagServiceUnavailable,
+    ) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "rag_content_unavailable",
+                "message": "课程证据服务暂不可用，请联系教师检查发布资源。",
+            },
+        ) from exc
+
 
 class AskHistoryItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -399,16 +655,18 @@ async def ask(
     req: AskRequest,
     context: AuthContext = Depends(require_student_context),
 ):
-    messages = [{
-        "role": "system",
-        "content": _system_prompt(
-            req.persona,
-            lesson_title=req.lesson_title,
-            peer_character=req.peer_character,
-            peer_intro=req.peer_intro,
-            era=req.era,
-        ),
-    }]
+    messages = [
+        {
+            "role": "system",
+            "content": _system_prompt(
+                req.persona,
+                lesson_title=req.lesson_title,
+                peer_character=req.peer_character,
+                peer_intro=req.peer_intro,
+                era=req.era,
+            ),
+        }
+    ]
     for h in req.history[-6:]:
         messages.append({"role": h.role, "content": h.content})
     messages.append({"role": "user", "content": req.user_message})
@@ -455,6 +713,7 @@ async def llm_info(
 
 # ============= 「练」 决策沙盘 =============
 
+
 @router.get("/sandbox")
 async def sandbox_list():
     return {"items": sandbox.list_scenarios()}
@@ -488,6 +747,7 @@ async def sandbox_step(sid: str, req: StepRequest):
 
 
 # ============= 「创」 知识画板（持久化） =============
+
 
 class CanvasGraph(BaseModel):
     model_config = ConfigDict(extra="forbid")

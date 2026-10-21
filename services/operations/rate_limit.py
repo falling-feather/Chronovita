@@ -14,7 +14,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 LOGIN_PATH = "/api/v1/auth/login"
 TOKEN_PATH = "/api/v1/auth/token"
-LOGIN_PATHS = frozenset((LOGIN_PATH, TOKEN_PATH))
+LOGIN_PATHS = frozenset((LOGIN_PATH, TOKEN_PATH, "/api/v1/profile/password"))
 
 
 @dataclass(frozen=True)

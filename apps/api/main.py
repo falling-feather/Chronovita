@@ -11,11 +11,9 @@ for _path in (_API_ROOT, _REPO_ROOT):
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from starlette.middleware.trustedhost import TrustedHostMiddleware
-
-from settings import secret_value, settings
 from routers import (
     admin_content,
+    api_config,
     auth,
     common,
     courses,
@@ -24,11 +22,17 @@ from routers import (
     learning,
     practice,
     profile,
+    shiji_compat,
 )
-from services import content, persistence, saga
+from settings import secret_value, settings
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from static_web import mount_classroom_web
+
+from services import content, persistence, rag, saga, shiji_ocr, shiji_reader
 from services.auth import AuthServiceConfig, configure_identity, shutdown_identity
 from services.content import workflow as content_workflow
 from services.game_runtime.service import configure_game_runtime, shutdown_game_runtime
+from services.learning_assets import configure_learning_assets, shutdown_learning_assets
 from services.operations import (
     LoginRateLimitMiddleware,
     RequestBodyLimitMiddleware,
@@ -39,7 +43,12 @@ from services.operations import (
     probe_database_readiness,
     validate_runtime_configuration,
 )
+from services.operations.api_config import load_api_config
 from services.persistence.student_assets import assert_no_unmapped_student_assets
+from services.persona_conversation import (
+    configure_persona_conversations,
+    shutdown_persona_conversations,
+)
 
 
 @asynccontextmanager
@@ -67,6 +76,8 @@ async def lifespan(app: FastAPI):
     )
     app.state.database_engine = engine
     try:
+        load_api_config()
+        validate_runtime_configuration(settings)
         configure_identity(
             engine,
             AuthServiceConfig(
@@ -92,16 +103,28 @@ async def lifespan(app: FastAPI):
             catalog_path=settings.game_catalog_path,
             engine=engine,
         )
+        configure_learning_assets(engine)
+        configure_persona_conversations(engine)
+        rag.configure_rag(
+            index_path=settings.rag_index_path,
+            model_root=settings.rag_model_root,
+            vector_enabled=settings.rag_vector_enabled,
+        )
         app.state.database_readiness = probe_database_readiness(engine)
         app.state.runtime_ready = True
         yield
     finally:
+        shiji_ocr.clear_cache()
         app.state.runtime_ready = False
         app.state.database_readiness = None
         app.state.database_engine = None
         saga.clear_states()
+        rag.shutdown_rag()
+        shutdown_persona_conversations()
+        shutdown_learning_assets()
         shutdown_game_runtime()
         shutdown_identity()
+        shiji_reader.close()
         persistence.close_engine()
 
 
@@ -111,6 +134,11 @@ app = FastAPI(
     description="Chronovita backend for course, practice and content production.",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(shiji_ocr.ShijiOcrError)
+async def shiji_ocr_unavailable(_: Request, exc: shiji_ocr.ShijiOcrError):
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 app.add_middleware(
     LoginRateLimitMiddleware,
@@ -149,30 +177,39 @@ API_PREFIX = "/api/v1"
 
 app.include_router(common.router, prefix=API_PREFIX, tags=["common"])
 app.include_router(auth.router, prefix=f"{API_PREFIX}/auth", tags=["auth"])
-app.include_router(admin_content.router, prefix=f"{API_PREFIX}/admin/content", tags=["admin-content"])
+app.include_router(
+    admin_content.router, prefix=f"{API_PREFIX}/admin/content", tags=["admin-content"]
+)
+app.include_router(api_config.router, prefix=f"{API_PREFIX}/admin", tags=["admin-config"])
 app.include_router(home.router, prefix=f"{API_PREFIX}/home", tags=["home"])
 app.include_router(courses.router, prefix=f"{API_PREFIX}/courses", tags=["courses"])
 app.include_router(learning.router, prefix=f"{API_PREFIX}/learning", tags=["learning"])
 app.include_router(practice.router, prefix=f"{API_PREFIX}/practice", tags=["practice"])
+app.include_router(shiji_compat.router, prefix=f"{API_PREFIX}/reader", tags=["shiji-reader-compat"])
+app.include_router(shiji_compat.ocr_router, prefix=f"{API_PREFIX}/ocr", tags=["shiji-ocr-compat"])
+app.include_router(shiji_compat.catalog_router, prefix=f"{API_PREFIX}/catalog", tags=["shiji-catalog"])
 app.include_router(game.router, prefix=f"{API_PREFIX}/practice/game", tags=["game"])
 app.include_router(profile.router, prefix=f"{API_PREFIX}/profile", tags=["profile"])
 
 
-@app.get("/", tags=["common"])
-async def root():
-    return {
-        "name": settings.app_name,
-        "version": settings.app_version,
-        "modules": [
-            "home",
-            "courses",
-            "learning",
-            "practice",
-            "game-runtime",
-            "profile",
-            "admin-content",
-        ],
-    }
+if not settings.serve_web_app:
+
+    @app.get("/", tags=["common"])
+    async def root():
+        return {
+            "name": settings.app_name,
+            "version": settings.app_version,
+            "modules": [
+                "home",
+                "courses",
+                "learning",
+                "practice",
+                "course-rag",
+                "game-runtime",
+                "profile",
+                "admin-content",
+            ],
+        }
 
 
 @app.get("/healthz", tags=["common"])
@@ -214,3 +251,7 @@ async def readyz(request: Request):
         "version": settings.app_version,
         "checks": readiness.public_checks(),
     }
+
+
+if settings.serve_web_app:
+    app.state.web_dist_root = mount_classroom_web(app, settings.web_dist_root)

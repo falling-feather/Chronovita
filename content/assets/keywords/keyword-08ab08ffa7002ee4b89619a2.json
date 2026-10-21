@@ -1,0 +1,38 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-08ab08ffa7002ee4b89619a2",
+  "word": "蒙古汗国",
+  "pinyin": "měng gǔ hán guó",
+  "gloss": "公元1206年形成的草原政权；后来向欧亚多地扩张",
+  "era": "宋元",
+  "category": "时代",
+  "examples": [
+    "本课结合“蒙古汗国”说明公元1206年形成的草原政权；后来向欧亚多地扩张。",
+    "讲解“蒙古汗国”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "铁木真（成吉思汗）",
+    "札木合",
+    "阿里不哥"
+  ],
+  "related_lessons": [
+    "L1101"
+  ],
+  "source_refs": [
+    {
+      "title": "L1101《成吉思汗》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L1101.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第十章至第十五章.zip\", \"archive_sha256\": \"f423dbbb5e9dca1c1d7e26831be614dc171e06e46595531466bd3f7ced32206f\", \"member\": \"keyword-l1101-03.json\", \"member_sha256\": \"fa3dfe0a4bac76f9adc037e9d1063832721e3131c328886fe3b161f1627bbb65\", \"source_id\": \"keyword-l1101-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-15T05:46:52.284000Z",
+  "updated_at": "2026-09-16T09:49:54.945025Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

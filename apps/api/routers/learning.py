@@ -3,17 +3,80 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from auth_dependencies import AuthContext, require_student_context
+from auth_dependencies import (
+    AuthContext,
+    audit_authorized_action,
+    require_permission,
+    require_student_context,
+)
 from services import persistence
+from services.auth import AccountsModeRequired, AuthStoreError, get_identity
+from services.contracts.learning_v1 import (
+    LearningCanvasSnapshotV1,
+    LearningSubmissionV1,
+    SubmissionId,
+)
 from services.contracts.v1 import ContractId
-from services.courses import get_lesson
+from services.contracts.learning_v2 import (LearningSubmissionAny, LearningSubmissionRequestAny,
+    LearningSubmissionRequestV2, LearningFeedbackAny, LearningFeedbackRequestAny)
+from services.contracts.classroom_v1 import ClassroomTaskRequestV1
+from services import classroom_tasks
+from services.courses import get_lesson, list_courses
+from services.courses.textbooks import ReadingLessonIndexItem, reading_lesson_index
+from services.learning_assets import (
+    LearningAssetStoreError,
+    LearningFeedbackIntegrityError,
+    LearningSubmissionConflict,
+    LearningSubmissionIntegrityError,
+    LearningSubmissionNotFound,
+    get_learning_assets,
+)
 
 
 router = APIRouter()
+
+
+def _task_items(course_id: str | None, lesson_id: str | None) -> list[dict]:
+    index = reading_lesson_index()
+    return [{"task": task.model_dump(mode="json"), "text_current": bool(index.get(task.lesson_id)
+             and index[task.lesson_id].teacher_text_checksum == task.teacher_text_checksum)}
+            for task in classroom_tasks.list_tasks(course_id, lesson_id)]
+
+
+@router.get("/tasks")
+async def list_student_tasks(course_id: ContractId | None = None, lesson_id: ContractId | None = None,
+                             context: AuthContext = Depends(require_student_context)) -> dict:
+    _require_persisted_account(context)
+    return {"items": _task_items(course_id, lesson_id)}
+
+
+@router.get("/review/tasks")
+async def list_teacher_tasks(course_id: ContractId | None = None, lesson_id: ContractId | None = None,
+                             context: AuthContext = Depends(require_permission("student.summary"))) -> dict:
+    _require_persisted_account(context)
+    return {"items": _task_items(course_id, lesson_id)}
+
+
+@router.post("/review/tasks")
+async def publish_classroom_task(payload: ClassroomTaskRequestV1, request: Request,
+                                 context: AuthContext = Depends(require_permission("student.feedback"))) -> dict:
+    _require_persisted_account(context)
+    try:
+        task = classroom_tasks.save_task(payload, teacher_id=context.principal.user_id,
+                                         teacher_display_name=context.principal.display_name)
+    except classroom_tasks.ClassroomTaskConflict as exc:
+        raise HTTPException(409, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(422, detail=str(exc)) from exc
+    audit_authorized_action(request, context, permission="student.feedback", action="classroom.task.publish",
+                            resource_type="classroom_task", resource_id=task.task_id,
+                            details={"lesson_id": task.lesson_id, "revision": task.revision, "status": task.status})
+    return {"task": task.model_dump(mode="json")}
 
 _LEGACY_USER = "default"
 _NS = "lesson_progress"
@@ -40,6 +103,8 @@ class ProgressItem(BaseModel):
     last_layer: str = "watch"
     layers: ProgressLayers = Field(default_factory=ProgressLayers)
     updated_at: str
+    reading_status: Literal["reading", "completed", "outdated", "unverified", "unavailable"] = "unverified"
+    reading_confirmed_at: str | None = None
 
 
 class StoredProgress(BaseModel):
@@ -50,6 +115,8 @@ class StoredProgress(BaseModel):
     last_layer: str = "watch"
     layers: ProgressLayers = Field(default_factory=ProgressLayers)
     updated_at: str
+    teacher_text_checksum: str | None = None
+    reading_confirmed_at: str | None = None
 
 
 class TouchRequest(BaseModel):
@@ -58,6 +125,38 @@ class TouchRequest(BaseModel):
     lesson_id: ContractId
     layer: str = "watch"
     completed: bool = False
+    teacher_text_checksum: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+
+
+class SubmissionListItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    submission_id: str
+    student_id: str
+    student_display_name: str
+    student_username: str | None = None
+    course_id: str
+    lesson_id: str
+    version: int
+    title: str
+    body_excerpt: str
+    lesson_title: str | None = None
+    sticky_note_count: int
+    stroke_count: int
+    event_count: int
+    canvas_node_count: int
+    submitted_at: str
+    checksum: str
+    latest_feedback: LearningFeedbackAny | None = None
+
+
+class SubmissionDetail(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    submission: LearningSubmissionAny
+    student_display_name: str
+    student_username: str | None = None
+    feedback: list[LearningFeedbackAny] = Field(default_factory=list)
 
 
 def _owner_id(context: AuthContext) -> str:
@@ -93,12 +192,20 @@ def _parse_progress(
     return record
 
 
-def _enrich(record: StoredProgress) -> ProgressItem:
-    item = record.model_dump(exclude={"user_id"})
-    lesson = get_lesson(record.lesson_id)
+def _enrich(record: StoredProgress, lessons: dict[str, ReadingLessonIndexItem]) -> ProgressItem:
+    item = record.model_dump(exclude={"user_id", "teacher_text_checksum"})
+    lesson = lessons.get(record.lesson_id)
     if lesson:
         item["course_id"] = lesson.course_id
         item["title"] = lesson.title
+        if record.teacher_text_checksum is None:
+            item["reading_status"] = "unverified"
+        elif record.teacher_text_checksum != lesson.teacher_text_checksum:
+            item["reading_status"] = "outdated"
+        else:
+            item["reading_status"] = "completed" if record.reading_confirmed_at else "reading"
+    else:
+        item["reading_status"] = "unavailable"
     return ProgressItem.model_validate(item)
 
 
@@ -122,9 +229,10 @@ async def index(
     context: AuthContext = Depends(require_student_context),
 ):
     records = _list_for_owner(_owner_id(context))
+    lessons = reading_lesson_index()
     return {
         "module": "我的学习",
-        "items": [_enrich(item).model_dump() for item in records[:50]],
+        "items": [_enrich(item, lessons).model_dump() for item in records[:50]],
     }
 
 
@@ -133,7 +241,9 @@ async def list_progress(
     context: AuthContext = Depends(require_student_context),
 ):
     records = _list_for_owner(_owner_id(context))
-    return {"items": [_enrich(item).model_dump() for item in records]}
+    lessons = reading_lesson_index()
+    return {"items": [_enrich(item, lessons).model_dump() for item in records],
+            "total_lessons": sum(course.lesson_count for course in list_courses())}
 
 
 @router.get("/progress/latest")
@@ -141,7 +251,10 @@ async def latest_progress(
     context: AuthContext = Depends(require_student_context),
 ):
     records = _list_for_owner(_owner_id(context))
-    return {"item": _enrich(records[0]).model_dump() if records else None}
+    lessons = reading_lesson_index()
+    available = next((item for record in records
+                      if (item := _enrich(record, lessons)).reading_status != "unavailable"), None)
+    return {"item": available.model_dump() if available else None}
 
 
 @router.get("/progress/{lesson_id}")
@@ -154,7 +267,7 @@ async def get_progress(
     if raw is None:
         return {"item": None}
     record = _parse_progress(raw, owner_id=owner_id, lesson_id=lesson_id)
-    return {"item": _enrich(record).model_dump()}
+    return {"item": _enrich(record, reading_lesson_index()).model_dump()}
 
 
 @router.post("/progress/touch")
@@ -162,6 +275,13 @@ async def touch_progress(
     req: TouchRequest,
     context: AuthContext = Depends(require_student_context),
 ):
+    lessons = reading_lesson_index()
+    lesson = lessons.get(req.lesson_id)
+    if lesson is None:
+        raise HTTPException(404, detail={"code": "lesson_not_found", "message": "该课时已撤下或不存在。"})
+    if (req.layer == "watch" and req.teacher_text_checksum is not None
+            and req.teacher_text_checksum != lesson.teacher_text_checksum):
+        raise HTTPException(409, detail={"code": "reading_changed", "message": "课文已更新，请刷新后再确认已读。"})
     if req.layer not in _LAYERS:
         raise HTTPException(
             status_code=422,
@@ -181,16 +301,25 @@ async def touch_progress(
                 lesson_id=req.lesson_id,
             )
             layers = current.layers.model_dump()
+            reading_checksum = current.teacher_text_checksum
+            confirmed_at = current.reading_confirmed_at
         else:
             layers = {layer: False for layer in _LAYER_ORDER}
+            reading_checksum = lesson.teacher_text_checksum if req.layer == "watch" and not req.completed else None
+            confirmed_at = None
         if req.completed:
             layers[req.layer] = True
+            if req.layer == "watch" and req.teacher_text_checksum is not None:
+                reading_checksum = req.teacher_text_checksum
+                confirmed_at = datetime.now(timezone.utc).isoformat()
         next_record = StoredProgress(
             user_id=owner_id,
             lesson_id=req.lesson_id,
             last_layer=req.layer,
             layers=layers,
             updated_at=datetime.now(timezone.utc).isoformat(),
+            teacher_text_checksum=reading_checksum,
+            reading_confirmed_at=confirmed_at,
         )
         if persistence.kv_compare_and_set(
             _NS,
@@ -199,7 +328,7 @@ async def touch_progress(
             next_record.model_dump(mode="json"),
             expected_present=found,
         ):
-            return {"ok": True, "item": _enrich(next_record).model_dump()}
+            return {"ok": True, "item": _enrich(next_record, lessons).model_dump()}
     raise HTTPException(
         status_code=409,
         detail={
@@ -217,3 +346,374 @@ def _progress_integrity_error() -> HTTPException:
             "message": "Learning progress storage failed integrity validation.",
         },
     )
+
+
+# ============= 明确提交的学习成果与教师反馈 =============
+
+
+@router.post("/submissions", status_code=status.HTTP_201_CREATED)
+async def create_submission(
+    payload: LearningSubmissionRequestAny,
+    request: Request,
+    context: AuthContext = Depends(require_student_context),
+):
+    _require_persisted_account(context)
+    lesson = get_lesson(payload.lesson_id)
+    if lesson is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "lesson_not_found",
+                "message": "The lesson does not exist.",
+            },
+        )
+    if lesson.course_id != payload.course_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail={
+                "code": "lesson_course_mismatch",
+                "message": "The lesson does not belong to the submitted course.",
+            },
+        )
+
+    owner_id = _owner_id(context)
+    try:
+        result = get_learning_assets().replay_submission(owner_id, payload)
+    except Exception as exc:
+        _raise_learning_asset_error(exc)
+    if result is None and isinstance(payload, LearningSubmissionRequestV2):
+        try:
+            classroom_tasks.validate_task_submission(payload.task, course_id=payload.course_id, lesson_id=payload.lesson_id)
+        except (KeyError, ValueError) as exc:
+            raise HTTPException(409, detail=str(exc)) from exc
+    if result is None:
+        canvas = _canvas_snapshot(owner_id, payload.lesson_id, context)
+        try:
+            result = get_learning_assets().create_submission(student_id=owner_id, request=payload, canvas=canvas)
+        except Exception as exc:
+            _raise_learning_asset_error(exc)
+    audit_authorized_action(
+        request,
+        context,
+        permission="student.own",
+        action="student.submission.create",
+        resource_type="learning_submission",
+        resource_id=result.submission.submission_id,
+        details={
+            "course_id": payload.course_id,
+            "lesson_id": payload.lesson_id,
+            "version": result.submission.version,
+            "reused": result.reused,
+        },
+    )
+    return {
+        "submission": result.submission.model_dump(mode="json"),
+        "reused": result.reused,
+    }
+
+
+@router.get("/submissions")
+async def list_own_submissions(
+    course_id: str | None = Query(default=None, min_length=2, max_length=64),
+    lesson_id: str | None = Query(default=None, min_length=2, max_length=64),
+    limit: int = Query(default=50, ge=1, le=100),
+    context: AuthContext = Depends(require_student_context),
+):
+    owner_id = _owner_id(context)
+    try:
+        submissions = get_learning_assets().list_student_submissions(
+            owner_id,
+            course_id=course_id,
+            lesson_id=lesson_id,
+            limit=limit,
+        )
+        labels = _student_labels(submissions, context=context)
+        items = [
+            _submission_list_item(item, labels=labels)
+            for item in submissions
+        ]
+    except Exception as exc:
+        _raise_learning_asset_error(exc)
+    return {"items": [item.model_dump(mode="json") for item in items]}
+
+
+@router.get("/submissions/{submission_id}")
+async def get_own_submission(
+    submission_id: SubmissionId,
+    context: AuthContext = Depends(require_student_context),
+):
+    owner_id = _owner_id(context)
+    try:
+        submission = get_learning_assets().load_student_submission(
+            submission_id,
+            owner_id,
+        )
+        labels = _student_labels([submission], context=context)
+        detail = _submission_detail(submission, labels=labels)
+    except Exception as exc:
+        _raise_learning_asset_error(exc)
+    return detail.model_dump(mode="json")
+
+
+@router.get("/review/submissions")
+async def list_review_submissions(
+    request: Request,
+    student_id: str | None = Query(default=None, min_length=2, max_length=64),
+    course_id: str | None = Query(default=None, min_length=2, max_length=64),
+    lesson_id: str | None = Query(default=None, min_length=2, max_length=64),
+    limit: int = Query(default=100, ge=1, le=100),
+    context: AuthContext = Depends(require_permission("student.summary")),
+):
+    try:
+        submissions = get_learning_assets().list_submissions(
+            student_id=student_id,
+            course_id=course_id,
+            lesson_id=lesson_id,
+            limit=limit,
+        )
+        labels = _student_labels(submissions, context=context)
+        items = [
+            _submission_list_item(item, labels=labels)
+            for item in submissions
+        ]
+    except Exception as exc:
+        _raise_learning_asset_error(exc)
+    audit_authorized_action(
+        request,
+        context,
+        permission="student.summary",
+        action="student.submission.list",
+        resource_type="learning_submission_collection",
+        resource_id="submitted-learning-work",
+        details={
+            "student_id": student_id,
+            "course_id": course_id,
+            "lesson_id": lesson_id,
+            "result_count": len(items),
+        },
+    )
+    return {"items": [item.model_dump(mode="json") for item in items]}
+
+
+@router.get("/review/submissions/{submission_id}")
+async def get_review_submission(
+    submission_id: SubmissionId,
+    request: Request,
+    context: AuthContext = Depends(require_permission("student.summary")),
+):
+    try:
+        submission = get_learning_assets().load_submission(submission_id)
+        labels = _student_labels([submission], context=context)
+        detail = _submission_detail(submission, labels=labels)
+    except Exception as exc:
+        _raise_learning_asset_error(exc)
+    audit_authorized_action(
+        request,
+        context,
+        permission="student.summary",
+        action="student.submission.read",
+        resource_type="learning_submission",
+        resource_id=submission_id,
+        details={
+            "student_id": submission.student_id,
+            "course_id": submission.course_id,
+            "lesson_id": submission.lesson_id,
+        },
+    )
+    return detail.model_dump(mode="json")
+
+
+@router.post(
+    "/review/submissions/{submission_id}/feedback",
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_review_feedback(
+    submission_id: SubmissionId,
+    payload: LearningFeedbackRequestAny,
+    request: Request,
+    context: AuthContext = Depends(require_permission("student.feedback")),
+):
+    _require_persisted_account(context)
+    try:
+        submission = get_learning_assets().load_submission(submission_id)
+        result = get_learning_assets().create_feedback(
+            submission_id=submission_id,
+            teacher_id=context.principal.user_id,
+            teacher_display_name=context.principal.display_name,
+            request=payload,
+        )
+    except Exception as exc:
+        _raise_learning_asset_error(exc)
+    audit_authorized_action(
+        request,
+        context,
+        permission="student.feedback",
+        action="student.submission.feedback",
+        resource_type="learning_submission",
+        resource_id=submission_id,
+        details={
+            "student_id": submission.student_id,
+            "completion_status": result.feedback.completion_status,
+            "feedback_sequence": result.feedback.sequence,
+            "reused": result.reused,
+        },
+    )
+    return {
+        "feedback": result.feedback.model_dump(mode="json"),
+        "reused": result.reused,
+    }
+
+
+def _canvas_snapshot(
+    owner_id: str,
+    lesson_id: str,
+    context: AuthContext,
+) -> LearningCanvasSnapshotV1:
+    key = lesson_id if context.source == "legacy-local-student" else f"{owner_id}:{lesson_id}"
+    found, raw = persistence.kv_get_with_presence("canvas", key)
+    if not found:
+        return LearningCanvasSnapshotV1(found=False, revision=0)
+    try:
+        if not isinstance(raw, dict):
+            raise ValueError("canvas record must be an object")
+        if raw.get("schema_version") == "canvas/v1":
+            revision = raw.get("revision")
+        else:
+            revision = 1
+        return LearningCanvasSnapshotV1(
+            found=True,
+            revision=revision,
+            nodes=raw.get("nodes", []),
+            edges=raw.get("edges", []),
+        )
+    except (ValidationError, ValueError, TypeError) as exc:
+        raise LearningSubmissionIntegrityError(
+            "the saved canvas cannot be included in a submission"
+        ) from exc
+
+
+def _require_persisted_account(context: AuthContext) -> None:
+    if context.principal.synthetic:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "accounts_mode_required",
+                "message": "Versioned learning work requires a persisted account.",
+            },
+        )
+
+
+def _submission_list_item(
+    submission: LearningSubmissionV1,
+    *,
+    labels: dict[str, tuple[str, str | None]],
+) -> SubmissionListItem:
+    feedback = get_learning_assets().list_feedback(submission.submission_id)
+    display_name, username = labels.get(
+        submission.student_id,
+        (submission.student_id, None),
+    )
+    excerpt = " ".join(submission.body_markdown.split())[:180]
+    current_lesson = get_lesson(submission.lesson_id)
+    return SubmissionListItem(
+        submission_id=submission.submission_id,
+        student_id=submission.student_id,
+        student_display_name=display_name,
+        student_username=username,
+        course_id=submission.course_id,
+        lesson_id=submission.lesson_id,
+        version=submission.version,
+        title=submission.title,
+        body_excerpt=excerpt,
+        lesson_title=current_lesson.title if current_lesson else None,
+        sticky_note_count=len(submission.sticky_notes),
+        stroke_count=len(submission.drawing_strokes),
+        event_count=len(submission.learning_events),
+        canvas_node_count=len(submission.canvas.nodes),
+        submitted_at=submission.submitted_at.isoformat(),
+        checksum=submission.checksum,
+        latest_feedback=feedback[-1] if feedback else None,
+    )
+
+
+def _submission_detail(
+    submission: LearningSubmissionV1,
+    *,
+    labels: dict[str, tuple[str, str | None]],
+) -> SubmissionDetail:
+    display_name, username = labels.get(
+        submission.student_id,
+        (submission.student_id, None),
+    )
+    return SubmissionDetail(
+        submission=submission,
+        student_display_name=display_name,
+        student_username=username,
+        feedback=get_learning_assets().list_feedback(submission.submission_id),
+    )
+
+
+def _student_labels(
+    submissions: list[LearningSubmissionV1],
+    *,
+    context: AuthContext,
+) -> dict[str, tuple[str, str | None]]:
+    labels = {
+        item.student_id: (item.student_id, None)
+        for item in submissions
+    }
+    if context.principal.synthetic:
+        labels[context.principal.user_id] = (
+            context.principal.display_name,
+            context.principal.username,
+        )
+        return labels
+    try:
+        users = get_identity().list_users()
+    except AccountsModeRequired:
+        return labels
+    except AuthStoreError as exc:
+        raise LearningAssetStoreError("student identity read failed") from exc
+    for user in users:
+        if user.user_id in labels:
+            labels[user.user_id] = (user.display_name, user.username)
+    return labels
+
+
+def _raise_learning_asset_error(exc: Exception) -> None:
+    if isinstance(exc, LearningSubmissionNotFound):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": exc.code,
+                "message": "The submitted learning work was not found.",
+            },
+        ) from exc
+    if isinstance(exc, LearningSubmissionConflict):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": exc.code,
+                "message": str(exc),
+            },
+        ) from exc
+    if isinstance(
+        exc,
+        (LearningSubmissionIntegrityError, LearningFeedbackIntegrityError),
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "code": exc.code,
+                "message": "Stored learning work failed integrity validation.",
+            },
+        ) from exc
+    if isinstance(exc, (LearningAssetStoreError, RuntimeError)):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": getattr(exc, "code", "learning_asset_unavailable"),
+                "message": "Learning work storage is temporarily unavailable.",
+            },
+        ) from exc
+    raise exc

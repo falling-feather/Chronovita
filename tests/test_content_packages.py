@@ -70,11 +70,11 @@ class ContentPackageTests(unittest.TestCase):
             actor="migration-admin",
         )
         course = courses.get_course("C-unit-test")
-        lesson = courses.get_lesson("unit-test-lesson")
+        lesson = courses.get_interactive_lesson("unit-test-lesson")
 
-        self.assertIsNotNone(course)
+        self.assertIsNone(course)
         self.assertIsNotNone(lesson)
-        self.assertEqual(course.summary.lesson_count, 1)
+        self.assertEqual(len(release.items), 1)
         self.assertEqual(workflow.get_current_release("C-unit-test").release_id, release.release_id)
         self.assertEqual(lesson.content_status, "published")
         self.assertEqual(lesson.body, payload.body)

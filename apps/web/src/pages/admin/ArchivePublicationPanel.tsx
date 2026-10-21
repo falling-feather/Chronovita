@@ -62,6 +62,9 @@ const ARCHIVE_FILE_LABELS: Record<ArchiveFileKind, string> = {
   'sealed-lesson': '课程原稿',
   'course-package': '课程运行包',
   'scenario-template': '情境关卡',
+  'evidence-corpus': '证据库',
+  'lesson-presentation': '课堂展示',
+  'persona-pack': '人物表达包',
   'format-layer': '格式层',
   'teacher-markdown': '教师稿',
   'preview-html': '离线预览',
@@ -69,6 +72,7 @@ const ARCHIVE_FILE_LABELS: Record<ArchiveFileKind, string> = {
 
 interface ArchivePublicationPanelProps {
   token: string;
+  canPublish: boolean;
   courseId: string;
   releases: CourseReleaseManifest[];
   currentRelease: CourseReleaseManifest | null;
@@ -174,6 +178,7 @@ function replacePublication(
 
 export default function ArchivePublicationPanel({
   token,
+  canPublish,
   courseId,
   releases,
   currentRelease,
@@ -575,7 +580,8 @@ export default function ArchivePublicationPanel({
           icon={<CloudUploadOutlined />}
           loading={activity === 'publish'}
           disabled={
-            busy
+            !canPublish
+            || busy
             || !archive
             || archive.release_id !== selectedReleaseId
             || (mode === 'direct_commit' && !directCommitConfirmed)
@@ -645,7 +651,7 @@ export default function ArchivePublicationPanel({
                   <Button
                     icon={<ReloadOutlined />}
                     loading={activity === 'retry'}
-                    disabled={busy}
+                    disabled={!canPublish || busy}
                     onClick={retryPublication}
                   >
                     重新尝试

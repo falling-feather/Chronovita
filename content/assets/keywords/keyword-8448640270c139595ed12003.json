@@ -1,0 +1,37 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-8448640270c139595ed12003",
+  "word": "魏晋风度",
+  "pinyin": "wèi jìn fēng dù",
+  "gloss": "魏晋士人重视个性 精神自由和人物气质的文化风貌",
+  "era": "魏晋南北朝",
+  "category": "思想",
+  "examples": [
+    "本课结合“魏晋风度”说明魏晋士人重视个性 精神自由和人物气质的文化风貌。",
+    "讲解“魏晋风度”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "嵇康",
+    "阮籍"
+  ],
+  "related_lessons": [
+    "L602"
+  ],
+  "source_refs": [
+    {
+      "title": "L602《清谈玄学与竹林七贤》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L602.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案-第五章至第九章.zip\", \"archive_sha256\": \"c773bfdf339b1300f9d5f4523b678d19132cfcb56af3876c83f95911df5b037c\", \"member\": \"keyword-l602-05.json\", \"member_sha256\": \"843c86610c45b86d46c0995afb19fe1b03494226e3b227b43a180d3f6b0681a6\", \"source_id\": \"keyword-l602-05\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T18:47:42.193000Z",
+  "updated_at": "2026-09-16T09:49:54.017706Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

@@ -13,11 +13,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 from sqlalchemy import Column, Integer, MetaData, Table, create_engine, insert, select
-from sqlalchemy.engine import Engine, URL
+from sqlalchemy.engine import URL, Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 from scripts import manage_database as database_cli
-from services.game_runtime.store import game_sessions_table
+from services.game_runtime.store import game_dossiers_table, game_sessions_table
 from services.persistence import backup as backup_module
 from services.persistence.backup import (
     DatabaseBackupDestinationExists,
@@ -33,12 +33,12 @@ from services.persistence.backup import (
 )
 from services.persistence.db import kv_table
 from services.persistence.schema import (
+    LATEST_SCHEMA_VERSION,
     ensure_current_schema,
     inspect_schema,
     schema_migrations_table,
 )
 from services.version import APP_VERSION
-
 
 NOW = datetime(2026, 7, 16, 14, 0, tzinfo=timezone.utc)
 
@@ -64,7 +64,7 @@ class DatabaseBackupTests(unittest.TestCase):
         target = self.tmp_root / "restored" / "chronovita.db"
         restored = restore_sqlite_backup(backup, target)
 
-        self.assertEqual(manifest.database_schema_version, 3)
+        self.assertEqual(manifest.database_schema_version, LATEST_SCHEMA_VERSION)
         self.assertEqual(manifest.app_version, APP_VERSION)
         self.assertTrue(manifest.ledger_present)
         self.assertEqual(verification.manifest, manifest)
@@ -83,8 +83,9 @@ class DatabaseBackupTests(unittest.TestCase):
         source = self.tmp_root / "legacy-v08.db"
         engine = self._engine(source)
         try:
-            kv_table.metadata.create_all(engine)
-            game_sessions_table.metadata.create_all(engine)
+            kv_table.create(engine)
+            game_sessions_table.create(engine)
+            game_dossiers_table.create(engine)
             with engine.begin() as connection:
                 connection.execute(
                     insert(kv_table).values(
@@ -236,14 +237,17 @@ class DatabaseBackupTests(unittest.TestCase):
             events.append(("sync", path))
             return real_fsync_directory(path)
 
-        with patch.object(
-            backup_module.os,
-            "link",
-            side_effect=track_link,
-        ), patch.object(
-            backup_module,
-            "_fsync_directory",
-            side_effect=track_directory_sync,
+        with (
+            patch.object(
+                backup_module.os,
+                "link",
+                side_effect=track_link,
+            ),
+            patch.object(
+                backup_module,
+                "_fsync_directory",
+                side_effect=track_directory_sync,
+            ),
         ):
             backup_sqlite_database(
                 source,
@@ -296,15 +300,18 @@ class DatabaseBackupTests(unittest.TestCase):
                 raise PermissionError("injected cleanup failure")
             return real_unlink(path, *args, **kwargs)
 
-        with patch.object(
-            backup_module,
-            "_sqlite_backup",
-            side_effect=fail_backup_after_temp_write,
-        ), patch.object(
-            backup_module.Path,
-            "unlink",
-            autospec=True,
-            side_effect=fail_temp_unlink,
+        with (
+            patch.object(
+                backup_module,
+                "_sqlite_backup",
+                side_effect=fail_backup_after_temp_write,
+            ),
+            patch.object(
+                backup_module.Path,
+                "unlink",
+                autospec=True,
+                side_effect=fail_temp_unlink,
+            ),
         ):
             with self.assertRaisesRegex(
                 DatabaseBackupIntegrityError,
@@ -512,13 +519,14 @@ class DatabaseBackupTests(unittest.TestCase):
     def test_future_schema_backup_is_rejected(self):
         source = self._current_database("future.db", value="future")
         engine = self._engine(source)
+        future_version = LATEST_SCHEMA_VERSION + 1
         try:
             with engine.begin() as connection:
                 connection.execute(
                     insert(schema_migrations_table).values(
-                        version=4,
-                        migration_id="future-v4",
-                        contract_checksum="4" * 64,
+                        version=future_version,
+                        migration_id=f"future-v{future_version}",
+                        contract_checksum="f" * 64,
                         applied_at=NOW,
                         app_version="99.0.0",
                     )
@@ -580,17 +588,22 @@ class DatabaseBackupTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertTrue(json.loads(output)["result"]["is_current"])
 
-    def test_database_cli_reads_postgres_url_only_from_named_env_and_redacts_errors(self):
+    def test_database_cli_reads_postgres_url_only_from_named_env_and_redacts_errors(
+        self,
+    ):
         env_name = "CHRONO_TEST_DATABASE_URL"
         secret = "postgres-command-secret-must-not-leak"
-        with patch.dict(
-            os.environ,
-            {env_name: f"postgresql://chrono:{secret}@db/chronovita"},
-            clear=False,
-        ), patch.object(
-            database_cli,
-            "inspect",
-            side_effect=SQLAlchemyError(f"connection failed near {secret}"),
+        with (
+            patch.dict(
+                os.environ,
+                {env_name: f"postgresql://chrono:{secret}@db/chronovita"},
+                clear=False,
+            ),
+            patch.object(
+                database_cli,
+                "inspect",
+                side_effect=SQLAlchemyError(f"connection failed near {secret}"),
+            ),
         ):
             code, _output, error = self._cli(
                 "status",

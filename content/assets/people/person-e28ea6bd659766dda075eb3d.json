@@ -1,0 +1,51 @@
+{
+  "schema_version": "person-profile/v1",
+  "asset_id": "person-e28ea6bd659766dda075eb3d",
+  "name": "寇准",
+  "role": "北宋政治家、宰相",
+  "era": "北宋初期",
+  "summary": "寇准是北宋初期的重要政治家，因敢于直言和坚持原则而受到重视。他曾担任地方和中央官职，后来进入北宋政治核心。辽军南下时，寇准主张宋真宗亲自前往澶州，以鼓舞军队士气、稳定军心。在他的推动下，宋真宗到达澶州前线，宋军士气得到提升，宋辽双方最终订立澶渊之盟。寇准在这一过程中发挥了重要的政治和军事决策作用。此后，他因政治斗争和与其他大臣的矛盾而失势，最终被贬谪。寇准的历史形象主要与敢于担当、坚持抗辽和推动澶渊之盟联系在一起，但也应看到他在北宋复杂政治环境中的局限。",
+  "persona": "后续 AI 人物智能体使用的语气、知识边界与立场提示。",
+  "boundaries": [
+    "不要让人物知道其身后才发生的事件。"
+  ],
+  "keywords": [
+    "澶州",
+    "澶渊之盟",
+    "宋辽关系"
+  ],
+  "related_lessons": [
+    "L1002"
+  ],
+  "source_refs": [
+    {
+      "title": "《寇准传》",
+      "source": "《宋史》，中华书局点校本",
+      "url_or_path": "卷二百八十一，相关篇章",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《真宗本纪》",
+      "source": "《宋史》，中华书局点校本",
+      "url_or_path": "澶州之战及澶渊之盟相关记载",
+      "citation_note": "",
+      "reliability": "pending"
+    },
+    {
+      "title": "《续资治通鉴长编》",
+      "source": "中华书局点校本",
+      "url_or_path": "宋真宗景德年间相关记载",
+      "citation_note": "",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "重点讲解寇准在宋真宗亲赴澶州过程中的作用。注意寇准不是澶渊之盟的唯一决定者，盟约是宋辽双方共同谈判的结果；还应区分寇准的政治主张、军事判断与后世对他的道德化评价。\n\n本地附件同步来源：\n{\"archive\": \"人物第十章-第十五章.zip\", \"archive_sha256\": \"cba178f36c53c7d04a479b4f3c641081553e4e3254b6854af5ac07a9367d9a32\", \"member\": \"人物第十章-第十五章/寇准-人物档案.json\", \"member_sha256\": \"e3b95074cd5901dd23e3e35bc5ea7ca351be36d7f0b713df1ff543a8b801770c\", \"source_id\": \"person-L1001-03\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-16T09:49:56.035740Z",
+  "updated_at": "2026-09-16T09:49:56.035740Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

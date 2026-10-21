@@ -1,0 +1,36 @@
+{
+  "schema_version": "keyword-profile/v1",
+  "asset_id": "keyword-2616bc33c6c0d8a63e197f6c",
+  "word": "《道德经》",
+  "pinyin": "dào dé jīng",
+  "gloss": "保存老子思想的重要传世文献；由短章和譬喻组成",
+  "era": "先秦",
+  "category": "文献",
+  "examples": [
+    "本课结合“《道德经》”说明保存老子思想的重要传世文献；由短章和譬喻组成。",
+    "讲解“《道德经》”时，应联系本课正文理解其历史含义。"
+  ],
+  "related_people": [
+    "老子"
+  ],
+  "related_lessons": [
+    "L202"
+  ],
+  "source_refs": [
+    {
+      "title": "L202《老子与道家》课程正文",
+      "source": "本项目课程内容模块",
+      "url_or_path": "content/drafts/L202.json",
+      "citation_note": "关键词、拼音、释义和课时顺序依据课程内容模块；关联人物依据人物对应关键词文档",
+      "reliability": "pending"
+    }
+  ],
+  "teacher_notes": "\n\n本地附件同步来源：\n{\"archive\": \"关键词档案1-4章.zip\", \"archive_sha256\": \"866f2d381e4194886a45a19ccffc0aa8fe6cf979398d604c8a7ec2de5dc2bfd7\", \"member\": \"keyword-l202-07.json\", \"member_sha256\": \"726021baf98d397808e33866efebdfaf0f8b8d54dc63e323d176cc04cb374dee\", \"source_id\": \"keyword-l202-07\"}\n{\"archive\": \"关键词档案1-4章(1).zip\", \"archive_sha256\": \"9ce3f6bc3dff895967a871108638c952eba7a70b9cfd95689e06262b10f8e5fe\", \"member\": \"关键词档案1-4章/keyword-l202-07.json\", \"member_sha256\": \"726021baf98d397808e33866efebdfaf0f8b8d54dc63e323d176cc04cb374dee\", \"source_id\": \"keyword-l202-07\"}",
+  "status": "draft",
+  "version": 0,
+  "created_at": "2026-09-14T14:36:25.766000Z",
+  "updated_at": "2026-09-16T09:49:53.257929Z",
+  "sealed_at": null,
+  "sealed_by": null,
+  "checksum": null
+}

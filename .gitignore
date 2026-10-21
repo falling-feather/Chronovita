@@ -1,5 +1,6 @@
 # 依赖与构建产物
 node_modules/
+apps/web/public/preview/media/
 dist/
 build/
 .pnpm-store/
@@ -55,6 +56,7 @@ Thumbs.db
 *.sqlite3
 *.db
 data/
+content/shiji/ocr-pages/
 storage/
 uploads/
 *.mp4
@@ -63,6 +65,14 @@ uploads/
 *.psd
 *.ai
 
+# RAG model binaries are fetched from a pinned snapshot for release packaging.
+distribution/models/**
+!distribution/models/**/
+!distribution/models/**/model-resource.json
+
+# Windows classroom release dependencies are rebuilt from requirements.lock in CI.
+distribution/wheelhouse/**
+
 # 任务队列与缓存数据卷
 .pgdata/
 .redisdata/
@@ -70,7 +80,13 @@ uploads/
 .minio/
 
 apps/web/.vite/
+# Generated from apps/shiji-reader; rebuilt before dev/build, never a source.
+/apps/web/public/shiji-reader/
+apps/web/playwright-report/
+apps/web/test-results/
+apps/web/blob-report/
 *.tsbuildinfo
 
 # Teacher package local credentials
 .chronovita-local/
+.chronovita-review/

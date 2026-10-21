@@ -24,6 +24,7 @@ from main import app
 from routers import game as game_router
 from settings import settings
 from services import content
+from services.content import workflow as content_workflow
 from services.game_runtime import (
     RevisionConflict,
     RuntimeCommandV1,
@@ -48,16 +49,20 @@ from services.persistence.schema import ensure_current_schema
 class GameApiTests(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
+        from tests.release_fixture import copy_legacy_content
+        self.legacy_content = copy_legacy_content(Path(self.temp_dir.name) / "content")
         self.previous = {
             "content_root": settings.content_root,
             "game_catalog_path": settings.game_catalog_path,
             "game_user_id": settings.game_user_id,
             "sqlite_path": settings.sqlite_path,
+            "auth_mode": settings.auth_mode,
         }
-        settings.content_root = str(REPO_ROOT / "content")
+        settings.content_root = str(self.legacy_content)
         settings.game_catalog_path = "scenarios/catalog.v1.json"
         settings.game_user_id = "api-student"
         settings.sqlite_path = str(Path(self.temp_dir.name) / "chronovita.db")
+        settings.auth_mode = "legacy-local"
         self.client = TestClient(app)
         self.client.__enter__()
 
@@ -71,12 +76,75 @@ class GameApiTests(unittest.TestCase):
     def test_catalog_start_turn_get_and_complete_without_client_state(self):
         listed = self.client.get("/api/v1/practice/game/scenarios")
         self.assertEqual(listed.status_code, 200, listed.text)
-        self.assertEqual(len(listed.json()["items"]), 2)
+        items = listed.json()["items"]
+        items_by_id = {item["scenario_id"]: item for item in items}
+        self.assertEqual(len(items_by_id), len(items))
+        self.assertTrue(
+            {
+                "scenario-dayu-flood-control",
+                "scenario-shangyang-institutional-reform",
+                "dayu-crisis-governance",
+                "shangyang-institutional-reform",
+            }.issubset(items_by_id)
+        )
         self.assertEqual(listed.json()["session_storage"], "sqlite-json")
         self.assertEqual(
-            {item["audience"] for item in listed.json()["items"]},
-            {"development"},
+            items_by_id["scenario-dayu-flood-control"]["audience"],
+            "development",
         )
+        self.assertEqual(
+            items_by_id["scenario-shangyang-institutional-reform"]["audience"],
+            "development",
+        )
+        self.assertEqual(
+            items_by_id["dayu-crisis-governance"]["audience"],
+            "published",
+        )
+        self.assertEqual(
+            items_by_id["shangyang-institutional-reform"]["audience"],
+            "published",
+        )
+        for scenario_id in (
+            "dayu-crisis-governance",
+            "shangyang-institutional-reform",
+        ):
+            published = items_by_id[scenario_id]
+            current = content_workflow.get_current_release("C-prequin-state")
+            self.assertEqual(published["release_id"], current.release_id)
+            self.assertEqual(published["release_no"], current.release_no)
+            self.assertEqual(
+                published["release_checksum"],
+                current.checksum,
+            )
+        dayu_summary = items_by_id["scenario-dayu-flood-control"]
+        self.assertGreaterEqual(len(dayu_summary["variables"]), 1)
+        self.assertGreaterEqual(len(dayu_summary["npcs"]), 1)
+        self.assertEqual(
+            {
+                "variable_id",
+                "label",
+                "description",
+                "initial",
+                "minimum",
+                "maximum",
+            },
+            set(dayu_summary["variables"][0]),
+        )
+        self.assertEqual(
+            {
+                "person_id",
+                "display_name",
+                "role",
+                "initial_attitude",
+                "initial_trust",
+            },
+            set(dayu_summary["npcs"][0]),
+        )
+        self.assertNotIn("actions", dayu_summary)
+        self.assertNotIn("events", dayu_summary)
+        self.assertNotIn("endings", dayu_summary)
+        self.assertNotIn("persona", dayu_summary["npcs"][0])
+        self.assertNotIn("fact_refs", dayu_summary["npcs"][0])
 
         started = self.client.post(
             "/api/v1/practice/game/sessions",
@@ -210,6 +278,57 @@ class GameApiTests(unittest.TestCase):
             "/api/v1/practice/game/sessions/session-does-not-exist"
         )
         self.assertEqual(missing.status_code, 404)
+
+    def test_published_fixed_turn_returns_and_restores_one_auditable_dialogue(self):
+        resources = content_workflow.get_published_lesson_resources(
+            "C-prequin-state",
+            "L101",
+        )
+        persona_pack = resources.persona_pack
+        self.assertIsNotNone(persona_pack)
+        assert persona_pack is not None
+        started = self.client.post(
+            "/api/v1/practice/game/sessions",
+            json={
+                "scenario_id": persona_pack.scenario_id,
+                "client_request_id": "api-dialogue-start-001",
+                "release_pin": {
+                    "release_id": resources.release_id,
+                    "release_no": resources.release_no,
+                    "release_checksum": resources.release_checksum,
+                    "course_id": resources.course_id,
+                    "lesson_id": resources.lesson_id,
+                    "course_content_version": resources.content_version,
+                    "course_checksum": resources.course_package.checksum,
+                    "scenario_version": persona_pack.scenario_version,
+                    "scenario_checksum": persona_pack.scenario_checksum,
+                },
+            },
+        )
+        self.assertEqual(started.status_code, 200, started.text)
+        session_id = started.json()["session"]["session_id"]
+
+        advanced = self.client.post(
+            f"/api/v1/practice/game/sessions/{session_id}/turns",
+            json={
+                "client_action_id": "api-dialogue-turn-001",
+                "action_id": "survey-waterways",
+                "expected_revision": 1,
+            },
+        )
+        self.assertEqual(advanced.status_code, 200, advanced.text)
+        dialogue = advanced.json()["npc_dialogue"]
+        self.assertEqual(dialogue["route_source"], "local_state")
+        self.assertEqual(dialogue["route_reason"], "fixed_action_local")
+        self.assertEqual(dialogue["release_id"], resources.release_id)
+        self.assertEqual(dialogue["turn_id"], advanced.json()["turn"]["turn_id"])
+
+        restored = self.client.get(
+            f"/api/v1/practice/game/sessions/{session_id}/dialogues"
+        )
+        self.assertEqual(restored.status_code, 200, restored.text)
+        self.assertEqual(restored.json()["session_storage"], "sqlite-json")
+        self.assertEqual(restored.json()["items"], [dialogue])
 
     def test_fixed_turn_authority_and_free_input_contract_are_separate(self):
         started = self.client.post(
