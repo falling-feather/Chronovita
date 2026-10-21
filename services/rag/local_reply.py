@@ -572,6 +572,8 @@ _APPROVED_QUESTION_LANGUAGE = (
     "真的",
     "是不是",
     "对不对",
+    "大家",
+    "一直",
 )
 _STATE_APPROVED_QUESTION_FACETS: dict[str, tuple[str, ...]] = {
     "L101.flood-science": ("一定存在", "已经证明"),
@@ -585,6 +587,8 @@ _STATE_APPROVED_QUESTION_FACETS: dict[str, tuple[str, ...]] = {
         "治理方法",
         "采用什么策略进行治水",
         "策略进行",
+        "负担过重",
+        "休整",
     ),
     "L103.law-credit": ("老百姓信法律", "相信法令", "信法律"),
     "L103.farming-merit": ("增加负担", "增加代价"),
@@ -703,6 +707,16 @@ _SINGLE_STATE_RELATIONS = (
 )
 
 _PEER_STATE_RELATIONS = (
+    _ApprovedQuestionRelation(
+        "L101-person-governance-action",
+        frozenset({"L101.transmitted-memory", "L101.governance"}),
+        frozenset({"detail", "causality", "evidence_boundary"}),
+        re.compile(
+            r"^(?:请问)?(?:大禹|禹|鲧|益)(?:是)?(?:如何|怎样|怎么)"
+            r".{0,20}(?:治水|协作|劳动|动员)"
+        ),
+        True,
+    ),
     _ApprovedQuestionRelation(
         "L101-cross-evidence",
         frozenset(
@@ -989,7 +1003,7 @@ def _fit_v2_local_reply(
             reason="answer_slot_not_published",
         )
 
-    normalized = _normalize(query_plan.original_question)
+    normalized = _normalize(query_plan.matching_question)
     from services.rag.query import expression_family_key
     lesson_key = expression_family_key(resources)
     legacy_matches = _merge_alias_matches(
@@ -1119,7 +1133,7 @@ def _fit_v2_local_reply(
     unsupported_facets = _unsupported_question_facets(
         resources,
         lesson_key,
-        query_plan.original_question,
+        query_plan.matching_question,
         matched_state_ids=tuple(state.state_id for state, _ in matches),
     )
     if unsupported_facets:

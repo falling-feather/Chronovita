@@ -27,6 +27,11 @@ class RagQueryPlan:
     intent: QueryIntent
     retrieval_queries: tuple[str, ...]
     blocked_reason: str | None = None
+    canonical_question: str | None = None
+
+    @property
+    def matching_question(self) -> str:
+        return self.canonical_question or self.original_question
 
     @property
     def blocked(self) -> bool:
@@ -79,7 +84,7 @@ _LESSON_ALIASES: dict[tuple[str, str], tuple[tuple[tuple[str, ...], str], ...]] 
         (("堵水", "堵住洪水", "只堵", "一直堵", "开沟", "开沟排水"), "疏导 水势 治水工程"),
         (("策略", "采用什么策略", "治理方法", "治水方式", "治理思路"), "禹 鲧 堵水 筑堤 疏导 治水 协作"),
         (("一个人", "靠他", "全靠禹", "禹自己"), "协作 劳动 公共动员"),
-        (("普通劳作者", "劳作者", "大家一起"), "协作 劳动 公共动员"),
+        (("普通劳作者", "劳作者", "大家一起", "劳动", "休整", "负担过重", "协调"), "协作 劳动 公共动员 轮换 劳役 代价"),
         (("施工图", "工程图", "古地图", "那张地图", "禹贡", "九州"), "禹贡 九州 记忆地图 空间边界"),
         (("宫殿", "道路", "作坊", "青铜器"), "二里头 早期国家 专业分工"),
         (("史记", "夏本纪"), "史记 夏本纪 传世文献 成书年代"),
@@ -114,8 +119,9 @@ def plan_rag_query(
     person: PersonV1 | None = None,
 ) -> RagQueryPlan:
     original = question.strip()
-    normalized = _normalize(original)
-    blocked_reason = _blocked_reason(normalized)
+    blocked_reason = _blocked_reason(_normalize(original))
+    canonical = normalize_classroom_expression(resources, original)
+    normalized = _normalize(canonical)
     intent = _intent_for(normalized, person=person)
     if blocked_reason is not None:
         return RagQueryPlan(
@@ -126,6 +132,8 @@ def plan_rag_query(
         )
 
     queries = [original]
+    if canonical != original:
+        queries.append(canonical)
     if intent == "identity" and person is not None:
         queries.append(
             " ".join(
@@ -162,7 +170,23 @@ def plan_rag_query(
         original_question=original,
         intent=intent,
         retrieval_queries=_deduplicate_queries(queries),
+        canonical_question=canonical if canonical != original else None,
     )
+
+
+def normalize_classroom_expression(resources: PublishedLessonResources, question: str) -> str:
+    """Normalize expression only; preserve unknown purposes, numbers and names."""
+    if expression_family_key(resources) != ("C-prequin-state", "L101"):
+        return question
+    result = question
+    for informal, reviewed in (
+        ("干活", "劳动"), ("劳作", "劳动"), ("忙活", "劳动"),
+        ("协调", "协作"), ("撑不住", "负担过重"), ("干不动", "负担过重"),
+        ("累坏", "负担过重"), ("累垮", "负担过重"), ("太累", "负担过重"),
+        ("歇一歇", "休整"), ("休息", "休整"),
+    ):
+        result = result.replace(informal, reviewed)
+    return result
 
 
 def _blocked_reason(normalized: str) -> str | None:
