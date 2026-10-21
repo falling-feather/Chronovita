@@ -241,7 +241,9 @@ export default function LessonWatch({ lesson, onReadComplete, readComplete = fal
           ))}
         </div>
         {onReadComplete ? <footer className="chrono-reading-confirm">
-          <Button type="primary" disabled={readComplete} loading={savingRead} onClick={onReadComplete}>
+          <Button type="primary" disabled={readComplete || savingRead} loading={savingRead}
+            aria-label={readComplete ? '已确认读完当前课文' : '我已读完这篇课文'}
+            aria-busy={savingRead} onClick={onReadComplete}>
             {readComplete ? '已确认读完当前课文' : '我已读完这篇课文'}
           </Button>
           <p>这是本人的阅读确认，不代表测验成绩或掌握程度。</p>

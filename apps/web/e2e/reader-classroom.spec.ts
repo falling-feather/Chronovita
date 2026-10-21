@@ -46,16 +46,33 @@ test('完整阅读器可读正文、保存设置、查看真实书影并刷新�
   await reader.getByRole('button', { name: '简体', exact: true }).click();
   await page.reload();
   await expect(reader.locator('.reader-app')).toHaveClass(/theme-night/);
-  const image = reader.locator('.scan-sheet-media img').first();
+  const image = reader.locator('.scan-sheet.active .scan-sheet-media img');
   await expect(image).toBeVisible();
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
-  await reader.locator('.scan-sheet-media').first().click();
+  await reader.locator('.scan-sheet.active .scan-sheet-media').click();
   await expect(reader.locator('.vertical-source-text')).not.toBeEmpty();
   await reader.getByRole('link', { name: '返回目录', exact: true }).click();
   await expect(reader.getByRole('heading', { name: '《史记》', exact: true })).toBeVisible();
   await reader.getByRole('tab', { name: /版本/ }).click();
   await expect(reader.locator('.version-row')).toHaveCount(2);
   expect(errors).toEqual([]);
+});
+
+test('未安装书影时明确说明，正文与 OCR 仍可阅读', async ({ page }, info) => {
+  test.skip(info.project.name !== 'classroom-1366x768', '缺少书影包在桌面检查一次。');
+  await page.route('**/api/v1/ocr/pages/*/image', (route) => route.fulfill({
+    status: 404, contentType: 'application/json', body: '{"detail":"书影未安装"}',
+  }));
+  await page.goto('/shiji');
+  await page.getByLabel('课堂账号', { exact: true }).fill('student.guard.laptop');
+  await page.getByLabel('密码', { exact: true }).fill(password);
+  await page.getByRole('button', { name: '进入课堂' }).click();
+  const reader = page.frameLocator('iframe[title="《史记》完整文献阅读器"]');
+  await expect(reader.locator('.sentence-original').first()).toBeVisible();
+  const activePage = reader.locator('.scan-sheet.active');
+  await expect(activePage).toContainText('书影不可用，请安装《史记》书影包后刷新。');
+  await activePage.getByRole('link').click();
+  await expect(reader.locator('.vertical-source-text')).not.toBeEmpty();
 });
 
 test('西周不调用商鞅旧互动，当前书案仍能编辑', async ({ page }) => {

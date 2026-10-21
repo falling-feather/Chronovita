@@ -65,7 +65,8 @@
                 :class="{ 'fit-page': fitPage }"
                 :style="fitPage ? undefined : { height: `${zoom}%` }"
                 draggable="false"
-                loading="lazy"
+                :loading="index === activePageIndex ? 'eager' : 'lazy'"
+                @load="syncToReading()"
                 @error="missingImages.push(pageId)"
               />
               <span v-else class="scan-sheet-unavailable">书影不可用，请安装《史记》书影包后刷新。</span>

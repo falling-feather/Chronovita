@@ -58,9 +58,10 @@ test('个人资料、阅读确认、反馈入口与改密退出形成真实闭�
   });
   const confirm = page.getByRole('button', { name: '我已读完这篇课文', exact: true });
   await confirm.click();
-  await expect(page.locator('.chrono-lesson-workspace .ant-alert')).toBeVisible();
+  await expect(page.locator('.chrono-lesson-workspace .ant-alert')).toContainText('已读确认未保存');
+  await expect(confirm).toBeEnabled();
   await page.unroute('**/api/v1/learning/progress/touch');
-  await confirm.click();
+  await page.getByRole('button', { name: '重试已读确认', exact: true }).click();
   await expect(page.getByRole('button', { name: '已确认读完当前课文' })).toBeDisabled();
   await page.reload();
   await expect(page.getByRole('button', { name: '已确认读完当前课文' })).toBeDisabled();

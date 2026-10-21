@@ -12,6 +12,16 @@ from scripts.install_shiji_facsimile import install
 from services import shiji_ocr
 
 
+class ShijiSmokeFixtureTests(unittest.TestCase):
+    def test_browser_smoke_page_is_a_real_indexed_facsimile(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        index = json.loads((root / "content/shiji/ocr-pages-index.json").read_text(encoding="utf-8"))
+        page = next(item for item in index["pages"]
+                    if item["id"] == "shiji--baina-ia-mirror--6c5c0783a987--p0124")
+        fixture = root / "tests/fixtures/shiji-baina-page0124.webp"
+        self.assertEqual(hashlib.sha256(fixture.read_bytes()).hexdigest(), page["image_sha256"])
+
+
 class ShijiOcrBoundaryTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()

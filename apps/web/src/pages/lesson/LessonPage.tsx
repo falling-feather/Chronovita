@@ -50,7 +50,9 @@ export default function LessonPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState<ProgressItem | null>(null);
-  const [progressError, setProgressError] = useState('');
+  const [progressError, setProgressError] = useState<{
+    message: string; retry: 'touch' | 'confirm';
+  } | null>(null);
   const [progressRetry, setProgressRetry] = useState(0);
   const [savingRead, setSavingRead] = useState(false);
   const enteredStagesRef = useRef(new Set<string>());
@@ -134,24 +136,29 @@ export default function LessonPage() {
   useEffect(() => {
     if (!lesson || lesson.id !== lessonId || IS_STATIC_PREVIEW) return;
     let active = true;
-    setProgressError('');
+    setProgressError(null);
     api.progressTouch({ lesson_id: lessonId, layer,
       ...(layer === 'watch' && lesson.teacher_text_checksum ? { teacher_text_checksum: lesson.teacher_text_checksum } : {}),
     }).then((response) => { if (active) setProgress(response.item); })
-      .catch(() => { if (active) setProgressError('学习记录暂未同步，不影响阅读。请恢复网络后重试。'); });
+      .catch(() => { if (active) setProgressError({
+        message: '学习记录暂未同步，不影响阅读。请恢复网络后重试。', retry: 'touch',
+      }); });
     return () => { active = false; };
   }, [lessonId, lesson, layer, progressRetry]);
 
   const confirmReading = useCallback(async () => {
     if (!lesson?.teacher_text_checksum || savingRead) return;
-    setSavingRead(true); setProgressError('');
+    setSavingRead(true); setProgressError(null);
     try {
       const response = await api.progressTouch({ lesson_id: lesson.id, layer: 'watch',
         completed: true, teacher_text_checksum: lesson.teacher_text_checksum });
       setProgress(response.item);
     } catch (failure) {
-      setProgressError(failure instanceof TypeError ? '网络连接失败，已读确认未保存，请重试。'
-        : failure instanceof Error ? failure.message.replace(/^\d{3}\s+/, '') : '已读确认未保存，请重试。');
+      setProgressError({
+        message: failure instanceof TypeError ? '网络连接失败，已读确认未保存，请重试。'
+          : failure instanceof Error ? failure.message.replace(/^\d{3}\s+/, '') : '已读确认未保存，请重试。',
+        retry: 'confirm',
+      });
     } finally { setSavingRead(false); }
   }, [lesson, savingRead]);
 
@@ -292,8 +299,10 @@ export default function LessonPage() {
       ) : null}
 
       <div className={`chrono-lesson-workspace companion-floating${layer === 'ask' ? ' consult-wide' : ''}${layer === 'watch' ? ' observe-wide' : ''}`}>
-        {progressError ? <Alert type="warning" showIcon message={progressError}
-          action={<><Button onClick={() => setProgressRetry((value) => value + 1)}>重试同步</Button>
+        {progressError ? <Alert type="warning" showIcon message={progressError.message}
+          action={<><Button disabled={savingRead} onClick={() => progressError.retry === 'confirm'
+            ? void confirmReading() : setProgressRetry((value) => value + 1)}>
+            {progressError.retry === 'confirm' ? '重试已读确认' : '重试同步'}</Button>
             <Button onClick={() => window.location.reload()}>刷新课文</Button></>} /> : null}
         {!IS_STATIC_PREVIEW && layer === 'watch' ? <p role="status">{readingLabel(progress?.lesson_id === lesson.id ? progress : null)}</p> : null}
         <main>{content}</main>

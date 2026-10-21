@@ -1,7 +1,8 @@
 param(
   [ValidateRange(1024, 65535)]
   [int] $Port = 8765,
-  [switch] $KeepArtifacts
+  [switch] $KeepArtifacts,
+  [string[]] $TestArgs = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -112,7 +113,7 @@ try {
   }
 
   $env:CHRONO_AUTH_BOOTSTRAP_PASSWORD = $null
-  & npm.cmd --prefix $WebRoot run test:e2e
+  & npm.cmd --prefix $WebRoot run test:e2e -- @TestArgs
   if ($LASTEXITCODE -ne 0) {
     throw "Student classroom Playwright chain failed with $LASTEXITCODE."
   }

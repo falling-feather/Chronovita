@@ -107,6 +107,18 @@ jobs:
           $database = Join-Path $env:RUNNER_TEMP "chronovita-student-e2e.db"
           $ragIndex = Join-Path $env:RUNNER_TEMP "chronovita-student-rag.db"
           $missingModel = Join-Path $env:RUNNER_TEMP "intentionally-missing-bge"
+          $shijiImages = Join-Path $env:RUNNER_TEMP "chronovita-shiji-smoke-images"
+          $pageId = "shiji--baina-ia-mirror--6c5c0783a987--p0124"
+          $index = Get-Content -LiteralPath "content/shiji/ocr-pages-index.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+          $page = @($index.pages | Where-Object { $_.id -eq $pageId })
+          if ($page.Count -ne 1) { throw "Shiji smoke page is not uniquely indexed." }
+          $fixture = "tests/fixtures/shiji-baina-page0124.webp"
+          if ((Get-FileHash -LiteralPath $fixture -Algorithm SHA256).Hash.ToLowerInvariant() -ne $page[0].image_sha256) {
+            throw "Shiji smoke page differs from the real facsimile index."
+          }
+          $imagePath = Join-Path $shijiImages $page[0].relative_image
+          New-Item -ItemType Directory -Path (Split-Path -Parent $imagePath) -Force | Out-Null
+          Copy-Item -LiteralPath $fixture -Destination $imagePath
           $contentRoot = (Resolve-Path "content").Path
           $webRoot = (Resolve-Path "apps\web\dist").Path
           $pythonPath = "$env:GITHUB_WORKSPACE;$env:GITHUB_WORKSPACE\apps\api"
@@ -116,6 +128,8 @@ jobs:
           "CHRONO_RAG_INDEX_PATH=$ragIndex" |
             Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CHRONO_RAG_MODEL_ROOT=$missingModel" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CHRONO_SHIJI_OCR_ROOT=$shijiImages" |
             Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CHRONO_CONTENT_ROOT=$contentRoot" |
             Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
