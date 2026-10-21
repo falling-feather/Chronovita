@@ -1,6 +1,6 @@
 # Chronovita · 历史未来课堂
 
-把历史学习组织成“读课文、做抉择、问依据、写笔记”的课堂。面向七年级、本地 Windows 与可信局域网；当前源码 **V1.4.13** 已解除检索依赖冲突，阅读不再等待可选展示资料，迟到的访问响应不会撤回刚确认的已读状态。本地阶段验收通过，正在收束远端集成。现有公开发行为 V1.2.0；源码、Pages 与下载包分别交付，不以源码版本代表已发布包。
+把历史学习组织成“读课文、做抉择、问依据、写笔记”的课堂。面向七年级、本地 Windows 与可信局域网；当前源码 **V1.4.14** 收束工程并交接后续内容工作，依赖与阅读竞态修复已经通过集中验收；[PR #6](https://github.com/falling-feather/Chronovita/pull/6) 保存远端检查与集成依据。现有公开发行为 V1.2.0；本轮不发布新安装包，源码、Pages 与下载包分别交付。
 
 ## 先了解当前状态
 
@@ -42,10 +42,11 @@
 py -3.11 -m venv .venv
 ./.venv/Scripts/python.exe -m pip install -r apps/api/requirements.txt
 npm --prefix apps/web ci
+./.venv/Scripts/python.exe scripts/initialize_classroom.py --database data/chronovita.db
 ./scripts/classroom-review.ps1 -LexicalOnly
 ```
 
-访问 `http://127.0.0.1:5174`，API 为 `http://127.0.0.1:8010`。`-LexicalOnly` 明确选择不依赖向量模型的词法模式；使用混合检索前按[手册](doc/01-开发者文档.md#5-入口与运行流程)准备模型。停止运行 `./scripts/stop-classroom-review.ps1`。
+初始化仅在空库提示设置管理员密码，已有账号不会重置；已有课堂库请显式使用相同的 `-DatabasePath`，不要误连另一份空库。访问 `http://127.0.0.1:5174`，API 为 `http://127.0.0.1:8010`。`-LexicalOnly` 明确选择不依赖向量模型的词法模式；使用混合检索前按[手册](doc/01-开发者文档.md#5-入口与运行流程)准备模型。停止运行 `./scripts/stop-classroom-review.ps1`。
 
 ## 技术与发行边界
 
