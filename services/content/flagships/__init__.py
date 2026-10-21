@@ -32,6 +32,26 @@ from services.content.flagships.shangyang_l103 import (
 from services.content.flagships.shangyang_l103_persona_v1 import (
     build_shangyang_persona_pack_v1,
 )
+from services.content.flagships.shang_l102_draft import (
+    CORPUS_ID as SHANG_L102_CORPUS_ID,
+    COURSE_ID as SHANG_L102_COURSE_ID,
+    LESSON_ID as SHANG_L102_LESSON_ID,
+    SCENARIO_ID as SHANG_L102_SCENARIO_ID,
+    build_l102_authoring_bundle,
+    build_l102_course_draft,
+    build_l102_evidence_draft,
+    build_l102_scenario_draft,
+)
+from services.content.flagships.westzhou_l103_draft import (
+    CORPUS_ID as WESTZHOU_L103_CORPUS_ID,
+    COURSE_ID as WESTZHOU_L103_COURSE_ID,
+    LESSON_ID as WESTZHOU_L103_LESSON_ID,
+    SCENARIO_ID as WESTZHOU_L103_SCENARIO_ID,
+    build_l103_authoring_bundle,
+    build_l103_course_draft,
+    build_l103_evidence_draft,
+    build_l103_scenario_draft,
+)
 
 __all__ = [
     "COURSE_ID",
@@ -44,6 +64,14 @@ __all__ = [
     "SHANGYANG_LESSON_ID",
     "SHANGYANG_PRESENTATION_ID",
     "SHANGYANG_SCENARIO_ID",
+    "SHANG_L102_CORPUS_ID",
+    "SHANG_L102_COURSE_ID",
+    "SHANG_L102_LESSON_ID",
+    "SHANG_L102_SCENARIO_ID",
+    "WESTZHOU_L103_CORPUS_ID",
+    "WESTZHOU_L103_COURSE_ID",
+    "WESTZHOU_L103_LESSON_ID",
+    "WESTZHOU_L103_SCENARIO_ID",
     "build_dayu_course_draft",
     "build_dayu_evidence_draft",
     "build_dayu_presentation",
@@ -54,4 +82,12 @@ __all__ = [
     "build_shangyang_presentation",
     "build_shangyang_persona_pack_v1",
     "build_shangyang_scenario_draft",
+    "build_l102_authoring_bundle",
+    "build_l102_course_draft",
+    "build_l102_evidence_draft",
+    "build_l102_scenario_draft",
+    "build_l103_authoring_bundle",
+    "build_l103_course_draft",
+    "build_l103_evidence_draft",
+    "build_l103_scenario_draft",
 ]
